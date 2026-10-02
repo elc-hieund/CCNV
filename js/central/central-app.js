@@ -2314,7 +2314,6 @@
                   ${window.CCNV_UI.ICONS.barChart}
                 </span>
                 <h2 style="color:var(--text-white);font-size:18px;margin:0;font-weight:700;">Báo Cáo Số Ca Tiếp Nhận</h2>
-                <span class="badge badge-normal" style="font-size:11px;">Mẫu báo cáo chuẩn</span>
               </div>
               <p style="font-size:12.5px;color:var(--text-muted);margin:0;">
                 Theo dõi toàn diện số lượng ca cấp cứu ngoại viện được kích hoạt, phân tích KPI đáp ứng và trích xuất dữ liệu chi tiết
@@ -3271,7 +3270,6 @@
               <h2 style="color:var(--text-white);font-size:18px;">Khoa Cấp cứu — Tiếp nhận Ca đang đến</h2>
               <p style="font-size:12px;color:var(--text-muted);">${currentUser?.organization} · Sẵn sàng đón tiếp bệnh nhân</p>
             </div>
-            <button class="btn btn-emergency" id="btn-trigger-hospital-alert">Giả lập: Nhận Cảnh báo Ca mới</button>
           </div>
 
           <div class="content-card" style="padding:0;overflow:visible;">
@@ -3319,10 +3317,6 @@
           }
         ]
       }).render();
-
-      container.querySelector('#btn-trigger-hospital-alert')?.addEventListener('click', () => {
-        this.showHospitalIncomingAlert(myCases[0] || state.cases[0]);
-      });
 
       container.addEventListener('click', (e) => {
         const acceptBtn = e.target.closest('.btn-hosp-accept');
