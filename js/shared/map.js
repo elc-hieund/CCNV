@@ -123,6 +123,11 @@
         <div>Bệnh nhân: <strong>Phan Văn Đức (34T)</strong> - Đa chấn thương</div>
         <div>Xe ứng cứu: <strong>65A-012.34</strong> (Kíp Cái Răng)</div>
       `);
+      this.incidentMarker.on('click', () => {
+        if (typeof this.onIncidentSelect === 'function') {
+          this.onIncidentSelect();
+        }
+      });
 
       // 3. Render Hospital Markers
       const hospitals = state.hospitals || [];
@@ -150,6 +155,11 @@
 
         const marker = window.L.marker(coords, { icon: hospIcon }).addTo(this.map);
         marker.bindPopup(this.createHospitalPopupHtml(h));
+        marker.on('click', () => {
+          if (typeof this.onHospitalSelect === 'function') {
+            this.onHospitalSelect(h.id);
+          }
+        });
         this.hospitalMarkers[h.id] = { marker, coords, data: h };
       });
 
@@ -178,6 +188,11 @@
 
         const marker = window.L.marker(coords, { icon: vehIcon }).addTo(this.map);
         marker.bindPopup(this.createVehiclePopupHtml(v));
+        marker.on('click', () => {
+          if (typeof this.onVehicleSelect === 'function') {
+            this.onVehicleSelect(v.plate);
+          }
+        });
         this.vehicleMarkers[v.plate] = { marker, coords, data: v };
       });
 
@@ -239,10 +254,18 @@
     }
 
     showVehiclePopup(plate) {
+      Object.values(this.vehicleMarkers).forEach(item => {
+        const el = item.marker?.getElement();
+        if (el) el.classList.remove('is-active-marker');
+      });
+
       if (this.vehicleMarkers[plate]) {
         const item = this.vehicleMarkers[plate];
+        const el = item.marker?.getElement();
+        if (el) el.classList.add('is-active-marker');
+
         if (this.map) {
-          this.map.flyTo(item.marker.getLatLng(), 15, { duration: 1.0 });
+          this.map.flyTo(item.marker.getLatLng(), 15, { duration: 0.8 });
           item.marker.openPopup();
         }
       }

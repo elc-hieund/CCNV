@@ -191,6 +191,8 @@
       this.searchPlaceholder = options.searchPlaceholder || 'Tìm kiếm...';
       this.filterOptions = options.filterOptions || []; // [{ label, value, filterFn }]
       this.exportTitle = options.exportTitle || 'Dữ liệu';
+      this.enableExport = options.enableExport !== undefined ? options.enableExport : (options.showExport !== undefined ? options.showExport : true);
+      this.showSortSelect = options.showSortSelect !== undefined ? options.showSortSelect : (options.enableSortSelect !== undefined ? options.enableSortSelect : true);
       this.pageSize = options.pageSize || 10;
       this.currentPage = 1;
       this.searchQuery = '';
@@ -447,10 +449,12 @@
                 <input type="text" id="${this.containerId}-search-input" value="${this.searchQuery}" placeholder="${this.searchPlaceholder}" />
               </div>
 
+              ${this.showSortSelect ? `
               <select class="table-select-filter" id="${this.containerId}-select-sort">
                 <option value="NEWEST" ${this.sortDirection === 'NEWEST' ? 'selected' : ''}>Mới nhất</option>
                 <option value="OLDEST" ${this.sortDirection === 'OLDEST' ? 'selected' : ''}>Cũ nhất</option>
               </select>
+              ` : ''}
 
               <button class="btn-table-action" id="${this.containerId}-btn-reset" title="Đặt lại bộ lọc">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -464,6 +468,7 @@
             </div>
 
             <div class="table-toolbar-right">
+              ${this.enableExport ? `
               <button class="btn-table-action" id="${this.containerId}-btn-export">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -472,6 +477,7 @@
                 </svg>
                 <span>Xuất Excel</span>
               </button>
+              ` : ''}
             </div>
           </div>
 

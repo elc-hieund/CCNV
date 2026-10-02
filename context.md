@@ -436,19 +436,19 @@ Ghi chú: App Tài xế / Kíp gắn theo xe, **không cần đăng nhập** (kh
 
 | Epic | Tính năng | Giai đoạn | Tác nhân | Màn hình | Mô tả / ghi chú |
 |---|---|---|---|---|---|
-| C1. Thông báo tiếp nhận bệnh nhân | Nhận cảnh báo xe đang đến | 1.0 | Tự động | Popup Cảnh báo ca đang đến | Thông tin ca + ETA |
-| C1 | Nhận cảnh báo người bệnh tự đến | 2.0 | Tự động | Popup Cảnh báo ca đang đến | Mục 4.3 |
-| C1 | Xem tóm tắt ca & ETA | 1.0 | Thủ công | Ca đang đến > Chi tiết ca | Kèm vị trí xe |
-| C1 | Phản hồi khả năng tiếp nhận | 1.0 | Thủ công | Popup Phản hồi khả năng tiếp nhận | Xác nhận/ Từ chối nhận bệnh nhân. Từ chối hoặc không phản hồi → cảnh báo trên App Trung tâm, điều phối viên xác nhận lại |
-| C1 | Nhận cuộc gọi kèm dữ liệu ca | 2.0 | Tự động | Popup Cuộc gọi kèm dữ liệu ca | Trung tâm bấm 1 nút "Gửi thông tin & Gọi" |
-| C2. Tiếp nhận & bàn giao | Check-in xe đến | 1.0 | Thủ công | Chi tiết ca > tab Tiếp nhận & bàn giao | Xác nhận thời gian xe cập bến |
-| C2 | Lập biên bản bàn giao | 1.0 | Thủ công | tab Tiếp nhận & bàn giao | Chẩn đoán ban đầu, tình trạng sống/chết, sự cố y tế nếu có. Nhấn **Xác nhận bàn giao** → ca tự chuyển Hoàn tất |
-| C2 | Cập nhật trạng thái tiếp nhận | 1.0 | Thủ công | Chưa có trong site map | Đang nhận / Hạn chế / Tạm ngưng; không chặn cuộc gọi hay điều phối |
-| C2 | Khai báo chuyên khoa / năng lực | 2.0 | Thủ công | Chưa có trong site map | |
-| C2 | In / xuất biên bản | 1.0 | Thủ công | tab Tiếp nhận & bàn giao | Tùy chọn |
-| C2 | Quản lý hồ sơ ePCR | 1.0 | Thủ công | Chi tiết ca > tab Phiếu cấp cứu (ePCR) | BV tiếp nhận được **CRUD** (thêm, xem, sửa, xóa) ePCR, kể cả dữ liệu do kíp nhập; mọi chỉnh sửa có log |
+| C1. Thông báo tiếp nhận bệnh nhân | Nhận cảnh báo xe đang đến | 1.0 | Tự động | Tiếp nhận hồ sơ > Cảnh báo ca đang đến [Popup] | Thông tin ca + ETA |
+| C1 | Nhận cảnh báo người bệnh tự đến | 2.0 | Tự động | Tiếp nhận hồ sơ > Cảnh báo ca đang đến [Popup] | Mục 4.3 |
+| C1 | Xem tóm tắt ca & ETA | 1.0 | Thủ công | Tiếp nhận hồ sơ > Chi tiết ca | Kèm vị trí xe |
+| C1 | Phản hồi khả năng tiếp nhận | 1.0 | Thủ công | Tiếp nhận hồ sơ > Chi tiết ca > Phản hồi khả năng tiếp nhận [Popup] | Xác nhận/ Từ chối nhận bệnh nhân. Từ chối hoặc không phản hồi → cảnh báo trên App Trung tâm, điều phối viên xác nhận lại |
+| C1 | Nhận cuộc gọi kèm dữ liệu ca | 2.0 | Tự động | Tiếp nhận hồ sơ > Cuộc gọi kèm dữ liệu ca [Popup] | Trung tâm bấm 1 nút "Gửi thông tin & Gọi" |
+| C2. Tiếp nhận & bàn giao | Check-in xe đến | 1.0 | Thủ công | Tiếp nhận hồ sơ > Chi tiết ca > tab Tiếp nhận & bàn giao | Xác nhận thời gian xe cập bến |
+| C2 | Lập biên bản bàn giao | 1.0 | Thủ công | Tiếp nhận hồ sơ > Chi tiết ca > tab Tiếp nhận & bàn giao > Form Biên bản bàn giao | Chẩn đoán ban đầu, tình trạng sống/chết, sự cố y tế nếu có. Nhấn **Xác nhận bàn giao** → ca tự chuyển Hoàn tất |
+| C2 | Cập nhật trạng thái tiếp nhận | 1.0 | Thủ công | Tiếp nhận hồ sơ > Cập nhật trạng thái tiếp nhận | Đang nhận / Hạn chế / Tạm ngưng; không chặn cuộc gọi hay điều phối |
+| C2 | Khai báo chuyên khoa / năng lực | 2.0 | Thủ công | Tiếp nhận hồ sơ > Khai báo chuyên khoa / năng lực | |
+| C2 | In / xuất biên bản | 1.0 | Thủ công | Tiếp nhận hồ sơ > Chi tiết ca > tab Tiếp nhận & bàn giao | Tùy chọn |
+| C2 | Quản lý hồ sơ ePCR | 1.0 | Thủ công | Tiếp nhận hồ sơ > Chi tiết ca > tab Phiếu cấp cứu (ePCR) | BV tiếp nhận được **CRUD** (thêm, xem, sửa, xóa) ePCR, kể cả dữ liệu do kíp nhập; mọi chỉnh sửa có log |
 | C3. Lịch sử | Danh sách ca đã tiếp nhận | 2.0 | Thủ công | Báo cáo > Chi tiết | |
-| C3 | Thống kê tiếp nhận | 2.0 | Tự động | Báo cáo | |
+| C3 | Thống kê tiếp nhận | 2.0 | Tự động | Báo cáo > Thống kê tiếp nhận | |
 
 ### 7.4. D. Quản trị & dữ liệu dùng chung
 
@@ -543,16 +543,22 @@ App Trung tâm
 │       ├── Mốc thời gian [Tab] - Hiển thị kết quả Ghi nhận mốc thời gian tự động
 │       ├── Ghi âm cuộc gọi [Tab] - Nghe lại bản ghi âm
 │       └── Phiếu cấp cứu (ePCR) [Tab] - Xem dữ liệu ePCR
-├── Tiếp nhận hồ sơ [Nhóm] (phần bệnh viện tiếp nhận của BVĐK)
+├── Tiếp nhận hồ sơ [Nhóm menu] (phần bệnh viện tiếp nhận của BVĐK)
 │   ├── Cảnh báo ca đang đến [Popup] - Nhận cảnh báo xe đang đến; Nhận cảnh báo người bệnh tự đến
 │   ├── Cuộc gọi kèm dữ liệu ca [Popup] - Nhận cuộc gọi kèm dữ liệu ca
 │   ├── Tài khoản [Menu người dùng]
 │   ├── Ca đang đến [Màn hình] - Danh sách xe / người bệnh đang đến bệnh viện
-│   └── Chi tiết ca [Màn hình, mở từ Ca đang đến] - Xem chi tiết thông tin bệnh nhân; Xem tóm tắt ca & ETA
-│       ├── Phản hồi khả năng tiếp nhận [Popup] - Xác nhận/ Từ chối nhận bệnh nhân
-│       ├── Phiếu cấp cứu (ePCR) [Tab] - Quản lý hồ sơ ePCR (CRUD)
-│       └── Tiếp nhận & bàn giao [Tab] - Check-in xe đến; Lập biên bản bàn giao bệnh nhân; Xác nhận bàn giao;
-│                                         In xuất biên bản (tùy chọn)
+│   ├── Chi tiết ca [Màn hình, mở từ Ca đang đến] - Xem chi tiết thông tin bệnh nhân; Xem tóm tắt ca & ETA
+│   │   ├── Phản hồi khả năng tiếp nhận [Popup] - Xác nhận/ Từ chối nhận bệnh nhân
+│   │   ├── Phiếu cấp cứu (ePCR) [Tab] - Quản lý hồ sơ ePCR (CRUD)
+│   │   └── Tiếp nhận & bàn giao [Tab] - Check-in xe đến; Xác nhận bàn giao
+│   │       └── Biên bản bàn giao [Form] - Lập biên bản bàn giao: chẩn đoán ban đầu, tình trạng sống/chết,
+│   │                                       sự cố y tế nếu có; In xuất biên bản (tùy chọn)
+│   ├── Cập nhật trạng thái tiếp nhận [Màn hình] - Đang nhận / Hạn chế / Tạm ngưng; không chặn cuộc gọi hay điều phối
+│   ├── Khai báo chuyên khoa / năng lực [Màn hình] - Khai báo năng lực chuyên khoa của bệnh viện
+│   └── Báo cáo [Nhóm menu]
+│       ├── Chi tiết [Màn hình] - Danh sách ca đã tiếp nhận
+│       └── Thống kê tiếp nhận [Màn hình] - Thống kê tiếp nhận của BVĐK
 ├── Giám sát [Nhóm menu]
 │   ├── Bản đồ ca [Màn hình] - Bản đồ điều hành và theo dõi vị trí xe; theo dõi ca xử lý thời gian thực;
 │   │                          theo dõi ca/ xe/ kíp trực; Cảnh báo bất thường hành trình; Danh sách ca đang xử lý;
@@ -604,23 +610,25 @@ Ghi chú cấu trúc: "Tạo ca cấp cứu", "Thông tin ca cấp cứu", "Đi�
 
 ```
 Web Bệnh viện tiếp nhận
-├── Tiếp nhận hồ sơ
+├── Tiếp nhận hồ sơ [Nhóm menu]
 │   ├── Cảnh báo ca đang đến [Popup] - Nhận cảnh báo xe đang đến; Nhận cảnh báo người bệnh tự đến
 │   ├── Cuộc gọi kèm dữ liệu ca [Popup] - Nhận cuộc gọi kèm dữ liệu ca
 │   ├── Tài khoản [Menu người dùng] - Đăng nhập, đổi mật khẩu, đăng xuất
 │   ├── Ca đang đến [Màn hình] - Danh sách xe / người bệnh đang đến bệnh viện
-│   └── Chi tiết ca [Màn hình, mở từ Ca đang đến] - Xem chi tiết thông tin bệnh nhân
-│       ├── Phản hồi khả năng tiếp nhận [Popup] - Xác nhận/ Từ chối nhận bệnh nhân
-│       ├── Phiếu cấp cứu (ePCR) [Tab] - Quản lý hồ sơ ePCR (CRUD)
-│       └── Tiếp nhận & bàn giao [Tab] - Check-in xe đến; Lập biên bản bàn giao bệnh nhân; Xác nhận bàn giao;
-│                                         In xuất biên bản (tùy chọn)
+│   ├── Chi tiết ca [Màn hình, mở từ Ca đang đến] - Xem chi tiết thông tin bệnh nhân; Xem tóm tắt ca & ETA
+│   │   ├── Phản hồi khả năng tiếp nhận [Popup] - Xác nhận/ Từ chối nhận bệnh nhân
+│   │   ├── Phiếu cấp cứu (ePCR) [Tab] - Quản lý hồ sơ ePCR (CRUD)
+│   │   └── Tiếp nhận & bàn giao [Tab] - Check-in xe đến; Xác nhận bàn giao
+│   │       └── Biên bản bàn giao [Form] - Lập biên bản bàn giao: chẩn đoán ban đầu, tình trạng sống/chết,
+│   │                                       sự cố y tế nếu có; In xuất biên bản (tùy chọn)
+│   ├── Cập nhật trạng thái tiếp nhận [Màn hình] - Đang nhận / Hạn chế / Tạm ngưng; không chặn cuộc gọi hay điều phối
+│   └── Khai báo chuyên khoa / năng lực [Màn hình] - Khai báo năng lực chuyên khoa của bệnh viện
 └── Báo cáo [Nhóm menu]
-    ├── Tổng quan [Màn hình] - Dashboard; Bản đồ số xe đang cấp cứu; Theo dõi KPI thời gian đáp ứng
-    ├── Chi tiết [Màn hình] - Chi tiết & xuất báo cáo KPI
-    └── Báo cáo thống kê [Màn hình] - Báo cáo thống kê
+    ├── Chi tiết [Màn hình] - Danh sách ca đã tiếp nhận
+    └── Thống kê tiếp nhận [Màn hình] - Thống kê tiếp nhận
 ```
 
-TBD: (1) màn cho "Cập nhật trạng thái tiếp nhận" và "Khai báo chuyên khoa / năng lực" chưa có trong site map; (2) "Danh sách ca đã tiếp nhận" nằm ở Báo cáo > Chi tiết hay màn riêng. **ASSUMPTION**: báo cáo của BV tiếp nhận chỉ gồm ca của BV đó.
+**ASSUMPTION**: báo cáo của BV tiếp nhận chỉ gồm ca của BV đó.
 
 ### 8.3. App Tài xế / Kíp cấp cứu
 
@@ -787,3 +795,4 @@ Call-to-Dispatch, Dispatch-to-Accept, Dispatch-to-Mobile, Dispatch-to-Scene, Cal
 | 1.0 | 01/10/2026 | Tạo lần đầu |
 | 1.1 | 01/10/2026 | Cập nhật theo review: đưa các phương án đã chốt vào từng mục (thiết bị app tài xế, ảnh hiện trường, trạng thái xe, trạng thái nhiệm vụ, kênh người dân, tên chủ đầu tư, quyền ePCR của BV, phạm vi prototype); bỏ danh sách tính năng không có trong bản tổng hợp; bỏ trích dẫn nguồn; đánh lại số mục, mã actor và mã BR |
 | 1.2 | 01/10/2026 | Cập nhật theo trả lời 26 câu hỏi: tên dự án; một người kiêm tổng đài và điều phối; form tạo ca tự mở và gộp bước điều phối; một ca nhiều xe; chọn BV khi phát lệnh; trạng thái ca 3 bước; kết thúc ca khi xác nhận bàn giao; app tài xế theo xe không đăng nhập, không có từ chối lệnh; SOS trên phần mềm; quy tắc App Người dân; bổ sung BR-09 đến BR-18 |
+| 1.3 | 02/10/2026 | Đồng bộ sitemap 8.1 (Tiếp nhận hồ sơ) và 8.2 (Web BV tiếp nhận) với feature catalog 7.3: bổ sung màn "Cập nhật trạng thái tiếp nhận", "Khai báo chuyên khoa / năng lực", "Xem tóm tắt ca & ETA"; thêm nhóm Báo cáo (Danh sách ca đã tiếp nhận, Thống kê tiếp nhận) cho Tiếp nhận hồ sơ trong 8.1; sửa Báo cáo 8.2 theo đúng C3 thay vì sao chép A10 |
