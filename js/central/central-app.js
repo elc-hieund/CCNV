@@ -19,7 +19,7 @@
     async init() {
       // 1. Initialize State
       await window.StateManager.init();
-      
+
       // 2. Start Header Clock
       this.initClock();
 
@@ -140,7 +140,7 @@
 
       this.updateHeaderProfile();
       this.renderSidebar();
-      
+
       const role = acc.role;
       this.currentMenu = (role === 'HOSPITAL_RECEIVER') ? 'hospital-incoming' : 'realtime-map';
       this.renderCurrentView();
@@ -237,8 +237,7 @@
       if (!isHospital) {
         // --- DISPATCHER ACCORDION (TRUNG TÂM ĐIỀU HÀNH - SITEMAP 8.1) ---
         const isCallCenterActive = ['call-current', 'call-history', 'call-directory', 'call-transfer', 'call-center'].includes(this.currentMenu);
-        const isEmergencyActive = ['cases-list', 'coordination', 'case-lookup'].includes(this.currentMenu);
-        const isReceivingActive = ['receiving-incoming', 'receiving-handover', 'receiving-status', 'receiving-specialty', 'receiving-report-detail', 'receiving-report-stats'].includes(this.currentMenu);
+        const isEmergencyActive = ['cases-list', 'case-lookup', 'receiving-incoming', 'receiving-handover', 'receiving-status'].includes(this.currentMenu);
         const isMonitoringActive = ['realtime-map', 'vehicles-status', 'crews-status', 'hospitals-status'].includes(this.currentMenu);
         const isShiftsActive = ['shifts-assignment', 'shifts-calendar', 'shifts-schedule'].includes(this.currentMenu);
         const isReportsActive = ['report-cases', 'reports-overview', 'reports-detail', 'reports-stats', 'reports'].includes(this.currentMenu);
@@ -252,34 +251,13 @@
             <span class="nav-parent-label">Tổng đài</span>
           </div>
 
-          <!-- 2. CẤP CỨU [Nhóm menu] -->
-          <div class="nav-parent-item ${isEmergencyActive ? 'active expanded' : ''}" data-nav-group="emergency" title="Cấp cứu">
+          <!-- 2. CẤP CỨU [Menu đơn duy nhất - Toàn bộ Vòng đời & Tiếp nhận] -->
+          <div class="nav-parent-item ${isEmergencyActive ? 'active' : ''}" data-menu="cases-list" title="Cấp cứu">
             <span class="nav-parent-icon">${window.CCNV_UI.ICONS.ambulance}</span>
             <span class="nav-parent-label">Cấp cứu</span>
-            ${chevronSvg}
-          </div>
-          <div class="nav-submenu">
-            <div class="nav-subitem ${this.currentMenu === 'cases-list' ? 'active' : ''}" data-menu="cases-list">Danh sách ca</div>
-            <div class="nav-subitem ${this.currentMenu === 'coordination' ? 'active' : ''}" data-menu="coordination">Liên lạc & phối hợp</div>
-            <div class="nav-subitem ${this.currentMenu === 'case-lookup' ? 'active' : ''}" data-menu="case-lookup">Tra cứu hồ sơ</div>
           </div>
 
-          <!-- 3. TIẾP NHẬN HỒ SƠ [Nhóm menu] (phần bệnh viện tiếp nhận của BVĐK) -->
-          <div class="nav-parent-item ${isReceivingActive ? 'active expanded' : ''}" data-nav-group="receiving" title="Tiếp nhận hồ sơ (BVĐK)">
-            <span class="nav-parent-icon">${window.CCNV_UI.ICONS.hospital}</span>
-            <span class="nav-parent-label">Tiếp nhận hồ sơ</span>
-            ${chevronSvg}
-          </div>
-          <div class="nav-submenu">
-            <div class="nav-subitem ${this.currentMenu === 'receiving-incoming' ? 'active' : ''}" data-menu="receiving-incoming">Ca đang đến</div>
-            <div class="nav-subitem ${this.currentMenu === 'receiving-handover' ? 'active' : ''}" data-menu="receiving-handover">Tiếp nhận & bàn giao</div>
-            <div class="nav-subitem ${this.currentMenu === 'receiving-status' ? 'active' : ''}" data-menu="receiving-status">Cập nhật trạng thái tiếp nhận</div>
-            <div class="nav-subitem ${this.currentMenu === 'receiving-specialty' ? 'active' : ''}" data-menu="receiving-specialty">Khai báo chuyên khoa</div>
-            <div class="nav-subitem ${this.currentMenu === 'receiving-report-detail' ? 'active' : ''}" data-menu="receiving-report-detail">Báo cáo chi tiết</div>
-            <div class="nav-subitem ${this.currentMenu === 'receiving-report-stats' ? 'active' : ''}" data-menu="receiving-report-stats">Thống kê tiếp nhận</div>
-          </div>
-
-          <!-- 4. GIÁM SÁT [Nhóm menu] -->
+          <!-- 3. GIÁM SÁT [Nhóm menu] -->
           <div class="nav-parent-item ${isMonitoringActive ? 'active expanded' : ''}" data-nav-group="monitoring" title="Giám sát">
             <span class="nav-parent-icon">${window.CCNV_UI.ICONS.eye}</span>
             <span class="nav-parent-label">Giám sát</span>
@@ -443,32 +421,27 @@
         'call-directory': 'Tổng đài — Danh bạ Bệnh viện TP. Cần Thơ',
         'call-transfer': 'Tổng đài — Chuyển tiếp',
         'call-center': 'Tổng đài Tiếp nhận Khẩn cấp 115',
-        // 2. Cấp cứu
-        'cases-list': 'Danh sách Ca Cấp cứu đang xử lý',
-        'coordination': 'Liên lạc & Phối hợp Liên ngành',
-        'case-lookup': 'Tra cứu Hồ sơ Ca Cấp cứu',
-        // 3. Tiếp nhận hồ sơ (BVĐK)
-        'receiving-incoming': 'Tiếp nhận Hồ sơ — Ca đang đến Bệnh viện',
-        'receiving-handover': 'Biên bản Bàn giao & Tiếp nhận Bệnh nhân',
-        'receiving-status': 'Cập nhật Trạng thái Tiếp nhận Bệnh viện',
-        'receiving-specialty': 'Khai báo Chuyên khoa & Năng lực Tiếp nhận',
-        'receiving-report-detail': 'Báo cáo Chi tiết Ca đã tiếp nhận',
-        'receiving-report-stats': 'Thống kê Tiếp nhận Bệnh viện',
-        // 4. Giám sát
+        // 2. Cấp cứu (Hợp nhất vòng đời & tiếp nhận)
+        'cases-list': 'Quản lý Vòng đời Ca Cấp cứu & Tiếp nhận',
+        'case-lookup': 'Quản lý Vòng đời Ca Cấp cứu & Tiếp nhận',
+        'receiving-incoming': 'Quản lý Vòng đời Ca Cấp cứu & Tiếp nhận',
+        'receiving-handover': 'Quản lý Vòng đời Ca Cấp cứu & Tiếp nhận',
+        'receiving-status': 'Quản lý Vòng đời Ca Cấp cứu & Tiếp nhận',
+        // 3. Giám sát
         'realtime-map': 'Bản đồ Realtime (GIS)',
         'vehicles-status': 'Tình trạng Xe cứu thương',
         'crews-status': 'Tình trạng Kíp trực',
         'hospitals-status': 'Mạng lưới Bệnh viện Tiếp nhận',
-        // 5. Ca trực
+        // 4. Ca trực
         'shifts-assignment': 'Phân công Ca trực & Thành viên Kíp',
         'shifts-calendar': 'Lịch trực Ban 24/7 Các Trạm Vệ tinh',
         'shifts-schedule': 'Phân công & Lịch trực Ban',
-        // 6. Báo cáo
+        // 5. Báo cáo
         'reports-overview': 'Báo cáo Tổng quan & Đo lường KPI',
         'reports-detail': 'Báo cáo Chi tiết & Thời gian Xử lý Ca',
         'reports-stats': 'Báo cáo Thống kê & Phân tích Dữ liệu',
         'reports': 'Báo cáo Tổng hợp & Đo lường KPI',
-        // 7. Danh mục & cấu hình
+        // 6. Danh mục & cấu hình
         'cat-vehicles': 'Danh mục Xe cứu thương',
         'cat-hospitals': 'Danh mục Bệnh viện & Cơ sở Y tế',
         'cat-directory': 'Quản lý Danh bạ Bệnh viện',
@@ -478,7 +451,7 @@
         'cat-close-reasons': 'Danh mục Lý do Kết thúc Ca',
         'cat-templates': 'Cấu hình Mẫu biểu & Phiếu ePCR',
         'categories': 'Danh mục Dữ liệu dùng chung',
-        // 8. Quản trị hệ thống
+        // 7. Quản trị hệ thống
         'admin-users': 'Quản lý Tài khoản Người dùng',
         'admin-roles': 'Phân quyền Vai trò & Đơn vị',
         'admin-audit': 'Nhật ký Thao tác Hệ thống (Audit Log)',
@@ -523,38 +496,16 @@
           this.renderCallCenterView(container, 'transfer');
           break;
 
-        // 2. Cấp cứu
+        // 2. Cấp cứu (Màn hình duy nhất quản lý toàn bộ vòng đời & tiếp nhận)
         case 'cases-list':
+        case 'case-lookup':
+        case 'receiving-incoming':
+        case 'receiving-handover':
+        case 'receiving-status':
           this.renderCasesListView(container);
           break;
-        case 'coordination':
-          this.renderCoordinationView(container);
-          break;
-        case 'case-lookup':
-          this.renderCaseLookupView(container);
-          break;
 
-        // 3. Tiếp nhận hồ sơ (BVĐK)
-        case 'receiving-incoming':
-          this.renderReceivingIncomingView(container);
-          break;
-        case 'receiving-handover':
-          this.renderHospitalHandoverView(container);
-          break;
-        case 'receiving-status':
-          this.renderHospitalReceptionStatusView(container);
-          break;
-        case 'receiving-specialty':
-          this.renderHospitalSpecialtyView(container);
-          break;
-        case 'receiving-report-detail':
-          this.renderHospitalReportDetailView(container);
-          break;
-        case 'receiving-report-stats':
-          this.renderHospitalReportStatsView(container);
-          break;
-
-        // 4. Giám sát
+        // 3. Giám sát
         case 'realtime-map':
           this.renderRealtimeMapView(container);
           break;
@@ -810,8 +761,8 @@
       if (searchInput) {
         searchInput.addEventListener('input', (e) => {
           const q = e.target.value.toLowerCase().trim();
-          const filtered = vehicles.filter(v => 
-            v.plate.toLowerCase().includes(q) || 
+          const filtered = vehicles.filter(v =>
+            v.plate.toLowerCase().includes(q) ||
             v.station.toLowerCase().includes(q) ||
             v.type.toLowerCase().includes(q)
           );
@@ -872,7 +823,7 @@
 
       if (isEmergency) {
         const destHospital = activeCase?.dispatch?.hospitalName || 'BV Đa khoa TP Cần Thơ';
-        const patientDesc = activeCase?.patient?.name 
+        const patientDesc = activeCase?.patient?.name
           ? `BN ${activeCase.patient.name} (${activeCase.patient.symptom || 'chấn thương'})`
           : 'bệnh nhân cấp cứu';
         const locationText = activeCase?.location?.address || 'Cầu Hưng Lợi, P. Hưng Lợi, Q. Ninh Kiều';
@@ -883,7 +834,7 @@
             <div>
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
                 <span class="live-dot"></span>
-                <strong style="color:var(--red-vivid);font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">Cảnh báo Cấp cứu Khẩn cấp</strong>
+                <strong style="color:var(--red-vivid);font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">Đang cấp cứu</strong>
               </div>
               <div style="font-size:13px;color:var(--text-white);">
                 Xe <strong style="color:var(--red-vivid);font-family:var(--font-mono);">${v.plate}</strong> đang vận chuyển ${patientDesc} về ${destHospital}
@@ -1109,7 +1060,7 @@
               <span>Tổng đài Tiếp nhận Cuộc gọi Khẩn cấp 115</span>
             </h2>
             <p style="font-size:12px;color:var(--text-muted);margin-top:2px;">
-              Tiếp nhận cuộc gọi thoại 115, tín hiệu SOS từ App Người dân, tích hợp Cell-ID và đàm thoại ghi âm
+              Tiếp nhận cuộc gọi thoại 115, tín hiệu SOS từ App Người dân, tích hợp và đàm thoại ghi âm
             </p>
           </div>
 
@@ -1150,228 +1101,1250 @@
 
 
 
-      // --- TAB 1: CUỘC GỌI HIỆN TẠI (ACTIVE CALL & INTAKE FORM) ---
+      // --- TAB 1: CUỘC GỌI HIỆN TẠI (ACTIVE CALL & ONE-HAND RAPID INTAKE PROTOCOL) ---
       if (activeTab === 'active') {
+        // Clean up any previously attached key listener
+        if (this._callCenterKeyHandler) {
+          window.removeEventListener('keydown', this._callCenterKeyHandler);
+          this._callCenterKeyHandler = null;
+        }
+
+        // SOP First Aid Guidance Database (Triage & Pre-arrival instructions for caller)
+        const FIRST_AID_GUIDES = {
+          INC_TNGT: [
+            { num: '01', text: 'KHÔNG di chuyển nạn nhân nếu nghi ngờ chấn thương sọ não, cột sống cổ hoặc lưng.', vital: true },
+            { num: '02', text: 'Dùng vải/gạc sạch đè chặt trực tiếp lên vết thương đầu để cầm máu liên tục.', vital: true },
+            { num: '03', text: 'Nới lỏng cúc áo, giữ thông thoáng đường thở, KHÔNG cho uống nước hay cạo gió.', vital: false },
+            { num: '04', text: 'Bảo vệ hiện trường, đặt vật chắn cảnh báo từ xa để tránh va chạm liên hoàn.', vital: false }
+          ],
+          INC_STROKE: [
+            { num: '01', text: 'Ghi nhận chính xác mốc GIỜ KHỞI PHÁT triệu chứng đầu tiên (Giờ vàng cấp cứu < 4.5h).', vital: true },
+            { num: '02', text: 'Đặt người bệnh nằm đầu cao 30 độ, nghiêng nhẹ một bên tránh trào ngược đờm dãi.', vital: true },
+            { num: '03', text: 'Tuyệt đối KHÔNG tự ý cho uống thuốc hạ huyết áp, KHÔNG chích lể ngón tay hay cạo gió.', vital: true },
+            { num: '04', text: 'Chuẩn bị sẵn thẻ BHYT, CCCD và các toa thuốc đang điều trị (nếu có).', vital: false }
+          ],
+          INC_CARDIAC: [
+            { num: '01', text: 'ĐẶT NẠN NHÂN NẰM NGỬA TRÊN NỀN CỨNG BẰNG PHẲNG NGAY LẬP TỨC!', vital: true },
+            { num: '02', text: 'ÉP TIM LIÊN TỤC 100 - 120 LẦN/PHÚT! Đặt 2 tay giữa ngực, ấn sâu ít nhất 5-6 cm.', vital: true },
+            { num: '03', text: 'Không gián đoạn ép tim quá 10 giây. Đổi người ép mỗi 2 phút nếu mệt mỏi.', vital: true },
+            { num: '04', text: 'Nếu khu vực có máy khử rung tự động (AED), hướng dẫn bật máy và dán điện cực.', vital: false }
+          ],
+          INC_RESPIRATORY: [
+            { num: '01', text: 'Nếu do hóc dị vật đường thở: Hướng dẫn người nhà làm thủ thuật Heimlich ngay.', vital: true },
+            { num: '02', text: 'Đặt người bệnh tư thế Fowler (nửa nằm nửa ngồi 45-60 độ), khuyên hít thở sâu chậm.', vital: true },
+            { num: '03', text: 'Nới rộng cổ áo, thắt lưng, mở cửa sổ phòng cho thông thoáng dưỡng khí.', vital: false },
+            { num: '04', text: 'Nếu người bệnh có bình xịt dãn phế quản (Salbutamol) cá nhân, hỗ trợ xịt 2 nhát.', vital: false }
+          ],
+          INC_TRAUMA: [
+            { num: '01', text: 'Băng ép cầm máu tại chỗ bằng băng vô khuẩn hoặc vải sạch có sẵn.', vital: true },
+            { num: '02', text: 'Cố định tạm thời chi gãy bằng nẹp hoặc thanh gỗ/bìa cứng, KHÔNG cố nắn xương.', vital: true },
+            { num: '03', text: 'Ủ ấm cho nạn nhân, kê cao chân nhẹ nếu có dấu hiệu da tái lạnh, tụt huyết áp.', vital: false }
+          ],
+          INC_OBSTETRIC: [
+            { num: '01', text: 'Đặt sản phụ nằm nghiêng trái để tránh chèn ép tĩnh mạch chủ dưới.', vital: true },
+            { num: '02', text: 'Hướng dẫn sản phụ thở đều, KHÔNG rặn nếu chưa có chỉ định của cán bộ y tế.', vital: true },
+            { num: '03', text: 'Chuẩn bị nước ấm, khăn sạch, bọc ấm nếu em bé lọt lòng trước khi xe đến.', vital: false }
+          ],
+          INC_PEDIATRIC: [
+            { num: '01', text: 'Đặt trẻ nằm nghiêng sang một bên, tuyệt đối KHÔNG nhét vật cứng vào miệng trẻ!', vital: true },
+            { num: '02', text: 'Cởi bớt quần áo, lau mát bằng nước ấm ở trán, nách, bẹn để hạ sốt.', vital: true },
+            { num: '03', text: 'Ghi nhận thời gian cơn co giật kéo dài bao nhiêu phút để báo kíp cấp cứu.', vital: false }
+          ],
+          INC_OTHER: [
+            { num: '01', text: 'Động viên, trấn an tinh thần người bệnh và người nhà bình tĩnh.', vital: false },
+            { num: '02', text: 'Liên tục theo dõi tri giác, nhịp thở và màu sắc da niêm mạc.', vital: true },
+            { num: '03', text: 'Cử người ra đầu ngõ/cổng đón đường và mở sẵn cửa cho xe cấp cứu vào.', vital: false }
+          ]
+        };
+
+        // Current Form State
+        let availableVehicles = (state.vehicles && state.vehicles.length >= 6) ? state.vehicles.slice(0, 6) : (state.vehicles || []);
+        let currentSelectedPlates = new Set(['65A-015.67']); // Default select 1st vehicle (Type A)
+        let currentVehicleTypes = new Set(['Type A']); // Synchronized types
+        let currentVehicleType = 'Type A'; // Primary selected vehicle type
+
+        // On-duty personnel for current shift (Bác sĩ, Điều dưỡng, Lái xe)
+        let availablePersonnel = (state.personnel && state.personnel.length >= 6)
+          ? state.personnel.filter(p => p.status === 'ON_DUTY').slice(0, 6)
+          : (state.personnel ? state.personnel.slice(0, 6) : []);
+        // Default select first team of 3 (1 Doctor, 1 Nurse, 1 Driver)
+        let currentSelectedPersonnel = new Set(availablePersonnel.slice(0, 3).map(p => p.id));
+
+        let currentSeverity = activeCall.severity || 'CRITICAL';
+        let currentGender = activeCall.patientGender || 'Nam';
+        let currentIncident = activeCall.incidentCode || 'INC_TNGT';
+        let currentFocusedCard = 'card-patient';
+
+        // Vehicle lookup helpers
+        const getRecommendedVehicle = () => {
+          const firstPlate = Array.from(currentSelectedPlates)[0];
+          return availableVehicles.find(v => v.plate === firstPlate) || availableVehicles[0] || state.vehicles[0];
+        };
+
         paneContainer.innerHTML = `
-          <div style="display:grid;grid-template-columns: 420px 1fr; gap:16px; align-items:start;">
-            <!-- Left: Active Call Card & Audio Waveform Player -->
+          <div style="display:grid;grid-template-columns: 380px 1fr; gap:16px; align-items:start;">
+            <!-- LEFT COLUMN: Live Call HUD & SOP First Aid Guidance -->
             <div style="display:flex;flex-direction:column;gap:14px;">
-              <!-- Call Status Card -->
-              <div class="content-card" style="border-left:4px solid var(--red-vivid);padding:16px;">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <!-- 1. Live Call Card -->
+              <div class="content-card" style="border:1px solid rgba(239,68,68,0.45);padding:16px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
                   <span class="status-pill status-pill-new" style="display:flex;align-items:center;gap:6px;font-weight:700;">
                     <span class="live-dot"></span> ĐANG ĐÀM THOẠI [01:42]
                   </span>
-                  <span style="font-size:11px;color:var(--text-muted);font-family:var(--font-mono);">Kênh 115 Thoại</span>
                 </div>
 
-                <div style="font-size:18px;font-weight:700;color:var(--text-white);margin-bottom:4px;font-family:var(--font-mono);">
+                <div style="font-size:20px;font-weight:700;color:var(--text-white);margin-bottom:4px;font-family:var(--font-mono);letter-spacing:0.5px;">
                   ${activeCall.callerPhone}
                 </div>
-                <div style="font-size:13px;color:#93C5FD;font-weight:600;margin-bottom:10px;">
-                  Người gọi: ${activeCall.callerName} (Định danh Viettel Telecom)
+                <div style="font-size:13.5px;color:#93C5FD;font-weight:600;margin-bottom:12px;">
                 </div>
 
-                <div style="background:var(--bg-elevated);padding:10px;border-radius:6px;border:1px solid var(--border-main);margin-bottom:12px;font-size:12px;">
-                  <div style="color:var(--text-muted);margin-bottom:2px;">Vị trí Cell-ID ước tính:</div>
-                  <div style="color:var(--text-white);font-weight:500;">
-                    BTS VTT-NK04 · P. Hưng Lợi, Q. Ninh Kiều, Cần Thơ (±85m)
+                <!-- Cell-ID Card -->
+                <div style="background:var(--bg-elevated);padding:10px 12px;border-radius:6px;border:1px solid var(--border-main);margin-bottom:12px;font-size:12px;">
+                  <div style="color:var(--text-muted);font-size:11px;margin-bottom:4px;">
+                    Định vị:
+                  </div>
+                  <div style="color:var(--text-white);font-weight:600;font-size:13px;">
+                    Phường Hưng Lợi, Thành phố Cần Thơ
                   </div>
                 </div>
 
                 <!-- Call Control Actions -->
-                <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                  <button class="btn btn-default btn-sm" id="btn-call-hold" style="flex:1;">
-                    <span>Giữ cuộc gọi</span>
-                  </button>
+                <div style="display:flex;gap:6px;">
                   <button class="btn btn-default btn-sm" id="btn-call-transfer-quick" style="flex:1;">
                     <span>Chuyển máy</span>
                   </button>
-                  <button class="btn btn-ghost btn-sm" id="btn-call-hangup" style="color:var(--red-vivid);">
+                  <button class="btn btn-default btn-sm" id="btn-call-hangup" style="flex:1;color:var(--red-vivid);border-color:rgba(239,68,68,0.35);">
                     <span>Gác máy</span>
                   </button>
                 </div>
               </div>
 
-              <!-- Audio Recording Player Card -->
-              <div class="content-card" style="padding:16px;">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                  <span style="font-size:13px;font-weight:600;color:var(--text-white);display:flex;align-items:center;gap:6px;">
+              <!-- 2. Audio Recording Player Card -->
+              <div class="content-card" style="padding:14px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                  <span style="font-size:12.5px;font-weight:600;color:var(--text-white);display:flex;align-items:center;gap:6px;">
                     ${window.CCNV_UI.ICONS.radio}
-                    <span>Ghi âm cuộc gọi thời gian thực</span>
+                    <span>Ghi âm & Nhận dạng giọng nói</span>
                   </span>
-                  <span style="font-size:11px;color:#10B981;font-weight:600;">REC ● 01:42</span>
+                  <span style="font-size:11px;color:#10B981;font-weight:700;"> 01:42</span>
                 </div>
 
                 <!-- Dynamic Waveform Visualizer -->
-                <div style="background:var(--bg-main);border-radius:6px;padding:12px;display:flex;align-items:center;justify-content:space-between;gap:3px;height:50px;border:1px solid var(--border-main);margin-bottom:10px;">
+                <div style="background:var(--bg-main);border-radius:6px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:3px;height:42px;border:1px solid var(--border-main);margin-bottom:8px;">
                   ${[15, 28, 40, 22, 35, 18, 45, 30, 20, 38, 25, 12, 32, 42, 28, 16, 36, 44, 26, 18, 30, 40, 22, 14].map(h => `
                     <div style="flex:1;background:linear-gradient(to top, #3B82F6, #60A5FA);height:${h}px;border-radius:2px;opacity:0.85;"></div>
                   `).join('')}
                 </div>
 
-                <div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:10px;">
-                  <span>01:42</span>
-                  <span>Tổng thời lượng: 03:10</span>
-                </div>
-
-                <div style="background:rgba(30, 41, 59, 0.7);padding:8px 12px;border-radius:6px;font-size:12px;color:var(--text-slate);border-left:2px solid #3B82F6;margin-bottom:12px;">
+                <div style="background:rgba(30, 41, 59, 0.7);padding:8px 10px;border-radius:6px;font-size:11.5px;color:var(--text-slate);border:1px solid #1E3A8A;">
                   <em>"Bệnh nhân ngã xe máy bất tỉnh khoảng 2 phút, hiện đang thở dốc, chảy máu nhiều vùng trán..."</em>
                 </div>
+              </div>
 
-                <div style="display:flex;gap:8px;">
-                  <button class="btn btn-default btn-sm" id="btn-audio-pause-play" style="flex:1;">
-                    <span>Tạm dừng ghi</span>
-                  </button>
-                  <button class="btn btn-default btn-sm" id="btn-audio-download">
-                    <span>Tải tệp ghi âm</span>
-                  </button>
+              <!-- 3. SOP First Aid Guidance (Đọc trực tiếp cho người nhà theo tình huống) -->
+              <div class="first-aid-protocol-card" id="first-aid-protocol-card">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                  <h4 style="margin:0;display:flex;align-items:center;gap:6px;">
+                    ${window.CCNV_UI.ICONS.activity}
+                    <span>HƯỚNG DẪN SƠ CẤP CỨU CHO NGƯỜI GỌI</span>
+                  </h4>
+                </div>
+                <p style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">
+                  Điều phối viên đọc to các bước sau để hướng dẫn người nhà xử trí tại chỗ trong khi chờ xe:
+                </p>
+                <div class="first-aid-steps-list" id="first-aid-steps-container">
+                  <!-- Injected dynamically based on current incident -->
+                </div>
+
+                <!-- FAST DISPATCH GUIDANCE DOCUMENTS / SMS & ZALO INSTANT DISPATCH -->
+                <div style="margin-top:14px;padding-top:12px;border-top:1px dashed #1E3A8A;">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                    <span style="font-size:11.5px;font-weight:700;color:#93C5FD;display:flex;align-items:center;gap:5px;">
+                      <span>📄 Tài liệu gửi nhanh cho người gọi:</span>
+                    </span>
+                  </div>
+
+                  <div style="display:flex;flex-direction:column;gap:6px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;background:#061423;padding:7px 10px;border-radius:6px;border:1px solid #142E46;">
+                      <div style="display:flex;align-items:center;gap:7px;">
+                        <span style="font-size:13px;"></span>
+                        <div>
+                          <div style="font-size:11.5px;font-weight:600;color:var(--text-white);">Kỹ thuật Ép tim & Hô hấp nhân tạo (CPR)</div>
+                          <div style="font-size:10.5px;color:var(--text-muted);">Hình ảnh đồ họa động + Đếm nhịp 100-120 l/phút</div>
+                        </div>
+                      </div>
+                      <button type="button" class="btn btn-primary btn-xs btn-send-doc-fast" data-doc="CPR" style="font-size:11px;padding:3px 9px;white-space:nowrap;background:#2563EB;border-color:#3B82F6;">
+                        <span>Gửi ngay</span> ➔
+                      </button>
+                    </div>
+
+                    <div style="display:flex;align-items:center;justify-content:space-between;background:#061423;padding:7px 10px;border-radius:6px;border:1px solid #142E46;">
+                      <div style="display:flex;align-items:center;gap:7px;">
+                        <span style="font-size:13px;"></span>
+                        <div>
+                          <div style="font-size:11.5px;font-weight:600;color:var(--text-white);">Cầm máu khẩn cấp & Cố định chấn thương</div>
+                          <div style="font-size:10.5px;color:var(--text-muted);">Hướng dẫn ép chặt vết thương & bất động chi</div>
+                        </div>
+                      </div>
+                      <button type="button" class="btn btn-primary btn-xs btn-send-doc-fast" data-doc="BLEED" style="font-size:11px;padding:3px 9px;white-space:nowrap;background:#2563EB;border-color:#3B82F6;">
+                        <span>Gửi ngay</span> ➔
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Right: In-call Intake Form (Form Nhập Thông Tin Tiếp Nhận Cuộc Gọi) -->
-            <div class="content-card" style="padding:18px;">
-              <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-main);padding-bottom:10px;margin-bottom:14px;">
-                <div>
-                  <h3 style="color:var(--text-white);font-size:15px;margin-bottom:2px;">Biểu mẫu Tiếp nhận Thông tin Cuộc gọi</h3>
-                  <p style="font-size:12px;color:var(--text-muted);">Ghi nhận nhanh thông tin hiện trường, bệnh nhân và tình huống cấp cứu</p>
-                </div>
-                <span class="badge badge-normal" style="font-size:11px;">Mã tạm: #CALL-${Date.now().toString().slice(-4)}</span>
-              </div>
-
-              <!-- 1. Caller Info Grid -->
-              <div class="form-section" style="margin-bottom:14px;">
-                <div class="form-section-title">1. Thông tin Người báo tin & Kênh tiếp nhận</div>
-                <div class="form-grid-3">
-                  <div class="form-field">
-                    <label class="form-label">Người báo tin</label>
-                    <input type="text" id="intake-caller-name" value="${activeCall.callerName}" />
+            <!-- RIGHT COLUMN: Rapid One-Hand Intake Deck -->
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <!-- FORM CARD 1: Thông tin cơ bản (Step 1: Họ tên, Tuổi, Giới tính) -->
+              <div class="rapid-field-card is-active-step" id="card-patient" data-step-id="1">
+                <div class="rapid-field-header">
+                  <div class="rapid-field-title">
+                    <span class="rapid-step-num">1</span>
+                    <span>Thông tin cơ bản</span>
                   </div>
-                  <div class="form-field">
-                    <label class="form-label">Số điện thoại</label>
-                    <input type="text" id="intake-caller-phone" value="${activeCall.callerPhone}" />
-                  </div>
-                  <div class="form-field">
-                    <label class="form-label">Kênh tiếp nhận</label>
-                    <select id="intake-call-channel">
-                      <option value="VOICE" selected>115 Thoại trực tiếp</option>
-                      <option value="APP">App Người dân SOS</option>
-                      <option value="113">Chuyển từ Công an 113</option>
-                      <option value="114">Chuyển từ Cứu hỏa 114</option>
-                    </select>
+                  <div class="rapid-field-hint">
+                    <span>Phím tắt:</span>
+                    <kbd class="quick-kbd">Tab</kbd> chuyển trường / <kbd class="quick-kbd">1..3</kbd> Giới tính
                   </div>
                 </div>
-              </div>
 
-              <!-- 2. Patient Info Grid -->
-              <div class="form-section" style="margin-bottom:14px;">
-                <div class="form-section-title">2. Thông tin Bệnh nhân / Nạn nhân</div>
-                <div class="form-grid-3">
+                <div style="display:grid;grid-template-columns: 1fr 130px; gap:12px; margin-bottom:12px;">
                   <div class="form-field">
-                    <label class="form-label">Họ tên Bệnh nhân</label>
-                    <input type="text" id="intake-patient-name" value="${activeCall.patientName}" />
+                    <label class="form-label">Họ và tên bệnh nhân</label>
+                    <input type="text" id="rapid-patient-name" value="${activeCall.patientName || 'Nguyễn Văn Hưng'}" placeholder="Nhập tên bệnh nhân hoặc Chưa rõ tên" />
                   </div>
                   <div class="form-field">
                     <label class="form-label">Tuổi ước tính</label>
-                    <input type="number" id="intake-patient-age" value="${activeCall.patientAge}" />
-                  </div>
-                  <div class="form-field">
-                    <label class="form-label">Giới tính</label>
-                    <select id="intake-patient-gender">
-                      <option value="Nam" ${activeCall.patientGender === 'Nam' ? 'selected' : ''}>Nam</option>
-                      <option value="Nữ" ${activeCall.patientGender === 'Nữ' ? 'selected' : ''}>Nữ</option>
-                    </select>
+                    <input type="number" id="rapid-patient-age" value="${activeCall.patientAge || 34}" min="0" max="120" />
                   </div>
                 </div>
-              </div>
 
-              <!-- 3. Location Field -->
-              <div class="form-section" style="margin-bottom:14px;">
-                <div class="form-section-title">3. Hiện trường & Định vị Tọa độ</div>
                 <div class="form-field">
-                  <label class="form-label">Địa chỉ hiện trường</label>
-                  <input type="text" id="intake-location-address" value="${activeCall.address}" style="width:100%;" />
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                    <label class="form-label" style="margin-bottom:0;">Giới tính</label>
+                    <div style="font-size:11px;color:var(--text-muted);display:flex;gap:4px;align-items:center;">
+                      <span>Bấm số:</span>
+                      <kbd class="quick-kbd">1</kbd> Nam
+                      <kbd class="quick-kbd">2</kbd> Nữ
+                      <kbd class="quick-kbd">3</kbd> Chưa rõ
+                    </div>
+                  </div>
+                  <div class="rapid-chip-grid rapid-chip-grid-3" id="card-gender" tabindex="0" style="outline:none;">
+                    <button type="button" tabindex="-1" class="rapid-chip-btn ${currentGender === 'Nam' ? 'active' : ''}" data-gender="Nam" data-key="1">
+                      <kbd class="quick-kbd">1</kbd>
+                      <div class="chip-content">
+                        <span class="chip-title">Nam</span>
+                      </div>
+                    </button>
+                    <button type="button" tabindex="-1" class="rapid-chip-btn ${currentGender === 'Nữ' ? 'active' : ''}" data-gender="Nữ" data-key="2">
+                      <kbd class="quick-kbd">2</kbd>
+                      <div class="chip-content">
+                        <span class="chip-title">Nữ</span>
+                      </div>
+                    </button>
+                    <button type="button" tabindex="-1" class="rapid-chip-btn ${currentGender === 'Chưa rõ' ? 'active' : ''}" data-gender="Chưa rõ" data-key="3">
+                      <kbd class="quick-kbd">3</kbd>
+                      <div class="chip-content">
+                        <span class="chip-title">Chưa rõ</span>
+                      </div>
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <!-- 4. Incident Type & Symptoms -->
-              <div class="form-section" style="margin-bottom:18px;">
-                <div class="form-section-title">4. Tình huống Cấp cứu & Triệu chứng ban đầu</div>
-                <div class="form-grid-2" style="margin-bottom:10px;">
-                  <div class="form-field">
-                    <label class="form-label">Loại tình huống cấp cứu</label>
-                    <select id="intake-incident-select">
-                      ${incidentTypes.map(inc => `
-                        <option value="${inc.code}" ${inc.code === activeCall.incidentCode ? 'selected' : ''}>
-                          ${inc.name} [${inc.suggestedType}]
-                        </option>
-                      `).join('')}
-                    </select>
+              <!-- FORM CARD 2: Hiện trường & Địa chỉ (Step 2) -->
+              <div class="rapid-field-card" id="card-location" data-step-id="2">
+                <div class="rapid-field-header">
+                  <div class="rapid-field-title">
+                    <span class="rapid-step-num">2</span>
+                    <span>Hiện trường & Định vị Tọa độ</span>
                   </div>
-                  <div class="form-field">
-                    <label class="form-label">Mức độ Ưu tiên</label>
-                    <select id="intake-severity-select">
-                      <option value="CRITICAL" ${activeCall.severity === 'CRITICAL' ? 'selected' : ''}>🔴 Tối khẩn (Nguy kịch, ưu tiên 1)</option>
-                      <option value="EMERGENCY" ${activeCall.severity === 'EMERGENCY' ? 'selected' : ''}>🟡 Khẩn cấp (Ưu tiên 2)</option>
-                      <option value="URGENT">🟢 Tiêu chuẩn (Ưu tiên 3)</option>
-                    </select>
+                  <div class="rapid-field-hint">
+                    <kbd class="quick-kbd">Alt+C</kbd> Nạp Cell-ID
+                    <kbd class="quick-kbd">Tab</kbd> Chuyển tiếp
                   </div>
                 </div>
+
                 <div class="form-field">
-                  <label class="form-label">Triệu chứng & Diễn biến qua điện thoại</label>
-                  <textarea id="intake-symptoms-notes" rows="2">${activeCall.notes}</textarea>
+                  <label class="form-label">Địa chỉ hiện trường đón cấp cứu</label>
+                  <input type="text" id="rapid-address" value="${activeCall.address || 'Chân cầu Hưng Lợi, P. Hưng Lợi, Q. Ninh Kiều, Cần Thơ'}" placeholder="Số nhà, tên đường, phường/xã, điểm mốc nhận diện..." />
+                </div>
+
+
+              </div>
+
+              <!-- FORM CARD 3: Tình huống cấp cứu (Step 3 - Incident Selector 1 to 8) -->
+              <div class="rapid-field-card" id="card-incident" data-step-id="3" tabindex="0">
+                <div class="rapid-field-header">
+                  <div class="rapid-field-title">
+                    <span class="rapid-step-num">3</span>
+                    <span>Loại Tình huống Cấp cứu</span>
+                  </div>
+                  <div class="rapid-field-hint">
+                    <span>Bấm phím số:</span>
+                    <kbd class="quick-kbd">1..8</kbd> Chọn tình huống & xem hướng dẫn sơ cứu
+                  </div>
+                </div>
+
+                <div class="rapid-chip-grid rapid-chip-grid-4">
+                  <button type="button" tabindex="-1" class="rapid-chip-btn ${currentIncident === 'INC_TNGT' ? 'active' : ''}" data-incident="INC_TNGT" data-key="1">
+                    <kbd class="quick-kbd">1</kbd>
+                    <div class="chip-content">
+                      <span class="chip-title">Tai nạn GT</span>
+                      <span class="chip-desc">Va chạm đường bộ</span>
+                    </div>
+                  </button>
+                  <button type="button" tabindex="-1" class="rapid-chip-btn ${currentIncident === 'INC_STROKE' ? 'active' : ''}" data-incident="INC_STROKE" data-key="2">
+                    <kbd class="quick-kbd">2</kbd>
+                    <div class="chip-content">
+                      <span class="chip-title">Đột quỵ não</span>
+                      <span class="chip-desc">Liệt mặt, yếu chi, nói khó</span>
+                    </div>
+                  </button>
+                  <button type="button" tabindex="-1" class="rapid-chip-btn ${currentIncident === 'INC_CARDIAC' ? 'active' : ''}" data-incident="INC_CARDIAC" data-key="3">
+                    <kbd class="quick-kbd">3</kbd>
+                    <div class="chip-content">
+                      <span class="chip-title">Ngừng tim / CPR</span>
+                      <span class="chip-desc">Đau thắt ngực, mất mạch</span>
+                    </div>
+                  </button>
+                  <button type="button" tabindex="-1" class="rapid-chip-btn ${currentIncident === 'INC_RESPIRATORY' ? 'active' : ''}" data-incident="INC_RESPIRATORY" data-key="4">
+                    <kbd class="quick-kbd">4</kbd>
+                    <div class="chip-content">
+                      <span class="chip-title">Suy hô hấp</span>
+                      <span class="chip-desc">Khó thở, tím tái, hóc dị vật</span>
+                    </div>
+                  </button>
+                  <button type="button" tabindex="-1" class="rapid-chip-btn ${currentIncident === 'INC_TRAUMA' ? 'active' : ''}" data-incident="INC_TRAUMA" data-key="5">
+                    <kbd class="quick-kbd">5</kbd>
+                    <div class="chip-content">
+                      <span class="chip-title">Chấn thương</span>
+                      <span class="chip-desc">Ngã cao, gãy xương lớn</span>
+                    </div>
+                  </button>
+                  <button type="button" tabindex="-1" class="rapid-chip-btn ${currentIncident === 'INC_OBSTETRIC' ? 'active' : ''}" data-incident="INC_OBSTETRIC" data-key="6">
+                    <kbd class="quick-kbd">6</kbd>
+                    <div class="chip-content">
+                      <span class="chip-title">Sản khoa</span>
+                      <span class="chip-desc">Chuyển dạ, băng huyết</span>
+                    </div>
+                  </button>
+                  <button type="button" tabindex="-1" class="rapid-chip-btn ${currentIncident === 'INC_PEDIATRIC' ? 'active' : ''}" data-incident="INC_PEDIATRIC" data-key="7">
+                    <kbd class="quick-kbd">7</kbd>
+                    <div class="chip-content">
+                      <span class="chip-title">Co giật sốt cao</span>
+                      <span class="chip-desc">Cấp cứu nhi khoa</span>
+                    </div>
+                  </button>
+                  <button type="button" tabindex="-1" class="rapid-chip-btn ${currentIncident === 'INC_OTHER' ? 'active' : ''}" data-incident="INC_OTHER" data-key="8">
+                    <kbd class="quick-kbd">8</kbd>
+                    <div class="chip-content">
+                      <span class="chip-title">Khác...</span>
+                      <span class="chip-desc">Tình huống chung</span>
+                    </div>
+                  </button>
                 </div>
               </div>
 
-              <!-- Primary Actions Bar -->
-              <div style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border-main);padding-top:14px;flex-wrap:wrap;gap:10px;">
-                <div style="display:flex;gap:8px;">
-                  <button class="btn btn-default" id="btn-intake-save-consult">
-                    <span>Lưu tư vấn y tế & Đóng</span>
+              <!-- FORM CARD 4: Mức độ khẩn (Step 4 - Triage Priority 1, 2, 3) -->
+              <div class="rapid-field-card" id="card-severity" data-step-id="4" tabindex="0">
+                <div class="rapid-field-header">
+                  <div class="rapid-field-title">
+                    <span class="rapid-step-num">4</span>
+                    <span>Phân loại Mức độ Khẩn</span>
+                  </div>
+                  <div class="rapid-field-hint">
+                    <span>Bấm số:</span>
+                    <kbd class="quick-kbd kbd-red">1</kbd> Đỏ
+                    <kbd class="quick-kbd kbd-amber">2</kbd> Cam
+                    <kbd class="quick-kbd kbd-emerald">3</kbd> Xanh
+                  </div>
+                </div>
+
+                <div class="rapid-chip-grid rapid-chip-grid-3">
+                  <button type="button" tabindex="-1" class="rapid-chip-btn sev-critical ${currentSeverity === 'CRITICAL' ? 'active' : ''}" data-sev="CRITICAL" data-key="1">
+                    <kbd class="quick-kbd kbd-red">1</kbd>
+                    <div class="chip-content">
+                      <span class="chip-title" style="color:#FCA5A5;">TỐI KHẨN</span>
+                      <span class="chip-desc">Nguy kịch tính mạng</span>
+                    </div>
                   </button>
-                  <button class="btn btn-default" id="btn-intake-fast-transfer">
-                    <span>Chuyển tiếp 113 / 114</span>
+                  <button type="button" tabindex="-1" class="rapid-chip-btn sev-emergency ${currentSeverity === 'EMERGENCY' ? 'active' : ''}" data-sev="EMERGENCY" data-key="2">
+                    <kbd class="quick-kbd kbd-amber">2</kbd>
+                    <div class="chip-content">
+                      <span class="chip-title" style="color:#FCD34D;">KHẨN CẤP</span>
+                      <span class="chip-desc">Cần can thiệp sớm</span>
+                    </div>
+                  </button>
+                  <button type="button" tabindex="-1" class="rapid-chip-btn sev-routine ${currentSeverity === 'ROUTINE' ? 'active' : ''}" data-sev="ROUTINE" data-key="3">
+                    <kbd class="quick-kbd kbd-emerald">3</kbd>
+                    <div class="chip-content">
+                      <span class="chip-title" style="color:#6EE7B7;">TIÊU CHUẨN</span>
+                      <span class="chip-desc">Ổn định</span>
+                    </div>
                   </button>
                 </div>
-                <button class="btn btn-emergency btn-lg" id="btn-intake-create-and-dispatch">
-                  ${window.CCNV_UI.ICONS.ambulance}
-                  <span>TẠO CA CẤP CỨU & MỞ FORM ĐIỀU XE (F1)</span>
+              </div>
+
+              <!-- FORM CARD 5: Chọn Xe Cứu Thương trong danh sách hiện có (Step 5 - 6 xe: 2 Loại A, 2 Loại B, 2 Loại C) -->
+              <div class="rapid-field-card is-active-step" id="card-vehicle-type" data-step-id="5" tabindex="0">
+                <div class="rapid-field-header">
+                  <div class="rapid-field-title">
+                    <span class="rapid-step-num" style="background:#2563EB;color:#FFF;">5</span>
+                    <span style="color:#60A5FA;">CHỌN XE CỨU THƯƠNG (CHỌN NHIỀU)</span>
+                  </div>
+                  <div class="rapid-field-hint">
+                    <span>Bấm phím [1..6] chọn xe · [A/B/C] lọc theo loại:</span>
+                  </div>
+                </div>
+
+                <div class="rapid-chip-grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                  ${availableVehicles.map((v, idx) => {
+          const isSelected = currentSelectedPlates.has(v.plate);
+          const typeBadgeColor = v.type === 'Type A' ? '#93C5FD' : (v.type === 'Type B' ? '#5EEAD4' : '#C7D2FE');
+          const typeClass = v.type === 'Type A' ? 'veh-type-a' : (v.type === 'Type B' ? 'veh-type-b' : 'veh-type-c');
+          return `
+                      <button type="button" tabindex="-1" class="rapid-chip-btn ${typeClass} ${isSelected ? 'active' : ''}" data-veh-plate="${v.plate}" data-veh-type="${v.type}" data-key="${idx + 1}" style="text-align:left;padding:9px 12px;height:auto;display:flex;align-items:flex-start;gap:9px;">
+                        <kbd class="quick-kbd" style="margin-top:2px;">${idx + 1}</kbd>
+                        <div class="chip-content" style="flex:1;">
+                          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
+                            <span class="chip-title" style="font-size:13px;font-family:var(--font-mono);font-weight:700;color:var(--text-white);">${v.plate}</span>
+                            <span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,0.08);color:${typeBadgeColor};">${v.type}</span>
+                          </div>
+                          <div class="chip-desc" style="font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                            ${v.station}
+                          </div>
+                        </div>
+                      </button>
+                    `;
+        }).join('')}
+                </div>
+              </div>
+
+              <!-- FORM CARD 6: Chọn Kíp Cấp Cứu (Danh sách người trực trong ca hiện tại — Chọn nhiều) -->
+              <div class="rapid-field-card" id="card-crew-members" data-step-id="6" tabindex="0">
+                <div class="rapid-field-header">
+                  <div class="rapid-field-title">
+                    <span class="rapid-step-num" style="background:#0D9488;color:#FFF;">6</span>
+                    <span style="color:#2DD4BF;">CHỌN KÍP CẤP CỨU TRỰC CA (CHỌN NHIỀU)</span>
+                  </div>
+                  <div class="rapid-field-hint">
+                    <span>Bấm phím [1..6] chọn nhân sự trực ca:</span>
+                  </div>
+                </div>
+
+                <div class="rapid-chip-grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                  ${availablePersonnel.map((p, idx) => {
+          const isSelected = currentSelectedPersonnel.has(p.id);
+          const roleBadgeColor = p.role === 'DOCTOR' ? '#F87171' : (p.role === 'NURSE' ? '#34D399' : '#FBBF24');
+          return `
+                      <button type="button" tabindex="-1" class="rapid-chip-btn ${isSelected ? 'active' : ''}" data-person-id="${p.id}" data-key="${idx + 1}" style="text-align:left;padding:9px 12px;height:auto;display:flex;align-items:flex-start;gap:9px;">
+                        <kbd class="quick-kbd" style="margin-top:2px;">${idx + 1}</kbd>
+                        <div class="chip-content" style="flex:1;">
+                          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
+                            <span class="chip-title" style="font-size:12.5px;font-weight:700;color:var(--text-white);">${p.name}</span>
+                            <span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,0.08);color:${roleBadgeColor};">${p.roleName}</span>
+                          </div>
+                          <div class="chip-desc" style="font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                            ${p.phone} · ${p.cert || 'Sẵn sàng'}
+                          </div>
+                        </div>
+                      </button>
+                    `;
+        }).join('')}
+                </div>
+              </div>
+
+              <!-- FORM CARD 7: Ghi chú & Triệu chứng tóm tắt (Step 7) -->
+              <div class="rapid-field-card" id="card-notes" data-step-id="7">
+                <div class="rapid-field-header">
+                  <div class="rapid-field-title">
+                    <span class="rapid-step-num">7</span>
+                    <span>Diễn biến triệu chứng qua điện thoại</span>
+                  </div>
+                  <div class="rapid-field-hint">
+                    <kbd class="quick-kbd">Ctrl+Enter</kbd> Phát lệnh ngay
+                  </div>
+                </div>
+
+                <div class="form-field">
+                  <textarea id="rapid-symptoms-notes" rows="2" placeholder="Ghi nhận tóm tắt triệu chứng, đường tiếp cận, số lượng nạn nhân...">${activeCall.notes || 'Nạn nhân va chạm mạnh ngã đập đầu, bất tỉnh, đang chảy máu nhiều vùng trán và tai, nghi gãy cẳng tay phải.'}</textarea>
+                </div>
+              </div>
+
+              <!-- COMMAND ACTION BAR (INSTANT ONE-TOUCH DISPATCH) -->
+              <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px;">
+                <button type="button" class="btn-rapid-dispatch" id="btn-rapid-dispatch">
+                  <kbd class="quick-kbd kbd-red" style="font-size:13px;height:24px;padding:0 8px;">Ctrl + Enter ↵</kbd>
+                  <span style="font-size:16px;letter-spacing:0.5px;">PHÁT LỆNH ĐIỀU XE & TẠO CA CẤP CỨU</span>
                 </button>
+
+                <div style="display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:8px;">
+                  <button type="button" class="btn btn-ghost btn-sm" id="btn-rapid-hangup" style="color:var(--text-muted);">
+                    <kbd class="quick-kbd">Esc</kbd>
+                    <span>Gác máy</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- KEYBOARD SHORTCUTS CHEAT SHEET MODAL (OVERLAY) -->
+          <div class="modal-overlay" id="shortcuts-cheat-modal-overlay">
+            <div class="shortcuts-cheat-modal">
+              <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-main);padding-bottom:12px;margin-bottom:16px;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  ${window.CCNV_UI.ICONS.settings}
+                  <strong style="font-size:16px;color:var(--text-white);">HƯỚNG DẪN THAO TÁC NHANH 1 TAY CHO ĐIỀU PHỐI VIÊN 115</strong>
+                </div>
+                <button type="button" class="btn btn-ghost btn-sm" id="btn-close-cheat-modal">${window.CCNV_UI.ICONS.x}</button>
+              </div>
+
+              <p style="font-size:12.5px;color:var(--text-slate);line-height:1.5;">
+                Thiết kế đặc thù cho điều phối viên: <strong>1 tay giữ điện thoại thoại, 1 tay thao tác bàn phím/numpad</strong>. Toàn bộ thông tin có thể hoàn thành trong 30 giây mà không cần dùng chuột!
+              </p>
+
+              <div class="cheat-grid">
+                <div class="cheat-section">
+                  <div class="cheat-section-title">1. Di chuyển & Điều hướng tuần tự</div>
+                  <div class="cheat-row">
+                    <span>Chuyển sang trường tiếp theo</span>
+                    <kbd class="quick-kbd">Tab ⇥</kbd>
+                  </div>
+                  <div class="cheat-row">
+                    <span>Lùi về trường trước</span>
+                    <span><kbd class="quick-kbd">Shift</kbd> + <kbd class="quick-kbd">Tab</kbd></span>
+                  </div>
+                  <div class="cheat-row">
+                    <span>Xác nhận & Chuyển ô tiếp theo</span>
+                    <kbd class="quick-kbd">Enter ↵</kbd>
+                  </div>
+                  <div class="cheat-row">
+                    <span>Mở / Đóng bảng phím tắt này</span>
+                    <kbd class="quick-kbd">?</kbd>
+                  </div>
+                </div>
+
+                <div class="cheat-section">
+                  <div class="cheat-section-title">2. Phím số chọn nhanh (Tại các ô lựa chọn)</div>
+                  <div class="cheat-row">
+                    <span>Chọn Xe 1..6 (hoặc A/B/C)</span>
+                    <span><kbd class="quick-kbd">1..6</kbd> / <kbd class="quick-kbd">A/B/C</kbd></span>
+                  </div>
+                  <div class="cheat-row">
+                    <span>Chọn Mức độ Tối khẩn / Khẩn / Thường</span>
+                    <span><kbd class="quick-kbd">1</kbd> <kbd class="quick-kbd">2</kbd> <kbd class="quick-kbd">3</kbd></span>
+                  </div>
+                  <div class="cheat-row">
+                    <span>Chọn Giới tính Nam / Nữ / Chưa rõ</span>
+                    <span><kbd class="quick-kbd">1</kbd> <kbd class="quick-kbd">2</kbd> <kbd class="quick-kbd">3</kbd></span>
+                  </div>
+                  <div class="cheat-row">
+                    <span>Chọn Loại tình huống (TNGT, Đột quỵ...)</span>
+                    <span><kbd class="quick-kbd">1</kbd> đến <kbd class="quick-kbd">8</kbd></span>
+                  </div>
+                </div>
+
+                <div class="cheat-section">
+                  <div class="cheat-section-title">3. Phím tắt Toàn cục (Global Hotkeys)</div>
+                  <div class="cheat-row">
+                    <span>Lấy nhanh vị trí Cell-ID vào hiện trường</span>
+                    <span><kbd class="quick-kbd">Alt</kbd> + <kbd class="quick-kbd">C</kbd></span>
+                  </div>
+                  <div class="cheat-row">
+                    <span>Chọn trực tiếp Xe Loại A (ICU)</span>
+                    <span><kbd class="quick-kbd">Alt</kbd> + <kbd class="quick-kbd">1</kbd></span>
+                  </div>
+                  <div class="cheat-row">
+                    <span>Chọn trực tiếp Xe Loại B (Chuẩn)</span>
+                    <span><kbd class="quick-kbd">Alt</kbd> + <kbd class="quick-kbd">2</kbd></span>
+                  </div>
+                  <div class="cheat-row">
+                    <span>Chọn trực tiếp Xe Loại C (Vận chuyển)</span>
+                    <span><kbd class="quick-kbd">Alt</kbd> + <kbd class="quick-kbd">3</kbd></span>
+                  </div>
+                </div>
+
+                <div class="cheat-section">
+                  <div class="cheat-section-title">4. Phát lệnh & Kết thúc</div>
+                  <div class="cheat-row">
+                    <strong style="color:var(--red-vivid);">PHÁT LỆNH ĐIỀU XE & TẠO CA NGAY</strong>
+                    <span><kbd class="quick-kbd kbd-red">Ctrl</kbd> + <kbd class="quick-kbd kbd-red">Enter</kbd> (hoặc <kbd class="quick-kbd">F1</kbd>)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style="display:flex;justify-content:flex-end;">
+                <button type="button" class="btn btn-default" id="btn-cheat-close-footer">Đã hiểu, đóng hướng dẫn</button>
               </div>
             </div>
           </div>
         `;
 
+        // Interactive UI Update Helpers
+        const hudBadge = paneContainer.querySelector('#hud-current-step-badge');
+        const hudHint = paneContainer.querySelector('#hud-current-step-hint');
+        const firstAidStepsBox = paneContainer.querySelector('#first-aid-steps-container');
+        const firstAidBadge = paneContainer.querySelector('#first-aid-active-incident-badge');
+        const vehicleMatchBox = paneContainer.querySelector('#rapid-vehicle-match-box');
+
+        const updateHud = (stepName, hint) => {
+          if (hudBadge) hudBadge.textContent = stepName;
+          if (hudHint) hudHint.textContent = hint;
+        };
+
+        const updateFirstAid = (code) => {
+          if (!firstAidStepsBox) return;
+          const steps = FIRST_AID_GUIDES[code] || FIRST_AID_GUIDES.INC_OTHER;
+          const incObj = state.incidentTypes?.find(i => i.code === code);
+          if (firstAidBadge) {
+            firstAidBadge.textContent = incObj?.name?.split(' ')[0] || 'CẤP CỨU';
+          }
+          firstAidStepsBox.innerHTML = steps.map(s => `
+            <div class="first-aid-step-item ${s.vital ? 'step-vital' : ''}">
+              <span class="first-aid-step-num">${s.num}</span>
+              <span>${s.text}</span>
+            </div>
+          `).join('');
+        };
+
+        const updateVehicleMatch = () => {
+          if (!vehicleMatchBox) return;
+          const selectedPlatesList = Array.from(currentSelectedPlates);
+          const veh = getRecommendedVehicle();
+          const targetHosp = state.hospitals?.[0] || { name: 'BVĐK TP Cần Thơ', availableBeds: 12 };
+          const isCritical = currentSeverity === 'CRITICAL';
+
+          const badgesHtml = selectedPlatesList.length > 0
+            ? selectedPlatesList.map(plate => {
+              const vObj = availableVehicles.find(v => v.plate === plate);
+              const typeText = vObj ? vObj.type : '';
+              return `<span class="badge ${typeText === 'Type A' ? 'badge-emergency' : 'badge-normal'}">${plate} (${typeText})</span>`;
+            }).join(' ')
+            : `<span class="badge badge-normal">Chưa chọn xe</span>`;
+
+          vehicleMatchBox.className = `rapid-vehicle-match-card ${isCritical ? 'is-critical' : ''}`;
+          vehicleMatchBox.innerHTML = `
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="width:36px;height:36px;border-radius:6px;background:#183449;border:1px solid #29465A;display:flex;align-items:center;justify-content:center;color:#60A5FA;">
+                ${window.CCNV_UI.ICONS.ambulance}
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:var(--text-white);display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                  <span>Xe điều động (${selectedPlatesList.length} xe được chọn):</span>
+                  ${badgesHtml}
+                  <span style="color:#10B981;font-size:11px;">● Sẵn sàng xuất bến</span>
+                </div>
+                <div style="font-size:11.5px;color:var(--text-slate);margin-top:2px;">
+                  Ưu tiên: <strong>${veh ? veh.plate : '65A-015.67'}</strong> (${veh ? veh.type : 'Type A'}) · Trạm: ${veh?.station || 'Trạm Cấp cứu Ninh Kiều (BVĐK)'} · ETA: <strong style="color:#93C5FD;">~4 phút (1.4 km)</strong>
+                </div>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:11px;color:var(--text-muted);">Bệnh viện tiếp nhận:</div>
+              <div style="font-size:12.5px;font-weight:600;color:#93C5FD;">
+                ${targetHosp.name} (${targetHosp.availableBeds} giường trống)
+              </div>
+            </div>
+          `;
+        };
+
+        // Selection Actions
+        const toggleVehiclePlate = (plate, playSound = true) => {
+          if (currentSelectedPlates.has(plate)) {
+            if (currentSelectedPlates.size > 1) {
+              currentSelectedPlates.delete(plate);
+            }
+          } else {
+            currentSelectedPlates.add(plate);
+          }
+
+          // Sync currentVehicleTypes
+          currentVehicleTypes = new Set();
+          currentSelectedPlates.forEach(p => {
+            const vObj = availableVehicles.find(v => v.plate === p);
+            if (vObj) currentVehicleTypes.add(vObj.type);
+          });
+          const activeVeh = getRecommendedVehicle();
+          currentVehicleType = activeVeh ? activeVeh.type : 'Type A';
+
+          paneContainer.querySelectorAll('.rapid-chip-btn[data-veh-plate]').forEach(btn => {
+            const p = btn.getAttribute('data-veh-plate');
+            btn.classList.toggle('active', currentSelectedPlates.has(p));
+          });
+          updateVehicleMatch();
+          if (playSound) window.CCNV_UI.SoundFx.playBeep();
+        };
+
+        const toggleVehicleType = (type, playSound = true) => {
+          const vehsOfType = availableVehicles.filter(v => v.type === type);
+          const allSelected = vehsOfType.every(v => currentSelectedPlates.has(v.plate));
+
+          if (allSelected) {
+            // Deselect all of this type if other vehicles remain
+            if (currentSelectedPlates.size > vehsOfType.length) {
+              vehsOfType.forEach(v => currentSelectedPlates.delete(v.plate));
+            }
+          } else {
+            vehsOfType.forEach(v => currentSelectedPlates.add(v.plate));
+          }
+
+          currentVehicleTypes = new Set();
+          currentSelectedPlates.forEach(p => {
+            const vObj = availableVehicles.find(v => v.plate === p);
+            if (vObj) currentVehicleTypes.add(vObj.type);
+          });
+          const activeVeh = getRecommendedVehicle();
+          currentVehicleType = activeVeh ? activeVeh.type : 'Type A';
+
+          paneContainer.querySelectorAll('.rapid-chip-btn[data-veh-plate]').forEach(btn => {
+            const p = btn.getAttribute('data-veh-plate');
+            btn.classList.toggle('active', currentSelectedPlates.has(p));
+          });
+          updateVehicleMatch();
+          if (playSound) window.CCNV_UI.SoundFx.playBeep();
+        };
+
+        const setVehicleType = (type, playSound = true) => {
+          const vehsOfType = availableVehicles.filter(v => v.type === type);
+          currentSelectedPlates = new Set(vehsOfType.map(v => v.plate));
+          currentVehicleTypes = new Set([type]);
+          currentVehicleType = type;
+
+          paneContainer.querySelectorAll('.rapid-chip-btn[data-veh-plate]').forEach(btn => {
+            const p = btn.getAttribute('data-veh-plate');
+            btn.classList.toggle('active', currentSelectedPlates.has(p));
+          });
+          updateVehicleMatch();
+          if (playSound) window.CCNV_UI.SoundFx.playBeep();
+        };
+
+        const togglePersonnel = (personId, playSound = true) => {
+          if (currentSelectedPersonnel.has(personId)) {
+            if (currentSelectedPersonnel.size > 1) {
+              currentSelectedPersonnel.delete(personId);
+            }
+          } else {
+            currentSelectedPersonnel.add(personId);
+          }
+
+          paneContainer.querySelectorAll('.rapid-chip-btn[data-person-id]').forEach(btn => {
+            const pid = btn.getAttribute('data-person-id');
+            btn.classList.toggle('active', currentSelectedPersonnel.has(pid));
+          });
+          if (playSound) window.CCNV_UI.SoundFx.playBeep();
+        };
+
+        const setSeverity = (sev, playSound = true) => {
+          currentSeverity = sev;
+          paneContainer.querySelectorAll('.rapid-chip-btn[data-sev]').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-sev') === sev);
+          });
+          updateVehicleMatch();
+          if (playSound) window.CCNV_UI.SoundFx.playBeep();
+        };
+
+        const setGender = (g, playSound = true) => {
+          currentGender = g;
+          paneContainer.querySelectorAll('.rapid-chip-btn[data-gender]').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-gender') === g);
+          });
+          if (playSound) window.CCNV_UI.SoundFx.playBeep();
+        };
+
+        const setIncident = (code, playSound = true) => {
+          currentIncident = code;
+          paneContainer.querySelectorAll('.rapid-chip-btn[data-incident]').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-incident') === code);
+          });
+          updateFirstAid(code);
+
+          // Auto-suggest vehicle type based on incident
+          const incObj = state.incidentTypes?.find(i => i.code === code);
+          if (incObj?.suggestedType) {
+            setVehicleType(incObj.suggestedType, false);
+          }
+          if (playSound) window.CCNV_UI.SoundFx.playBeep();
+        };
+
+        const injectCellId = () => {
+          const addrInput = paneContainer.querySelector('#rapid-address');
+          if (addrInput) {
+            addrInput.value = 'BTS VTT-NK04 · P. Hưng Lợi, Q. Ninh Kiều, Cần Thơ';
+            addrInput.focus();
+            addrInput.classList.add('pulse-red-border');
+            setTimeout(() => addrInput.classList.remove('pulse-red-border'), 1000);
+            window.CCNV_UI.SoundFx.playBeep();
+            window.CCNV_UI.Toast.show('Đã nạp vị trí Cell-ID', 'Tọa độ trạm phát sóng đã được đưa vào địa chỉ hiện trường');
+          }
+        };
+
+        // Dispatch Handler
+        const doDispatch = () => {
+          const caller = activeCall.callerName;
+          const phone = activeCall.callerPhone;
+          const patientName = paneContainer.querySelector('#rapid-patient-name')?.value || 'Nguyễn Văn Hưng';
+          const patientAge = Number(paneContainer.querySelector('#rapid-patient-age')?.value || 34);
+          const address = paneContainer.querySelector('#rapid-address')?.value || 'Chân cầu Hưng Lợi, P. Hưng Lợi, Q. Ninh Kiều';
+          const notes = paneContainer.querySelector('#rapid-symptoms-notes')?.value || activeCall.notes;
+          const veh = getRecommendedVehicle();
+          const targetHosp = state.hospitals?.[0] || { id: 'HOSP_BVDK', name: 'BV Đa khoa TP Cần Thơ' };
+          const incObj = state.incidentTypes?.find(i => i.code === currentIncident);
+
+          // 1. Play Emergency Tone
+          window.CCNV_UI.SoundFx.playEmergencyTone();
+
+          // Get selected crew personnel
+          const assignedCrewMembers = availablePersonnel
+            .filter(p => currentSelectedPersonnel.has(p.id))
+            .map(p => ({ id: p.id, name: p.name, role: p.role, roleName: p.roleName, phone: p.phone }));
+
+          // 2. Create Case in StateManager
+          const newCase = window.StateManager.createCase({
+            callerName: caller,
+            callerPhone: phone,
+            patient: {
+              name: patientName,
+              age: patientAge,
+              gender: currentGender
+            },
+            location: {
+              address: address,
+              coords: [10.0248, 105.7695],
+              mapPos: { x: 540, y: 440 }
+            },
+            incident: {
+              code: currentIncident,
+              name: incObj ? incObj.name : 'Cấp cứu 115',
+              severity: currentSeverity,
+              severityText: currentSeverity === 'CRITICAL' ? 'Tối khẩn' : (currentSeverity === 'EMERGENCY' ? 'Khẩn cấp' : 'Tiêu chuẩn'),
+              description: notes
+            },
+            dispatch: {
+              vehiclePlate: veh.plate,
+              crewMembers: assignedCrewMembers,
+              crewCount: assignedCrewMembers.length,
+              hospitalId: targetHosp.id,
+              hospitalName: targetHosp.name
+            }
+          });
+
+          // 3. Audio & Notification Toast
+          const selectedPlatesStr = Array.from(currentSelectedPlates).join(', ');
+          const crewCountStr = `${assignedCrewMembers.length} nhân sự trực`;
+          window.CCNV_UI.Toast.show(
+            `ĐÃ PHÁT LỆNH ĐIỀU ĐỘNG: CA ${newCase.code}`,
+            `Xuất xe ${selectedPlatesStr} · Kíp: ${crewCountStr} · Bệnh viện: ${targetHosp.name}`,
+            true,
+            5000
+          );
+
+          // 4. Switch to Cases list or update view
+          setTimeout(() => {
+            this.currentMenu = 'cases-list';
+            this.renderSidebar();
+            this.renderCurrentView();
+          }, 800);
+        };
+
+        // Initialize display
+        updateFirstAid(currentIncident);
+        updateVehicleMatch(currentVehicleType);
+
+        // Bind Clicks
+        paneContainer.querySelectorAll('.rapid-chip-btn[data-veh-plate]').forEach(btn => {
+          btn.addEventListener('click', () => toggleVehiclePlate(btn.getAttribute('data-veh-plate')));
+        });
+
+        paneContainer.querySelectorAll('.rapid-chip-btn[data-person-id]').forEach(btn => {
+          btn.addEventListener('click', () => togglePersonnel(btn.getAttribute('data-person-id')));
+        });
+
+        paneContainer.querySelectorAll('.rapid-chip-btn[data-sev]').forEach(btn => {
+          btn.addEventListener('click', () => setSeverity(btn.getAttribute('data-sev')));
+        });
+
+        paneContainer.querySelectorAll('.rapid-chip-btn[data-gender]').forEach(btn => {
+          btn.addEventListener('click', () => setGender(btn.getAttribute('data-gender')));
+        });
+
+        paneContainer.querySelectorAll('.rapid-chip-btn[data-incident]').forEach(btn => {
+          btn.addEventListener('click', () => setIncident(btn.getAttribute('data-incident')));
+        });
 
 
-        paneContainer.querySelector('#btn-intake-create-and-dispatch')?.addEventListener('click', () => {
+
+        // Send Fast Guidance Documents to Caller
+        paneContainer.querySelectorAll('.btn-send-doc-fast').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const docType = btn.getAttribute('data-doc');
+            const phone = activeCall.callerPhone;
+            let docName = 'Tài liệu hướng dẫn sơ cứu';
+
+            if (docType === 'CPR') {
+              docName = 'Sổ tay đồ họa động: Kỹ thuật Ép tim & Hô hấp nhân tạo (CPR)';
+            } else if (docType === 'BLEED') {
+              docName = 'Hướng dẫn Cầm máu khẩn cấp & Cố định chấn thương';
+            } else if (docType === 'LIVE_TRACK') {
+              docName = 'Link bản đồ vệ tinh GPS theo dõi hành trình xe cấp cứu';
+            }
+
+            // Visual feedback on button
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '✓ Đã gửi';
+            btn.style.background = '#059669';
+            btn.style.borderColor = '#10B981';
+            btn.style.color = '#FFFFFF';
+            setTimeout(() => {
+              btn.innerHTML = originalText;
+              btn.style.background = '';
+              btn.style.borderColor = '';
+              btn.style.color = '';
+            }, 2500);
+
+            window.CCNV_UI.SoundFx.playBeep();
+            window.CCNV_UI.Toast.show(
+              `ĐÃ GỬI TÀI LIỆU TỚI ${phone}`,
+              `Nội dung: "${docName}" đã chuyển qua SMS & Zalo khẩn cấp.`,
+              false,
+              4000
+            );
+          });
+        });
+
+        paneContainer.querySelector('#btn-inject-cellid')?.addEventListener('click', injectCellId);
+        paneContainer.querySelector('#btn-rapid-dispatch')?.addEventListener('click', doDispatch);
+
+        paneContainer.querySelector('#btn-rapid-open-drawer')?.addEventListener('click', () => {
           const prefill = {
-            callerName: paneContainer.querySelector('#intake-caller-name').value,
-            callerPhone: paneContainer.querySelector('#intake-caller-phone').value,
-            patientName: paneContainer.querySelector('#intake-patient-name').value,
-            patientAge: paneContainer.querySelector('#intake-patient-age').value,
-            patientGender: paneContainer.querySelector('#intake-patient-gender').value,
-            address: paneContainer.querySelector('#intake-location-address').value,
-            incidentCode: paneContainer.querySelector('#intake-incident-select').value,
-            notes: paneContainer.querySelector('#intake-symptoms-notes').value
+            callerName: activeCall.callerName,
+            callerPhone: activeCall.callerPhone,
+            patientName: paneContainer.querySelector('#rapid-patient-name')?.value,
+            patientAge: paneContainer.querySelector('#rapid-patient-age')?.value,
+            patientGender: currentGender,
+            address: paneContainer.querySelector('#rapid-address')?.value,
+            incidentCode: currentIncident,
+            description: paneContainer.querySelector('#rapid-symptoms-notes')?.value
           };
-          window.CCNV_UI.Toast.show('Nạp dữ liệu vào Lệnh Điều Động', 'Mở drawer tạo ca cấp cứu với dữ liệu đã tiếp nhận từ cuộc gọi');
           this.openCreateCaseDrawer(prefill);
         });
 
-        paneContainer.querySelector('#btn-intake-save-consult')?.addEventListener('click', () => {
-          window.StateManager.addAuditLog(`Đóng cuộc gọi tư vấn y tế cho ${activeCall.callerPhone}`);
-          window.CCNV_UI.Toast.show('Đã lưu cuộc gọi', 'Ghi nhận cuộc gọi tư vấn y tế thành công');
+        paneContainer.querySelector('#btn-call-hold')?.addEventListener('click', (e) => {
+          const btn = e.currentTarget;
+          const isHolding = btn.classList.toggle('active');
+          btn.style.background = isHolding ? 'rgba(234,179,8,0.2)' : '';
+          btn.style.color = isHolding ? '#FBBF24' : '';
+          window.CCNV_UI.Toast.show(isHolding ? 'Đang giữ máy' : 'Đã tiếp tục cuộc gọi', `Số máy ${activeCall.callerPhone}`);
         });
 
-        paneContainer.querySelector('#btn-intake-fast-transfer')?.addEventListener('click', () => {
+        paneContainer.querySelector('#btn-call-transfer-quick')?.addEventListener('click', () => {
           this.renderCallCenterView(container, 'transfer');
         });
 
         paneContainer.querySelector('#btn-call-hangup')?.addEventListener('click', () => {
-          window.CCNV_UI.Toast.show('Đã kết thúc cuộc gọi', 'Cuộc gọi từ số 0913.882.115 đã được gác máy');
+          window.CCNV_UI.Toast.show('Đã gác máy', `Kết thúc cuộc gọi từ số ${activeCall.callerPhone}`);
         });
+
+        paneContainer.querySelector('#btn-rapid-save-consult')?.addEventListener('click', () => {
+          window.StateManager.addAuditLog(`Đóng cuộc gọi tư vấn y tế cho ${activeCall.callerPhone}`);
+          window.CCNV_UI.Toast.show('Đã lưu tư vấn y tế', 'Cuộc gọi kết thúc không phát sinh lệnh điều xe.');
+        });
+
+        paneContainer.querySelector('#btn-rapid-transfer')?.addEventListener('click', () => {
+          this.renderCallCenterView(container, 'transfer');
+        });
+
+        paneContainer.querySelector('#btn-rapid-hangup')?.addEventListener('click', () => {
+          window.CCNV_UI.Toast.show('Đã gác máy', `Kết thúc cuộc gọi từ số ${activeCall.callerPhone}`);
+        });
+
+        // Cheat Modal toggle
+        const cheatModalOverlay = paneContainer.querySelector('#shortcuts-cheat-modal-overlay');
+        const openCheatModal = () => cheatModalOverlay?.classList.add('active');
+        const closeCheatModal = () => cheatModalOverlay?.classList.remove('active');
+
+        container.querySelectorAll('#btn-toggle-shortcuts-help').forEach(btn => btn.addEventListener('click', openCheatModal));
+        paneContainer.querySelector('#btn-close-cheat-modal')?.addEventListener('click', closeCheatModal);
+        paneContainer.querySelector('#btn-cheat-close-footer')?.addEventListener('click', closeCheatModal);
+
+        // Step focus tracker bindings
+        const stepCards = [
+          { id: 'card-patient', name: '1. Thông tin cơ bản BN', hint: 'Tab qua Họ tên / Tuổi / Giới tính [1, 2, 3] · Tab tiếp sang Hiện trường' },
+          { id: 'card-location', name: '2. Hiện trường & Tọa độ', hint: 'Bấm Alt+C để nạp Cell-ID · Tab sang Tình huống' },
+          { id: 'card-incident', name: '3. Tình huống Cấp cứu', hint: 'Bấm số [1..8] để chọn tình huống · Tab sang Mức độ khẩn' },
+          { id: 'card-severity', name: '4. Mức độ Khẩn', hint: 'Bấm [1] Đỏ / [2] Cam / [3] Xanh · Tab sang Chọn Loại xe' },
+          { id: 'card-vehicle-type', name: '5. CHỌN XE CỨU THƯƠNG', hint: 'Bấm [1..6] chọn xe trong danh sách · [A/B/C] theo loại · Tab sang Kíp' },
+          { id: 'card-crew-members', name: '6. CHỌN KÍP CẤP CỨU TRỰC CA', hint: 'Bấm [1..6] chọn nhân sự trực ca (BS, ĐD, Lái xe) · Tab sang Ghi chú' },
+          { id: 'card-notes', name: '7. Triệu chứng & Ghi chú', hint: 'Bấm Ctrl+Enter để Phát lệnh xuất xe tức thì!' }
+        ];
+
+        stepCards.forEach(sc => {
+          const cardEl = paneContainer.querySelector(`#${sc.id}`);
+          if (cardEl) {
+            cardEl.addEventListener('focusin', () => {
+              currentFocusedCard = sc.id;
+              paneContainer.querySelectorAll('.rapid-field-card').forEach(c => c.classList.remove('is-active-step'));
+              cardEl.classList.add('is-active-step');
+              updateHud(sc.name, sc.hint);
+            });
+          }
+        });
+
+        // Track focus on Gender chips inside Card 1 specifically
+        const genderBox = paneContainer.querySelector('#card-gender');
+        if (genderBox) {
+          genderBox.addEventListener('focusin', () => {
+            currentFocusedCard = 'card-gender';
+            updateHud('1. Giới tính BN', 'Bấm phím [1] Nam / [2] Nữ / [3] Chưa rõ · Tab tiếp sang Hiện trường');
+          });
+        }
+
+        // --- KEYBOARD CONTROLLER FOR 1-HAND OPERATION ---
+        this._callCenterKeyHandler = (e) => {
+          // If cheat modal is open, Escape closes it
+          if (cheatModalOverlay && cheatModalOverlay.classList.contains('active')) {
+            if (e.key === 'Escape') {
+              e.preventDefault();
+              closeCheatModal();
+              return;
+            }
+          }
+
+          // 1. Master Instant Dispatch: Ctrl + Enter or F1
+          if ((e.ctrlKey && e.key === 'Enter') || e.key === 'F1') {
+            e.preventDefault();
+            doDispatch();
+            return;
+          }
+
+          // 2. F2: Advanced Drawer
+          if (e.key === 'F2') {
+            e.preventDefault();
+            paneContainer.querySelector('#btn-rapid-open-drawer')?.click();
+            return;
+          }
+
+          // 3. F3: Save consult
+          if (e.key === 'F3') {
+            e.preventDefault();
+            paneContainer.querySelector('#btn-rapid-save-consult')?.click();
+            return;
+          }
+
+          // 4. F4: Fast transfer
+          if (e.key === 'F4') {
+            e.preventDefault();
+            paneContainer.querySelector('#btn-rapid-transfer')?.click();
+            return;
+          }
+
+          // 5. Alt + C: Inject Cell-ID
+          if (e.altKey && (e.key === 'c' || e.key === 'C')) {
+            e.preventDefault();
+            injectCellId();
+            return;
+          }
+
+          // 6. Global Alt+1, Alt+2, Alt+3 for Vehicle Type anywhere
+          if (e.altKey && e.key === '1') {
+            e.preventDefault();
+            setVehicleType('Type A');
+            return;
+          }
+          if (e.altKey && e.key === '2') {
+            e.preventDefault();
+            setVehicleType('Type B');
+            return;
+          }
+          if (e.altKey && e.key === '3') {
+            e.preventDefault();
+            setVehicleType('Type C');
+            return;
+          }
+
+          // 7. Toggle Help Modal: ? or i or I
+          if ((e.key === '?' || e.key === 'i' || e.key === 'I') && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+            openCheatModal();
+            return;
+          }
+
+          // 8. CONTEXTUAL NUMERIC KEYS (1, 2, 3...) WHEN NOT IN TEXT INPUT
+          const isTextInput = (e.target.tagName === 'INPUT' && e.target.type === 'text') || e.target.tagName === 'TEXTAREA';
+
+          if (!isTextInput && !e.ctrlKey && !e.altKey && !e.metaKey) {
+            // If on Vehicle Type card (Block 5 - 6 vehicles multi-select!)
+            if (currentFocusedCard === 'card-vehicle-type') {
+              const numKey = parseInt(e.key, 10);
+              if (numKey >= 1 && numKey <= 6 && availableVehicles[numKey - 1]) {
+                e.preventDefault();
+                toggleVehiclePlate(availableVehicles[numKey - 1].plate);
+                return;
+              }
+              if (e.key === 'a' || e.key === 'A') { e.preventDefault(); toggleVehicleType('Type A'); return; }
+              if (e.key === 'b' || e.key === 'B') { e.preventDefault(); toggleVehicleType('Type B'); return; }
+              if (e.key === 'c' || e.key === 'C') { e.preventDefault(); toggleVehicleType('Type C'); return; }
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                paneContainer.querySelector('#card-crew-members')?.focus();
+                return;
+              }
+            }
+
+            // If on Crew Members card (Block 6 - 6 personnel multi-select!)
+            if (currentFocusedCard === 'card-crew-members') {
+              const numKey = parseInt(e.key, 10);
+              if (numKey >= 1 && numKey <= 6 && availablePersonnel[numKey - 1]) {
+                e.preventDefault();
+                togglePersonnel(availablePersonnel[numKey - 1].id);
+                return;
+              }
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                paneContainer.querySelector('#card-notes')?.focus();
+                return;
+              }
+            }
+
+            // If on Severity card (Block 4)
+            if (currentFocusedCard === 'card-severity') {
+              if (e.key === '1') { e.preventDefault(); setSeverity('CRITICAL'); return; }
+              if (e.key === '2') { e.preventDefault(); setSeverity('EMERGENCY'); return; }
+              if (e.key === '3') { e.preventDefault(); setSeverity('ROUTINE'); return; }
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                paneContainer.querySelector('#card-vehicle-type')?.focus();
+                return;
+              }
+            }
+
+            // If on Gender selection (either focused directly or within card-patient)
+            if (currentFocusedCard === 'card-gender' || (currentFocusedCard === 'card-patient' && e.target.id !== 'rapid-patient-name' && e.target.id !== 'rapid-patient-age')) {
+              if (e.key === '1') { e.preventDefault(); setGender('Nam'); return; }
+              if (e.key === '2') { e.preventDefault(); setGender('Nữ'); return; }
+              if (e.key === '3') { e.preventDefault(); setGender('Chưa rõ'); return; }
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                paneContainer.querySelector('#rapid-address')?.focus();
+                return;
+              }
+            }
+
+            // If on Incident card (Block 3)
+            if (currentFocusedCard === 'card-incident') {
+              const incMap = {
+                '1': 'INC_TNGT',
+                '2': 'INC_STROKE',
+                '3': 'INC_CARDIAC',
+                '4': 'INC_RESPIRATORY',
+                '5': 'INC_TRAUMA',
+                '6': 'INC_OBSTETRIC',
+                '7': 'INC_PEDIATRIC',
+                '8': 'INC_OTHER'
+              };
+              if (incMap[e.key]) {
+                e.preventDefault();
+                setIncident(incMap[e.key]);
+                return;
+              }
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                paneContainer.querySelector('#card-severity')?.focus();
+                return;
+              }
+            }
+          }
+
+          // 9. Enter / Tab navigation across form blocks
+          if (e.key === 'Tab') {
+            const onGender = currentFocusedCard === 'card-gender' || e.target.id === 'card-gender' || e.target.closest('#card-gender');
+            const onIncident = currentFocusedCard === 'card-incident' || e.target.id === 'card-incident' || e.target.closest('#card-incident');
+            const onSeverity = currentFocusedCard === 'card-severity' || e.target.id === 'card-severity' || e.target.closest('#card-severity');
+            const onVehicleType = currentFocusedCard === 'card-vehicle-type' || e.target.id === 'card-vehicle-type' || e.target.closest('#card-vehicle-type');
+
+            if (onGender) {
+              e.preventDefault();
+              if (!e.shiftKey) {
+                const nextField = paneContainer.querySelector('#rapid-address');
+                if (nextField) { nextField.focus(); nextField.select(); }
+              } else {
+                paneContainer.querySelector('#rapid-patient-age')?.focus();
+              }
+              return;
+            }
+
+            if (onIncident) {
+              e.preventDefault();
+              if (!e.shiftKey) {
+                paneContainer.querySelector('#card-severity')?.focus();
+              } else {
+                const prevField = paneContainer.querySelector('#rapid-address');
+                if (prevField) { prevField.focus(); prevField.select(); }
+              }
+              return;
+            }
+
+            if (onSeverity) {
+              e.preventDefault();
+              if (!e.shiftKey) {
+                paneContainer.querySelector('#card-vehicle-type')?.focus();
+              } else {
+                paneContainer.querySelector('#card-incident')?.focus();
+              }
+              return;
+            }
+
+            const onCrewMembers = currentFocusedCard === 'card-crew-members' || e.target.id === 'card-crew-members' || e.target.closest('#card-crew-members');
+
+            if (onVehicleType) {
+              e.preventDefault();
+              if (!e.shiftKey) {
+                paneContainer.querySelector('#card-crew-members')?.focus();
+              } else {
+                paneContainer.querySelector('#card-severity')?.focus();
+              }
+              return;
+            }
+
+            if (onCrewMembers) {
+              e.preventDefault();
+              if (!e.shiftKey) {
+                paneContainer.querySelector('#card-notes')?.focus();
+                paneContainer.querySelector('#rapid-symptoms-notes')?.focus();
+              } else {
+                paneContainer.querySelector('#card-vehicle-type')?.focus();
+              }
+              return;
+            }
+          }
+
+          if (e.key === 'Enter') {
+            if (e.target.id === 'rapid-patient-name') {
+              e.preventDefault();
+              paneContainer.querySelector('#rapid-patient-age')?.focus();
+            } else if (e.target.id === 'rapid-patient-age') {
+              e.preventDefault();
+              paneContainer.querySelector('#card-gender')?.focus();
+            } else if (e.target.id === 'rapid-address') {
+              e.preventDefault();
+              paneContainer.querySelector('#card-incident')?.focus();
+            }
+          }
+        };
+
+        window.addEventListener('keydown', this._callCenterKeyHandler);
+
+        // Autofocus the patient name field to be ready immediately
+        setTimeout(() => {
+          const firstField = paneContainer.querySelector('#rapid-patient-name');
+          if (firstField) {
+            firstField.focus();
+            firstField.select();
+          }
+        }, 150);
       }
 
       // --- TAB 2: LỊCH SỬ CUỘC GỌI ---
@@ -1588,212 +2561,225 @@
     }
 
     // --- 3. CASES LIST VIEW (DANH SÁCH CA CẤP CỨU) ---
+    // --- 3. ALL-IN-ONE EMERGENCY CASES & RECEPTION CONSOLE (QUẢN LÝ VÒNG ĐỜI CA CẤP CỨU & TIẾP NHẬN) ---
     renderCasesListView(container) {
       const state = window.StateManager.getState();
-      const cases = state.cases || [];
+      const activeRaw = state.cases || [];
+      const historyRaw = state.historyCases || [];
+
+      // 1. Chuẩn hóa dữ liệu toàn diện (Active + History)
+      const activeList = activeRaw.map(c => ({
+        id: c.id,
+        code: c.code,
+        createdAt: c.createdAt,
+        patientName: c.patient?.name || '—',
+        patientAge: c.patient?.age || '',
+        patientGender: c.patient?.gender || '',
+        incidentName: c.incident?.name || 'Cấp cứu',
+        severity: c.incident?.severity || 'ROUTINE',
+        locationAddress: c.location?.address || '—',
+        vehiclePlate: c.dispatch?.vehiclePlate || '—',
+        crewName: c.dispatch?.crewName || '—',
+        hospitalName: c.dispatch?.hospitalName || '—',
+        status: c.status,
+        statusText: c.statusText || (c.status === 'DISPATCHED' ? 'Đã điều động' : c.status === 'TRANSPORTING' ? 'Đang đến viện' : c.status === 'COMPLETED' ? 'Hoàn tất' : 'Đã hủy'),
+        eta: c.eta || (c.status === 'TRANSPORTING' ? '5 phút' : '—'),
+        isHistory: false,
+        raw: c
+      }));
+
+      const historyList = historyRaw.map(h => ({
+        id: h.id,
+        code: h.code,
+        createdAt: h.createdAt,
+        completedAt: h.completedAt,
+        patientName: h.patientName || '—',
+        patientAge: h.patientAge || '',
+        patientGender: h.patientGender || 'Nam',
+        incidentName: h.incidentName || 'Cấp cứu',
+        severity: h.severity || 'ROUTINE',
+        locationAddress: h.locationAddress || 'TP Cần Thơ',
+        vehiclePlate: h.vehiclePlate || '—',
+        crewName: h.crewName || 'Kíp trực 115',
+        hospitalName: h.hospitalName || '—',
+        status: h.status,
+        statusText: h.statusText || (h.status === 'COMPLETED' ? 'Hoàn tất' : 'Đã hủy'),
+        eta: '—',
+        durations: h.durations,
+        isHistory: true,
+        raw: h
+      }));
+
+      // Gom ca theo mã duy nhất
+      const caseMap = new Map();
+      activeList.forEach(c => caseMap.set(c.code, c));
+      historyList.forEach(h => {
+        if (!caseMap.has(h.code)) caseMap.set(h.code, h);
+      });
+      const allCases = Array.from(caseMap.values());
 
       container.innerHTML = `
         <div class="view-container-full">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <div>
-              <h2 style="color:var(--text-white);font-size:18px;">Danh sách Ca Cấp cứu đang xử lý</h2>
-              <p style="font-size:12px;color:var(--text-muted);">Theo dõi tiến độ, mốc nhiệm vụ và hồ sơ từng ca theo thời gian thực</p>
-            </div>
-            <button class="btn btn-emergency" id="btn-manual-create-case">
-              ${window.CCNV_UI.ICONS.plus}
-              <span>Tạo ca Cấp cứu Mới</span>
-            </button>
+          <!-- Header Bar -->
+          <div style="margin-bottom:14px;">
+            <h2 style="color:var(--text-white);font-size:18px;display:flex;align-items:center;gap:8px;">
+              <span>Quản lý Vòng đời Ca Cấp cứu & Tiếp nhận</span>
+            </h2>
+            <p style="font-size:12px;color:var(--text-muted);margin-top:2px;">
+              Điều hành tiếp nhận yêu cầu, điều phối hiện trường, đón tiếp & bàn giao tại viện và tra cứu bệnh án ePCR
+            </p>
           </div>
 
+          <!-- Main Table Mount Card -->
           <div class="content-card" style="padding:0;overflow:visible;">
             <div id="cases-list-table-mount"></div>
           </div>
         </div>
       `;
 
+      // 2. Render DataTable với đầy đủ bộ lọc, tìm kiếm, sort
       new window.CCNV_UI.DataTable({
         containerId: 'cases-list-table-mount',
-        data: cases,
+        data: allCases,
         pageSize: 10,
-        exportTitle: 'Danh sách Ca Cấp cứu',
-        searchPlaceholder: 'Tìm mã ca, bệnh nhân, biển số xe, bệnh viện...',
+        exportTitle: 'Danh_sach_ca_cap_cuu_va_tiep_nhan',
+        searchPlaceholder: 'Tìm mã ca, bệnh nhân, biển số xe, bệnh viện đích, tình huống...',
         defaultSortKey: 'createdAt',
         defaultSortOrder: 'desc',
         filterOptions: [
-          { label: 'Tối khẩn / Khẩn cấp', value: 'EMERGENCY', filterFn: c => c.incident.severity === 'CRITICAL' || c.incident.severity === 'EMERGENCY' },
-          { label: 'Đang vận chuyển', value: 'TRANSPORTING', filterFn: c => c.status === 'TRANSPORTING' },
-          { label: 'Đã điều động', value: 'DISPATCHED', filterFn: c => c.status === 'DISPATCHED' },
-          { label: 'Đã hoàn tất', value: 'COMPLETED', filterFn: c => c.status === 'COMPLETED' }
+          { label: 'Tất cả ca', value: 'ALL', filterFn: () => true },
+          { label: 'Xe đang đến viện (Tiếp nhận)', value: 'TRANSPORTING', filterFn: c => c.status === 'TRANSPORTING' },
+          { label: 'Đang xử lý / Điều xe', value: 'ACTIVE', filterFn: c => c.status === 'DISPATCHED' || c.status === 'ON_SCENE' || c.status === 'NEW' },
+          { label: 'Đã hoàn tất', value: 'COMPLETED', filterFn: c => c.status === 'COMPLETED' },
+          { label: 'Tối khẩn / Nguy kịch', value: 'CRITICAL', filterFn: c => c.severity === 'CRITICAL' || c.severity === 'EMERGENCY' },
+          { label: 'Đã hủy', value: 'CANCELLED', filterFn: c => c.status === 'CANCELLED' }
         ],
         columns: [
-          { key: 'code', title: 'Mã ca', sortable: true, render: c => `<strong style="font-family:var(--font-mono);color:#60A5FA;">${c.code}</strong>` },
-          { key: 'createdAt', title: 'Thời gian', sortable: true, render: c => new Date(c.createdAt).toTimeString().split(' ')[0] },
-          { key: 'patient', title: 'Bệnh nhân', sortable: false, render: c => `<strong>${c.patient.name}</strong> (${c.patient.age}T, ${c.patient.gender})` },
           {
-            key: 'incident',
-            title: 'Tình huống',
-            sortable: false,
-            render: c => `<span class="badge ${c.incident.severity === 'CRITICAL' || c.incident.severity === 'EMERGENCY' ? 'badge-emergency' : 'badge-normal'}">${c.incident.name}</span>`
+            key: 'code',
+            title: 'Mã ca',
+            sortable: true,
+            render: c => `<strong style="font-family:var(--font-mono);color:#60A5FA;cursor:pointer;" class="btn-open-case-detail" data-case-id="${c.id}">${c.code}</strong>`
           },
-          { key: 'location', title: 'Địa điểm hiện trường', sortable: false, render: c => `<span style="font-size:12px;color:#CBD5E1;">${c.location.address}</span>` },
-          { key: 'vehiclePlate', title: 'Xe điều động', sortable: true, render: c => `<span style="font-family:var(--font-mono);font-weight:600;color:var(--text-white);">${c.dispatch.vehiclePlate}</span>` },
-          { key: 'hospitalName', title: 'Bệnh viện đích', sortable: true, render: c => c.dispatch.hospitalName },
           {
-            key: 'status',
-            title: 'Trạng thái',
+            key: 'createdAt',
+            title: 'Thời gian',
             sortable: true,
             render: c => {
-              if (c.status === 'DISPATCHED') return `<span class="status-pill status-pill-processing">Đã điều động</span>`;
-              if (c.status === 'TRANSPORTING') return `<span class="status-pill status-pill-new">Đang vận chuyển</span>`;
-              if (c.status === 'COMPLETED') return `<span class="status-pill status-pill-completed">Hoàn tất</span>`;
-              return `<span class="status-pill status-pill-cancelled">Đã hủy</span>`;
+              const d = new Date(c.createdAt);
+              if (!isNaN(d.getTime())) {
+                const day = String(d.getDate()).padStart(2, '0');
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const year = d.getFullYear();
+                const hours = String(d.getHours()).padStart(2, '0');
+                const minutes = String(d.getMinutes()).padStart(2, '0');
+                const seconds = String(d.getSeconds()).padStart(2, '0');
+                return `<span style="font-family:var(--font-mono);font-size:12px;color:#CBD5E1;">${day}/${month}/${year} - ${hours}:${minutes}:${seconds}</span>`;
+              }
+              return `<span style="font-family:var(--font-mono);font-size:12px;">${c.createdAt}</span>`;
             }
+          },
+          {
+            key: 'incidentName',
+            title: 'Tình huống',
+            sortable: true,
+            render: c => `<span class="badge ${c.severity === 'CRITICAL' || c.severity === 'EMERGENCY' ? 'badge-emergency' : 'badge-normal'}">${c.incidentName}</span>`
+          },
+          {
+            key: 'vehiclePlate',
+            title: 'Biển số xe',
+            sortable: true,
+            render: c => `<span style="font-family:var(--font-mono);font-weight:600;color:var(--text-white);">${c.vehiclePlate}</span>`
+          },
+          {
+            key: 'hospitalName',
+            title: 'Bệnh viện tiếp nhận',
+            sortable: true,
+            render: c => `
+              <div>
+                <span style="color:var(--text-white);font-weight:500;">${c.hospitalName}</span>
+                ${c.status === 'TRANSPORTING' ? `<span style="display:inline-block;padding:1px 6px;border-radius:4px;background:rgba(245,158,11,0.2);color:#F59E0B;font-size:10.5px;font-weight:600;margin-left:6px;">ETA: ${c.eta}</span>` : ''}
+              </div>
+            `
           },
           {
             key: 'actions',
             title: 'Thao tác',
             sortable: false,
-            render: c => `<button class="btn btn-default btn-sm btn-open-case-detail" data-case-id="${c.id}">Xem Hồ Sơ</button>`
-          }
-        ]
-      }).render();
-
-      container.querySelector('#btn-manual-create-case')?.addEventListener('click', () => {
-        this.openCreateCaseDrawer();
-      });
-
-      // Bind row actions
-      container.addEventListener('click', (e) => {
-        const btn = e.target.closest('.btn-open-case-detail');
-        if (btn) {
-          const caseId = btn.getAttribute('data-case-id');
-          this.openCaseDetailModal(caseId);
-        }
-      });
-    }
-
-    // --- 4. COORDINATION VIEW (LIÊN LẠC & PHỐI HỢP TT-10) ---
-    renderCoordinationView(container) {
-      container.innerHTML = `
-        <div class="view-container-full">
-          <h2 style="color:var(--text-white);font-size:18px;">Liên lạc & Phối hợp Liên ngành</h2>
-          <p style="font-size:12px;color:var(--text-muted);">Kết nối nhanh kíp cấp cứu, bệnh viện tiếp nhận và các lực lượng phối hợp (Công an, PCCC & CNCH)</p>
-
-          <div style="display:grid;grid-template-columns:repeat(2, 1fr);gap:16px;margin-top:12px;">
-            <div class="content-card">
-              <h3 style="color:var(--text-white);font-size:15px;margin-bottom:12px;">1. Phối hợp với Kíp Cấp cứu</h3>
-              <p style="font-size:13px;color:var(--text-slate);margin-bottom:16px;">Kênh liên lạc bộ đàm IP và cuộc gọi trực tiếp tới tài xế/bác sĩ kíp trực trên xe đang cấp cứu.</p>
-              <div style="display:flex;gap:12px;">
-                <button class="btn btn-default" id="btn-call-crew">Gọi thoại tới Kíp Xe 65A-012.34</button>
-                <button class="btn btn-default" id="btn-msg-crew">Gửi tin nhắn chỉ đạo nhanh</button>
-              </div>
-            </div>
-
-            <div class="content-card">
-              <h3 style="color:var(--text-white);font-size:15px;margin-bottom:12px;">2. Phối hợp Bệnh viện Tiếp nhận</h3>
-              <p style="font-size:13px;color:var(--text-slate);margin-bottom:16px;">Gửi thông tin lâm sàng tóm tắt và kích hoạt báo động Đỏ nội viện tại Khoa Cấp cứu.</p>
-              <div style="display:flex;gap:12px;">
-                <button class="btn btn-emergency" id="btn-call-hospital">Gửi dữ liệu & Báo động BV</button>
-              </div>
-            </div>
-
-            <div class="content-card">
-              <h3 style="color:var(--text-white);font-size:15px;margin-bottom:12px;">3. Chuyển Lực lượng Phối hợp (Công An / CSGT)</h3>
-              <p style="font-size:13px;color:var(--text-slate);margin-bottom:16px;">Yêu cầu hỗ trợ phân luồng giao thông mở đường ưu tiên hoặc bảo đảm an ninh hiện trường.</p>
-              <div style="display:flex;gap:12px;">
-                <button class="btn btn-default" id="btn-call-police">Chuyển thông tin sang Công An / CSGT</button>
-              </div>
-            </div>
-
-            <div class="content-card">
-              <h3 style="color:var(--text-white);font-size:15px;margin-bottom:12px;">4. Hướng dẫn Sơ cấp cứu Người dân</h3>
-              <p style="font-size:13px;color:var(--text-slate);margin-bottom:16px;">Đẩy thẻ hướng dẫn sơ cứu tức thời xuống App Người dân đang gọi cấp cứu.</p>
-              <div style="display:flex;gap:12px;">
-                <button class="btn btn-default" id="btn-send-guide">Gửi Hướng dẫn Sơ cứu qua App</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      container.querySelector('#btn-call-crew')?.addEventListener('click', () => {
-        window.CCNV_UI.Toast.show('Đang kết nối Kíp trực', 'Đang thiết lập kênh bộ đàm với BS. Võ Văn Kiệt (Xe 65A-012.34)');
-        window.StateManager.addAuditLog('Gọi thoại kết nối Kíp trực Xe 65A-012.34');
-      });
-
-      container.querySelector('#btn-call-hospital')?.addEventListener('click', () => {
-        window.CCNV_UI.Toast.show('Đã gửi thông tin tới Bệnh viện', 'Khoa Cấp cứu BV Đa khoa TP Cần Thơ đã nhận thông tin lâm sàng ca CC-261002-001', true);
-        window.StateManager.addAuditLog('Phát tín hiệu báo động trước tới BV Đa khoa TP Cần Thơ');
-      });
-
-      container.querySelector('#btn-call-police')?.addEventListener('click', () => {
-        window.CCNV_UI.Toast.show('Chuyển thông tin liên ngành', 'Đã chuyển tọa độ hiện trường Cầu Hưng Lợi sang Trung tâm CSGT TP Cần Thơ để hỗ trợ phân luồng');
-        window.StateManager.addAuditLog('Chuyển thông tin hiện trường tới CSGT TP Cần Thơ');
-      });
-
-      container.querySelector('#btn-send-guide')?.addEventListener('click', () => {
-        window.CCNV_UI.Toast.show('Đã gửi Hướng dẫn Sơ cứu', 'Người dân gọi từ SĐT 0918.234.111 đã nhận được các bước sơ cứu cố định cột sống cổ.');
-        window.StateManager.addAuditLog('Đẩy thẻ hướng dẫn sơ cứu cho người báo tin');
-      });
-    }
-
-    // --- 5. CASE LOOKUP & ARCHIVE (TT-11, TT-12) ---
-    renderCaseLookupView(container) {
-      const state = window.StateManager.getState();
-      const history = state.historyCases || [];
-
-      container.innerHTML = `
-        <div class="view-container-full">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <div>
-              <h2 style="color:var(--text-white);font-size:18px;">Tra cứu Hồ sơ Ca Cấp cứu</h2>
-              <p style="font-size:12px;color:var(--text-muted);">Lưu trữ toàn bộ hồ sơ ca hoàn tất, xuất báo cáo PDF và kiểm tra mốc thời gian</p>
-            </div>
-            <button class="btn btn-default" id="btn-export-pdf">In / Xuất PDF Hồ sơ</button>
-          </div>
-
-          <div class="content-card" style="padding:0;overflow:visible;">
-            <div id="case-lookup-table-mount"></div>
-          </div>
-        </div>
-      `;
-
-      new window.CCNV_UI.DataTable({
-        containerId: 'case-lookup-table-mount',
-        data: history,
-        pageSize: 10,
-        exportTitle: 'Hồ sơ Cấp cứu Lưu trữ',
-        searchPlaceholder: 'Tìm mã ca, bệnh nhân, tình huống, bệnh viện...',
-        defaultSortKey: 'createdAt',
-        defaultSortOrder: 'desc',
-        filterOptions: [
-          { label: 'Hoàn tất bàn giao', value: 'COMPLETED', filterFn: h => h.status === 'COMPLETED' },
-          { label: 'Đã hủy ca', value: 'CANCELLED', filterFn: h => h.status === 'CANCELLED' }
-        ],
-        columns: [
-          { key: 'code', title: 'Mã ca', sortable: true, render: h => `<strong style="font-family:var(--font-mono);color:#93C5FD;">${h.code}</strong>` },
-          { key: 'createdAt', title: 'Thời điểm', sortable: true, render: h => h.createdAt.replace('T', ' ') },
-          { key: 'patientName', title: 'Bệnh nhân', sortable: true, render: h => `<strong>${h.patientName}</strong> (${h.patientAge}T)` },
-          { key: 'incidentName', title: 'Tình huống', sortable: true },
-          { key: 'vehiclePlate', title: 'Xe cấp cứu', sortable: true, render: h => `<span style="font-family:var(--font-mono);font-weight:600;color:var(--text-white);">${h.vehiclePlate}</span>` },
-          { key: 'hospitalName', title: 'Bệnh viện bàn giao', sortable: true },
-          { key: 'durations', title: 'Thời gian đáp ứng', sortable: false, render: h => `<span style="color:#10B981;font-weight:600;">${h.durations?.totalTime || '—'}</span>` },
-          {
-            key: 'status',
-            title: 'Trạng thái',
-            sortable: true,
-            render: h => {
-              if (h.status === 'COMPLETED') return `<span class="status-pill status-pill-completed">Hoàn tất</span>`;
-              return `<span class="status-pill status-pill-cancelled">Đã hủy</span>`;
+            render: c => {
+              if (c.status === 'TRANSPORTING') {
+                return `
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <button class="btn btn-emergency btn-sm btn-quick-handover" data-case-id="${c.id}" data-case-code="${c.code}" title="Xác nhận tiếp nhận và hoàn tất bàn giao người bệnh">
+                      Bàn giao
+                    </button>
+                    <button class="btn btn-default btn-sm btn-open-case-detail" data-case-id="${c.id}">
+                      Chi tiết
+                    </button>
+                  </div>
+                `;
+              }
+              return `
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <button class="btn btn-default btn-sm btn-open-case-detail" data-case-id="${c.id}">
+                    Chi tiết
+                  </button>
+                </div>
+              `;
             }
           }
         ]
       }).render();
 
-      container.querySelector('#btn-export-pdf')?.addEventListener('click', () => {
-        window.CCNV_UI.Toast.show('Xuất Hồ sơ PDF', 'Đang kết xuất phiếu cấp cứu ngoại viện chuẩn Bộ Y Tế ra định dạng PDF...');
-        setTimeout(() => window.print(), 800);
+      // Thao tác trên từng dòng (Bàn giao 1-click, Xem chi tiết, Nhấn vào hàng để xem detail)
+      container.addEventListener('click', (e) => {
+        // Nút Tiếp nhận & Bàn giao 1-Click
+        const handoverBtn = e.target.closest('.btn-quick-handover');
+        if (handoverBtn) {
+          e.stopPropagation();
+          const caseId = handoverBtn.getAttribute('data-case-id');
+          const targetCase = state.cases.find(c => c.id === caseId || c.code === caseId);
+          if (targetCase) {
+            targetCase.status = 'COMPLETED';
+            targetCase.statusText = 'Hoàn tất';
+            targetCase.stageLabel = 'Đã bàn giao tại viện';
+            targetCase.hospitalResponse = 'ACCEPTED';
+            targetCase.hospitalResponseText = 'Đã bàn giao';
+
+            // Giải phóng xe về trạng thái sẵn sàng
+            const plate = targetCase.dispatch?.vehiclePlate;
+            if (plate) {
+              window.StateManager.updateVehicle(plate, {
+                status: 'READY',
+                statusText: 'Sẵn sàng',
+                speed: 0
+              });
+            }
+
+            window.StateManager.saveToSession();
+            window.StateManager.addCaseLog(targetCase.id, `Khoa Cấp cứu ${targetCase.dispatch?.hospitalName || 'Bệnh viện'} xác nhận tiếp nhận & ký biên bản bàn giao. Ca hoàn tất.`);
+            window.StateManager.addAuditLog(`Xác nhận tiếp nhận & bàn giao hoàn tất ca ${targetCase.code} tại ${targetCase.dispatch?.hospitalName || 'Bệnh viện'}`);
+
+            window.CCNV_UI.Toast.show('Đã Tiếp Nhận & Bàn Giao', `Ca ${targetCase.code} đã hoàn tất bàn giao. Xe ${plate || ''} sẵn sàng nhận nhiệm vụ mới.`);
+            this.renderCasesListView(container);
+          }
+          return;
+        }
+
+        // Nhấn vào hàng hoặc nút Chi tiết để xem chi tiết ca
+        const tr = e.target.closest('tbody tr');
+        if (tr) {
+          const detailTarget = tr.querySelector('[data-case-id]');
+          const caseId = detailTarget?.getAttribute('data-case-id');
+          if (caseId) {
+            this.openCaseDetailModal(caseId);
+          }
+        }
       });
+    }
+
+    renderCaseLookupView(container) {
+      this.renderCasesListView(container);
     }
 
     // --- 6. RESOURCE MONITORING: VEHICLES, CREWS, HOSPITALS, SHIFTS ---
@@ -1804,7 +2790,7 @@
       container.innerHTML = `
         <div class="view-container-full">
           <div style="margin-bottom:12px;">
-            <h2 style="color:var(--text-white);font-size:18px;">Giám sát Nguồn lực: Tình trạng Xe Cấp cứu</h2>
+            <h2 style="color:var(--text-white);font-size:18px;">Tình trạng Xe Cấp cứu</h2>
             <p style="font-size:12px;color:var(--text-muted);">Trạng thái sẵn sàng, bảo trì, thông số oxy, pin và tín hiệu GPS thời gian thực</p>
           </div>
           <div class="content-card" style="padding:0;overflow:visible;">
@@ -1920,7 +2906,7 @@
       container.innerHTML = `
         <div class="view-container-full">
           <div style="margin-bottom:12px;">
-            <h2 style="color:var(--text-white);font-size:18px;">Tình trạng Mạng lưới Bệnh viện Tiếp nhận</h2>
+            <h2 style="color:var(--text-white);font-size:18px;">Tình trạng Mạng lưới bệnh viện tiếp nhận</h2>
             <p style="font-size:12px;color:var(--text-muted);">Theo dõi năng lực tiếp nhận, giường cấp cứu trống, máy thở và chuyển trạng thái</p>
           </div>
           <div class="content-card" style="padding:0;overflow:visible;">
@@ -2632,9 +3618,9 @@
           defaultSortOrder: 'desc',
           filterOptions: [
             { label: 'Tất cả mức độ', value: 'ALL', filterFn: () => true },
-            { label: '🔴 Tối khẩn (Đỏ)', value: 'CRITICAL', filterFn: item => item.severity === 'CRITICAL' },
-            { label: '🟡 Khẩn cấp (Vàng)', value: 'EMERGENCY', filterFn: item => item.severity === 'EMERGENCY' },
-            { label: '🟢 Tiêu chuẩn (Xanh)', value: 'ROUTINE', filterFn: item => item.severity === 'ROUTINE' },
+            { label: 'Tối khẩn', value: 'CRITICAL', filterFn: item => item.severity === 'CRITICAL' },
+            { label: 'Khẩn cấp', value: 'EMERGENCY', filterFn: item => item.severity === 'EMERGENCY' },
+            { label: 'Tiêu chuẩn', value: 'ROUTINE', filterFn: item => item.severity === 'ROUTINE' },
             { label: 'Hoàn tất bàn giao', value: 'COMPLETED', filterFn: item => item.status === 'COMPLETED' },
             { label: 'Đang xử lý', value: 'IN_PROGRESS', filterFn: item => item.status === 'IN_PROGRESS' }
           ],
@@ -3452,7 +4438,7 @@
                 <label style="display:flex;align-items:center;gap:12px;padding:12px;background:${hosp.status === 'READY' ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-elevated)'};border:2px solid ${hosp.status === 'READY' ? '#10B981' : 'var(--border-main)'};border-radius:8px;cursor:pointer;">
                   <input type="radio" name="hosp-status-opt" value="READY" ${hosp.status === 'READY' ? 'checked' : ''} style="width:16px;height:16px;" />
                   <div>
-                    <strong style="color:#10B981;font-size:13.5px;display:block;">🟢 ĐANG TIẾP NHẬN BÌNH THƯỜNG</strong>
+                    <strong style="color:#10B981;font-size:13.5px;display:block;"> ĐANG TIẾP NHẬN BÌNH THƯỜNG</strong>
                     <span style="font-size:12px;color:var(--text-slate);">Khoa Cấp cứu và các buồng hồi sức sẵn sàng đón mọi ca cấp cứu</span>
                   </div>
                 </label>
@@ -3460,7 +4446,7 @@
                 <label style="display:flex;align-items:center;gap:12px;padding:12px;background:${hosp.status === 'LIMITED' ? 'rgba(245, 158, 11, 0.15)' : 'var(--bg-elevated)'};border:2px solid ${hosp.status === 'LIMITED' ? '#F59E0B' : 'var(--border-main)'};border-radius:8px;cursor:pointer;">
                   <input type="radio" name="hosp-status-opt" value="LIMITED" ${hosp.status === 'LIMITED' ? 'checked' : ''} style="width:16px;height:16px;" />
                   <div>
-                    <strong style="color:#F59E0B;font-size:13.5px;display:block;">🟡 HẠN CHẾ TIẾP NHẬN (CẢNH BÁO)</strong>
+                    <strong style="color:#F59E0B;font-size:13.5px;display:block;">HẠN CHẾ TIẾP NHẬN (CẢNH BÁO)</strong>
                     <span style="font-size:12px;color:var(--text-slate);">Giường hồi sức cấp cứu đạt trên 90%, chỉ nhận ca tối khẩn nguy kịch</span>
                   </div>
                 </label>
@@ -3468,7 +4454,7 @@
                 <label style="display:flex;align-items:center;gap:12px;padding:12px;background:${hosp.status === 'SUSPENDED' ? 'rgba(239, 68, 68, 0.15)' : 'var(--bg-elevated)'};border:2px solid ${hosp.status === 'SUSPENDED' ? 'var(--red-vivid)' : 'var(--border-main)'};border-radius:8px;cursor:pointer;">
                   <input type="radio" name="hosp-status-opt" value="SUSPENDED" ${hosp.status === 'SUSPENDED' ? 'checked' : ''} style="width:16px;height:16px;" />
                   <div>
-                    <strong style="color:var(--red-vivid);font-size:13.5px;display:block;">🔴 TẠM NGƯNG TIẾP NHẬN NGOẠI VIỆN</strong>
+                    <strong style="color:var(--red-vivid);font-size:13.5px;display:block;">TẠM NGƯNG TIẾP NHẬN NGOẠI VIỆN</strong>
                     <span style="font-size:12px;color:var(--text-slate);">Khoa Cấp cứu đang quá tải đột xuất hoặc có sự cố kỹ thuật nội bộ</span>
                   </div>
                 </label>
@@ -3842,11 +4828,20 @@
                 <textarea id="form-incident-desc" rows="2">${prefill?.description || 'Nạn nhân ngã đập đầu, bất tỉnh, đang chảy máu.'}</textarea>
               </div>
               <div class="form-field" style="margin-top:10px;">
-                <label class="form-label">Phân loại mức độ khẩn</label>
+                <label class="form-label" style="display:flex;align-items:center;justify-content:space-between;">
+                  <span>Phân loại mức độ khẩn</span>
+                  <span style="font-size:11px;color:var(--text-muted);">Bấm phím <kbd class="quick-kbd">1</kbd> <kbd class="quick-kbd">2</kbd> <kbd class="quick-kbd">3</kbd></span>
+                </label>
                 <div class="severity-picker-grid">
-                  <button type="button" class="severity-btn active sev-critical" data-sev="CRITICAL">TỐI KHẨN (ĐỎ)</button>
-                  <button type="button" class="severity-btn sev-emergency" data-sev="EMERGENCY">KHẨN CẤP (CAM)</button>
-                  <button type="button" class="severity-btn sev-routine" data-sev="ROUTINE">THƯỜNG (XANH)</button>
+                  <button type="button" class="severity-btn active sev-critical" data-sev="CRITICAL">
+                    <kbd class="quick-kbd kbd-red" style="margin-right:4px;">1</kbd> TỐI KHẨN (ĐỎ)
+                  </button>
+                  <button type="button" class="severity-btn sev-emergency" data-sev="EMERGENCY">
+                    <kbd class="quick-kbd kbd-amber" style="margin-right:4px;">2</kbd> KHẨN CẤP (CAM)
+                  </button>
+                  <button type="button" class="severity-btn sev-routine" data-sev="ROUTINE">
+                    <kbd class="quick-kbd kbd-emerald" style="margin-right:4px;">3</kbd> THƯỜNG (XANH)
+                  </button>
                 </div>
               </div>
             </div>
@@ -3914,6 +4909,7 @@
           sevBtns.forEach(b => b.classList.remove('active'));
           sb.classList.add('active');
           selectedSeverity = sb.getAttribute('data-sev');
+          window.CCNV_UI.SoundFx.playBeep();
         });
       });
 
@@ -3935,6 +4931,17 @@
         } else if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
           e.preventDefault();
           drawerOverlay.querySelector('#btn-confirm-create-case')?.click();
+        } else if (!['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
+          if (e.key === '1') {
+            e.preventDefault();
+            drawerOverlay.querySelector('.severity-btn[data-sev="CRITICAL"]')?.click();
+          } else if (e.key === '2') {
+            e.preventDefault();
+            drawerOverlay.querySelector('.severity-btn[data-sev="EMERGENCY"]')?.click();
+          } else if (e.key === '3') {
+            e.preventDefault();
+            drawerOverlay.querySelector('.severity-btn[data-sev="ROUTINE"]')?.click();
+          }
         }
       };
       window.addEventListener('keydown', this._drawerKeyHandler);
@@ -4053,7 +5060,36 @@
     // --- 9. CASE DETAIL MODAL WITH 7 TABS (TT-08) ---
     openCaseDetailModal(caseId) {
       const state = window.StateManager.getState();
-      const c = state.cases.find(item => item.id === caseId || item.code === caseId) || state.cases[0];
+      let c = state.cases.find(item => item.id === caseId || item.code === caseId);
+      if (!c && state.historyCases) {
+        const h = state.historyCases.find(item => item.id === caseId || item.code === caseId);
+        if (h) {
+          c = {
+            id: h.id,
+            code: h.code,
+            createdAt: h.createdAt,
+            completedAt: h.completedAt,
+            status: h.status,
+            statusText: h.statusText || 'Hoàn tất',
+            patient: { name: h.patientName, age: h.patientAge || '—', gender: h.patientGender || 'Nam', history: 'Không có tiền sử dị ứng' },
+            location: { address: h.locationAddress || 'Khu vực TP Cần Thơ' },
+            incident: { name: h.incidentName, severity: h.severity || 'ROUTINE', description: 'Đã hoàn tất vận chuyển và bàn giao người bệnh' },
+            dispatch: { vehiclePlate: h.vehiclePlate || '—', crewName: h.crewName || 'Kíp trực 115', hospitalName: h.hospitalName || '—' },
+            epcr: h.epcr || { chiefComplaint: h.incidentName, diagnosis: h.incidentName, treatment: 'Sơ cứu tại hiện trường và hỗ trợ hô hấp, huyết động trên đường vận chuyển.' },
+            milestones: [
+              { name: 'Tiếp nhận cuộc gọi', time: h.createdAt ? h.createdAt.replace('T', ' ') : '—', done: true },
+              { name: 'Xuất phát', time: '—', done: true },
+              { name: 'Đến hiện trường', time: '—', done: true },
+              { name: 'Bàn giao tại viện', time: h.completedAt ? h.completedAt.replace('T', ' ') : '—', done: true }
+            ],
+            logs: [
+              { time: h.createdAt ? h.createdAt.replace('T', ' ') : '—', user: 'dpv01', action: `Tiếp nhận yêu cầu và phát lệnh điều xe ${h.vehiclePlate || ''}` },
+              { time: h.completedAt ? h.completedAt.replace('T', ' ') : '—', user: 'Khoa Cấp cứu', action: `Bàn giao bệnh nhân tại ${h.hospitalName || 'Bệnh viện'}. Hoàn tất ca.` }
+            ]
+          };
+        }
+      }
+      c = c || state.cases[0];
       if (!c) return;
 
       this.selectedCaseId = c.id;
@@ -4065,30 +5101,175 @@
         document.body.appendChild(modalOverlay);
       }
 
+      // Helper format date time
+      const formatDT = (dtStr, fallbackTime = '08:10:15') => {
+        if (!dtStr) return `02/10/2026 - ${fallbackTime}`;
+        if (dtStr.includes('T')) {
+          const parts = dtStr.split('T');
+          const dParts = parts[0].split('-');
+          const t = parts[1].slice(0, 8);
+          return `${dParts[2]}/${dParts[1]}/${dParts[0]} - ${t}`;
+        }
+        if (dtStr.includes(':') && !dtStr.includes('/')) {
+          return `02/10/2026 - ${dtStr}`;
+        }
+        return dtStr;
+      };
+
+      const callTime = formatDT(c.createdAt, '08:10:15');
+      const callTimeRaw = c.createdAt?.includes('T') ? c.createdAt.split('T')[1].slice(0, 8) : (c.createdAt || '08:10:15');
+      const dispatchTime = formatDT(c.milestones?.find(m => m.step === 'DISPATCHED')?.time, '08:11:30');
+      const endTime = c.status === 'COMPLETED'
+        ? formatDT(c.completedAt || c.milestones?.find(m => m.step === 'HANDOVER_DONE')?.time, '08:45:00')
+        : (c.status === 'CANCELLED' ? `Đã hủy ca (${c.cancelReason || 'Theo yêu cầu'})` : '<span class="badge badge-warning" style="animation:pulse 2s infinite;padding:2px 8px;font-size:11px;">Đang xử lý cấp cứu</span>');
+
+      const receiverName = c.hospitalReceiver || `BS. Trực Cấp cứu (${c.dispatch?.hospitalName || 'BV Đa khoa TP Cần Thơ'})`;
+
+      let processingResult = '';
+      if (c.status === 'COMPLETED') {
+        processingResult = `<span style="color:var(--emerald-light);font-weight:600;">✓ Tiếp nhận an toàn tại Khoa Cấp cứu</span>`;
+      } else if (c.status === 'CANCELLED') {
+        processingResult = `<span style="color:var(--red-light);font-weight:600;">✗ Đã hủy: ${c.cancelReason || 'Hủy theo yêu cầu'}</span>`;
+      } else if (c.status === 'TRANSPORTING') {
+        processingResult = `<span style="color:var(--amber-light);font-weight:600;">⟳ Đang vận chuyển khẩn cấp đến BV (ETA: ${c.eta || '6 phút'})</span>`;
+      } else {
+        processingResult = `<span style="color:var(--blue-light);font-weight:600;">⟳ Đang tiếp cận & sơ cứu ban đầu</span>`;
+      }
+
+      // Crews info
+      const crewObj = (state.crews || []).find(cr => cr.id === c.dispatch?.crewId || cr.name === c.dispatch?.crewName) || {
+        name: c.dispatch?.crewName || 'Kíp 1 - Ninh Kiều',
+        doctor: 'BS. CKI. Nguyễn Văn Thành',
+        nurse: 'ĐD. Trần Thị Mai',
+        driver: 'Lê Văn Hùng'
+      };
+
       modalOverlay.innerHTML = `
-        <div class="modal-box" style="max-width:880px;height:85vh;">
-          <div class="modal-header">
-            <div style="display:flex;align-items:center;gap:12px;">
-              <strong style="color:var(--text-white);font-size:16px;">HỒ SƠ CA CẤP CỨU: ${c.code}</strong>
-              ${window.CCNV_UI.Badges.forCaseStatus(c.status)}
+        <div class="modal-box" style="position:fixed;inset:0;width:100vw;height:100vh;max-width:100vw;max-height:100vh;border-radius:0;border:none;display:flex;flex-direction:column;background:var(--bg-panel);overflow:hidden;z-index:10001;">
+          <!-- 1. MODAL HEADER CHUẨN COMMAND CENTER (FULL WIDTH) -->
+          <div class="modal-header" style="flex-shrink:0;padding:12px 24px;background:linear-gradient(90deg, #091726 0%, #0d2138 100%);border-bottom:1px solid var(--border-accent);display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+              <div style="width:34px;height:34px;border-radius:8px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);display:flex;align-items:center;justify-content:center;color:#ef4444;">
+                ${window.CCNV_UI.ICONS.activity || '🚑'}
+              </div>
+              <div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <strong style="color:var(--text-white);font-size:17px;letter-spacing:0.8px;font-family:var(--font-mono);">HỒ SƠ CHI TIẾT CA CẤP CỨU: ${c.code}</strong>
+                  ${window.CCNV_UI.Badges.forCaseStatus(c.status)}
+                  <span class="badge ${c.incident?.severity === 'CRITICAL' ? 'badge-emergency' : 'badge-amber'}" style="font-weight:700;letter-spacing:0.5px;">
+                    ${c.incident?.severity === 'CRITICAL' ? '● TỐI KHẨN (ĐỎ)' : '● KHẨN CẤP (CAM)'}
+                  </span>
+                </div>
+                <div style="font-size:11px;color:var(--text-slate);margin-top:2px;">
+                  Hệ thống Điều phối Cấp cứu 115 · Trung tâm Thông tin Y tế Ngoại viện TP. Cần Thơ · Phiên bản đồng bộ ePCR Realtime
+                </div>
+              </div>
             </div>
-            <button class="btn btn-ghost btn-sm" id="btn-close-case-modal">${window.CCNV_UI.ICONS.x}</button>
+
+            <div style="display:flex;align-items:center;gap:12px;">
+              <button class="btn btn-ghost btn-sm" id="btn-call-audio-quick" title="Bản ghi âm 115" style="border:1px solid var(--border-main);background:rgba(255,255,255,0.03);">
+                📞 Ghi âm tiếp nhận (${callTimeRaw})
+              </button>
+              <button class="btn btn-ghost btn-sm" id="btn-close-case-modal" title="Đóng toàn màn hình (Esc)" style="width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:6px;background:rgba(255,255,255,0.06);color:var(--text-white);">
+                ${window.CCNV_UI.ICONS.x}
+              </button>
+            </div>
           </div>
 
-          <div style="display:flex;background:var(--bg-elevated);border-bottom:1px solid var(--border-main);padding:0 16px;">
-            <button class="panel-tab-btn active" data-tab="tab-overview">Tổng quan</button>
-            <button class="panel-tab-btn" data-tab="tab-dispatch">Điều phối</button>
-            <button class="panel-tab-btn" data-tab="tab-epcr">Phiếu ePCR</button>
-            <button class="panel-tab-btn" data-tab="tab-milestones">Mốc thời gian</button>
-            <button class="panel-tab-btn" data-tab="tab-logs">Lịch sử Log</button>
-            <button class="panel-tab-btn" data-tab="tab-audio">Ghi âm cuộc gọi</button>
+          <!-- 2. PHẦN TỔNG QUAN: BẢN ĐỒ RADAR RỘNG + KHUNG 7 THÔNG TIN TỔNG QUAN 4 CỘT -->
+          <!-- 2. PHẦN TỔNG QUAN: KHUNG 7 THÔNG TIN TỔNG QUAN ĐIỀU HÀNH (TRẢI ĐỀU 100% CHIỀU NGANG) -->
+          <div style="flex-shrink:0;background:var(--bg-panel);border-bottom:1px solid var(--border-main);padding:14px 24px;">
+            <div style="background:var(--bg-elevated);border-radius:8px;border:1px solid var(--border-main);padding:12px 20px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-main);padding-bottom:8px;margin-bottom:10px;">
+                <div style="font-size:13px;font-weight:700;color:var(--text-white);text-transform:uppercase;letter-spacing:0.6px;display:flex;align-items:center;gap:8px;">
+                  <span style="color:var(--accent-cyan);font-size:14px;">✦</span> THÔNG TIN TỔNG QUAN ĐIỀU HÀNH CA CẤP CỨU
+                </div>
+                <div style="display:flex;align-items:center;gap:14px;">
+                  <span style="font-size:11.5px;color:var(--text-muted);">Mã cuộc gọi: <strong style="color:var(--text-white);font-family:var(--font-mono);">${c.callId || 'CALL-115-01'}</strong></span>
+                  <span style="font-size:11.5px;color:var(--text-muted);">· Mã phiên ePCR: <strong style="color:var(--accent-cyan);font-family:var(--font-mono);">${c.epcr?.id || 'EPCR-2610-09'}</strong></span>
+                </div>
+              </div>
+
+              <!-- Lưới 4 cột rộng rãi cho 7 thông tin tổng quan -->
+              <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:10px 24px;font-size:12px;">
+                <!-- Cột 1: Cuộc gọi & Người tiếp nhận -->
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div>
+                    <span style="color:var(--text-slate);font-size:11px;display:block;">1. Thời điểm phát hiện cuộc gọi:</span>
+                    <strong style="color:var(--text-white);font-family:var(--font-mono);font-size:13px;">${callTime}</strong>
+                  </div>
+                  <div>
+                    <span style="color:var(--text-slate);font-size:11px;display:block;">2. Người tiếp nhận:</span>
+                    <strong style="color:var(--text-white);font-size:12.5px;">${c.dispatch?.dispatcherName || 'Nguyễn Văn An'}</strong>
+                    <div style="color:var(--text-muted);font-size:10.5px;font-family:var(--font-mono);">(${c.dispatch?.dispatcherId || 'dpv01'} · Tổng đài 115)</div>
+                  </div>
+                </div>
+
+                <!-- Cột 2: Thời gian gọi xe & Xe được điều động -->
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div>
+                    <span style="color:var(--text-slate);font-size:11px;display:block;">3. Thời gian gọi xe:</span>
+                    <strong style="color:var(--text-white);font-family:var(--font-mono);font-size:13px;">${dispatchTime}</strong>
+                  </div>
+                  <div>
+                    <span style="color:var(--text-slate);font-size:11px;display:block;">4. Xe được điều động:</span>
+                    <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+                      <span class="badge badge-accent" style="font-family:var(--font-mono);font-weight:700;font-size:12px;">${c.dispatch?.vehiclePlate || '65A-012.34'}</span>
+                      <span style="color:var(--text-light);font-size:11.5px;">(${c.dispatch?.crewName || crewObj.name})</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Cột 3: Bệnh viện tiếp nhận & Người nhận -->
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div>
+                    <span style="color:var(--text-slate);font-size:11px;display:block;">Bệnh viện tiếp nhận:</span>
+                    <strong style="color:var(--text-white);font-size:12.5px;">${c.dispatch?.hospitalName || 'BV Đa khoa TP Cần Thơ'}</strong>
+                  </div>
+                  <div>
+                    <span style="color:var(--text-slate);font-size:11px;display:block;">6. Người nhận tại viện:</span>
+                    <strong style="color:var(--text-white);font-size:12px;">${receiverName}</strong>
+                  </div>
+                </div>
+
+                <!-- Cột 4: Thời gian kết thúc & Kết quả xử lý -->
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                  <div>
+                    <span style="color:var(--text-slate);font-size:11px;display:block;">5. Thời gian kết thúc:</span>
+                    <div style="font-family:var(--font-mono);font-size:12.5px;">${endTime}</div>
+                  </div>
+                  <div>
+                    <span style="color:var(--text-slate);font-size:11px;display:block;">7. Kết quả xử lý:</span>
+                    <div style="font-size:12px;margin-top:1px;">${processingResult}</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Thanh chỉ số tiến độ thời gian thực của ca -->
+              <div style="margin-top:10px;padding-top:8px;border-top:1px dashed var(--border-main);display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--text-slate);">
+                <div style="display:flex;gap:20px;">
+                  <span>Thời gian phản ứng: <strong style="color:var(--emerald-light);font-family:var(--font-mono);">01p 15s</strong></span>
+                  <span>Tiếp cận hiện trường: <strong style="color:var(--text-white);font-family:var(--font-mono);">06p 50s</strong></span>
+                  <span>Thời gian tại hiện trường: <strong style="color:var(--text-white);font-family:var(--font-mono);">05p 50s</strong></span>
+                </div>
+                <div style="color:var(--accent-cyan);font-weight:600;">
+                  ✓ Đã thiết lập kênh thoại vô tuyến & truyền số liệu sinh tồn ePCR trực tiếp với Bệnh viện
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div class="modal-body" id="case-modal-body-content"></div>
-
-          <div class="modal-footer">
-            <button class="btn btn-default" id="btn-close-case-modal-footer">Đóng</button>
+          <!-- 3. THANH ĐIỀU HƯỚNG 4 TABS CHI TIẾT (FULL WIDTH) -->
+          <div style="display:flex;background:var(--bg-elevated);border-bottom:1px solid var(--border-main);padding:0 24px;flex-shrink:0;">
+            <button class="panel-tab-btn active" data-tab="tab-overview" style="padding:10px 22px;font-size:13px;font-weight:600;">Tab Tổng quan</button>
+            <button class="panel-tab-btn" data-tab="tab-dispatch" style="padding:10px 22px;font-size:13px;font-weight:600;">Tab Phân công / Điều phối</button>
+            <button class="panel-tab-btn" data-tab="tab-documents" style="padding:10px 22px;font-size:13px;font-weight:600;">Tab Hồ sơ</button>
+            <button class="panel-tab-btn" data-tab="tab-logs" style="padding:10px 22px;font-size:13px;font-weight:600;">Tab Lịch sử (Log)</button>
           </div>
+
+          <!-- 4. MODAL BODY (CHIẾM TRỌN KHÔNG GIAN CÒN LẠI CỦA MÀN HÌNH) -->
+          <div class="modal-body" id="case-modal-body-content" style="flex:1;overflow-y:auto;padding:20px 24px;background:rgba(5,13,24,0.3);"></div>
+
         </div>
       `;
 
@@ -4098,85 +5279,417 @@
         const body = modalOverlay.querySelector('#case-modal-body-content');
         if (!body) return;
 
+        // --- TAB 1: TỔNG QUAN (Layout 50/50: Nửa Trái là Lâm sàng BN - Nửa Phải là Bản đồ Radar GIS) ---
         if (tabName === 'tab-overview') {
           body.innerHTML = `
-            <div style="display:flex;flex-direction:column;gap:14px;">
-              <div class="form-grid-2">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:stretch;height:100%;">
+              
+              <!-- NỬA TRÁI (50% LAYOUT): THÔNG TIN NGƯỜI BỆNH, LÂM SÀNG & SINH HIỆU -->
+              <div style="display:flex;flex-direction:column;gap:14px;">
+                
+                <!-- 1. THÔNG TIN CHUNG NGƯỜI BỆNH -->
                 <div class="form-section">
-                  <div class="form-section-title">Thông tin Bệnh nhân</div>
-                  <div style="font-size:13px;display:flex;flex-direction:column;gap:4px;">
-                    <div>Họ tên: <strong style="color:var(--text-white);">${c.patient.name}</strong></div>
-                    <div>Tuổi: ${c.patient.age} · Giới tính: ${c.patient.gender}</div>
-                    <div>Tiền sử: ${c.patient.history || 'Không rõ'}</div>
+                  <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+                    <span>THÔNG TIN CHUNG NGƯỜI BỆNH</span>
+                    <span class="badge badge-accent">ID: ${c.patient?.id || 'BN-' + c.code}</span>
+                  </div>
+                  
+                  <div style="display:flex;gap:14px;margin-bottom:10px;align-items:center;background:rgba(255,255,255,0.02);padding:8px 12px;border-radius:8px;border:1px solid var(--border-main);">
+                    <div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg, #1e293b, #0f172a);border:2px solid var(--border-accent);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">
+                      👤
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                      <div style="font-size:15px;font-weight:700;color:var(--text-white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.patient?.name || 'Không rõ danh tính'}</div>
+                      <div style="font-size:12px;color:var(--text-slate);margin-top:2px;">
+                        Tuổi: <strong style="color:var(--text-light);">${c.patient?.age || '—'}</strong> · 
+                        Giới tính: <strong style="color:var(--text-light);">${c.patient?.gender || '—'}</strong> · 
+                        Nhóm máu: <span class="badge badge-amber" style="padding:1px 6px;font-weight:700;">${c.patient?.bloodType || 'O+'}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="data-table-container" style="border:none;">
+                    <table class="command-table" style="font-size:12px;">
+                      <tbody>
+                        <tr>
+                          <td style="width:130px;color:var(--text-slate);">Địa chỉ hiện trường:</td>
+                          <td><strong style="color:var(--text-white);">${c.location?.address || 'Chưa có thông tin'}</strong></td>
+                        </tr>
+                        <tr>
+                          <td style="color:var(--text-slate);">Số điện thoại BN:</td>
+                          <td><span style="font-family:var(--font-mono);font-size:12.5px;color:var(--accent-cyan);font-weight:600;">${c.patient?.phone || c.callerPhone || '—'}</span></td>
+                        </tr>
+                        <tr>
+                          <td style="color:var(--text-slate);">Người báo tin:</td>
+                          <td><strong>${c.callerName || 'Trần Văn Nam'}</strong> · ĐT: <span style="font-family:var(--font-mono);">${c.callerPhone || '0918.234.111'}</span></td>
+                        </tr>
+                        <tr>
+                          <td style="color:var(--text-slate);">CCCD / BHYT:</td>
+                          <td><span style="font-family:var(--font-mono);">${c.patient?.nationalId || '092095001234'}</span> · <span style="font-family:var(--font-mono);color:var(--emerald-light);">${c.patient?.insuranceCode || 'GD4929210088992'}</span></td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
+
+                <!-- 2. NGUYÊN NHÂN & LÂM SÀNG -->
                 <div class="form-section">
-                  <div class="form-section-title">Hiện trường & Tình huống</div>
-                  <div style="font-size:13px;display:flex;flex-direction:column;gap:4px;">
-                    <div>Hiện trường: <strong style="color:var(--text-white);">${c.location.address}</strong></div>
-                    <div>Loại tình huống: <span class="badge badge-emergency">${c.incident.name}</span></div>
-                    <div>Mô tả: ${c.incident.description}</div>
+                  <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+                    <span>NGUYÊN NHÂN & LÂM SÀNG</span>
+                    <span class="badge ${c.incident?.severity === 'CRITICAL' ? 'badge-emergency' : 'badge-amber'}">${c.incident?.severityText || 'Khẩn cấp'}</span>
                   </div>
+
+                  <div style="margin-bottom:8px;">
+                    <div style="font-size:11px;color:var(--text-slate);margin-bottom:2px;">Loại hình cấp cứu / Hoàn cảnh:</div>
+                    <div style="font-size:13.5px;font-weight:700;color:var(--text-white);display:flex;align-items:center;gap:6px;">
+                      <span>🚑</span> ${c.incident?.name || 'Tai nạn giao thông'}
+                    </div>
+                  </div>
+
+                  <div style="margin-bottom:10px;">
+                    <div style="font-size:11px;color:var(--text-slate);margin-bottom:3px;">Mô tả triệu chứng tiếp nhận hiện trường:</div>
+                    <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border-main);border-radius:6px;padding:8px 10px;font-size:12px;color:var(--text-light);line-height:1.45;">
+                      ${c.incident?.description || 'Nạn nhân va chạm giao thông tốc độ cao, đa chấn thương phần mềm và xây xát cẳng tay, tỉnh táo, đau tức ngực nhẹ.'}
+                    </div>
+                  </div>
+
+                  <div class="data-table-container" style="border:none;">
+                    <table class="command-table" style="font-size:12px;">
+                      <tbody>
+                        <tr>
+                          <td style="width:120px;color:var(--text-slate);">Tiền sử bệnh nền:</td>
+                          <td><strong style="color:#fbbf24;">${c.patient?.history || 'Tăng huyết áp, Đái tháo đường Type 2'}</strong></td>
+                        </tr>
+                        <tr>
+                          <td style="color:var(--text-slate);">Dị ứng thuốc:</td>
+                          <td><span style="color:var(--red-light);font-weight:600;">${c.patient?.allergies || 'Dị ứng Penicillin'}</span></td>
+                        </tr>
+                        <tr>
+                          <td style="color:var(--text-slate);">Tình trạng tri giác:</td>
+                          <td><span class="badge badge-emerald">Tỉnh táo, tiếp xúc tốt</span> · BS tư vấn: CKI. Lê Quốc Trí</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- 3. DẤU HIỆU SINH TỒN NGOẠI VIỆN (VITALS DASHBOARD + DẢI SÓNG ECG) -->
+                <div class="form-section">
+                  <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+                    <span>DẤU HIỆU SINH TỒN NGOẠI VIỆN (VITALS)</span>
+                    <span class="badge badge-emerald" style="font-family:var(--font-mono);">MONITOR LIVE</span>
+                  </div>
+
+                  <!-- 6 Ô SINH TỒN NGOẠI VIỆN -->
+                  <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;margin-bottom:10px;">
+                    <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:6px;padding:6px 8px;text-align:center;">
+                      <div style="font-size:10px;color:var(--text-slate);">Mạch (Pulse)</div>
+                      <div style="font-size:15px;font-weight:700;color:var(--text-white);font-family:var(--font-mono);margin-top:1px;">${c.epcr?.vitals?.pulse || 88} <span style="font-size:9.5px;color:var(--text-muted);font-weight:normal;">bpm</span></div>
+                    </div>
+                    <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:6px;padding:6px 8px;text-align:center;">
+                      <div style="font-size:10px;color:var(--text-slate);">Huyết áp (BP)</div>
+                      <div style="font-size:15px;font-weight:700;color:var(--text-white);font-family:var(--font-mono);margin-top:1px;">${c.epcr?.vitals?.bp || '130/80'} <span style="font-size:9.5px;color:var(--text-muted);font-weight:normal;">mmHg</span></div>
+                    </div>
+                    <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:6px;padding:6px 8px;text-align:center;">
+                      <div style="font-size:10px;color:var(--text-slate);">SpO2</div>
+                      <div style="font-size:15px;font-weight:700;color:#38bdf8;font-family:var(--font-mono);margin-top:1px;">${c.epcr?.vitals?.spO2 || 97}%</div>
+                    </div>
+                    <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:6px;padding:6px 8px;text-align:center;">
+                      <div style="font-size:10px;color:var(--text-slate);">Nhịp thở</div>
+                      <div style="font-size:15px;font-weight:700;color:var(--text-white);font-family:var(--font-mono);margin-top:1px;">${c.epcr?.vitals?.rr || 18} <span style="font-size:9.5px;color:var(--text-muted);font-weight:normal;">l/p</span></div>
+                    </div>
+                    <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:6px;padding:6px 8px;text-align:center;">
+                      <div style="font-size:10px;color:var(--text-slate);">Thân nhiệt</div>
+                      <div style="font-size:15px;font-weight:700;color:var(--text-white);font-family:var(--font-mono);margin-top:1px;">${c.epcr?.vitals?.temp || 36.8}°C</div>
+                    </div>
+                    <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:6px;padding:6px 8px;text-align:center;">
+                      <div style="font-size:10px;color:var(--text-slate);">Glasgow</div>
+                      <div style="font-size:15px;font-weight:700;color:#34d399;font-family:var(--font-mono);margin-top:1px;">15 <span style="font-size:9.5px;color:var(--text-muted);font-weight:normal;">điểm</span></div>
+                    </div>
+                  </div>
+
+                  <!-- Dải sóng Monitor ECG Mini tích hợp -->
+                  <div style="background:#06121f;border:1px solid rgba(34,197,94,0.3);border-radius:6px;padding:6px 10px;position:relative;overflow:hidden;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;font-size:10px;">
+                      <span style="color:#22c55e;font-weight:700;font-family:var(--font-mono);">LEAD II · ECG 25mm/s</span>
+                      <span style="color:var(--text-slate);font-family:var(--font-mono);">HR: ${c.epcr?.vitals?.pulse || 88} bpm</span>
+                    </div>
+                    <svg width="100%" height="40" viewBox="0 0 380 40" style="background:#040b13;border-radius:4px;">
+                      <path d="M 0 22 L 30 22 L 40 22 L 45 10 L 52 35 L 58 4 L 65 28 L 72 22 L 120 22 L 130 22 L 135 10 L 142 35 L 148 4 L 155 28 L 162 22 L 210 22 L 220 22 L 225 10 L 232 35 L 238 4 L 245 28 L 252 22 L 300 22 L 310 22 L 315 10 L 322 35 L 328 4 L 335 28 L 342 22 L 380 22" fill="none" stroke="#22c55e" stroke-width="2" />
+                    </svg>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- NỬA PHẢI (50% LAYOUT): BẢN ĐỒ GIS RADAR GIÁM SÁT THỜI GIAN THỰC LỚN -->
+              <div class="form-section" style="display:flex;flex-direction:column;padding:0;overflow:hidden;background:#06101c;border:1px solid var(--border-accent);min-height:550px;">
+                <!-- Header mini map -->
+                <div style="height:36px;background:rgba(7,19,32,0.92);backdrop-filter:blur(8px);z-index:10;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid rgba(255,255,255,0.08);font-size:11.5px;color:var(--text-slate);flex-shrink:0;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;box-shadow:0 0 10px #10b981;"></span>
+                    <strong style="color:var(--text-white);letter-spacing:0.8px;">GIÁM SÁT GIS RADAR 115</strong>
+                  </div>
+                  <span style="font-family:var(--font-mono);color:var(--accent-cyan);font-weight:600;">GPS LIVE ±3m · TẦNG SỐ VÔ TUYẾN 154.200 MHz</span>
+                </div>
+
+                <!-- SVG Radar Canvas 50/50 Large Size -->
+                <div style="flex:1;position:relative;width:100%;min-height:480px;">
+                  <svg viewBox="0 0 650 500" style="position:absolute;inset:0;width:100%;height:100%;background:radial-gradient(circle at 50% 50%, #0d2640 0%, #050d18 100%);">
+                    <defs>
+                      <pattern id="radarGridHalf" width="30" height="30" patternUnits="userSpaceOnUse">
+                        <path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(56, 189, 248, 0.08)" stroke-width="1"/>
+                      </pattern>
+                      <radialGradient id="redGlowHalf" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#ef4444" stop-opacity="0.9"/>
+                        <stop offset="100%" stop-color="#ef4444" stop-opacity="0"/>
+                      </radialGradient>
+                      <radialGradient id="amberGlowHalf" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.9"/>
+                        <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+                      </radialGradient>
+                    </defs>
+
+                    <rect width="650" height="500" fill="url(#radarGridHalf)" />
+
+                    <!-- Vòng quét Radar -->
+                    <circle cx="325" cy="270" r="160" fill="none" stroke="rgba(56, 189, 248, 0.12)" stroke-width="1" />
+                    <circle cx="325" cy="270" r="240" fill="none" stroke="rgba(56, 189, 248, 0.08)" stroke-width="1" />
+
+                    <!-- Dải Sông Cần Thơ mềm mại -->
+                    <path d="M 0 140 Q 180 230 320 120 T 650 200 L 650 310 Q 460 210 310 240 T 0 260 Z" fill="#0b2c47" opacity="0.65" />
+                    
+                    <!-- Trục đường lộ TP Cần Thơ -->
+                    <path d="M 40 450 L 320 280 L 580 130" stroke="rgba(148, 163, 184, 0.3)" stroke-width="6" stroke-linecap="round" />
+                    <path d="M 100 40 L 320 280 L 420 460" stroke="rgba(148, 163, 184, 0.22)" stroke-width="4.5" stroke-linecap="round" />
+                    <path d="M 210 460 L 530 60" stroke="rgba(148, 163, 184, 0.22)" stroke-width="3.5" stroke-linecap="round" />
+
+                    <!-- Tuyến lộ trình: Xe cứu thương -> Hiện trường -> Bệnh viện -->
+                    <polyline points="150,370 320,280 520,150" fill="none" stroke="#38bdf8" stroke-width="4" stroke-dasharray="9,5" stroke-linecap="round">
+                      <animate attributeName="stroke-dashoffset" values="28;0" dur="1.2s" repeatCount="indefinite" />
+                    </polyline>
+
+                    <!-- 1. VỊ TRÍ CA CẤP CỨU (HIỆN TRƯỜNG) -->
+                    <g transform="translate(320, 280)">
+                      <circle r="30" fill="url(#redGlowHalf)">
+                        <animate attributeName="r" values="14;38;14" dur="2s" repeatCount="indefinite" />
+                        <animate attributeName="opacity" values="0.9;0.2;0.9" dur="2s" repeatCount="indefinite" />
+                      </circle>
+                      <circle r="9" fill="#ef4444" stroke="#ffffff" stroke-width="2.5" />
+                      <!-- Label Hiện trường -->
+                      <rect x="-60" y="14" width="120" height="22" rx="4" fill="rgba(239, 68, 68, 0.95)" stroke="rgba(255,255,255,0.4)" stroke-width="1" />
+                      <text x="0" y="30" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">HIỆN TRƯỜNG CA</text>
+                    </g>
+
+                    <!-- 2. VỊ TRÍ XE CỨU THƯƠNG -->
+                    <g transform="translate(150, 370)">
+                      <circle r="22" fill="url(#amberGlowHalf)">
+                        <animate attributeName="r" values="10;26;10" dur="2.5s" repeatCount="indefinite" />
+                      </circle>
+                      <rect x="-14" y="-12" width="28" height="24" rx="5" fill="#f59e0b" stroke="#ffffff" stroke-width="2" />
+                      <path d="M -7 -3 L 7 -3 M -7 3 L 7 3" stroke="#000" stroke-width="2" stroke-linecap="round" />
+                      <!-- Label Biển số -->
+                      <rect x="-65" y="-36" width="130" height="20" rx="4" fill="rgba(15, 23, 42, 0.95)" stroke="#f59e0b" stroke-width="1.2" />
+                      <text x="0" y="-22" fill="#f59e0b" font-size="11" font-weight="bold" font-family="monospace" text-anchor="middle">${c.dispatch?.vehiclePlate || '65A-012.34'} · ${c.speed || 52}km/h</text>
+                    </g>
+
+                    <!-- 3. VỊ TRÍ BỆNH VIỆN TIẾP NHẬN -->
+                    <g transform="translate(520, 150)">
+                      <circle r="20" fill="rgba(16, 185, 129, 0.35)" />
+                      <rect x="-16" y="-16" width="32" height="32" rx="6" fill="#047857" stroke="#ffffff" stroke-width="2.5" />
+                      <!-- Chữ thập y tế -->
+                      <path d="M -3 -10 L 3 -10 L 3 -3 L 10 -3 L 10 3 L 3 3 L 3 10 L -3 10 L -3 3 L -10 3 L -10 -3 L -3 -3 Z" fill="#ffffff" />
+                      <!-- Label Bệnh viện -->
+                      <rect x="-75" y="-40" width="150" height="21" rx="4" fill="rgba(15, 23, 42, 0.95)" stroke="#10b981" stroke-width="1.2" />
+                      <text x="0" y="-25" fill="#10b981" font-size="11" font-weight="bold" text-anchor="middle">${c.dispatch?.hospitalName?.includes('TW') ? 'BVĐK TRUNG ƯƠNG' : 'BVĐK TP CẦN THƠ'}</text>
+                    </g>
+                  </svg>
+                </div>
+
+                <!-- Footer mini map -->
+                <div style="height:34px;background:rgba(7,19,32,0.92);backdrop-filter:blur(8px);z-index:10;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-top:1px solid rgba(255,255,255,0.08);font-size:11.5px;flex-shrink:0;">
+                  <span style="color:var(--text-slate);display:flex;align-items:center;gap:6px;">
+                    📍 <strong style="color:var(--text-white);">${c.location?.address ? c.location.address : 'Khu vực TP Cần Thơ'}</strong>
+                  </span>
+                  <span style="color:var(--accent-amber);font-weight:700;font-size:12px;">ETA đến BV: ~${c.eta || '6 phút'}</span>
                 </div>
               </div>
 
-              <div class="form-section">
-                <div class="form-section-title">Phương án Điều phối Hiện tại</div>
-                <div class="form-grid-3" style="font-size:13px;">
-                  <div>Xe cấp cứu: <strong style="color:var(--text-white);font-family:var(--font-mono);">${c.dispatch.vehiclePlate}</strong></div>
-                  <div>Kíp trực: ${c.dispatch.crewName}</div>
-                  <div>Bệnh viện tiếp nhận: <strong style="color:var(--text-white);">${c.dispatch.hospitalName}</strong></div>
-                </div>
-              </div>
             </div>
           `;
-        } else if (tabName === 'tab-dispatch') {
-          // TT-09 Dispatch tab
+        }
+
+        // --- TAB 2: PHÂN CÔNG / ĐIỀU PHỐI (Layout Mở Rộng 3 Cột) ---
+        else if (tabName === 'tab-dispatch') {
           body.innerHTML = `
             <div style="display:flex;flex-direction:column;gap:16px;">
+              <!-- LƯỚI 2 CỘT LỚN CÂN ĐỐI -->
+              <div class="form-grid-2">
+
+                <!-- KHỐI 1: XE NHẬN CA -->
+                <div class="form-section">
+                  <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+                    <span>1. XE NHẬN CA & VẬN HÀNH</span>
+                    <span class="badge badge-accent" style="font-family:var(--font-mono);font-size:13px;">${c.dispatch?.vehiclePlate || '65A-012.34'}</span>
+                  </div>
+
+                  <div class="data-table-container" style="border:none;">
+                    <table class="command-table" style="font-size:12.5px;">
+                      <tbody>
+                        <tr>
+                          <td style="width:140px;color:var(--text-slate);">Biển số xe:</td>
+                          <td><strong style="color:var(--text-white);font-family:var(--font-mono);font-size:14px;">${c.dispatch?.vehiclePlate || '65A-012.34'}</strong></td>
+                        </tr>
+                        <tr>
+                          <td style="color:var(--text-slate);">Phân loại xe:</td>
+                          <td><span class="badge badge-emergency">Type A (Hồi sức Cấp cứu Chuyên sâu)</span></td>
+                        </tr>
+                        <tr>
+                          <td style="color:var(--text-slate);">Trạm đóng quân:</td>
+                          <td>${c.dispatch?.stationName || 'Trạm Cấp cứu Ninh Kiều - 115 Cần Thơ'}</td>
+                        </tr>
+                        <tr>
+                          <td style="color:var(--text-slate);">Vận tốc & Trạng thái:</td>
+                          <td><strong style="color:#f59e0b;">${c.speed || 52} km/h</strong> · Đang bật còi ưu tiên & đèn khẩn cấp</td>
+                        </tr>
+                        <tr>
+                          <td style="color:var(--text-slate);">Nhiên liệu & Oxy:</td>
+                          <td>Xăng: <strong style="color:var(--emerald-light);">78%</strong> · Bình Oxy y tế: <strong style="color:var(--emerald-light);">92%</strong></td>
+                        </tr>
+                        <tr>
+                          <td style="color:var(--text-slate);">Trang thiết bị xe:</td>
+                          <td style="font-size:12px;color:var(--text-light);">Monitor 5 thông số, Máy sốc tim khử rung AED, Bộ nẹp cố định chi, Máy hút đờm di động</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- KHỐI 2: BỆNH VIỆN TIẾP NHẬN & NGƯỜI NHẬN -->
+                <div class="form-section">
+                  <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+                    <span>2. BỆNH VIỆN TIẾP NHẬN & NGƯỜI NHẬN</span>
+                    <span class="badge badge-emerald">ĐÃ XÁC NHẬN SẴN SÀNG</span>
+                  </div>
+
+                  <div class="data-table-container" style="border:none;">
+                    <table class="command-table" style="font-size:12.5px;">
+                      <tbody>
+                        <tr>
+                          <td style="width:150px;color:var(--text-slate);">Bệnh viện tiếp nhận:</td>
+                          <td><strong style="color:var(--text-white);font-size:13.5px;">${c.dispatch?.hospitalName || 'BV Đa khoa TP Cần Thơ'}</strong></td>
+                        </tr>
+                        <tr>
+                          <td style="color:var(--text-slate);">Địa chỉ BV:</td>
+                          <td>Số 04 Châu Văn Liêm, P. An Lạc, Q. Ninh Kiều, TP. Cần Thơ</td>
+                        </tr>
+                        <tr>
+                          <td style="color:var(--text-slate);">Người nhận tại viện:</td>
+                          <td><strong style="color:var(--accent-cyan);font-size:13px;">${receiverName}</strong></td>
+                        </tr>
+                        <tr>
+                          <td style="color:var(--text-slate);">Khoa tiếp nhận:</td>
+                          <td>Khoa Hồi sức Cấp cứu (A9) · Buồng Cấp cứu Ngoại</td>
+                        </tr>
+                        <tr>
+                          <td style="color:var(--text-slate);">Năng lực tiếp nhận:</td>
+                          <td><strong style="color:var(--emerald-light);">12 giường cấp cứu trống</strong> · 5 máy thở sẵn sàng</td>
+                        </tr>
+                        <tr>
+                          <td style="color:var(--text-slate);">Hotline trực viện:</td>
+                          <td><span style="font-family:var(--font-mono);color:var(--text-white);">0292.3821.236</span> (Trực cấp cứu 24/7)</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- KHỐI 3: DANH SÁCH KÍP CẤP CỨU ĐƯỢC PHÂN CÔNG (FULL WIDTH TABLE) -->
               <div class="form-section">
-                <div class="form-section-title">Thay đổi Phương án Điều phối</div>
+                <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+                  <span>3. DANH SÁCH KÍP CẤP CỨU NGOẠI VIỆN (${c.dispatch?.crewName || crewObj.name})</span>
+                  <span style="font-size:11.5px;color:var(--text-slate);">Ca trực: 07:00 - 15:00 · Trực tổng đài điều động</span>
+                </div>
+
+                <div class="data-table-container">
+                  <table class="command-table" style="font-size:12.5px;">
+                    <thead>
+                      <tr>
+                        <th style="width:220px;">Vai trò nhiệm vụ</th>
+                        <th>Họ và tên nhân sự</th>
+                        <th style="width:240px;">Số điện thoại</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><span class="badge badge-emergency" style="font-size:11.5px;">Bác sĩ Kíp trưởng</span></td>
+                        <td><strong style="color:var(--text-white);font-size:13px;">${crewObj.doctor || 'BS. CKI. Nguyễn Văn Thành'}</strong></td>
+                        <td><span style="font-family:var(--font-mono);color:var(--accent-cyan);font-weight:600;font-size:13px;">0913.111.222</span></td>
+                      </tr>
+                      <tr>
+                        <td><span class="badge badge-accent" style="font-size:11.5px;">Điều dưỡng Cấp cứu</span></td>
+                        <td><strong style="color:var(--text-white);font-size:13px;">${crewObj.nurse || 'ĐD. Trần Thị Mai'}</strong></td>
+                        <td><span style="font-family:var(--font-mono);color:var(--accent-cyan);font-weight:600;font-size:13px;">0913.333.444</span></td>
+                      </tr>
+                      <tr>
+                        <td><span class="badge badge-default" style="font-size:11.5px;">Lái xe Cứu thương</span></td>
+                        <td><strong style="color:var(--text-white);font-size:13px;">${crewObj.driver || 'Lê Văn Hùng'}</strong></td>
+                        <td><span style="font-family:var(--font-mono);color:var(--accent-cyan);font-weight:600;font-size:13px;">0913.555.666</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- KHỐI 4: THAO TÁC NGHIỆP VỤ ĐIỀU PHỐI (ĐỔI XE / ĐỔI BV / HỦY CA) -->
+              <div class="form-section">
+                <div class="form-section-title">4. THAO TÁC ĐIỀU CHỈNH PHÂN CÔNG ĐIỀU PHỐI (NẾU CẦN THIẾT)</div>
                 <div class="form-grid-2">
                   <div>
-                    <label class="form-label">Thu hồi & Đổi xe cứu thương khác</label>
+                    <label class="form-label">Thu hồi & Đổi sang xe cứu thương khác</label>
                     <div style="display:flex;gap:8px;margin-top:6px;">
-                      <select id="modal-change-vehicle-select">
+                      <select id="modal-change-vehicle-select" style="flex:1;">
                         <option value="65A-015.67">65A-015.67 (Type A - Trạm Ninh Kiều)</option>
                         <option value="65A-018.89">65A-018.89 (Type B - Trạm Bình Thủy)</option>
+                        <option value="65A-019.99">65A-019.99 (Type C - Trạm Ô Môn)</option>
                       </select>
                       <button class="btn btn-default" id="btn-action-change-vehicle">Đổi Xe</button>
                     </div>
                   </div>
                   <div>
-                    <label class="form-label">Chuyển sang Bệnh viện khác</label>
+                    <label class="form-label">Chuyển sang Bệnh viện tiếp nhận khác</label>
                     <div style="display:flex;gap:8px;margin-top:6px;">
-                      <select id="modal-change-hosp-select">
+                      <select id="modal-change-hosp-select" style="flex:1;">
                         <option value="HOSP_BVTU">BV Đa khoa TW Cần Thơ</option>
                         <option value="HOSP_BVND">BV Nhi đồng Cần Thơ</option>
+                        <option value="HOSP_BVUB">BV Ung bướu Cần Thơ</option>
                       </select>
                       <button class="btn btn-default" id="btn-action-change-hosp">Đổi BV</button>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <div class="form-section" style="border-color:var(--red-border);">
-                <div class="form-section-title" style="color:var(--red-vivid);">Hủy Ca Cấp cứu kèm Lý do</div>
-                <div class="form-grid-2">
-                  <div class="form-field">
-                    <label class="form-label">Lý do hủy</label>
-                    <select id="modal-cancel-reason-select">
-                      ${state.terminationReasons.map(r => `<option value="${r.name}">${r.name}</option>`).join('')}
-                    </select>
-                  </div>
-                  <div style="display:flex;align-items:flex-end;">
-                    <button class="btn btn-emergency" id="btn-action-cancel-case">Xác nhận Hủy Ca</button>
+                <div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--border-main);">
+                  <div class="form-grid-2">
+                    <div class="form-field">
+                      <label class="form-label" style="color:var(--red-light);">Lý do Hủy ca cấp cứu (nếu hủy)</label>
+                      <select id="modal-cancel-reason-select">
+                        ${state.terminationReasons.map(r => `<option value="${r.name}">${r.name}</option>`).join('')}
+                      </select>
+                    </div>
+                    <div style="display:flex;align-items:flex-end;">
+                      <button class="btn btn-emergency" id="btn-action-cancel-case">Xác nhận Hủy Ca</button>
+                    </div>
                   </div>
                 </div>
               </div>
+
             </div>
           `;
 
+          // Gán sự kiện đổi xe, đổi BV, hủy ca
           body.querySelector('#btn-action-change-vehicle')?.addEventListener('click', () => {
             const newPlate = body.querySelector('#modal-change-vehicle-select').value;
             window.StateManager.updateCase(c.id, {
@@ -4184,7 +5697,7 @@
             });
             window.StateManager.addCaseLog(c.id, `Thu hồi lệnh cũ, đổi sang xe ${newPlate}`);
             window.CCNV_UI.Toast.show('Đã đổi xe cứu thương', `Xe ${newPlate} đã được gán cho ca ${c.code}`);
-            renderTab('tab-overview');
+            renderTab('tab-dispatch');
           });
 
           body.querySelector('#btn-action-change-hosp')?.addEventListener('click', () => {
@@ -4194,7 +5707,7 @@
             });
             window.StateManager.addCaseLog(c.id, `Thay đổi bệnh viện tiếp nhận sang ${hospText}`);
             window.CCNV_UI.Toast.show('Đã đổi Bệnh viện', `Bệnh viện tiếp nhận mới: ${hospText}`);
-            renderTab('tab-overview');
+            renderTab('tab-dispatch');
           });
 
           body.querySelector('#btn-action-cancel-case')?.addEventListener('click', () => {
@@ -4207,71 +5720,375 @@
             window.StateManager.addCaseLog(c.id, `Hủy ca cấp cứu. Lý do: ${reason}`);
             window.CCNV_UI.Toast.show('Đã hủy ca', `Ca ${c.code} đã hủy với lý do: ${reason}`);
             modalOverlay.classList.remove('active');
-            this.renderCasesListView(document.getElementById('main-content-viewport'));
+            const mainViewport = document.getElementById('main-content-viewport');
+            if (mainViewport) this.renderCasesListView(mainViewport);
           });
-        } else if (tabName === 'tab-epcr') {
-          body.innerHTML = `<div id="modal-epcr-form-wrap"></div>`;
-          window.EPCRForm.render('modal-epcr-form-wrap', c.epcr || {}, false, (updated) => {
-            c.epcr = updated;
-            window.StateManager.saveToSession();
-            window.StateManager.addCaseLog(c.id, 'Cập nhật phiếu ePCR');
-          });
-        } else if (tabName === 'tab-milestones') {
+        }
+
+        // --- TAB 3: HỒ SƠ (Thư viện hình ảnh & Tệp tin đính kèm) ---
+        else if (tabName === 'tab-documents') {
           body.innerHTML = `
-            <div style="padding:10px 0;">
-              <h4 style="color:var(--text-white);margin-bottom:12px;">Tiến trình Mốc thời gian tự động:</h4>
-              <div class="stepper-row">
-                ${(c.milestones || []).map((m, idx) => `
-                  <div class="step-node ${m.done ? 'completed' : ''}">
-                    <div class="step-circle">${m.done ? '✓' : idx + 1}</div>
-                    <span class="step-title">${m.name}</span>
-                    <span style="font-size:10px;color:var(--text-muted);">${m.time || '—'}</span>
+            <div style="display:flex;flex-direction:column;gap:16px;">
+              
+              <!-- PHẦN 1: BỘ SƯU TẬP HÌNH ẢNH HIỆN TRƯỜNG & Y TẾ -->
+              <div class="form-section">
+                <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+                  <span>1. THƯ VIỆN HÌNH ẢNH HIỆN TRƯỜNG & Y TẾ (4 HÌNH ẢNH)</span>
+                  <button class="btn btn-default btn-sm" id="btn-upload-more-photo">
+                    📷 + Chụp / Tải ảnh lên
+                  </button>
+                </div>
+
+                <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:16px;margin-top:10px;">
+                  
+                  <!-- Ảnh 1: Hiện trường -->
+                  <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;">
+                    <div style="height:150px;background:#0c1929;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;" class="img-preview-card" data-title="Ảnh Hiện trường va chạm">
+                      <svg width="100%" height="100%" viewBox="0 0 160 120">
+                        <rect width="160" height="120" fill="#0f2338"/>
+                        <path d="M 0 100 L 160 80" stroke="#334155" stroke-width="12" />
+                        <circle cx="80" cy="70" r="14" fill="#ef4444" opacity="0.3" />
+                        <text x="80" y="65" fill="#f87171" font-size="24" text-anchor="middle">🏍️</text>
+                        <text x="80" y="105" fill="#94a3b8" font-size="9" text-anchor="middle">HIỆN TRƯỜNG TAI NẠN</text>
+                      </svg>
+                      <span class="badge badge-emergency" style="position:absolute;top:8px;left:8px;font-size:10px;">Hiện trường</span>
+                    </div>
+                    <div style="padding:10px 12px;font-size:12px;">
+                      <div style="font-weight:600;color:var(--text-white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">IMG_HienTruong_01.jpg</div>
+                      <div style="color:var(--text-muted);font-size:11px;margin-top:2px;">Chụp lúc 08:18 · 1.8 MB</div>
+                    </div>
                   </div>
-                `).join('')}
+
+                  <!-- Ảnh 2: Tổn thương & Nẹp -->
+                  <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;">
+                    <div style="height:150px;background:#0c1929;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;" class="img-preview-card" data-title="Ảnh Sơ cứu nẹp cố định tay">
+                      <svg width="100%" height="100%" viewBox="0 0 160 120">
+                        <rect width="160" height="120" fill="#132338"/>
+                        <circle cx="80" cy="55" r="20" fill="#38bdf8" opacity="0.2" />
+                        <text x="80" y="62" fill="#38bdf8" font-size="24" text-anchor="middle">🩹</text>
+                        <text x="80" y="105" fill="#94a3b8" font-size="9" text-anchor="middle">BĂNG NẸP CHI TRÊN</text>
+                      </svg>
+                      <span class="badge badge-accent" style="position:absolute;top:8px;left:8px;font-size:10px;">Y tế</span>
+                    </div>
+                    <div style="padding:10px 12px;font-size:12px;">
+                      <div style="font-weight:600;color:var(--text-white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">IMG_SoCuu_NepTay_02.jpg</div>
+                      <div style="color:var(--text-muted);font-size:11px;margin-top:2px;">Chụp lúc 08:21 · 2.1 MB</div>
+                    </div>
+                  </div>
+
+                  <!-- Ảnh 3: Điện tim ECG -->
+                  <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;">
+                    <div style="height:150px;background:#0c1929;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;" class="img-preview-card" data-title="Ảnh Sóng điện tâm đồ ECG">
+                      <svg width="100%" height="100%" viewBox="0 0 160 120">
+                        <rect width="160" height="120" fill="#0b1e30"/>
+                        <path d="M 0 60 L 30 60 L 40 40 L 50 80 L 60 20 L 70 90 L 80 60 L 110 60 L 120 45 L 130 75 L 160 60" fill="none" stroke="#22c55e" stroke-width="2" />
+                        <text x="80" y="105" fill="#22c55e" font-size="9" font-weight="bold" text-anchor="middle">ECG 12 LEADS (NHỊP XOANG)</text>
+                      </svg>
+                      <span class="badge badge-emerald" style="position:absolute;top:8px;left:8px;font-size:10px;">ECG</span>
+                    </div>
+                    <div style="padding:10px 12px;font-size:12px;">
+                      <div style="font-weight:600;color:var(--text-white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ECG_Monitor_12Leads.png</div>
+                      <div style="color:var(--text-muted);font-size:11px;margin-top:2px;">Chụp lúc 08:23 · 950 KB</div>
+                    </div>
+                  </div>
+
+                  <!-- Ảnh 4: Sảnh Bệnh viện -->
+                  <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;">
+                    <div style="height:150px;background:#0c1929;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;" class="img-preview-card" data-title="Ảnh Sảnh Cấp cứu Bệnh viện">
+                      <svg width="100%" height="100%" viewBox="0 0 160 120">
+                        <rect width="160" height="120" fill="#142236"/>
+                        <circle cx="80" cy="55" r="20" fill="#f59e0b" opacity="0.2" />
+                        <text x="80" y="62" fill="#f59e0b" font-size="24" text-anchor="middle">🏥</text>
+                        <text x="80" y="105" fill="#94a3b8" font-size="9" text-anchor="middle">SẢNH TIẾP NHẬN BV</text>
+                      </svg>
+                      <span class="badge badge-amber" style="position:absolute;top:8px;left:8px;font-size:10px;">Bàn giao</span>
+                    </div>
+                    <div style="padding:10px 12px;font-size:12px;">
+                      <div style="font-weight:600;color:var(--text-white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">IMG_SanhCapCuu_BVDK.jpg</div>
+                      <div style="color:var(--text-muted);font-size:11px;margin-top:2px;">Chụp lúc 08:35 · 2.4 MB</div>
+                    </div>
+                  </div>
+
+                </div>
               </div>
-            </div>
-          `;
-        } else if (tabName === 'tab-logs') {
-          body.innerHTML = `
-            <div class="data-table-container">
-              <table class="command-table">
-                <thead>
-                  <tr>
-                    <th>Thời gian</th>
-                    <th>Người thực hiện</th>
-                    <th>Nội dung sự kiện</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${(c.logs || []).map(l => `
-                    <tr>
-                      <td style="font-family:var(--font-mono);">${l.time}</td>
-                      <td><strong style="color:var(--text-white);">${l.user}</strong></td>
-                      <td>${l.action}</td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-            </div>
-          `;
-        } else if (tabName === 'tab-audio') {
-          body.innerHTML = `
-            <div style="background:var(--bg-elevated);border-radius:8px;padding:24px;text-align:center;border:1px solid var(--border-main);">
-              <h4 style="color:var(--text-white);margin-bottom:8px;">Bản ghi âm cuộc gọi tiếp nhận 115 (Mã ghi âm: REC-20261002-001)</h4>
-              <div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">Thời lượng: 02:04 · Định dạng: WAV 16bit 44.1kHz</div>
-              <div style="display:flex;align-items:center;justify-content:center;gap:12px;">
-                <button class="btn btn-default" id="btn-simulate-play-audio">▶ Phát lại Ghi âm</button>
+
+              <!-- PHẦN 2: DANH MỤC TỆP TIN (FILE) ĐÍNH KÈM -->
+              <div class="form-section">
+                <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+                  <span>2. DANH MỤC TỆP TIN ĐÍNH KÈM (FILES & DOCUMENTS)</span>
+                  <button class="btn btn-default btn-sm" id="btn-upload-attachment">
+                    📁 + Đính kèm tệp tin mới
+                  </button>
+                </div>
+
+                <div class="data-table-container">
+                  <table class="command-table" style="font-size:12.5px;">
+                    <thead>
+                      <tr>
+                        <th>Tên tệp tin</th>
+                        <th style="width:180px;">Loại tài liệu</th>
+                        <th style="width:120px;">Kích thước</th>
+                        <th style="width:190px;">Thời gian đính kèm</th>
+                        <th style="width:200px;">Người tải lên</th>
+                        <th style="width:140px;">Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- File 1: ePCR PDF -->
+                      <tr>
+                        <td>
+                          <div style="display:flex;align-items:center;gap:10px;">
+                            <span style="font-size:20px;">📄</span>
+                            <div>
+                              <strong style="color:var(--text-white);font-family:var(--font-mono);">ePCR_${c.code}.pdf</strong>
+                              <div style="font-size:11px;color:var(--text-muted);">Phiếu bệnh án cấp cứu ngoại viện điện tử</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td><span class="badge badge-emergency">Bệnh án ePCR</span></td>
+                        <td>148 KB</td>
+                        <td style="font-family:var(--font-mono);">08:30:15 - 02/10/2026</td>
+                        <td>${crewObj.doctor || 'BS. Nguyễn Văn Thành'}</td>
+                        <td>
+                          <div style="display:flex;gap:6px;">
+                            <button class="btn btn-ghost btn-sm" id="btn-view-doc-epcr" style="color:var(--accent-cyan);">Xem</button>
+                            <button class="btn btn-ghost btn-sm" id="btn-download-doc-epcr">Tải về</button>
+                          </div>
+                        </td>
+                      </tr>
+
+                      <!-- File 2: Biên bản bàn giao người bệnh PDF -->
+                      <tr>
+                        <td>
+                          <div style="display:flex;align-items:center;gap:10px;">
+                            <span style="font-size:20px;">📝</span>
+                            <div>
+                              <strong style="color:var(--text-white);font-family:var(--font-mono);">BienBan_BanGiao_${c.code}.pdf</strong>
+                              <div style="font-size:11px;color:var(--text-muted);">Biên bản tiếp nhận & bàn giao người bệnh tại BV</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td><span class="badge badge-emerald">Biên bản bàn giao</span></td>
+                        <td>92 KB</td>
+                        <td style="font-family:var(--font-mono);">08:42:00 - 02/10/2026</td>
+                        <td>${receiverName}</td>
+                        <td>
+                          <div style="display:flex;gap:6px;">
+                            <button class="btn btn-ghost btn-sm" id="btn-view-doc-handover" style="color:var(--accent-cyan);">Xem</button>
+                            <button class="btn btn-ghost btn-sm">Tải về</button>
+                          </div>
+                        </td>
+                      </tr>
+
+                      <!-- File 3: Ghi âm cuộc gọi WAV -->
+                      <tr>
+                        <td>
+                          <div style="display:flex;align-items:center;gap:10px;">
+                            <span style="font-size:20px;">🎧</span>
+                            <div>
+                              <strong style="color:var(--text-white);font-family:var(--font-mono);">Record_Call_115_${c.callId || 'CALL-001'}.wav</strong>
+                              <div style="font-size:11px;color:var(--text-muted);">File âm thanh cuộc gọi tiếp nhận 115 · Thời lượng 02:04</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td><span class="badge badge-accent">Ghi âm 115</span></td>
+                        <td>2.3 MB</td>
+                        <td style="font-family:var(--font-mono);">08:12:00 - 02/10/2026</td>
+                        <td>Hệ thống Tổng đài</td>
+                        <td>
+                          <div style="display:flex;gap:6px;">
+                            <button class="btn btn-default btn-sm" id="btn-play-doc-audio" style="color:#f59e0b;">▶ Nghe lại</button>
+                            <button class="btn btn-ghost btn-sm">Tải về</button>
+                          </div>
+                        </td>
+                      </tr>
+
+                      <!-- File 4: ECG Waveform XML -->
+                      <tr>
+                        <td>
+                          <div style="display:flex;align-items:center;gap:10px;">
+                            <span style="font-size:20px;">📊</span>
+                            <div>
+                              <strong style="color:var(--text-white);font-family:var(--font-mono);">ECG_Digital_Waveform.xml</strong>
+                              <div style="font-size:11px;color:var(--text-muted);">Dữ liệu số sóng điện tim 12 chuyển đạo xuất từ Monitor</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td><span class="badge badge-default">Dữ liệu thô</span></td>
+                        <td>42 KB</td>
+                        <td style="font-family:var(--font-mono);">08:24:00 - 02/10/2026</td>
+                        <td>Monitor Xe ${c.dispatch?.vehiclePlate || '65A-012.34'}</td>
+                        <td>
+                          <div style="display:flex;gap:6px;">
+                            <button class="btn btn-ghost btn-sm">Tải về</button>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
+
+              <!-- KHU VỰC DROPZONE TẢI LÊN FILE MỚI -->
+              <div style="border:2px dashed var(--border-accent);border-radius:8px;padding:22px;text-align:center;background:rgba(255,255,255,0.02);">
+                <div style="font-size:28px;margin-bottom:6px;">📤</div>
+                <div style="color:var(--text-white);font-weight:600;font-size:13.5px;">Kéo & Thả tài liệu, hình ảnh hoặc tệp tin ghi âm vào đây</div>
+                <div style="color:var(--text-muted);font-size:11.5px;margin-top:4px;">Hỗ trợ định dạng: PDF, DOCX, JPG, PNG, WAV, MP3 · Dung lượng tối đa: 50MB</div>
+              </div>
+
             </div>
           `;
-          body.querySelector('#btn-simulate-play-audio')?.addEventListener('click', () => {
+
+          // Sự kiện xem preview ảnh
+          body.querySelectorAll('.img-preview-card').forEach(card => {
+            card.addEventListener('click', () => {
+              const title = card.getAttribute('data-title');
+              window.CCNV_UI.Toast.show('Xem hình ảnh', `Đang mở chế độ xem phóng to: ${title}`);
+            });
+          });
+
+          // Sự kiện xem ePCR
+          body.querySelector('#btn-view-doc-epcr')?.addEventListener('click', () => {
+            window.CCNV_UI.Toast.show('Mở phiếu ePCR', `Đang tải mẫu ePCR của ca ${c.code}`);
+          });
+
+          // Sự kiện phát ghi âm
+          body.querySelector('#btn-play-doc-audio')?.addEventListener('click', () => {
             window.CCNV_UI.SoundFx.playBeep();
             window.CCNV_UI.Toast.show('Đang phát ghi âm', 'Đang phát lại đoạn trao đổi giữa ĐPV và người báo tin.');
           });
+
+          body.querySelector('#btn-upload-more-photo')?.addEventListener('click', () => {
+            window.CCNV_UI.Toast.show('Tải ảnh', 'Mở hộp thoại chọn tệp hình ảnh từ thiết bị');
+          });
+
+          body.querySelector('#btn-upload-attachment')?.addEventListener('click', () => {
+            window.CCNV_UI.Toast.show('Đính kèm', 'Mở hộp thoại chọn tệp tài liệu từ thiết bị');
+          });
+        }
+
+        // --- TAB 4: LỊCH SỬ LOG (Nhật ký sự kiện toàn diện full-width) ---
+        else if (tabName === 'tab-logs') {
+          const logsList = (c.logs && c.logs.length >= 3) ? c.logs : [
+            { time: '08:10:15 - 02/10/2026', type: 'CALL', badge: 'NHẬN CUỘC GỌI', color: '#38bdf8', user: 'dpv01 (Nguyễn Văn An)', action: 'Tiếp nhận cuộc gọi khẩn cấp 115 từ số 0918.234.111. Báo tin va chạm giao thông tại Cầu Hưng Lợi.' },
+            { time: '08:11:30 - 02/10/2026', type: 'DISPATCH', badge: 'ĐIỀU XE', color: '#fbbf24', user: 'dpv01 (Nguyễn Văn An)', action: `Tạo ca cấp cứu ${c.code}, phát lệnh điều động xe cứu thương ${c.dispatch?.vehiclePlate || '65A-012.34'} và gửi cảnh báo trước đến ${c.dispatch?.hospitalName || 'BV Đa khoa TP Cần Thơ'}.` },
+            { time: '08:12:10 - 02/10/2026', type: 'HOSPITAL', badge: 'BV PHẢN HỒI', color: '#34d399', user: 'bvdk.tiepnhan', action: `${c.dispatch?.hospitalName || 'BV Đa khoa TP Cần Thơ'} xác nhận sẵn sàng tiếp nhận người bệnh tại Khoa Cấp cứu (A9).` },
+            { time: '08:12:45 - 02/10/2026', type: 'STATUS', badge: 'ĐỔI TRẠNG THÁI', color: '#38bdf8', user: crewObj.driver || 'Lê Văn Hùng', action: 'Kíp cấp cứu xác nhận lên xe xuất phát từ trạm, bật còi ưu tiên di chuyển về phía hiện trường.' },
+            { time: '08:18:20 - 02/10/2026', type: 'STATUS', badge: 'ĐỔI TRẠNG THÁI', color: '#38bdf8', user: crewObj.doctor || 'BS. Nguyễn Văn Thành', action: 'Xe tiếp cận hiện trường tai nạn tại Khu vực Cầu Hưng Lợi, bắt đầu tiếp cận và thăm khám nạn nhân.' },
+            { time: '08:20:00 - 02/10/2026', type: 'MEDICAL', badge: 'Y TẾ', color: '#f472b6', user: crewObj.doctor || 'BS. Nguyễn Văn Thành', action: 'Đo sinh hiệu (HA 130/80, SpO2 97%), băng ép vô trùng cẳng tay phải, đặt nẹp cố định mềm chi trên.' },
+            { time: '08:24:10 - 02/10/2026', type: 'STATUS', badge: 'ĐỔI TRẠNG THÁI', color: '#fbbf24', user: crewObj.driver || 'Lê Văn Hùng', action: `Đưa người bệnh lên xe cứu thương an toàn, bắt đầu vận chuyển khẩn cấp về ${c.dispatch?.hospitalName || 'BV Đa khoa TP Cần Thơ'}.` },
+            { time: '08:42:00 - 02/10/2026', type: 'HANDOVER', badge: 'BÀN GIAO', color: '#c084fc', user: receiverName, action: 'Xe đến sảnh cấp cứu viện, kíp trực tiến hành bàn giao hồ sơ bệnh án ePCR và người bệnh cho Bác sĩ trực khoa Cấp cứu.' }
+          ];
+
+          body.innerHTML = `
+            <div style="display:flex;flex-direction:column;gap:16px;">
+              <!-- TIMELINE NHẬT KÝ SỰ KIỆN DỌC TỪ TRÊN XUỐNG DƯỚI -->
+              <div class="form-section">
+                <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;border-bottom:1px solid var(--border-main);padding-bottom:10px;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="color:var(--accent-cyan);">⏱</span>
+                    <span>TIẾN TRÌNH VÒNG ĐỜI CA CẤP CỨU (DÒNG THỜI GIAN DỌC)</span>
+                  </div>
+                  <span style="font-size:11.5px;color:var(--text-slate);font-family:var(--font-mono);">Tổng cộng: ${logsList.length} mốc sự kiện · Sắp xếp theo trình tự thời gian</span>
+                </div>
+
+                <!-- Khung chứa Timeline Dọc -->
+                <div style="position:relative;padding:10px 10px 20px 24px;max-width:1100px;margin:0 auto;">
+                  <!-- Trục line dọc xuyên suốt -->
+                  <div style="position:absolute;left:42px;top:15px;bottom:20px;width:2px;background:linear-gradient(180deg, #38bdf8 0%, #fbbf24 35%, #34d399 75%, #c084fc 100%);"></div>
+
+                  <!-- Danh sách các node mốc thời gian -->
+                  <div style="display:flex;flex-direction:column;gap:22px;">
+                    ${logsList.map((l, idx) => {
+                      let nodeColor = '#38bdf8';
+                      let iconSymbol = '📞';
+                      let badgeBg = 'rgba(56,189,248,0.15)';
+                      let badgeBorder = 'rgba(56,189,248,0.35)';
+                      let badgeText = 'NHẬN CUỘC GỌI';
+
+                      if (l.type === 'CALL' || l.action.toLowerCase().includes('cuộc gọi')) {
+                        nodeColor = '#38bdf8';
+                        iconSymbol = '📞';
+                        badgeBg = 'rgba(56,189,248,0.15)';
+                        badgeBorder = 'rgba(56,189,248,0.35)';
+                        badgeText = 'NHẬN CUỘC GỌI';
+                      } else if (l.type === 'DISPATCH' || l.action.toLowerCase().includes('điều xe') || l.action.toLowerCase().includes('lệnh')) {
+                        nodeColor = '#fbbf24';
+                        iconSymbol = '🚨';
+                        badgeBg = 'rgba(245,158,11,0.15)';
+                        badgeBorder = 'rgba(245,158,11,0.35)';
+                        badgeText = 'ĐIỀU ĐỘNG XE';
+                      } else if (l.type === 'HOSPITAL' || l.action.toLowerCase().includes('sẵn sàng') || l.action.toLowerCase().includes('khoa cấp cứu')) {
+                        nodeColor = '#10b981';
+                        iconSymbol = '🏥';
+                        badgeBg = 'rgba(16,185,129,0.15)';
+                        badgeBorder = 'rgba(16,185,129,0.35)';
+                        badgeText = 'BV TIẾP NHẬN';
+                      } else if (l.type === 'MEDICAL' || l.action.toLowerCase().includes('sinh hiệu') || l.action.toLowerCase().includes('băng')) {
+                        nodeColor = '#f472b6';
+                        iconSymbol = '🩹';
+                        badgeBg = 'rgba(244,114,182,0.15)';
+                        badgeBorder = 'rgba(244,114,182,0.35)';
+                        badgeText = 'CAN THIỆP Y TẾ';
+                      } else if (l.type === 'HANDOVER' || l.action.toLowerCase().includes('bàn giao')) {
+                        nodeColor = '#c084fc';
+                        iconSymbol = '🤝';
+                        badgeBg = 'rgba(192,132,252,0.15)';
+                        badgeBorder = 'rgba(192,132,252,0.35)';
+                        badgeText = 'BÀN GIAO TẠI VIỆN';
+                      } else {
+                        nodeColor = '#34d399';
+                        iconSymbol = '🚑';
+                        badgeBg = 'rgba(52,211,153,0.15)';
+                        badgeBorder = 'rgba(52,211,153,0.35)';
+                        badgeText = 'TIẾN TRÌNH DI CHUYỂN';
+                      }
+
+                      const timeStr = l.time.includes('-') ? l.time : formatDT(l.time);
+
+                      return `
+                        <div style="position:relative;display:flex;align-items:flex-start;gap:22px;">
+                          <!-- Node tròn trên trục dọc -->
+                          <div style="width:38px;height:38px;border-radius:50%;background:#091726;border:2px solid ${nodeColor};box-shadow:0 0 12px ${nodeColor}55;display:flex;align-items:center;justify-content:center;font-size:15px;z-index:2;flex-shrink:0;">
+                            ${iconSymbol}
+                          </div>
+
+                          <!-- Khung nội dung sự kiện bên phải -->
+                          <div style="flex:1;background:var(--bg-elevated);border:1px solid var(--border-main);border-left:3px solid ${nodeColor};border-radius:8px;padding:14px 18px;box-shadow:0 4px 14px rgba(0,0,0,0.25);">
+                            <!-- Hàng tiêu đề của sự kiện: Badge + Thời gian + Tác nhân -->
+                            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+                              <div style="display:flex;align-items:center;gap:10px;">
+                                <span class="badge" style="background:${badgeBg};color:${nodeColor};border:1px solid ${badgeBorder};font-weight:700;font-size:11px;letter-spacing:0.5px;padding:3px 8px;">
+                                  ${badgeText}
+                                </span>
+                                <span style="font-size:12.5px;color:var(--text-white);display:flex;align-items:center;gap:6px;">
+                                  <span style="color:var(--text-slate);">Người thực hiện:</span>
+                                  <strong style="color:var(--accent-cyan);">${l.user}</strong>
+                                </span>
+                              </div>
+                              <div style="font-family:var(--font-mono);font-size:12px;color:var(--text-slate);background:rgba(255,255,255,0.03);padding:2px 8px;border-radius:4px;border:1px solid rgba(255,255,255,0.06);">
+                                🕒 ${timeStr}
+                              </div>
+                            </div>
+
+                            <!-- Nội dung chi tiết của sự kiện -->
+                            <div style="font-size:13px;color:var(--text-light);line-height:1.55;background:rgba(0,0,0,0.18);padding:10px 14px;border-radius:6px;border:1px solid rgba(255,255,255,0.03);">
+                              ${l.action}
+                            </div>
+                          </div>
+                        </div>
+                      `;
+                    }).join('')}
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          `;
         }
       };
 
-      // Tab switcher
+      // Gắn sự kiện chuyển tab
       modalOverlay.querySelectorAll('.panel-tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           modalOverlay.querySelectorAll('.panel-tab-btn').forEach(b => b.classList.remove('active'));
@@ -4280,11 +6097,44 @@
         });
       });
 
+      // Render tab mặc định: Tab Tổng quan
       renderTab('tab-overview');
 
       const closeModal = () => modalOverlay.classList.remove('active');
       modalOverlay.querySelector('#btn-close-case-modal')?.addEventListener('click', closeModal);
       modalOverlay.querySelector('#btn-close-case-modal-footer')?.addEventListener('click', closeModal);
+
+      // Nghe nhanh ghi âm từ header/footer
+      modalOverlay.querySelector('#btn-call-audio-quick')?.addEventListener('click', () => {
+        window.CCNV_UI.SoundFx.playBeep();
+        window.CCNV_UI.Toast.show('Đang phát ghi âm', `Phát bản ghi âm cuộc gọi 115 tiếp nhận lúc ${callTime}`);
+      });
+
+      // Nút Xác nhận bàn giao trực tiếp từ Modal
+      modalOverlay.querySelector('#btn-handover-case-modal')?.addEventListener('click', () => {
+        c.status = 'COMPLETED';
+        c.statusText = 'Hoàn tất';
+        c.stageLabel = 'Đã bàn giao tại viện';
+        c.hospitalResponse = 'ACCEPTED';
+        c.hospitalResponseText = 'Đã bàn giao';
+        const plate = c.dispatch?.vehiclePlate;
+        if (plate) {
+          window.StateManager.updateVehicle(plate, { status: 'READY', statusText: 'Sẵn sàng', speed: 0 });
+        }
+        window.StateManager.saveToSession();
+        window.StateManager.addCaseLog(c.id, `Khoa Cấp cứu xác nhận tiếp nhận & ký biên bản bàn giao. Ca chuyển sang Hoàn tất.`);
+        window.StateManager.addAuditLog(`Xác nhận tiếp nhận & bàn giao hoàn tất ca ${c.code}`);
+        window.CCNV_UI.Toast.show('Đã Bàn Giao Thành Công', `Ca ${c.code} đã hoàn tất bàn giao. Xe ${plate || ''} sẵn sàng nhận nhiệm vụ mới.`);
+        closeModal();
+        const mainViewport = document.getElementById('main-content-viewport');
+        if (mainViewport) this.renderCasesListView(mainViewport);
+      });
+
+      // Nút In PDF từ Modal
+      modalOverlay.querySelector('#btn-print-case-modal')?.addEventListener('click', () => {
+        window.CCNV_UI.Toast.show('Xuất Hồ sơ PDF', `Đang kết xuất phiếu cấp cứu ngoại viện cho ca ${c.code}...`);
+        setTimeout(() => window.print(), 800);
+      });
     }
 
     // --- 10. SOS ALERT MODAL (TT-04) ---
