@@ -1,0 +1,77 @@
+/* ==========================================================================
+   CCNV DESIGN TOKENS — COMMAND CENTER MEDICAL EMERGENCY
+   Strict adherence to design_rule.md (3-Color Command Center Philosophy)
+   ========================================================================== */
+
+:root {
+  /* --- 1. DARK NAVY (80% of interface) --- */
+  --bg-main: #071522;
+  --bg-sidebar-header: #081827;
+  --bg-panel: #0A1B2A;
+  --bg-elevated: #0E2435;
+  --bg-hover: #132D42;
+  --bg-card: #0A1B2A;
+  
+  --border-main: #183449;
+  --border-accent: #29465A;
+  --border-subtle: #122838;
+  --border-focus: #3A627E;
+
+  /* --- 2. WHITE & LIGHT GRAY (15% of interface - WCAG AA compliant >= 4.5:1 on #071522) --- */
+  --text-white: #FFFFFF;
+  --text-light: #F8FAFC;
+  --text-slate: #E2E8F0;
+  --text-muted: #CBD5E1;
+  --text-gray: #94A3B8;
+  --text-dim: #94A3B8;
+
+  /* --- 3. EMERGENCY RED (5% of interface - Rare & Standout) --- */
+  --red-primary: #E52521;
+  --red-vivid: #DC2626;
+  --red-dark: #B91C1C;
+  --red-deep: #160B0F;
+  --red-glow: rgba(255, 59, 53, 0.28);
+  --red-border: rgba(229, 37, 33, 0.45);
+
+  /* --- 4. MAP VISUALIZATION PALETTE --- */
+  --map-bg: #071522;
+  --map-water: #0A1E30;
+  --map-water-border: #13334F;
+  --map-road: #20394A;
+  --map-road-major: #385468;
+  --map-road-highway: #496F89;
+  --map-boundary: #294252;
+  --map-label: #AAB8C2;
+  --map-grid: rgba(24, 52, 73, 0.35);
+
+  /* --- 5. TYPOGRAPHY & SIZING --- */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Roboto Mono', Consolas, monospace;
+
+  --font-xs: 11px;
+  --font-sm: 12px;
+  --font-md: 13px;
+  --font-base: 14px;
+  --font-lg: 16px;
+  --font-xl: 18px;
+  --font-2xl: 22px;
+  --font-3xl: 28px;
+  --font-kpi: 32px;
+
+  /* --- 6. SHADOWS & RADII --- */
+  --radius-xs: 3px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.55);
+  --shadow-red: 0 0 20px rgba(229, 37, 33, 0.35);
+
+  /* --- 7. TRANSITIONS --- */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}

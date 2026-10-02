@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CCNV — App Người Dân Gọi Cấp Cứu 115</title>
+  
+  <link rel="stylesheet" href="css/tokens.css?v=20261002_03" />
+  <link rel="stylesheet" href="css/global.css?v=20261002_03" />
+  <link rel="stylesheet" href="css/mobile.css?v=20261002_03" />
+</head>
+<body>
+  <div class="mobile-app-wrapper" id="citizen-app-root">
+    <!-- Header -->
+    <header class="mobile-header">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="medical-cross-icon" style="width:26px;height:26px;border-radius:6px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h5v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"/></svg>
+        </div>
+        <div>
+          <strong style="color:var(--text-white);font-size:14px;letter-spacing:0.5px;">CẤP CỨU 115 CẦN THƠ</strong>
+          <div style="font-size:12px;color:#94A3B8;">Kênh Khẩn cấp Người dân</div>
+        </div>
+      </div>
+      <span style="font-size:12px;color:#94A3B8;font-family:var(--font-mono);">0907.654.321</span>
+    </header>
+
+    <!-- Main Content -->
+    <div class="mobile-content">
+      <!-- GPS Location Status -->
+      <div style="background:var(--bg-panel);border:1px solid var(--border-main);border-radius:8px;padding:12px;text-align:center;">
+        <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);padding:3px 10px;border-radius:12px;">
+          <span style="width:7px;height:7px;border-radius:50%;background:#10B981;"></span>
+          <span style="font-size:11px;font-weight:700;color:#34D399;letter-spacing:0.5px;">GPS ĐỘ CHÍNH XÁC CAO (±2.8M)</span>
+        </div>
+        <div style="font-size:12.5px;color:var(--text-white);font-weight:600;margin-top:6px;">
+          Đại học Cần Thơ, Đường 3/2, P. Xuân Khánh, Q. Ninh Kiều
+        </div>
+      </div>
+
+      <!-- P0: Anti-Accidental Touch SOS Trigger -->
+      <div id="citizen-idle-view" style="display:flex;flex-direction:column;align-items:center;text-align:center;">
+        <div class="sos-container-box">
+          <div class="sos-ring-wrapper" id="sos-ring-trigger">
+            <!-- Circular Progress Indicator for 1.5s hold -->
+            <svg class="sos-progress-svg" viewBox="0 0 200 200">
+              <circle class="sos-progress-track" cx="100" cy="100" r="90" />
+              <circle class="sos-progress-bar" id="sos-progress-bar" cx="100" cy="100" r="90" />
+            </svg>
+            <button class="big-sos-btn" id="btn-citizen-sos" aria-label="Gọi cấp cứu 115 khẩn cấp">
+              <h2>SOS</h2>
+              <span>GIỮ 1.5S ĐỂ GỌI</span>
+            </button>
+          </div>
+          <p class="sos-hint-text">
+            <strong>Nhấn & Giữ 1.5s</strong> hoặc <strong>Chạm 1 lần</strong> để đếm ngược khẩn cấp.
+            <br/><span style="color:#94A3B8;font-size:12px;">Cơ chế chống chạm nhầm trong túi quần hoặc khi hoảng loạn.</span>
+          </p>
+        </div>
+
+        <div style="background:var(--bg-panel);border:1px solid var(--border-subtle);border-radius:8px;padding:12px 14px;margin-top:8px;text-align:left;width:100%;">
+          <div style="font-size:12.5px;font-weight:700;color:var(--text-white);margin-bottom:4px;">Khi kích hoạt khẩn cấp:</div>
+          <ul style="font-size:12.5px;color:#94A3B8;margin:0;padding-left:16px;line-height:1.5;">
+            <li>Hệ thống gửi ngay tọa độ GPS hiện trường về Trung tâm 115.</li>
+            <li>Tổng đài viên liên hệ lại thoại trực tiếp sau 15 giây.</li>
+            <li>Điều động xe cứu thương có trang thiết bị phù hợp nhất.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- P0: Active Tracking Screen (ND-05) -->
+      <div id="citizen-tracking-card" style="display:none;">
+        <div style="background:var(--bg-panel);border:1px solid var(--border-accent);border-radius:10px;padding:16px;">
+          <!-- System Status Feedback -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid var(--border-main);">
+            <div>
+              <span style="font-size:12px;color:#94A3B8;text-transform:uppercase;font-weight:700;">Đang xử lý yêu cầu</span>
+              <h3 style="color:var(--text-white);font-size:16px;margin:2px 0 0 0;">XE ĐANG ĐẾN: 65A-011.15</h3>
+            </div>
+            <div style="background:rgba(229,37,33,0.15);border:1px solid rgba(229,37,33,0.4);border-radius:6px;padding:6px 10px;text-align:center;">
+              <span style="font-size:11.5px;color:var(--red-vivid);display:block;font-weight:700;">DỰ KIẾN</span>
+              <strong style="color:#FFFFFF;font-size:16px;font-family:var(--font-mono);">~4 PHÚT</strong>
+            </div>
+          </div>
+
+          <!-- Realtime Connection Status -->
+          <div style="background:#0E2435;border:1px solid #1E3A5F;border-radius:6px;padding:10px;margin-top:12px;font-size:12px;display:flex;align-items:center;gap:8px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:#38BDF8;flex-shrink:0;"></span>
+            <span style="color:#E2E8F0;">
+              Tổng đài 115 đang gọi lại cho bạn qua SĐT <strong>0907.654.321</strong>...
+            </span>
+          </div>
+
+          <div style="font-size:12.5px;color:#CBD5E1;display:flex;flex-direction:column;gap:6px;margin-top:12px;">
+            <div>Bệnh viện tiếp nhận: <strong style="color:var(--text-white);">BV Đa khoa TP Cần Thơ</strong></div>
+            <div>Bác sĩ phụ trách kíp: <strong style="color:var(--text-white);">BS. Nguyễn Văn Thành</strong></div>
+            <div>Khoảng cách: <strong style="color:#38BDF8;">1.6 km (Đang qua cầu Quang Trung)</strong></div>
+          </div>
+
+          <!-- Clean Alert Card: First Aid Steps -->
+          <div class="clean-alert-card">
+            <strong style="color:var(--red-vivid);font-size:12px;letter-spacing:0.5px;">HƯỚNG DẪN SƠ CỨU TRONG KHI CHỜ XE:</strong>
+            <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;font-size:12px;color:#E2E8F0;">
+              <div>• <strong>1. Giữ bình tĩnh:</strong> Không di chuyển nạn nhân nếu nghi ngờ chấn thương cột sống.</div>
+              <div>• <strong>2. Thông thoáng:</strong> Đặt bệnh nhân nằm nghiêng an toàn nếu có nôn ói.</div>
+              <div>• <strong>3. Tuyệt đối:</strong> Không cho bệnh nhân ăn uống bất kỳ thứ gì.</div>
+            </div>
+          </div>
+
+          <!-- Cancel Emergency Request Button -->
+          <button class="btn btn-default btn-sm" id="btn-citizen-open-cancel" style="width:100%;margin-top:16px;padding:12px;color:#94A3B8;border:1px solid #334155;">
+            Yêu cầu Hủy Cấp cứu
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- P0: 5-Second Emergency Countdown Overlay -->
+    <div class="countdown-overlay" id="countdown-overlay" style="display:none;">
+      <div style="font-size:13px;font-weight:700;color:var(--red-vivid);text-transform:uppercase;letter-spacing:1px;">
+        Đang chuẩn bị gửi tín hiệu khẩn cấp
+      </div>
+      <div class="countdown-number" id="countdown-timer">5</div>
+      <p style="font-size:13px;color:#CBD5E1;max-width:280px;line-height:1.5;">
+        Vị trí GPS và thông tin của bạn sẽ được truyền tới Trung tâm 115 khi đếm ngược kết thúc.
+      </p>
+      <button class="countdown-cancel-btn" id="btn-cancel-countdown">
+        ✕ HỦY NGAY (BẤM NHẦM)
+      </button>
+    </div>
+
+    <!-- P0: Bottom Sheet Modal Cancellation -->
+    <div class="bottom-sheet-backdrop" id="cancel-bottom-sheet">
+      <div class="bottom-sheet-modal">
+        <div class="bottom-sheet-handle"></div>
+        <h3 style="color:var(--text-white);font-size:16px;margin:0 0 6px 0;">Xác nhận Hủy Yêu cầu Cấp cứu?</h3>
+        <p style="font-size:12px;color:#94A3B8;margin-bottom:14px;">
+          Xe cứu thương 65A-011.15 đang trên đường đến. Vui lòng cho biết lý do nếu bạn muốn hủy:
+        </p>
+
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
+          <button class="bottom-sheet-reason-btn selected" data-reason="accidental">
+            Tôi chạm nhầm / Bấm thử nghiệm ứng dụng
+          </button>
+          <button class="bottom-sheet-reason-btn" data-reason="other_vehicle">
+            Đã có phương tiện khác / Người bệnh tự đi viện
+          </button>
+          <button class="bottom-sheet-reason-btn" data-reason="recovered">
+            Tình trạng bệnh nhân đã ổn định trở lại
+          </button>
+        </div>
+
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-default" id="btn-sheet-keep-waiting" style="flex:1;padding:12px;">
+            Tiếp tục Chờ Xe
+          </button>
+          <button class="btn btn-emergency" id="btn-sheet-confirm-cancel" style="flex:1;padding:12px;">
+            Xác nhận Hủy
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/shared/data-seed.js"></script>
+  <script src="js/shared/data-loader.js"></script>
+  <script src="js/shared/components.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      await window.StateManager.init();
+
+      const btnSos = document.getElementById('btn-citizen-sos');
+      const sosRing = document.getElementById('sos-ring-trigger');
+      const idleView = document.getElementById('citizen-idle-view');
+      const trackingCard = document.getElementById('citizen-tracking-card');
+      const countdownOverlay = document.getElementById('countdown-overlay');
+      const countdownTimer = document.getElementById('countdown-timer');
+      const btnCancelCountdown = document.getElementById('btn-cancel-countdown');
+
+      const btnOpenCancel = document.getElementById('btn-citizen-open-cancel');
+      const cancelSheet = document.getElementById('cancel-bottom-sheet');
+      const btnKeepWaiting = document.getElementById('btn-sheet-keep-waiting');
+      const btnConfirmCancel = document.getElementById('btn-sheet-confirm-cancel');
+
+      let holdTimeout = null;
+      let countdownInterval = null;
+      let countdownSec = 5;
+
+      // Kích hoạt phát lệnh SOS chính thức
+      function triggerEmergencyDispatch() {
+        if (countdownInterval) clearInterval(countdownInterval);
+        countdownOverlay.style.display = 'none';
+        idleView.style.display = 'none';
+        trackingCard.style.display = 'block';
+
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+
+        window.CCNV_UI.Toast.show(
+          'ĐÃ KÍCH HOẠT CẤP CỨU 115',
+          'Vị trí GPS của bạn đã truyền thành công tới Trung tâm Điều hành Cần Thơ. Xe 65A-011.15 đang xuất phát.',
+          true
+        );
+      }
+
+      // 1. CHẾ ĐỘ GIỮ 1.5S (HOLD TO ACTIVATE)
+      function startHold(e) {
+        sosRing.classList.add('holding');
+        holdTimeout = setTimeout(() => {
+          sosRing.classList.remove('holding');
+          triggerEmergencyDispatch();
+        }, 1500);
+      }
+
+      function cancelHold(e) {
+        sosRing.classList.remove('holding');
+        if (holdTimeout) {
+          clearTimeout(holdTimeout);
+          holdTimeout = null;
+        }
+      }
+
+      // Pointer / Touch events for reliable mobile interaction
+      btnSos.addEventListener('pointerdown', startHold);
+      btnSos.addEventListener('pointerup', cancelHold);
+      btnSos.addEventListener('pointerleave', cancelHold);
+      btnSos.addEventListener('pointercancel', cancelHold);
+
+      // 2. CHẾ ĐỘ CHẠM NHANH -> BẬT ĐẾM NGƯỢC 5 GIÂY (TAP TO 5S COUNTDOWN)
+      btnSos.addEventListener('click', (e) => {
+        // Nếu không giữ đủ 1.5s, mở chế độ đếm ngược an toàn
+        if (trackingCard.style.display === 'block') return;
+        countdownSec = 5;
+        countdownTimer.textContent = countdownSec;
+        countdownOverlay.style.display = 'flex';
+
+        if (countdownInterval) clearInterval(countdownInterval);
+        countdownInterval = setInterval(() => {
+          countdownSec--;
+          countdownTimer.textContent = countdownSec;
+          if (countdownSec <= 0) {
+            clearInterval(countdownInterval);
+            triggerEmergencyDispatch();
+          }
+        }, 1000);
+      });
+
+      // Hủy đếm ngược
+      btnCancelCountdown.addEventListener('click', () => {
+        if (countdownInterval) clearInterval(countdownInterval);
+        countdownOverlay.style.display = 'none';
+        window.CCNV_UI.Toast.show('Đã hủy đếm ngược', 'Yêu cầu gọi cấp cứu chưa được gửi đi.');
+      });
+
+      // 3. BOTTOM SHEET XÁC NHẬN HỦY THAY THẾ WINDOW.CONFIRM()
+      btnOpenCancel.addEventListener('click', () => {
+        cancelSheet.classList.add('active');
+      });
+
+      btnKeepWaiting.addEventListener('click', () => {
+        cancelSheet.classList.remove('active');
+      });
+
+      // Chọn lý do hủy
+      cancelSheet.querySelectorAll('.bottom-sheet-reason-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          cancelSheet.querySelectorAll('.bottom-sheet-reason-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+        });
+      });
+
+      // Xác nhận hủy
+      btnConfirmCancel.addEventListener('click', () => {
+        cancelSheet.classList.remove('active');
+        trackingCard.style.display = 'none';
+        idleView.style.display = 'flex';
+        window.CCNV_UI.Toast.show('Đã hủy yêu cầu cấp cứu', 'Yêu cầu gọi xe đã được hủy và thông báo tới trung tâm.');
+      });
+    });
+  </script>
+</body>
+</html>

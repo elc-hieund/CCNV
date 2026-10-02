@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CCNV — App Kíp Cấp Cứu & Tài Xế Xe</title>
+  
+  <link rel="stylesheet" href="css/tokens.css?v=20261002_03" />
+  <link rel="stylesheet" href="css/global.css?v=20261002_03" />
+  <link rel="stylesheet" href="css/mobile.css?v=20261002_03" />
+</head>
+<body>
+  <div class="tablet-app-wrapper" id="driver-app-root">
+    <!-- Header with large touch targets -->
+    <header class="mobile-header">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="badge badge-emergency" style="font-size:13px;padding:6px 12px;font-family:var(--font-mono);">XE 65A-012.34</div>
+        <div>
+          <strong style="color:var(--text-white);font-size:15px;display:block;">KÍP CẤP CỨU 3 · CÁI RĂNG</strong>
+          <span style="font-size:12.5px;color:#94A3B8;">BS. Trần Thanh Tùng · ĐDV. Lê Hồng Hoa</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <!-- P0: Safety SOS Button for Paramedics (Hold 1.5s to prevent bump triggers) -->
+        <button class="btn btn-emergency" id="driver-btn-sos" style="min-height:44px;padding:0 16px;font-weight:800;letter-spacing:1px;" title="Nhấn giữ 1.5s để phát tín hiệu khẩn cấp">
+          SOS XE
+        </button>
+      </div>
+    </header>
+
+    <div class="mobile-content">
+      <!-- Active Case Task Stepper (TX-04) -->
+      <div style="background:var(--bg-panel);border:1px solid var(--border-main);border-radius:10px;padding:18px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div>
+            <span style="font-size:11px;color:#94A3B8;text-transform:uppercase;font-weight:700;">Nhiệm vụ Hiện tại:</span>
+            <h3 style="color:var(--text-white);font-size:17px;margin:2px 0 0 0;">Ca CC-261002-001 — TNGT Cầu Hưng Lợi</h3>
+          </div>
+          <span class="badge badge-emergency" id="badge-current-phase" style="font-size:12px;padding:6px 10px;">ĐANG VẬN CHUYỂN</span>
+        </div>
+
+        <div style="font-size:13px;color:#CBD5E1;display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
+          <div>Bệnh nhân: <strong style="color:var(--text-white);">Phan Văn Đức (58T, Nam)</strong> — Chấn thương sọ não</div>
+          <div>Bệnh viện tiếp nhận: <strong style="color:var(--text-white);">BV Đa khoa TP Cần Thơ</strong> (Khoa Cấp cứu)</div>
+          <div>Dẫn đường: <strong style="color:#38BDF8;font-family:var(--font-mono);">ETA ~6 phút (3.8 km)</strong> qua đường 30/4</div>
+        </div>
+
+        <!-- Stepper Nodes -->
+        <div class="stepper-row" id="driver-stepper-nodes" style="margin-bottom:18px;">
+          <div class="step-node completed" data-step="1">
+            <div class="step-circle">✓</div>
+            <span class="step-title">Xuất phát</span>
+          </div>
+          <div class="step-node completed" data-step="2">
+            <div class="step-circle">✓</div>
+            <span class="step-title">Đến hiện trường</span>
+          </div>
+          <div class="step-node active" data-step="3">
+            <div class="step-circle">3</div>
+            <span class="step-title">Rời HT -> BV</span>
+          </div>
+          <div class="step-node" data-step="4">
+            <div class="step-circle">4</div>
+            <span class="step-title">Đến BV</span>
+          </div>
+        </div>
+
+        <!-- P0: Slide-To-Confirm (Chống nhảy mốc khi xe rung lắc) -->
+        <div class="slide-confirm-container" id="slide-confirm-box">
+          <div class="slide-track" id="slider-track">
+            <div class="slide-fill" id="slider-fill"></div>
+            <span class="slide-text" id="slider-label">VUỐT SANG PHẢI: ĐÃ ĐẾN BỆNH VIỆN ➔</span>
+            <div class="slide-knob" id="slider-knob">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- P0: Undo Banner (Hoàn tác trong 10 giây nếu vô tình trượt nhầm) -->
+        <div class="undo-banner" id="undo-step-banner" style="display:none;">
+          <div style="font-size:12.5px;color:#FFFFFF;">
+            Đã ghi nhận mốc: <strong id="undo-milestone-name">Đã đến BV</strong>
+          </div>
+          <button class="btn btn-default btn-sm" id="btn-undo-step" style="border:1px solid #475569;color:#CBD5E1;padding:4px 12px;">
+            Hoàn tác (10s)
+          </button>
+          <div class="undo-progress-line" id="undo-progress-bar"></div>
+        </div>
+      </div>
+
+      <!-- Quick ePCR on Tablet (TX-06) -->
+      <div style="background:var(--bg-panel);border:1px solid var(--border-main);border-radius:10px;padding:18px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <h4 style="color:var(--text-white);margin:0;font-size:15px;">Phiếu Cấp cứu Ngoại viện (ePCR) trên Xe</h4>
+          <span style="font-size:11px;color:#10B981;">● Tự động đồng bộ với Bệnh viện</span>
+        </div>
+        <div id="driver-epcr-form-wrap"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/shared/data-seed.js"></script>
+  <script src="js/shared/data-loader.js"></script>
+  <script src="js/shared/components.js"></script>
+  <script src="js/shared/epcr-form.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      await window.StateManager.init();
+      const currentCase = window.StateManager.getState().cases[0];
+      window.EPCRForm.render('driver-epcr-form-wrap', currentCase?.epcr || {}, false);
+
+      // --- P0: SLIDE TO CONFIRM LOGIC ---
+      const track = document.getElementById('slider-track');
+      const knob = document.getElementById('slider-knob');
+      const fill = document.getElementById('slider-fill');
+      const label = document.getElementById('slider-label');
+      const undoBanner = document.getElementById('undo-step-banner');
+      const undoProgressBar = document.getElementById('undo-progress-bar');
+      const undoMilestoneName = document.getElementById('undo-milestone-name');
+      const btnUndo = document.getElementById('btn-undo-step');
+      const badgePhase = document.getElementById('badge-current-phase');
+
+      let isDragging = false;
+      let startX = 0;
+      let currentX = 0;
+      let maxDrag = 0;
+      let undoTimer = null;
+      let currentStep = 3; // Step 3: Rời hiện trường -> BV; Step 4: Đến BV
+
+      function updateMaxDrag() {
+        maxDrag = track.clientWidth - knob.clientWidth - 8;
+      }
+      window.addEventListener('resize', updateMaxDrag);
+      updateMaxDrag();
+
+      function onStart(clientX) {
+        isDragging = true;
+        startX = clientX - currentX;
+        track.style.cursor = 'grabbing';
+      }
+
+      function onMove(clientX) {
+        if (!isDragging) return;
+        updateMaxDrag();
+        currentX = Math.max(0, Math.min(clientX - startX, maxDrag));
+        knob.style.transform = `translateX(${currentX}px)`;
+        fill.style.width = `${currentX + knob.clientWidth / 2}px`;
+        label.style.opacity = `${1 - (currentX / maxDrag) * 1.5}`;
+
+        // Kiểm tra ngưỡng hoàn thành > 85%
+        if (currentX >= maxDrag * 0.85) {
+          triggerSlideSuccess();
+        }
+      }
+
+      function onEnd() {
+        if (!isDragging) return;
+        isDragging = false;
+        track.style.cursor = 'default';
+        if (currentX < maxDrag * 0.85) {
+          // Snap back
+          knob.style.transition = 'transform 200ms ease';
+          fill.style.transition = 'width 200ms ease';
+          label.style.transition = 'opacity 200ms ease';
+          knob.style.transform = 'translateX(0px)';
+          fill.style.width = '0px';
+          label.style.opacity = '1';
+          currentX = 0;
+          setTimeout(() => {
+            knob.style.transition = '';
+            fill.style.transition = '';
+            label.style.transition = '';
+          }, 200);
+        }
+      }
+
+      // Pointer / Touch support
+      knob.addEventListener('pointerdown', (e) => onStart(e.clientX));
+      window.addEventListener('pointermove', (e) => onMove(e.clientX));
+      window.addEventListener('pointerup', onEnd);
+      window.addEventListener('pointercancel', onEnd);
+
+      function triggerSlideSuccess() {
+        isDragging = false;
+        if (navigator.vibrate) navigator.vibrate(100);
+
+        // Advance to Step 4
+        currentStep = 4;
+        const nodes = document.querySelectorAll('.step-node');
+        nodes.forEach(n => {
+          const s = Number(n.getAttribute('data-step'));
+          if (s < 4) {
+            n.className = 'step-node completed';
+            n.querySelector('.step-circle').textContent = '✓';
+          } else if (s === 4) {
+            n.className = 'step-node active';
+          }
+        });
+
+        badgePhase.textContent = 'ĐÃ ĐẾN BỆNH VIỆN';
+        label.textContent = 'ĐÃ HOÀN TẤT BÀN GIAO CA';
+        knob.style.transform = `translateX(${maxDrag}px)`;
+        fill.style.width = '100%';
+        fill.style.background = 'rgba(16, 185, 129, 0.4)';
+
+        // Show Undo Banner for 10 seconds
+        undoMilestoneName.textContent = 'Đã đến Bệnh viện (Sẵn sàng bàn giao)';
+        undoBanner.style.display = 'flex';
+        undoProgressBar.style.transform = 'scaleX(1)';
+
+        window.CCNV_UI.Toast.show(
+          'Đã cập nhật mốc nhiệm vụ',
+          'Đã ghi nhận mốc ĐẾN BỆNH VIỆN và thông báo tức thời tới Khoa Cấp cứu tiếp nhận.',
+          true
+        );
+
+        // Animate countdown bar with 60fps GPU acceleration
+        setTimeout(() => {
+          undoProgressBar.style.transform = 'scaleX(0)';
+        }, 50);
+
+        if (undoTimer) clearTimeout(undoTimer);
+        undoTimer = setTimeout(() => {
+          undoBanner.style.display = 'none';
+        }, 10000);
+      }
+
+      // Undo Action
+      btnUndo.addEventListener('click', () => {
+        if (undoTimer) clearTimeout(undoTimer);
+        undoBanner.style.display = 'none';
+
+        // Revert to Step 3
+        currentStep = 3;
+        const nodes = document.querySelectorAll('.step-node');
+        nodes.forEach(n => {
+          const s = Number(n.getAttribute('data-step'));
+          if (s < 3) {
+            n.className = 'step-node completed';
+            n.querySelector('.step-circle').textContent = '✓';
+          } else if (s === 3) {
+            n.className = 'step-node active';
+            n.querySelector('.step-circle').textContent = '3';
+          } else {
+            n.className = 'step-node';
+            n.querySelector('.step-circle').textContent = '4';
+          }
+        });
+
+        badgePhase.textContent = 'ĐANG VẬN CHUYỂN';
+        label.textContent = 'VUỐT SANG PHẢI: ĐÃ ĐẾN BỆNH VIỆN ➔';
+        label.style.opacity = '1';
+        knob.style.transform = 'translateX(0px)';
+        fill.style.width = '0px';
+        fill.style.background = 'linear-gradient(90deg, rgba(229, 37, 33, 0.3) 0%, rgba(229, 37, 33, 0.7) 100%)';
+        currentX = 0;
+
+        window.CCNV_UI.Toast.show('Đã hoàn tác', 'Đã quay trở lại mốc Rời hiện trường đi Bệnh viện.');
+      });
+
+      // Driver SOS with Safety Hold (1.5s)
+      const btnSosDriver = document.getElementById('driver-btn-sos');
+      let driverHoldTimer = null;
+
+      btnSosDriver.addEventListener('pointerdown', () => {
+        btnSosDriver.style.filter = 'brightness(1.2)';
+        driverHoldTimer = setTimeout(() => {
+          if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+          window.CCNV_UI.Toast.show(
+            'ĐÃ PHÁT TÍN HIỆU SOS XE',
+            'Đã truyền tín hiệu ưu tiên cứu nạn khẩn cấp tới Trung tâm Điều hành 115 Cần Thơ.',
+            true
+          );
+        }, 1200);
+      });
+
+      const cancelDriverHold = () => {
+        btnSosDriver.style.filter = '';
+        if (driverHoldTimer) {
+          clearTimeout(driverHoldTimer);
+          driverHoldTimer = null;
+        }
+      };
+
+      btnSosDriver.addEventListener('pointerup', cancelDriverHold);
+      btnSosDriver.addEventListener('pointerleave', cancelDriverHold);
+      btnSosDriver.addEventListener('click', (e) => {
+        // If just clicked without holding
+        window.CCNV_UI.Toast.show('Cảnh báo an toàn', 'Vui lòng nhấn giữ nút SOS XE trong 1.5 giây để tránh kích hoạt nhầm khi di chuyển.');
+      });
+    });
+  </script>
+</body>
+</html>

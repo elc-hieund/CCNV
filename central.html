@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TRUNG TÂM ĐIỀU HÀNH CẤP CỨU NGOẠI VIỆN — TP. CẦN THƠ</title>
+  
+  <!-- CSS Design System adhering strictly to design_rule.md -->
+  <link rel="stylesheet" href="css/tokens.css?v=20261002_02" />
+  <link rel="stylesheet" href="css/global.css?v=20261002_02" />
+  <link rel="stylesheet" href="css/desktop.css?v=20261002_02" />
+  <!-- Leaflet GIS Real World Map Engine -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- MAIN SHELL: SIDEBAR ON THE LEFT (FULL HEIGHT 100vh), MAIN AREA ON THE RIGHT -->
+    <div class="app-layout-shell">
+      <!-- 1. LEFT SIDEBAR (Từ trên cùng xuống hết chiều cao, giống hệt ảnh mẫu) -->
+      <aside class="command-sidebar" id="main-command-sidebar">
+        <!-- Top Brand Header with Logo & Collapse Toggle Button -->
+        <div class="sidebar-top-brand">
+          <div class="brand-left">
+            <div class="medical-cross-icon" style="width:28px;height:28px;border-radius:6px;flex-shrink:0;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h5v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"/>
+              </svg>
+            </div>
+            <span class="sidebar-brand-title">Cấp Cứu 115 Cần Thơ</span>
+          </div>
+          <button class="sidebar-toggle-btn" id="btn-toggle-sidebar" title="Thu gọn / Mở rộng Menu">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Accordion Nav Menu Container -->
+        <div id="sidebar-menu-wrapper" class="sidebar-nav-container">
+          <!-- Dynamically populated accordion menu -->
+        </div>
+
+        <!-- Bottom Footer: 2026 © Design by elcom -->
+        <div class="sidebar-bottom-footer" id="sidebar-bottom-footer">
+          <span class="footer-copyright-text">
+            2026 © Design by <span class="footer-brand-name">elcom</span>
+          </span>
+          <span class="footer-brand-logo" id="sidebar-footer-logo">
+            <svg width="18" height="13" viewBox="0 0 20 14" fill="none">
+              <rect x="0" y="1" width="20" height="2.5" rx="1.25" fill="#EF4444"/>
+              <rect x="0" y="5.75" width="16" height="2.5" rx="1.25" fill="#06B6D4"/>
+              <rect x="0" y="10.5" width="12" height="2.5" rx="1.25" fill="#6366F1"/>
+            </svg>
+          </span>
+        </div>
+      </aside>
+
+      <!-- 2. RIGHT MAIN WRAPPER (HEADER NẰM BÊN PHẢI SIDEBAR + VIEWPORT BÊN DƯỚI) -->
+      <div class="app-main-wrapper">
+        <!-- HEADER (Nằm hoàn toàn bên phải Nav bar) -->
+        <header class="command-header">
+          <div class="header-left"></div>
+
+          <div class="header-right">
+            <!-- Đồng hồ & Ngày tháng (sát cạnh bên trái quả chuông) -->
+            <div class="header-clock-widget">
+              <div class="clock-display" id="header-live-clock">10:31:24</div>
+              <div class="date-display" id="header-live-date">02/10/2026</div>
+            </div>
+
+            <!-- 1. Nút thông báo khẩn cấp -->
+            <button class="bell-btn" id="btn-header-bell" title="Thông báo khẩn cấp">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              </svg>
+              <span class="bell-badge">1</span>
+            </button>
+
+            <!-- 2. Phần thông tin tài khoản & nút Đăng xuất -->
+            <div class="header-user-profile" id="header-user-profile">
+              <div class="user-avatar-circle" id="header-user-avatar">NV</div>
+              <div class="user-info-text">
+                <span class="user-name" id="header-user-name">Nguyễn Văn An</span>
+                <span class="user-role-badge" id="header-user-role">Điều phối viên</span>
+              </div>
+              <button class="btn btn-ghost btn-sm" id="btn-logout" title="Đăng xuất khỏi hệ thống">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                <span>Đăng xuất</span>
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <!-- CONTENT BODY: Thanh KPI bên trên + Viewport bên dưới -->
+        <main class="content-body">
+          <!-- KPI Bar nằm bên phải nav bar, ngay dưới header -->
+          <div class="kpi-header-grid">
+            <div class="kpi-card">
+              <span class="kpi-label">Tổng xe</span>
+              <div class="kpi-value-wrap">
+                <span class="kpi-value" id="kpi-total-vehicles">06</span>
+                <span class="kpi-total-ratio"><span class="kpi-slash">/</span> <span class="kpi-max-total">06</span></span>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Đang hoạt động</span>
+              <div class="kpi-value-wrap">
+                <span class="kpi-value" id="kpi-active-vehicles">05</span>
+                <span class="kpi-total-ratio"><span class="kpi-slash">/</span> <span class="kpi-max-total">06</span></span>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Đang di chuyển</span>
+              <div class="kpi-value-wrap">
+                <span class="kpi-value" id="kpi-moving-vehicles">01</span>
+                <span class="kpi-total-ratio"><span class="kpi-slash">/</span> <span class="kpi-max-total">06</span></span>
+              </div>
+            </div>
+            <div class="kpi-card kpi-emergency">
+              <span class="kpi-label" style="color:var(--red-vivid);">Đang cấp cứu (SOS)</span>
+              <div class="kpi-value-wrap">
+                <span class="kpi-value" id="kpi-emergency-vehicles">01</span>
+                <span class="kpi-total-ratio"><span class="kpi-slash">/</span> <span class="kpi-max-total">06</span></span>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">Mất kết nối</span>
+              <div class="kpi-value-wrap">
+                <span class="kpi-value" id="kpi-disconnected-vehicles">00</span>
+                <span class="kpi-total-ratio"><span class="kpi-slash">/</span> <span class="kpi-max-total">06</span></span>
+              </div>
+            </div>
+            <div class="kpi-card">
+              <span class="kpi-label">GPS Cảnh báo</span>
+              <div class="kpi-value-wrap">
+                <span class="kpi-value" id="kpi-gps-warnings">00</span>
+                <span class="kpi-total-ratio"><span class="kpi-slash">/</span> <span class="kpi-max-total">06</span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic Main Content Viewport -->
+          <div id="main-content-viewport" class="content-viewport-container">
+            <!-- Rendered dynamically by CentralApp -->
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. LARGE DRAWER: CREATE CASE & DISPATCH (Root Body Level Overlay) -->
+  <div class="drawer-overlay" id="drawer-create-case-overlay">
+    <!-- Injected by CentralApp -->
+  </div>
+
+  <!-- 6. DEDICATED LOGIN SCREEN (Root Body Level Overlay) -->
+  <div class="login-screen-overlay" id="login-screen-overlay">
+    <div class="login-modal-card">
+      <div class="login-brand-header">
+        <div class="login-cross-icon pulse-red">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h5v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"/>
+          </svg>
+        </div>
+        <h2>TRUNG TÂM ĐIỀU HÀNH CẤP CỨU</h2>
+        <p>HỆ THỐNG ĐIỀU HÀNH CẤP CỨU NGOẠI VIỆN · TP. CẦN THƠ</p>
+      </div>
+
+      <form class="login-form-box" id="login-form">
+        <div class="form-field">
+          <label class="form-label">Tài khoản / Mã định danh</label>
+          <input type="text" id="login-username-input" placeholder="ví dụ: dpv01, bvdk.tn" value="dpv01" required />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Mật khẩu</label>
+          <input type="password" id="login-password-input" value="••••••••" required />
+        </div>
+
+        <button type="submit" class="btn btn-emergency btn-lg" style="width:100%;margin-top:8px;">
+          <span>ĐĂNG NHẬP VÀO HỆ THỐNG</span>
+        </button>
+      </form>
+
+      <div class="login-quick-accounts-list" id="login-quick-accounts-list" style="margin-top: 16px;">
+        <!-- Dynamically populated from data.json accounts -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/shared/data-seed.js?v=20261002_02"></script>
+  <script src="js/shared/data-loader.js?v=20261002_02"></script>
+  <script src="js/shared/components.js?v=20261002_02"></script>
+  <!-- Leaflet GIS Real World Map Engine -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/shared/map.js?v=20261002_02"></script>
+  <script src="js/shared/epcr-form.js?v=20261002_02"></script>
+  <script src="js/central/central-app.js?v=20261002_02"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      window.CentralApp.init();
+    });
+  </script>
+</body>
+</html>
