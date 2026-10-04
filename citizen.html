@@ -1,151 +1,726 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CCNV — App Người Dân Gọi Cấp Cứu 115</title>
-  
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>CCNV — App Người Dân Gọi Cấp Cứu 115 TP. Cần Thơ</title>
+
+  <!-- Core CCNV Stylesheets -->
   <link rel="stylesheet" href="css/tokens.css?v=20261002_03" />
   <link rel="stylesheet" href="css/global.css?v=20261002_03" />
-  <link rel="stylesheet" href="css/mobile.css?v=20261002_03" />
+  <link rel="stylesheet" href="css/mobile.css?v=20261002_04" />
+  <link rel="stylesheet" href="css/citizen.css?v=20261004_01" />
+
+  <!-- Leaflet GIS Real World Map Engine for Mobile Tracking & Facilities -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    /* In-page micro tweaks for crisp mobile dark theme */
+    body {
+      background-color: #030A10;
+      margin: 0;
+      padding: 0;
+    }
+
+    .leaflet-popup-content-wrapper {
+      background: #0A1B2A !important;
+      border: 1px solid #1E3A56 !important;
+      color: #FFFFFF !important;
+      border-radius: 8px !important;
+      font-size: 12px;
+    }
+
+    .leaflet-popup-tip {
+      background: #0A1B2A !important;
+    }
+  </style>
 </head>
+
 <body>
-  <div class="mobile-app-wrapper" id="citizen-app-root">
-    <!-- Header -->
-    <header class="mobile-header">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div class="medical-cross-icon" style="width:26px;height:26px;border-radius:6px;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h5v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"/></svg>
+  <div class="citizen-viewport" id="citizen-app-root">
+
+    <!-- 1. SMARTPHONE STATUS BAR -->
+    <div class="citizen-status-bar">
+      <span>08:15</span>
+      <div class="citizen-status-icons">
+        <span style="font-size:10px;font-family:var(--font-mono);color:#38BDF8;font-weight:700;">5G</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+          <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+          <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+          <line x1="12" y1="20" x2="12.01" y2="20"></line>
+        </svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="7" width="16" height="10" rx="2" ry="2"></rect>
+          <line x1="22" y1="11" x2="22" y2="13"></line>
+          <line x1="6" y1="11" x2="15" y2="11" stroke="#10B981" stroke-width="3"></line>
+        </svg>
+      </div>
+    </div>
+
+    <!-- 2. APP HEADER -->
+    <header class="citizen-header">
+      <div class="citizen-brand">
+        <div class="citizen-brand-logo">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6">
+            <path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h5v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z" />
+          </svg>
         </div>
         <div>
-          <strong style="color:var(--text-white);font-size:14px;letter-spacing:0.5px;">CẤP CỨU 115 CẦN THƠ</strong>
-          <div style="font-size:12px;color:#94A3B8;">Kênh Khẩn cấp Người dân</div>
+          <strong style="color:#FFFFFF;font-size:13.5px;letter-spacing:0.5px;display:block;">CẤP CỨU 115 CẦN THƠ</strong>
+          <span style="font-size:11px;color:#94A3B8;">Kênh Khẩn Cấp Người Dân</span>
         </div>
       </div>
-      <span style="font-size:12px;color:#94A3B8;font-family:var(--font-mono);">0907.654.321</span>
+
+      <!-- Account & SOS Action Buttons -->
+      <div style="display:flex;align-items:center;gap:8px;">
+        <!-- Header SOS Emergency Call Button (ND-04) -->
+        <button class="header-sos-call-btn" id="header-btn-sos" title="Bấm gọi Cấp cứu 115 khẩn cấp (Đếm ngược 5s hoặc Gọi ngay)">
+          <svg class="header-sos-phone-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+          </svg>
+          <span>SOS 115</span>
+        </button>
+
+        <!-- Account Badge Button -->
+        <div class="citizen-user-pill" id="citizen-header-user-btn" title="Xem hồ sơ cá nhân">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span id="header-user-phone" style="font-family:var(--font-mono);font-weight:600;">0907.654.321</span>
+        </div>
+      </div>
     </header>
 
-    <!-- Main Content -->
-    <div class="mobile-content">
-      <!-- GPS Location Status -->
-      <div style="background:var(--bg-panel);border:1px solid var(--border-main);border-radius:8px;padding:12px;text-align:center;">
-        <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);padding:3px 10px;border-radius:12px;">
-          <span style="width:7px;height:7px;border-radius:50%;background:#10B981;"></span>
-          <span style="font-size:11px;font-weight:700;color:#34D399;letter-spacing:0.5px;">GPS ĐỘ CHÍNH XÁC CAO (±2.8M)</span>
-        </div>
-        <div style="font-size:12.5px;color:var(--text-white);font-weight:600;margin-top:6px;">
-          Đại học Cần Thơ, Đường 3/2, P. Xuân Khánh, Q. Ninh Kiều
-        </div>
-      </div>
+    <!-- 3. SCROLLABLE MAIN CONTENT AREA -->
+    <main class="citizen-main-scroll" id="citizen-main-container">
 
-      <!-- P0: Anti-Accidental Touch SOS Trigger -->
-      <div id="citizen-idle-view" style="display:flex;flex-direction:column;align-items:center;text-align:center;">
-        <div class="sos-container-box">
-          <div class="sos-ring-wrapper" id="sos-ring-trigger">
-            <!-- Circular Progress Indicator for 1.5s hold -->
-            <svg class="sos-progress-svg" viewBox="0 0 200 200">
-              <circle class="sos-progress-track" cx="100" cy="100" r="90" />
-              <circle class="sos-progress-bar" id="sos-progress-bar" cx="100" cy="100" r="90" />
-            </svg>
-            <button class="big-sos-btn" id="btn-citizen-sos" aria-label="Gọi cấp cứu 115 khẩn cấp">
-              <h2>SOS</h2>
-              <span>GIỮ 1.5S ĐỂ GỌI</span>
+      <!-- ====================================================================
+           TAB 1: TRANG CHỦ (Gộp Trang chủ & Yêu cầu cấp cứu)
+           ==================================================================== -->
+      <section class="citizen-tab-panel active" id="tab-home">
+
+        <!-- 1. ACTIVE EMERGENCY CASE VIEW (Hiển thị khi đang có yêu cầu xử lý) -->
+        <div id="home-active-case-view" style="display:none;">
+          <div class="emergency-tracking-card">
+            <!-- Case Status & ETA Header -->
+            <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #183449;padding-bottom:10px;">
+              <div>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <span class="badge badge-emergency" style="font-size:9.5px;padding:2px 6px;">TỐI KHẨN</span>
+                  <span style="font-family:var(--font-mono);font-size:12px;color:#38BDF8;font-weight:700;" id="track-case-code">CC-261002-002</span>
+                </div>
+                <h2 style="color:#FFFFFF;font-size:15px;margin:4px 0 0 0;" id="track-case-status-title">XE ĐANG ĐẾN: 65A-011.15</h2>
+              </div>
+              <div style="background:rgba(229,37,33,0.15);border:1px solid rgba(229,37,33,0.4);border-radius:8px;padding:6px 12px;text-align:center;">
+                <span style="font-size:10px;color:#FF5A55;display:block;font-weight:700;">DỰ KIẾN</span>
+                <strong style="color:#FFFFFF;font-size:16px;font-family:var(--font-mono);" id="track-eta-value">~4 PHÚT</strong>
+              </div>
+            </div>
+
+            <!-- Stepper: 5 Milestone Progress Nodes -->
+            <div class="case-stepper">
+              <div class="stepper-node done" id="step-node-1">
+                <div class="stepper-node-dot">✓</div>
+                <span class="stepper-node-label">Tiếp nhận 115</span>
+              </div>
+              <div class="stepper-node done" id="step-node-2">
+                <div class="stepper-node-dot">✓</div>
+                <span class="stepper-node-label">Điều xe</span>
+              </div>
+              <div class="stepper-node active" id="step-node-3">
+                <div class="stepper-node-dot">3</div>
+                <span class="stepper-node-label">Xe đang đến</span>
+              </div>
+              <div class="stepper-node" id="step-node-4">
+                <div class="stepper-node-dot">4</div>
+                <span class="stepper-node-label">Sơ cứu</span>
+              </div>
+              <div class="stepper-node" id="step-node-5">
+                <div class="stepper-node-dot">5</div>
+                <span class="stepper-node-label">Đến BV</span>
+              </div>
+            </div>
+
+            <!-- Realtime GIS Map View -->
+            <div class="citizen-map-container" id="citizen-tracking-map">
+              <div class="map-floating-eta" id="map-eta-badge">
+                <span style="width:8px;height:8px;border-radius:50%;background:#FF3B35;"></span>
+                <span style="font-size:11.5px;color:#FFFFFF;font-weight:700;">ETA: ~4P</span>
+              </div>
+            </div>
+
+            <!-- Crew & Hospital Specs -->
+            <div style="font-size:12px;color:#CBD5E1;display:flex;flex-direction:column;gap:5px;background:#081827;padding:10px 12px;border-radius:8px;border:1px solid #183449;">
+              <div style="display:flex;justify-content:space-between;">
+                <span>Khoảng cách: <strong style="color:#38BDF8;" id="track-dist-value">1.6 km (Tốc độ: 48 km/h)</strong></span>
+                <span style="color:#34D399;font-weight:600;" id="live-share-status-tag">GPS Live</span>
+              </div>
+              <div>Bác sĩ phụ trách: <strong style="color:#FFFFFF;">BS. CKI. Nguyễn Văn Thành</strong> (0903.115.115)</div>
+              <div>Bệnh viện tiếp nhận: <strong style="color:#FFFFFF;">BV Đa khoa TP Cần Thơ</strong></div>
+            </div>
+
+            <!-- Action Button Strip: Call Center + Share Location + Self-Transport -->
+            <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;margin-top:12px;">
+              <button class="btn btn-default btn-xs" id="btn-call-center-direct" style="padding:8px 4px;border:1px solid #29465A;color:#FFFFFF;" title="Gọi lại Tổng đài 115">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                <span>Gọi lại</span>
+              </button>
+              <button class="btn btn-default btn-xs" id="btn-share-live-location" style="padding:8px 4px;border:1px solid #29465A;color:#FFFFFF;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                <span>Chia sẻ vị trí</span>
+              </button>
+              <button class="btn btn-default btn-xs" id="btn-open-self-transport" style="padding:8px 4px;border:1px solid #29465A;color:#F59E0B;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.2"><path d="M19 17h2a2 2 0 0 0 2-2v-4a2 2 0 0 0-.73-1.54L19 7h-5v10h5z"/><circle cx="8" cy="19" r="2"/><circle cx="17" cy="19" r="2"/></svg>
+                <span>Tự di chuyển</span>
+              </button>
+            </div>
+
+            <!-- First Aid Medical Instructions Strip -->
+            <div class="first-aid-container">
+              <div style="font-size:12px;font-weight:700;color:#FF5A55;display:flex;align-items:center;gap:6px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                HƯỚNG DẪN SƠ CỨU TRONG KHI CHỜ XE (BẤM XEM CHI TIẾT):
+              </div>
+
+              <div class="first-aid-card" data-aid-type="cpr">
+                <strong style="color:#FFFFFF;font-size:13px;display:block;">1. Ép tim ngoài lồng ngực (CPR)</strong>
+                <span style="font-size:11.5px;color:#94A3B8;">Đặt 2 tay giữa ngực, ép sâu 5cm với nhịp độ 100-120 lần/phút. Bấm xem bộ đếm nhịp.</span>
+              </div>
+
+              <div class="first-aid-card" data-aid-type="stroke">
+                <strong style="color:#FFFFFF;font-size:13px;display:block;">2. Xử trí nghi ngờ Đột quỵ (FAST)</strong>
+                <span style="font-size:11.5px;color:#94A3B8;">Nằm nghiêng an toàn, đầu cao 30 độ, không cho ăn uống bất cứ thứ gì.</span>
+              </div>
+
+              <div class="first-aid-card" data-aid-type="bleeding">
+                <strong style="color:#FFFFFF;font-size:13px;display:block;">3. Cầm máu vết thương ngoài</strong>
+                <span style="font-size:11.5px;color:#94A3B8;">Băng ép trực tiếp bằng gạc vô trùng, không tháo gạc ra nếu máu thấm qua.</span>
+              </div>
+            </div>
+
+            <!-- Safe Cancellation Button -->
+            <button class="btn btn-default btn-sm" id="btn-citizen-request-cancel" style="width:100%;margin-top:16px;padding:11px;color:#94A3B8;border:1px solid #334155;">
+              Yêu cầu Hủy Cấp cứu
             </button>
           </div>
-          <p class="sos-hint-text">
-            <strong>Nhấn & Giữ 1.5s</strong> hoặc <strong>Chạm 1 lần</strong> để đếm ngược khẩn cấp.
-            <br/><span style="color:#94A3B8;font-size:12px;">Cơ chế chống chạm nhầm trong túi quần hoặc khi hoảng loạn.</span>
-          </p>
         </div>
 
-        <div style="background:var(--bg-panel);border:1px solid var(--border-subtle);border-radius:8px;padding:12px 14px;margin-top:8px;text-align:left;width:100%;">
-          <div style="font-size:12.5px;font-weight:700;color:var(--text-white);margin-bottom:4px;">Khi kích hoạt khẩn cấp:</div>
-          <ul style="font-size:12.5px;color:#94A3B8;margin:0;padding-left:16px;line-height:1.5;">
-            <li>Hệ thống gửi ngay tọa độ GPS hiện trường về Trung tâm 115.</li>
-            <li>Tổng đài viên liên hệ lại thoại trực tiếp sau 15 giây.</li>
-            <li>Điều động xe cứu thương có trang thiết bị phù hợp nhất.</li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- P0: Active Tracking Screen (ND-05) -->
-      <div id="citizen-tracking-card" style="display:none;">
-        <div style="background:var(--bg-panel);border:1px solid var(--border-accent);border-radius:10px;padding:16px;">
-          <!-- System Status Feedback -->
-          <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid var(--border-main);">
-            <div>
-              <span style="font-size:12px;color:#94A3B8;text-transform:uppercase;font-weight:700;">Đang xử lý yêu cầu</span>
-              <h3 style="color:var(--text-white);font-size:16px;margin:2px 0 0 0;">XE ĐANG ĐẾN: 65A-011.15</h3>
+        <!-- 2. IDLE VIEW (Mặc định: Hiển thị Bản đồ các cơ sở y tế gần nhất & thông tin tiếp nhận) -->
+        <div id="home-idle-view">
+          <!-- Current GPS Location Bar -->
+          <div class="home-location-bar">
+            <div class="home-location-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.2">
+                <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
             </div>
-            <div style="background:rgba(229,37,33,0.15);border:1px solid rgba(229,37,33,0.4);border-radius:6px;padding:6px 10px;text-align:center;">
-              <span style="font-size:11.5px;color:var(--red-vivid);display:block;font-weight:700;">DỰ KIẾN</span>
-              <strong style="color:#FFFFFF;font-size:16px;font-family:var(--font-mono);">~4 PHÚT</strong>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:10px;color:#94A3B8;text-transform:uppercase;font-weight:700;letter-spacing:0.5px;">VỊ TRÍ CỦA BẠN (GPS ĐÃ ĐỊNH VỊ)</div>
+              <strong style="font-size:12.5px;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;" title="Đại học Cần Thơ - Cổng A đường 3/2, P. Xuân Khánh, Q. Ninh Kiều">
+                Đại học Cần Thơ - Cổng A đường 3/2, P. Xuân Khánh, Q. Ninh Kiều
+              </strong>
+            </div>
+            <span class="badge badge-ready" style="font-size:10px;padding:3px 7px;">GPS Live</span>
+          </div>
+
+          <!-- Leaflet Map of Nearest Healthcare Facilities -->
+          <div class="home-map-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <span style="font-size:12px;font-weight:700;color:#38BDF8;display:flex;align-items:center;gap:6px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
+                BẢN ĐỒ CƠ SỞ Y TẾ GẦN BẠN NHẤT
+              </span>
+              <span style="font-size:11px;color:#94A3B8;" id="home-facilities-count">5 cơ sở tiếp nhận</span>
+            </div>
+            <div id="home-facilities-map" style="width:100%;height:270px;border-radius:10px;border:1px solid #1E3A56;overflow:hidden;position:relative;"></div>
+          </div>
+
+          <!-- Top Nearest Hospitals List -->
+          <div style="margin-top:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <strong style="color:#FFFFFF;font-size:12.5px;text-transform:uppercase;letter-spacing:0.5px;">CƠ SỞ Y TẾ TIẾP NHẬN GẦN NHẤT</strong>
+              <span style="font-size:11px;color:#38BDF8;cursor:pointer;font-weight:600;" id="home-link-view-all-hospitals">Xem tất cả →</span>
+            </div>
+            <div id="home-nearest-hospitals-list">
+              <!-- Dynamically populated via citizen-app.js -->
             </div>
           </div>
 
-          <!-- Realtime Connection Status -->
-          <div style="background:#0E2435;border:1px solid #1E3A5F;border-radius:6px;padding:10px;margin-top:12px;font-size:12px;display:flex;align-items:center;gap:8px;">
-            <span style="width:8px;height:8px;border-radius:50%;background:#38BDF8;flex-shrink:0;"></span>
-            <span style="color:#E2E8F0;">
-              Tổng đài 115 đang gọi lại cho bạn qua SĐT <strong>0907.654.321</strong>...
+          <!-- 4 Emergency Steps Guidance Banner -->
+          <div style="background:#081827;border:1px solid #183449;border-radius:10px;padding:12px 14px;margin-top:12px;">
+            <div style="font-size:12px;font-weight:700;color:#38BDF8;margin-bottom:6px;display:flex;align-items:center;gap:6px;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              QUY TRÌNH KHI BẤM GỌI CẤP CỨU 115:
+            </div>
+            <ul style="font-size:11.5px;color:#94A3B8;margin:0;padding-left:16px;line-height:1.55;">
+              <li>Bấm nút <strong>SOS 115</strong> trên header: đếm ngược 5 giây hoặc bấm <strong>GỌI NGAY</strong>.</li>
+              <li>Tọa độ GPS hiện trường lập tức gửi về Trung tâm Điều hành 115 Cần Thơ.</li>
+              <li>Tổng đài viên liên hệ lại thoại trực tiếp để nắm triệu chứng trong 15s.</li>
+              <li>Xe cứu thương gần nhất có trang thiết bị chuyên dụng xuất phát ngay.</li>
+            </ul>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ====================================================================
+           TAB 2: DANH SÁCH CƠ SỞ Y TẾ (ND-06)
+           ==================================================================== -->
+      <section class="citizen-tab-panel" id="tab-hospitals">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div>
+            <h2 style="color:#FFFFFF;font-size:15px;margin:0;">CƠ SỞ Y TẾ CẦN THƠ</h2>
+            <span style="font-size:11px;color:#94A3B8;">Bản đồ & năng lực tiếp nhận cấp cứu thời gian thực</span>
+          </div>
+          <span class="badge badge-ready" id="hosp-count-badge" style="font-size:10px;padding:3px 8px;">
+            5 Cơ sở sẵn sàng
+          </span>
+        </div>
+
+        <!-- Search Box with Clear Button -->
+        <div style="position:relative;margin-bottom:10px;">
+          <input type="text" id="input-hospital-search" placeholder="Tìm tên bệnh viện, địa chỉ, chuyên khoa..." class="form-control-citizen" style="padding-left:34px;padding-right:32px;" />
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" style="position:absolute;left:11px;top:11px;">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <span id="btn-clear-hosp-search" style="display:none;position:absolute;right:10px;top:7px;color:#94A3B8;cursor:pointer;font-size:16px;padding:2px 6px;" title="Xóa tìm kiếm">✕</span>
+        </div>
+
+        <!-- Specialty Filter Buttons -->
+        <div class="hospitals-filter-bar" style="margin-bottom:10px;">
+          <button class="hospital-filter-btn active" data-filter="ALL">Tất cả</button>
+          <button class="hospital-filter-btn" data-filter="EMERGENCY">Cấp cứu Đa khoa</button>
+          <button class="hospital-filter-btn" data-filter="PEDIATRIC">Nhi khoa</button>
+          <button class="hospital-filter-btn" data-filter="STROKE">Đột quỵ / Can thiệp mạch</button>
+        </div>
+
+        <!-- Interactive GIS Map (Luôn hiển thị trực quan theo kết quả tìm kiếm) -->
+        <div class="hospitals-map-card" style="margin-bottom:14px;background:#0A1B2A;border:1px solid #1E3A56;border-radius:12px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.35);">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#081827;border-bottom:1px solid #183449;">
+            <span style="font-size:11.5px;font-weight:700;color:#38BDF8;display:flex;align-items:center;gap:6px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/></svg>
+              BẢN ĐỒ VỊ TRÍ CƠ SỞ Y TẾ TIẾP NHẬN
             </span>
+            <span style="font-size:10.5px;color:#94A3B8;" id="map-hosp-search-info">Hiển thị 5/5 cơ sở</span>
           </div>
+          <div id="hospitals-leaflet-map" style="width:100%;height:220px;background:#071522;isolation:isolate;contain:paint;z-index:1;"></div>
+        </div>
 
-          <div style="font-size:12.5px;color:#CBD5E1;display:flex;flex-direction:column;gap:6px;margin-top:12px;">
-            <div>Bệnh viện tiếp nhận: <strong style="color:var(--text-white);">BV Đa khoa TP Cần Thơ</strong></div>
-            <div>Bác sĩ phụ trách kíp: <strong style="color:var(--text-white);">BS. Nguyễn Văn Thành</strong></div>
-            <div>Khoảng cách: <strong style="color:#38BDF8;">1.6 km (Đang qua cầu Quang Trung)</strong></div>
-          </div>
+        <!-- List of Hospitals Container -->
+        <div id="hospitals-card-list">
+          <!-- Populated dynamically via citizen-app.js -->
+        </div>
+      </section>
 
-          <!-- Clean Alert Card: First Aid Steps -->
-          <div class="clean-alert-card">
-            <strong style="color:var(--red-vivid);font-size:12px;letter-spacing:0.5px;">HƯỚNG DẪN SƠ CỨU TRONG KHI CHỜ XE:</strong>
-            <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;font-size:12px;color:#E2E8F0;">
-              <div>• <strong>1. Giữ bình tĩnh:</strong> Không di chuyển nạn nhân nếu nghi ngờ chấn thương cột sống.</div>
-              <div>• <strong>2. Thông thoáng:</strong> Đặt bệnh nhân nằm nghiêng an toàn nếu có nôn ói.</div>
-              <div>• <strong>3. Tuyệt đối:</strong> Không cho bệnh nhân ăn uống bất kỳ thứ gì.</div>
+      <!-- ====================================================================
+           TAB 4: HỒ SƠ CÁ NHÂN (ND-07, ND-08, ND-09, ND-10)
+           ==================================================================== -->
+      <section class="citizen-tab-panel" id="tab-profile">
+
+        <!-- User Profile Card -->
+        <div class="profile-user-card">
+          <div class="profile-avatar-box">AN</div>
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <strong style="color:#FFFFFF;font-size:15px;">Nguyễn Văn An</strong>
+              <span class="badge badge-ready" style="font-size:9.5px;padding:2px 6px;">ĐÃ XÁC THỰC</span>
             </div>
+            <div style="font-size:12px;color:#38BDF8;font-family:var(--font-mono);margin-top:2px;">0907.654.321</div>
+            <div style="font-size:11px;color:#94A3B8;margin-top:2px;">CCCD: 092095001234 · P. Xuân Khánh</div>
           </div>
+        </div>
 
-          <!-- Cancel Emergency Request Button -->
-          <button class="btn btn-default btn-sm" id="btn-citizen-open-cancel" style="width:100%;margin-top:16px;padding:12px;color:#94A3B8;border:1px solid #334155;">
-            Yêu cầu Hủy Cấp cứu
+        <div style="display:flex;gap:8px;margin-bottom:14px;">
+          <button class="btn btn-default btn-xs" id="btn-retest-onboarding" style="flex:1;border:1px solid #29465A;color:#CBD5E1;padding:8px;">
+            ↺ Luồng OTP / Quyền
+          </button>
+          <button class="btn btn-default btn-xs" id="btn-logout-citizen" style="flex:1;border:1px solid #7F1D1D;color:#EF4444;padding:8px;font-weight:600;">
+            ⎋ Đăng xuất
           </button>
         </div>
+
+        <!-- 3 Sub-Tabs for Personal Profile -->
+        <div class="profile-nav-tabs">
+          <button class="profile-nav-tab-btn active" data-subtab="sub-emergency-contacts">Người liên hệ</button>
+          <button class="profile-nav-tab-btn" data-subtab="sub-privacy-settings">Quyền riêng tư</button>
+          <button class="profile-nav-tab-btn" data-subtab="sub-request-history">Lịch sử</button>
+        </div>
+
+        <!-- Sub-View: Người liên hệ khẩn cấp (ND-08) -->
+        <div class="profile-sub-view active" id="sub-emergency-contacts">
+          <div style="background:#0A1B2A;border:1px solid #1E3A56;border-radius:10px;padding:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <strong style="color:#FFFFFF;font-size:13px;">DANH SÁCH NGƯỜI THÂN LIÊN HỆ:</strong>
+              <button class="btn btn-primary btn-xs" id="btn-add-contact" style="padding:4px 8px;background:#1E3A5F;border-color:#38BDF8;">
+                + Thêm
+              </button>
+            </div>
+
+            <div id="emergency-contacts-list">
+              <!-- Populated dynamically via citizen-app.js -->
+            </div>
+
+            <p style="font-size:11px;color:#94A3B8;margin-top:10px;line-height:1.45;">
+              * Khi bạn bấm SOS 1 chạm, hệ thống sẽ tự động gửi tin nhắn SMS cảnh báo và tọa độ hiện trường tới người liên hệ chính.
+            </p>
+          </div>
+        </div>
+
+        <!-- Sub-View 3: Quyền riêng tư (ND-09) -->
+        <div class="profile-sub-view" id="sub-privacy-settings">
+          <div style="background:#0A1B2A;border:1px solid #1E3A56;border-radius:10px;padding:14px;">
+            <div style="font-size:12px;font-weight:700;color:#38BDF8;margin-bottom:10px;">
+              QUẢN LÝ QUYỀN RIÊNG TƯ & DỮ LIỆU CÁ NHÂN (NĐ 13/2023/NĐ-CP):
+            </div>
+
+            <form id="form-privacy-settings">
+              <div class="consent-item">
+                <input type="checkbox" id="toggle-privacy-gps" class="consent-checkbox" checked />
+                <div>
+                  <strong style="color:#FFFFFF;font-size:12px;">Chia sẻ vị trí GPS thời gian thực</strong>
+                  <div style="font-size:11px;color:#94A3B8;">Chỉ kích hoạt khi bạn bấm SOS để xe cấp cứu tìm đúng vị trí.</div>
+                </div>
+              </div>
+
+              <div class="consent-item">
+                <input type="checkbox" id="toggle-privacy-medical" class="consent-checkbox" checked />
+                <div>
+                  <strong style="color:#FFFFFF;font-size:12px;">Chia sẻ hồ sơ y tế khẩn cấp</strong>
+                  <div style="font-size:11px;color:#94A3B8;">Kíp bác sĩ trên xe có thể xem nhóm máu và dị ứng để chuẩn bị thuốc.</div>
+                </div>
+              </div>
+
+              <div class="consent-item">
+                <input type="checkbox" id="toggle-privacy-contacts" class="consent-checkbox" checked />
+                <div>
+                  <strong style="color:#FFFFFF;font-size:12px;">Tự động thông báo người thân</strong>
+                  <div style="font-size:11px;color:#94A3B8;">Gửi tin nhắn SMS khẩn cấp tới danh bạ người thân khi phát lệnh SOS.</div>
+                </div>
+              </div>
+
+              <div class="consent-item">
+                <input type="checkbox" id="toggle-privacy-hospital" class="consent-checkbox" checked />
+                <div>
+                  <strong style="color:#FFFFFF;font-size:12px;">Truyền dữ liệu trước cho Bệnh viện tiếp nhận</strong>
+                  <div style="font-size:11px;color:#94A3B8;">Khoa Cấp cứu tiếp nhận chuẩn bị sẵn phòng mổ hoặc can thiệp mạch.</div>
+                </div>
+              </div>
+
+              <div class="consent-item">
+                <input type="checkbox" id="toggle-privacy-audio" class="consent-checkbox" checked />
+                <div>
+                  <strong style="color:#FFFFFF;font-size:12px;">Ghi âm cuộc gọi tư vấn y khoa</strong>
+                  <div style="font-size:11px;color:#94A3B8;">Phục vụ giám sát chất lượng cấp cứu và an toàn người bệnh.</div>
+                </div>
+              </div>
+            </form>
+
+            <div style="background:#081827;border:1px solid #183449;border-radius:6px;padding:8px 10px;margin-top:12px;font-size:11px;color:#CBD5E1;">
+              <strong>Nhật ký truy cập dữ liệu y tế gần nhất:</strong>
+              <div style="color:#94A3B8;margin-top:2px;">BS. CKI. Nguyễn Văn Thành (Kíp xe 65A-011.15) truy cập lúc 08:15:32</div>
+            </div>
+
+            <button class="btn btn-default btn-sm" id="btn-revoke-all-privacy" style="width:100%;margin-top:12px;color:#EF4444;border:1px solid #7F1D1D;">
+              Thu hồi Toàn bộ Đồng ý Chia sẻ Dữ liệu
+            </button>
+          </div>
+        </div>
+
+        <!-- Sub-View 4: Lịch sử yêu cầu (ND-10) -->
+        <div class="profile-sub-view" id="sub-request-history">
+          <div style="background:#0A1B2A;border:1px solid #1E3A56;border-radius:10px;padding:14px;">
+            <div style="font-size:12px;font-weight:700;color:#38BDF8;margin-bottom:10px;">
+              LỊCH SỬ CÁC LẦN GỌI CẤP CỨU (BẤM XEM BIÊN BẢN):
+            </div>
+
+            <div id="history-cases-list">
+              <!-- Populated dynamically via citizen-app.js -->
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- 4. BOTTOM NAVIGATION BAR (Thanh điều hướng ở dưới cùng) -->
+    <nav class="citizen-bottom-nav" id="citizen-bottom-navigation">
+      <div class="citizen-nav-tab active" data-target="tab-home" title="Trang chủ">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+        <span class="citizen-nav-tab-label">Trang chủ</span>
+        <span class="citizen-nav-badge active" id="nav-emergency-badge"></span>
+      </div>
+
+      <div class="citizen-nav-tab" data-target="tab-hospitals" title="Cơ sở y tế">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M18 20V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14"></path>
+          <path d="M2 20h20"></path>
+          <path d="M10 9h4"></path>
+          <path d="M12 7v4"></path>
+        </svg>
+        <span class="citizen-nav-tab-label">Cơ sở y tế</span>
+      </div>
+
+      <div class="citizen-nav-tab" data-target="tab-profile" title="Hồ sơ">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span class="citizen-nav-tab-label">Hồ sơ</span>
+      </div>
+    </nav>
+
+    <!-- ====================================================================
+         5. MODALS & POPUPS
+         ==================================================================== -->
+
+    <!-- Dedicated Authentication Portal: Login & Register -->
+    <div class="auth-portal-overlay" id="auth-portal-overlay" style="display:none;">
+      <div class="onboarding-header">
+        <div class="onboarding-logo">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h5v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z" />
+          </svg>
+        </div>
+        <h2 style="color:#FFFFFF;font-size:18px;margin:0 0 4px 0;">CẤP CỨU 115 TP. CẦN THƠ</h2>
+        <span style="font-size:12px;color:#94A3B8;">Cổng Đăng Nhập & Đăng Ký Người Dân</span>
+      </div>
+
+      <!-- Segmented Switcher for Login / Register -->
+      <div class="auth-tab-switch">
+        <button class="auth-tab-btn active" id="auth-tab-btn-login">ĐĂNG NHẬP</button>
+        <button class="auth-tab-btn" id="auth-tab-btn-register">ĐĂNG KÝ</button>
+      </div>
+
+      <!-- 1. LOGIN PANEL (Active logic) -->
+      <div class="onboarding-card" id="auth-panel-login">
+        <h3 style="color:#FFFFFF;font-size:15px;margin:0 0 6px 0;">Đăng nhập tài khoản</h3>
+        <p style="font-size:12px;color:#94A3B8;margin-bottom:14px;">
+          Đăng nhập để đồng bộ thông tin y tế khẩn cấp và danh bạ người thân khi gọi 115.
+        </p>
+
+        <form id="form-citizen-login">
+          <div class="form-group-citizen">
+            <label>Số điện thoại:</label>
+            <input type="tel" id="input-login-phone" class="form-control-citizen" value="0907.654.321" placeholder="Nhập số điện thoại 10 số" required />
+          </div>
+
+          <div class="form-group-citizen">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+              <label style="margin:0;">Mật khẩu:</label>
+              <span style="font-size:11px;color:#38BDF8;cursor:pointer;" id="link-forgot-pass">Quên mật khẩu?</span>
+            </div>
+            <input type="password" id="input-login-pass" class="form-control-citizen" value="123456" placeholder="Nhập mật khẩu" required />
+          </div>
+
+          <button type="submit" class="btn btn-emergency" id="btn-submit-login" style="width:100%;padding:12px;font-weight:700;margin-top:14px;">
+            ĐĂNG NHẬP
+          </button>
+        </form>
+
+        <div style="text-align:center;margin-top:14px;font-size:12px;color:#94A3B8;">
+          Chưa có tài khoản? <span style="color:#38BDF8;font-weight:700;cursor:pointer;" id="link-go-to-register">Đăng ký ngay</span>
+        </div>
+      </div>
+
+      <!-- 2. REGISTER PANEL (Displays UI and button as requested) -->
+      <div class="onboarding-card" id="auth-panel-register" style="display:none;">
+        <h3 style="color:#FFFFFF;font-size:15px;margin:0 0 6px 0;">Đăng ký tài khoản người dân</h3>
+        <p style="font-size:12px;color:#94A3B8;margin-bottom:14px;">
+          Tạo tài khoản để quản lý hồ sơ sức khỏe và chia sẻ vị trí cấp cứu an toàn.
+        </p>
+
+        <form id="form-citizen-register">
+          <div class="form-group-citizen">
+            <label>Họ và tên của bạn:</label>
+            <input type="text" id="input-reg-name" class="form-control-citizen" placeholder="Ví dụ: Nguyễn Văn An" />
+          </div>
+
+          <div class="form-group-citizen">
+            <label>Số điện thoại xác thực:</label>
+            <input type="tel" id="input-reg-phone" class="form-control-citizen" placeholder="Nhập số điện thoại 10 số" />
+          </div>
+
+          <div class="form-group-citizen">
+            <label>Số CCCD / Mã định danh:</label>
+            <input type="text" id="input-reg-id" class="form-control-citizen" placeholder="Số căn cước công dân 12 số" />
+          </div>
+
+          <div class="form-group-citizen">
+            <label>Mật khẩu tạo mới:</label>
+            <input type="password" id="input-reg-pass" class="form-control-citizen" placeholder="Tối thiểu 6 ký tự" />
+          </div>
+
+          <div class="form-group-citizen">
+            <label>Nhập lại mật khẩu:</label>
+            <input type="password" id="input-reg-repass" class="form-control-citizen" placeholder="Nhập lại mật khẩu để xác nhận" />
+          </div>
+
+          <div class="consent-item" style="margin-bottom:12px;">
+            <input type="checkbox" id="reg-agree-terms" class="consent-checkbox" checked />
+            <div style="font-size:11px;color:#94A3B8;line-height:1.4;">
+              Tôi đồng ý với <strong style="color:#CBD5E1;">Điều khoản sử dụng</strong> và <strong style="color:#CBD5E1;">Chính sách bảo vệ dữ liệu cá nhân y tế</strong> theo Nghị định 13/2023/NĐ-CP.
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-emergency" id="btn-submit-register" style="width:100%;padding:12px;font-weight:700;">
+            ĐĂNG KÝ TÀI KHOẢN MỚI
+          </button>
+        </form>
+
+        <div style="text-align:center;margin-top:14px;font-size:12px;color:#94A3B8;">
+          Đã có tài khoản? <span style="color:#38BDF8;font-weight:700;cursor:pointer;" id="link-go-to-login">Đăng nhập ngay</span>
+        </div>
       </div>
     </div>
 
-    <!-- P0: 5-Second Emergency Countdown Overlay -->
+    <!-- Onboarding Flow Modal Overlay (ND-01, ND-02, ND-03) -->
+    <div class="onboarding-overlay" id="onboarding-modal-flow" style="display:none;">
+      <div class="onboarding-header">
+        <div class="onboarding-logo">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h5v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z" />
+          </svg>
+        </div>
+        <h2 style="color:#FFFFFF;font-size:18px;margin:0 0 4px 0;">ĐĂNG KÝ SỬ DỤNG 115</h2>
+        <span style="font-size:12px;color:#94A3B8;">Kênh kết nối Cấp cứu Ngoại viện TP. Cần Thơ</span>
+      </div>
+
+      <div class="onboarding-stepper">
+        <div class="onboarding-step-dot active" id="step-dot-1">1</div>
+        <div class="onboarding-step-line" id="step-line-1"></div>
+        <div class="onboarding-step-dot" id="step-dot-2">2</div>
+        <div class="onboarding-step-line" id="step-line-2"></div>
+        <div class="onboarding-step-dot" id="step-dot-3">3</div>
+      </div>
+
+      <!-- Step 1: Input Phone -->
+      <div class="onboarding-card" id="onboard-step-1">
+        <h3 style="color:#FFFFFF;font-size:15px;margin:0 0 6px 0;">Xác thực số điện thoại</h3>
+        <p style="font-size:12px;color:#94A3B8;margin-bottom:14px;">
+          Số điện thoại giúp tổng đài viên liên hệ và xác minh tọa độ khi có sự cố khẩn cấp.
+        </p>
+
+        <div class="form-group-citizen">
+          <label>Số điện thoại của bạn:</label>
+          <input type="tel" id="input-onboard-phone" class="form-control-citizen" value="0907.654.321" placeholder="Nhập số điện thoại 10 số" />
+        </div>
+
+        <button class="btn btn-emergency" id="btn-onboard-send-otp" style="width:100%;padding:12px;margin-top:10px;font-weight:700;">
+          Gửi Mã Xác Thực OTP
+        </button>
+      </div>
+
+      <!-- Step 2: Input OTP 6-Digit -->
+      <div class="onboarding-card" id="onboard-step-2" style="display:none;">
+        <h3 style="color:#FFFFFF;font-size:15px;margin:0 0 6px 0;">Nhập mã OTP</h3>
+        <p style="font-size:12px;color:#94A3B8;margin-bottom:6px;">
+          Mã xác thực gồm 6 chữ số đã được gửi qua SMS tới số <strong style="color:#38BDF8;" id="otp-target-phone">0907.654.321</strong>.
+        </p>
+
+        <div class="otp-input-row">
+          <input type="text" maxlength="1" class="otp-box" value="1" />
+          <input type="text" maxlength="1" class="otp-box" value="1" />
+          <input type="text" maxlength="1" class="otp-box" value="5" />
+          <input type="text" maxlength="1" class="otp-box" value="1" />
+          <input type="text" maxlength="1" class="otp-box" value="1" />
+          <input type="text" maxlength="1" class="otp-box" value="5" />
+        </div>
+
+        <div style="text-align:center;font-size:12px;color:#94A3B8;margin-bottom:14px;" id="otp-countdown-text">
+          Gửi lại mã sau 60s
+        </div>
+
+        <button class="btn btn-primary" id="btn-verify-otp" style="width:100%;padding:12px;font-weight:700;background:#2563EB;">
+          Xác Nhận & Tiếp Tục
+        </button>
+      </div>
+
+      <!-- Step 3: Consent Agreement -->
+      <div class="onboarding-card" id="onboard-step-3" style="display:none;">
+        <h3 style="color:#FFFFFF;font-size:15px;margin:0 0 6px 0;">Đồng ý chia sẻ dữ liệu y tế</h3>
+        <p style="font-size:12px;color:#94A3B8;margin-bottom:14px;">
+          Tuân thủ Nghị định 13/2023/NĐ-CP về bảo vệ dữ liệu cá nhân y tế khẩn cấp:
+        </p>
+
+        <div class="consent-item">
+          <input type="checkbox" class="consent-checkbox" checked disabled />
+          <div>
+            <strong style="color:#FFFFFF;font-size:12px;">Chia sẻ vị trí GPS khi bấm SOS</strong>
+            <div style="font-size:11px;color:#94A3B8;">Bắt buộc để xe cứu thương xác định được hiện trường.</div>
+          </div>
+        </div>
+
+        <div class="consent-item">
+          <input type="checkbox" class="consent-checkbox" checked />
+          <div>
+            <strong style="color:#FFFFFF;font-size:12px;">Chia sẻ hồ sơ y tế & tiền sử dị ứng</strong>
+            <div style="font-size:11px;color:#94A3B8;">Giúp bác sĩ cấp cứu chuẩn bị phác đồ và thuốc phù hợp.</div>
+          </div>
+        </div>
+
+        <div class="consent-item">
+          <input type="checkbox" class="consent-checkbox" checked />
+          <div>
+            <strong style="color:#FFFFFF;font-size:12px;">Gửi tin nhắn SMS tới người thân</strong>
+            <div style="font-size:11px;color:#94A3B8;">Tự động báo tin cho người liên hệ khi có biến cố y khoa.</div>
+          </div>
+        </div>
+
+        <button class="btn btn-emergency" id="btn-accept-data-consent" style="width:100%;padding:12px;margin-top:10px;font-weight:700;">
+          Đồng Ý Tất Cả & Bắt Đầu Sử Dụng
+        </button>
+      </div>
+    </div>
+
+    <!-- 5-Second Safe Emergency Countdown Overlay -->
     <div class="countdown-overlay" id="countdown-overlay" style="display:none;">
-      <div style="font-size:13px;font-weight:700;color:var(--red-vivid);text-transform:uppercase;letter-spacing:1px;">
-        Đang chuẩn bị gửi tín hiệu khẩn cấp
+      <div style="font-size:12.5px;font-weight:700;color:var(--red-vivid);text-transform:uppercase;letter-spacing:1px;">
+        ĐANG KÍCH HOẠT TÍN HIỆU CẤP CỨU 115
       </div>
-      <div class="countdown-number" id="countdown-timer">5</div>
-      <p style="font-size:13px;color:#CBD5E1;max-width:280px;line-height:1.5;">
-        Vị trí GPS và thông tin của bạn sẽ được truyền tới Trung tâm 115 khi đếm ngược kết thúc.
+      <div class="countdown-number" id="countdown-timer-num">5</div>
+      <p style="font-size:12.5px;color:#CBD5E1;max-width:300px;line-height:1.5;margin:0 auto 16px;">
+        Tọa độ GPS hiện trường và hồ sơ của bạn sẽ truyền đến Trung tâm Điều hành Cần Thơ sau 5 giây.
       </p>
-      <button class="countdown-cancel-btn" id="btn-cancel-countdown">
-        ✕ HỦY NGAY (BẤM NHẦM)
-      </button>
+      <div style="display:flex;flex-direction:column;gap:10px;width:100%;max-width:280px;">
+        <button class="btn btn-emergency countdown-call-now-btn" id="btn-call-sos-now">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:6px;">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+          </svg>
+          GỌI NGAY (KHÔNG CHỜ)
+        </button>
+        <button class="countdown-cancel-btn" id="btn-cancel-sos-countdown">
+          ✕ HỦY GỌI (BẤM NHẦM)
+        </button>
+      </div>
     </div>
 
-    <!-- P0: Bottom Sheet Modal Cancellation -->
+    <!-- Bottom Sheet Modal: Cancellation Reason (ND-05) -->
     <div class="bottom-sheet-backdrop" id="cancel-bottom-sheet">
       <div class="bottom-sheet-modal">
         <div class="bottom-sheet-handle"></div>
-        <h3 style="color:var(--text-white);font-size:16px;margin:0 0 6px 0;">Xác nhận Hủy Yêu cầu Cấp cứu?</h3>
+        <h3 style="color:#FFFFFF;font-size:16px;margin:0 0 6px 0;">Xác nhận Hủy Yêu cầu Cấp cứu?</h3>
         <p style="font-size:12px;color:#94A3B8;margin-bottom:14px;">
           Xe cứu thương 65A-011.15 đang trên đường đến. Vui lòng cho biết lý do nếu bạn muốn hủy:
         </p>
 
         <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
-          <button class="bottom-sheet-reason-btn selected" data-reason="accidental">
+          <button class="bottom-sheet-reason-btn selected">
             Tôi chạm nhầm / Bấm thử nghiệm ứng dụng
           </button>
-          <button class="bottom-sheet-reason-btn" data-reason="other_vehicle">
+          <button class="bottom-sheet-reason-btn">
             Đã có phương tiện khác / Người bệnh tự đi viện
           </button>
-          <button class="bottom-sheet-reason-btn" data-reason="recovered">
+          <button class="bottom-sheet-reason-btn">
             Tình trạng bệnh nhân đã ổn định trở lại
           </button>
         </div>
@@ -160,122 +735,111 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal: Self-Transport Hospital Confirmation (ND-05) -->
+    <div class="citizen-modal-backdrop" id="modal-self-transport">
+      <div class="citizen-modal-dialog">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <strong style="color:#FFFFFF;font-size:15px;">XÁC NHẬN TỰ DI CHUYỂN TỚI VIỆN</strong>
+          <span style="color:#94A3B8;cursor:pointer;font-size:18px;" id="btn-close-self-transport">✕</span>
+        </div>
+        <p style="font-size:12px;color:#CBD5E1;margin-bottom:12px;">
+          Hệ thống gợi ý các Bệnh viện gần nhất đang có khoa Cấp cứu sẵn sàng tiếp nhận. Vui lòng chọn điểm đến để gửi cảnh báo trước cho bác sĩ:
+        </p>
+
+        <div id="self-transport-hospital-list" style="margin-bottom:14px;">
+          <!-- Dynamically populated via citizen-app.js -->
+        </div>
+
+        <button class="btn btn-primary" id="btn-confirm-self-transport" style="width:100%;padding:12px;font-weight:700;background:#2563EB;">
+          Xác Nhận Điểm Đến & Gửi Thông Báo Cho Bệnh Viện
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal: First Aid Medical Guidance (ND-05) -->
+    <div class="citizen-modal-backdrop" id="modal-first-aid-guide">
+      <div class="citizen-modal-dialog">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1px solid #1E3A56;padding-bottom:10px;">
+          <strong style="color:#FF3B35;font-size:14px;" id="first-aid-modal-title">HƯỚNG DẪN SƠ CỨU 115</strong>
+          <span style="color:#94A3B8;cursor:pointer;font-size:18px;" id="btn-close-first-aid">✕</span>
+        </div>
+        <div id="first-aid-modal-content">
+          <!-- Populated dynamically via citizen-app.js -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Call Center 115 Dialog -->
+    <div class="citizen-modal-backdrop" id="modal-call-center">
+      <div class="citizen-modal-dialog" style="text-align:center;">
+        <div style="width:54px;height:54px;border-radius:50%;background:rgba(229,37,33,0.15);border:2px solid #E52521;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;color:#FF3B35;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        </div>
+        <h3 style="color:#FFFFFF;font-size:16px;margin:0 0 6px 0;">GỌI LẠI TỔNG ĐÀI 115 CẦN THƠ</h3>
+        <p style="font-size:12.5px;color:#CBD5E1;margin-bottom:16px;">
+          Đường dây nóng cấp cứu 24/7. Điều phối viên đang trực ban và sẵn sàng tiếp nhận cuộc gọi cho ca cấp cứu hiện tại.
+        </p>
+        <div style="display:flex;gap:10px;">
+          <button class="btn btn-default" id="btn-close-call-modal" style="flex:1;padding:12px;">Đóng</button>
+          <a href="tel:115" class="btn btn-emergency" style="flex:1;padding:12px;text-decoration:none;display:flex;align-items:center;justify-content:center;font-weight:700;">
+            GỌI LẠI NGAY
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Add Emergency Contact (ND-08) -->
+    <div class="citizen-modal-backdrop" id="modal-add-contact">
+      <div class="citizen-modal-dialog">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <strong style="color:#FFFFFF;font-size:14px;">THÊM NGƯỜI LIÊN HỆ KHẨN CẤP</strong>
+          <span style="color:#94A3B8;cursor:pointer;font-size:18px;" id="btn-close-contact-modal">✕</span>
+        </div>
+        <form id="form-add-contact-inner">
+          <div class="form-group-citizen">
+            <label>Họ và tên người thân:</label>
+            <input type="text" id="new-contact-name" class="form-control-citizen" placeholder="Ví dụ: Nguyễn Văn B" required />
+          </div>
+          <div class="form-group-citizen">
+            <label>Mối quan hệ:</label>
+            <input type="text" id="new-contact-relation" class="form-control-citizen" placeholder="Ví dụ: Bố, Mẹ, Vợ, Con..." required />
+          </div>
+          <div class="form-group-citizen">
+            <label>Số điện thoại:</label>
+            <input type="tel" id="new-contact-phone" class="form-control-citizen" placeholder="Ví dụ: 0918.xxx.xxx" required />
+          </div>
+          <button type="submit" class="btn btn-emergency" style="width:100%;padding:10px;margin-top:6px;">
+            Lưu Người Liên Hệ
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Request History Detail (ND-10) -->
+    <div class="citizen-modal-backdrop" id="modal-history-detail">
+      <div class="citizen-modal-dialog">
+        <div style="display:flex;justify-content:flex-end;">
+          <span style="color:#94A3B8;cursor:pointer;font-size:18px;" id="btn-close-history-modal">✕</span>
+        </div>
+        <div id="history-detail-modal-body">
+          <!-- Populated dynamically via citizen-app.js -->
+        </div>
+      </div>
+    </div>
+
   </div>
 
+  <!-- Shared CCNV Data & UI Scripts -->
   <script src="js/shared/data-seed.js"></script>
   <script src="js/shared/data-loader.js"></script>
   <script src="js/shared/components.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      await window.StateManager.init();
 
-      const btnSos = document.getElementById('btn-citizen-sos');
-      const sosRing = document.getElementById('sos-ring-trigger');
-      const idleView = document.getElementById('citizen-idle-view');
-      const trackingCard = document.getElementById('citizen-tracking-card');
-      const countdownOverlay = document.getElementById('countdown-overlay');
-      const countdownTimer = document.getElementById('countdown-timer');
-      const btnCancelCountdown = document.getElementById('btn-cancel-countdown');
+  <!-- Leaflet GIS Real World Map Engine -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-      const btnOpenCancel = document.getElementById('btn-citizen-open-cancel');
-      const cancelSheet = document.getElementById('cancel-bottom-sheet');
-      const btnKeepWaiting = document.getElementById('btn-sheet-keep-waiting');
-      const btnConfirmCancel = document.getElementById('btn-sheet-confirm-cancel');
-
-      let holdTimeout = null;
-      let countdownInterval = null;
-      let countdownSec = 5;
-
-      // Kích hoạt phát lệnh SOS chính thức
-      function triggerEmergencyDispatch() {
-        if (countdownInterval) clearInterval(countdownInterval);
-        countdownOverlay.style.display = 'none';
-        idleView.style.display = 'none';
-        trackingCard.style.display = 'block';
-
-        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-
-        window.CCNV_UI.Toast.show(
-          'ĐÃ KÍCH HOẠT CẤP CỨU 115',
-          'Vị trí GPS của bạn đã truyền thành công tới Trung tâm Điều hành Cần Thơ. Xe 65A-011.15 đang xuất phát.',
-          true
-        );
-      }
-
-      // 1. CHẾ ĐỘ GIỮ 1.5S (HOLD TO ACTIVATE)
-      function startHold(e) {
-        sosRing.classList.add('holding');
-        holdTimeout = setTimeout(() => {
-          sosRing.classList.remove('holding');
-          triggerEmergencyDispatch();
-        }, 1500);
-      }
-
-      function cancelHold(e) {
-        sosRing.classList.remove('holding');
-        if (holdTimeout) {
-          clearTimeout(holdTimeout);
-          holdTimeout = null;
-        }
-      }
-
-      // Pointer / Touch events for reliable mobile interaction
-      btnSos.addEventListener('pointerdown', startHold);
-      btnSos.addEventListener('pointerup', cancelHold);
-      btnSos.addEventListener('pointerleave', cancelHold);
-      btnSos.addEventListener('pointercancel', cancelHold);
-
-      // 2. CHẾ ĐỘ CHẠM NHANH -> BẬT ĐẾM NGƯỢC 5 GIÂY (TAP TO 5S COUNTDOWN)
-      btnSos.addEventListener('click', (e) => {
-        // Nếu không giữ đủ 1.5s, mở chế độ đếm ngược an toàn
-        if (trackingCard.style.display === 'block') return;
-        countdownSec = 5;
-        countdownTimer.textContent = countdownSec;
-        countdownOverlay.style.display = 'flex';
-
-        if (countdownInterval) clearInterval(countdownInterval);
-        countdownInterval = setInterval(() => {
-          countdownSec--;
-          countdownTimer.textContent = countdownSec;
-          if (countdownSec <= 0) {
-            clearInterval(countdownInterval);
-            triggerEmergencyDispatch();
-          }
-        }, 1000);
-      });
-
-      // Hủy đếm ngược
-      btnCancelCountdown.addEventListener('click', () => {
-        if (countdownInterval) clearInterval(countdownInterval);
-        countdownOverlay.style.display = 'none';
-        window.CCNV_UI.Toast.show('Đã hủy đếm ngược', 'Yêu cầu gọi cấp cứu chưa được gửi đi.');
-      });
-
-      // 3. BOTTOM SHEET XÁC NHẬN HỦY THAY THẾ WINDOW.CONFIRM()
-      btnOpenCancel.addEventListener('click', () => {
-        cancelSheet.classList.add('active');
-      });
-
-      btnKeepWaiting.addEventListener('click', () => {
-        cancelSheet.classList.remove('active');
-      });
-
-      // Chọn lý do hủy
-      cancelSheet.querySelectorAll('.bottom-sheet-reason-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          cancelSheet.querySelectorAll('.bottom-sheet-reason-btn').forEach(b => b.classList.remove('selected'));
-          btn.classList.add('selected');
-        });
-      });
-
-      // Xác nhận hủy
-      btnConfirmCancel.addEventListener('click', () => {
-        cancelSheet.classList.remove('active');
-        trackingCard.style.display = 'none';
-        idleView.style.display = 'flex';
-        window.CCNV_UI.Toast.show('Đã hủy yêu cầu cấp cứu', 'Yêu cầu gọi xe đã được hủy và thông báo tới trung tâm.');
-      });
-    });
-  </script>
+  <!-- Citizen Mobile App Controller -->
+  <script src="js/citizen/citizen-app.js?v=20261004_01"></script>
 </body>
+
 </html>

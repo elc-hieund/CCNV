@@ -1302,8 +1302,16 @@
             attributionControl: false
           });
 
-          window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            maxZoom: 19
+          window.L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '&copy; Esri, DeLorme, NAVTEQ',
+            maxNativeZoom: 16,
+            maxZoom: 18
+          }).addTo(map);
+
+          window.L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '',
+            maxNativeZoom: 16,
+            maxZoom: 18
           }).addTo(map);
 
           // Route coordinates
