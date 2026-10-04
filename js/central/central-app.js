@@ -49,9 +49,29 @@
           const role = window.StateManager.getCurrentUser()?.role;
           this.currentMenu = (role === 'HOSPITAL_RECEIVER') ? 'hospital-incoming' : 'realtime-map';
           this.renderCurrentView();
-        } else if (event === 'CASE_CREATED' || event === 'CASE_UPDATED') {
-          if (this.currentMenu === 'cases-list' || this.currentMenu === 'hospital-incoming') {
+        } else if (event === 'CASE_CREATED' || event === 'CASE_UPDATED' || event === 'PATIENT_UPDATED' || event === 'STORAGE_SYNC') {
+          if (this.currentMenu === 'cases-list' || this.currentMenu === 'hospital-incoming' || this.currentMenu === 'realtime-map') {
             this.renderCurrentView();
+          }
+          // If case detail modal is open for this case, refresh it live
+          const modalOverlay = document.getElementById('case-detail-modal-overlay');
+          if (modalOverlay && modalOverlay.classList.contains('active') && this.selectedCaseId) {
+            const currentC = window.StateManager.getState().cases.find(item => item.id === this.selectedCaseId || item.code === this.selectedCaseId);
+            if (currentC) {
+              this.showCaseDetailModal(currentC);
+            }
+          }
+          // Toast notification on Central for patient sync from Driver app
+          if (event === 'PATIENT_UPDATED' && payload?.patient) {
+            if (window.CCNV_UI?.Toast) {
+              const p = payload.patient;
+              const vehText = payload.vehiclePlate ? `Xe ${payload.vehiclePlate} · ` : '';
+              window.CCNV_UI.Toast.show(
+                'ĐỒNG BỘ THÔNG TIN BỆNH NHÂN (ePCR)',
+                `${vehText}Đã cập nhật: ${p.name || 'Bệnh nhân'} (${p.age || '—'}T, ${p.gender || '—'}) · Nhóm máu: ${p.bloodType || '—'} · Tiền sử: ${p.history || 'Không'}`,
+                true
+              );
+            }
           }
         }
       });
@@ -5290,8 +5310,76 @@
                 <!-- 1. THÔNG TIN CHUNG NGƯỜI BỆNH -->
                 <div class="form-section">
                   <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between;">
-                    <span>THÔNG TIN CHUNG NGƯỜI BỆNH</span>
-                    <span class="badge badge-accent">ID: ${c.patient?.id || 'BN-' + c.code}</span>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span>THÔNG TIN CHUNG NGƯỜI BỆNH</span>
+                      <span class="badge badge-accent">ID: ${c.patient?.id || 'BN-' + c.code}</span>
+                    </div>
+                    <button class="btn btn-default btn-xs" id="btn-toggle-edit-patient-central" style="border:1px solid var(--accent-cyan);color:var(--accent-cyan);font-size:11px;padding:3px 8px;display:flex;align-items:center;gap:4px;font-weight:600;">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                      <span>Sửa & Đồng bộ về xe</span>
+                    </button>
+                  </div>
+
+                  <!-- Central Quick Edit Form for Dispatcher / Doctor -->
+                  <div id="box-edit-patient-central" style="display:none;background:rgba(8,24,39,0.95);border:1px solid var(--accent-cyan);border-radius:8px;padding:12px;margin-bottom:12px;">
+                    <div style="font-size:11px;color:var(--accent-cyan);font-weight:700;margin-bottom:8px;text-transform:uppercase;display:flex;align-items:center;gap:6px;">
+                      <span>✦ ĐIỀU PHỐI VIÊN 115 CẬP NHẬT & ĐỒNG BỘ THÔNG TIN BỆNH NHÂN:</span>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 80px 100px 100px;gap:8px;margin-bottom:8px;">
+                      <div>
+                        <label style="font-size:10.5px;color:var(--text-slate);display:block;margin-bottom:2px;">Họ tên bệnh nhân</label>
+                        <input type="text" id="central-input-patient-name" value="${c.patient?.name || ''}" class="form-input" style="padding:4px 8px;font-size:12px;width:100%;background:#061421;border:1px solid var(--border-accent);color:#FFFFFF;border-radius:4px;" />
+                      </div>
+                      <div>
+                        <label style="font-size:10.5px;color:var(--text-slate);display:block;margin-bottom:2px;">Tuổi</label>
+                        <input type="number" id="central-input-patient-age" value="${c.patient?.age || ''}" class="form-input" style="padding:4px 8px;font-size:12px;width:100%;background:#061421;border:1px solid var(--border-accent);color:#FFFFFF;border-radius:4px;" />
+                      </div>
+                      <div>
+                        <label style="font-size:10.5px;color:var(--text-slate);display:block;margin-bottom:2px;">Giới tính</label>
+                        <select id="central-input-patient-gender" class="form-select" style="padding:4px 8px;font-size:12px;width:100%;background:#061421;border:1px solid var(--border-accent);color:#FFFFFF;border-radius:4px;">
+                          <option value="Nam" ${c.patient?.gender === 'Nam' ? 'selected' : ''}>Nam</option>
+                          <option value="Nữ" ${c.patient?.gender === 'Nữ' ? 'selected' : ''}>Nữ</option>
+                          <option value="Chưa rõ" ${c.patient?.gender === 'Chưa rõ' ? 'selected' : ''}>Chưa rõ</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label style="font-size:10.5px;color:var(--text-slate);display:block;margin-bottom:2px;">Nhóm máu</label>
+                        <select id="central-input-patient-blood" class="form-select" style="padding:4px 8px;font-size:12px;width:100%;background:#061421;border:1px solid var(--border-accent);color:#FFFFFF;border-radius:4px;">
+                          <option value="O+" ${c.patient?.bloodType === 'O+' ? 'selected' : ''}>O+</option>
+                          <option value="O-" ${c.patient?.bloodType === 'O-' ? 'selected' : ''}>O-</option>
+                          <option value="A+" ${c.patient?.bloodType === 'A+' ? 'selected' : ''}>A+</option>
+                          <option value="A-" ${c.patient?.bloodType === 'A-' ? 'selected' : ''}>A-</option>
+                          <option value="B+" ${c.patient?.bloodType === 'B+' ? 'selected' : ''}>B+</option>
+                          <option value="B-" ${c.patient?.bloodType === 'B-' ? 'selected' : ''}>B-</option>
+                          <option value="AB+" ${c.patient?.bloodType === 'AB+' ? 'selected' : ''}>AB+</option>
+                          <option value="AB-" ${c.patient?.bloodType === 'AB-' ? 'selected' : ''}>AB-</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:140px 1fr 1fr;gap:8px;margin-bottom:8px;">
+                      <div>
+                        <label style="font-size:10.5px;color:var(--text-slate);display:block;margin-bottom:2px;">Số điện thoại BN</label>
+                        <input type="text" id="central-input-patient-phone" value="${c.patient?.phone || c.callerPhone || ''}" class="form-input" style="padding:4px 8px;font-size:12px;width:100%;background:#061421;border:1px solid var(--border-accent);color:#FFFFFF;border-radius:4px;" />
+                      </div>
+                      <div>
+                        <label style="font-size:10.5px;color:var(--text-slate);display:block;margin-bottom:2px;">Tiền sử bệnh lý nền</label>
+                        <input type="text" id="central-input-patient-history" value="${c.patient?.history || ''}" class="form-input" style="padding:4px 8px;font-size:12px;width:100%;background:#061421;border:1px solid var(--border-accent);color:#FFFFFF;border-radius:4px;" />
+                      </div>
+                      <div>
+                        <label style="font-size:10.5px;color:var(--text-slate);display:block;margin-bottom:2px;">Dị ứng thuốc & thức ăn</label>
+                        <input type="text" id="central-input-patient-allergies" value="${c.patient?.allergies || ''}" class="form-input" style="padding:4px 8px;font-size:12px;width:100%;background:#061421;border:1px solid var(--border-accent);color:#FFFFFF;border-radius:4px;" />
+                      </div>
+                    </div>
+                    <div>
+                      <label style="font-size:10.5px;color:var(--text-slate);display:block;margin-bottom:2px;">Chẩn đoán sơ bộ / Triệu chứng</label>
+                      <input type="text" id="central-input-patient-symptom" value="${c.patient?.symptom || c.incident?.description || ''}" class="form-input" style="padding:4px 8px;font-size:12px;width:100%;background:#061421;border:1px solid var(--border-accent);color:#FFFFFF;border-radius:4px;" />
+                    </div>
+                    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px;">
+                      <button class="btn btn-default btn-xs" id="btn-cancel-edit-patient-central" style="padding:4px 10px;">Hủy</button>
+                      <button class="btn btn-emergency btn-xs" id="btn-save-patient-central" style="padding:4px 14px;font-weight:700;">
+                        LƯU & PHÁT ĐỒNG BỘ VỀ KÍP XE ➔
+                      </button>
+                    </div>
                   </div>
                   
                   <div style="display:flex;gap:14px;margin-bottom:10px;align-items:center;background:rgba(255,255,255,0.02);padding:8px 12px;border-radius:8px;border:1px solid var(--border-main);">
@@ -5517,6 +5605,37 @@
 
             </div>
           `;
+
+          // Gắn sự kiện sửa & đồng bộ thông tin BN về kíp xe
+          body.querySelector('#btn-toggle-edit-patient-central')?.addEventListener('click', () => {
+            const box = body.querySelector('#box-edit-patient-central');
+            if (box) box.style.display = box.style.display === 'none' ? 'block' : 'none';
+          });
+          body.querySelector('#btn-cancel-edit-patient-central')?.addEventListener('click', () => {
+            const box = body.querySelector('#box-edit-patient-central');
+            if (box) box.style.display = 'none';
+          });
+          body.querySelector('#btn-save-patient-central')?.addEventListener('click', () => {
+            const name = body.querySelector('#central-input-patient-name')?.value.trim() || 'Chưa rõ';
+            const age = Number(body.querySelector('#central-input-patient-age')?.value) || 0;
+            const gender = body.querySelector('#central-input-patient-gender')?.value || 'Nam';
+            const phone = body.querySelector('#central-input-patient-phone')?.value.trim() || '';
+            const bloodType = body.querySelector('#central-input-patient-blood')?.value || 'O+';
+            const history = body.querySelector('#central-input-patient-history')?.value.trim() || '';
+            const allergies = body.querySelector('#central-input-patient-allergies')?.value.trim() || '';
+            const symptom = body.querySelector('#central-input-patient-symptom')?.value.trim() || '';
+
+            const patch = { name, age, gender, phone, bloodType, history, allergies, symptom };
+            window.StateManager.updateCasePatient(c.id, patch);
+            if (window.CCNV_UI?.Toast) {
+              window.CCNV_UI.Toast.show(
+                'ĐÃ ĐỒNG BỘ VỀ XE CẤP CỨU',
+                `Đã cập nhật thông tin BN "${name}" (${age}T, ${gender}) và phát tín hiệu đồng bộ realtime tới app tài xế & kíp cấp cứu.`,
+                true
+              );
+            }
+            renderTab('tab-overview');
+          });
         }
 
         // --- TAB 2: PHÂN CÔNG / ĐIỀU PHỐI (Layout Mở Rộng 3 Cột) ---
@@ -6000,53 +6119,53 @@
                   <!-- Danh sách các node mốc thời gian -->
                   <div style="display:flex;flex-direction:column;gap:22px;">
                     ${logsList.map((l, idx) => {
-                      let nodeColor = '#38bdf8';
-                      let iconSymbol = '📞';
-                      let badgeBg = 'rgba(56,189,248,0.15)';
-                      let badgeBorder = 'rgba(56,189,248,0.35)';
-                      let badgeText = 'NHẬN CUỘC GỌI';
+            let nodeColor = '#38bdf8';
+            let iconSymbol = '📞';
+            let badgeBg = 'rgba(56,189,248,0.15)';
+            let badgeBorder = 'rgba(56,189,248,0.35)';
+            let badgeText = 'NHẬN CUỘC GỌI';
 
-                      if (l.type === 'CALL' || l.action.toLowerCase().includes('cuộc gọi')) {
-                        nodeColor = '#38bdf8';
-                        iconSymbol = '📞';
-                        badgeBg = 'rgba(56,189,248,0.15)';
-                        badgeBorder = 'rgba(56,189,248,0.35)';
-                        badgeText = 'NHẬN CUỘC GỌI';
-                      } else if (l.type === 'DISPATCH' || l.action.toLowerCase().includes('điều xe') || l.action.toLowerCase().includes('lệnh')) {
-                        nodeColor = '#fbbf24';
-                        iconSymbol = '🚨';
-                        badgeBg = 'rgba(245,158,11,0.15)';
-                        badgeBorder = 'rgba(245,158,11,0.35)';
-                        badgeText = 'ĐIỀU ĐỘNG XE';
-                      } else if (l.type === 'HOSPITAL' || l.action.toLowerCase().includes('sẵn sàng') || l.action.toLowerCase().includes('khoa cấp cứu')) {
-                        nodeColor = '#10b981';
-                        iconSymbol = '🏥';
-                        badgeBg = 'rgba(16,185,129,0.15)';
-                        badgeBorder = 'rgba(16,185,129,0.35)';
-                        badgeText = 'BV TIẾP NHẬN';
-                      } else if (l.type === 'MEDICAL' || l.action.toLowerCase().includes('sinh hiệu') || l.action.toLowerCase().includes('băng')) {
-                        nodeColor = '#f472b6';
-                        iconSymbol = '🩹';
-                        badgeBg = 'rgba(244,114,182,0.15)';
-                        badgeBorder = 'rgba(244,114,182,0.35)';
-                        badgeText = 'CAN THIỆP Y TẾ';
-                      } else if (l.type === 'HANDOVER' || l.action.toLowerCase().includes('bàn giao')) {
-                        nodeColor = '#c084fc';
-                        iconSymbol = '🤝';
-                        badgeBg = 'rgba(192,132,252,0.15)';
-                        badgeBorder = 'rgba(192,132,252,0.35)';
-                        badgeText = 'BÀN GIAO TẠI VIỆN';
-                      } else {
-                        nodeColor = '#34d399';
-                        iconSymbol = '🚑';
-                        badgeBg = 'rgba(52,211,153,0.15)';
-                        badgeBorder = 'rgba(52,211,153,0.35)';
-                        badgeText = 'TIẾN TRÌNH DI CHUYỂN';
-                      }
+            if (l.type === 'CALL' || l.action.toLowerCase().includes('cuộc gọi')) {
+              nodeColor = '#38bdf8';
+              iconSymbol = '📞';
+              badgeBg = 'rgba(56,189,248,0.15)';
+              badgeBorder = 'rgba(56,189,248,0.35)';
+              badgeText = 'NHẬN CUỘC GỌI';
+            } else if (l.type === 'DISPATCH' || l.action.toLowerCase().includes('điều xe') || l.action.toLowerCase().includes('lệnh')) {
+              nodeColor = '#fbbf24';
+              iconSymbol = '🚨';
+              badgeBg = 'rgba(245,158,11,0.15)';
+              badgeBorder = 'rgba(245,158,11,0.35)';
+              badgeText = 'ĐIỀU ĐỘNG XE';
+            } else if (l.type === 'HOSPITAL' || l.action.toLowerCase().includes('sẵn sàng') || l.action.toLowerCase().includes('khoa cấp cứu')) {
+              nodeColor = '#10b981';
+              iconSymbol = '🏥';
+              badgeBg = 'rgba(16,185,129,0.15)';
+              badgeBorder = 'rgba(16,185,129,0.35)';
+              badgeText = 'BV TIẾP NHẬN';
+            } else if (l.type === 'MEDICAL' || l.action.toLowerCase().includes('sinh hiệu') || l.action.toLowerCase().includes('băng')) {
+              nodeColor = '#f472b6';
+              iconSymbol = '🩹';
+              badgeBg = 'rgba(244,114,182,0.15)';
+              badgeBorder = 'rgba(244,114,182,0.35)';
+              badgeText = 'CAN THIỆP Y TẾ';
+            } else if (l.type === 'HANDOVER' || l.action.toLowerCase().includes('bàn giao')) {
+              nodeColor = '#c084fc';
+              iconSymbol = '🤝';
+              badgeBg = 'rgba(192,132,252,0.15)';
+              badgeBorder = 'rgba(192,132,252,0.35)';
+              badgeText = 'BÀN GIAO TẠI VIỆN';
+            } else {
+              nodeColor = '#34d399';
+              iconSymbol = '🚑';
+              badgeBg = 'rgba(52,211,153,0.15)';
+              badgeBorder = 'rgba(52,211,153,0.35)';
+              badgeText = 'TIẾN TRÌNH DI CHUYỂN';
+            }
 
-                      const timeStr = l.time.includes('-') ? l.time : formatDT(l.time);
+            const timeStr = l.time.includes('-') ? l.time : formatDT(l.time);
 
-                      return `
+            return `
                         <div style="position:relative;display:flex;align-items:flex-start;gap:22px;">
                           <!-- Node tròn trên trục dọc -->
                           <div style="width:38px;height:38px;border-radius:50%;background:#091726;border:2px solid ${nodeColor};box-shadow:0 0 12px ${nodeColor}55;display:flex;align-items:center;justify-content:center;font-size:15px;z-index:2;flex-shrink:0;">
@@ -6078,7 +6197,7 @@
                           </div>
                         </div>
                       `;
-                    }).join('')}
+          }).join('')}
                   </div>
                 </div>
               </div>

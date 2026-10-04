@@ -380,3 +380,755 @@
   background-color: var(--red-vivid);
   color: #FFFFFF;
 }
+
+/* ==========================================================================
+   3. DRIVER MOBILE PHONE APP REDESIGN — SMARTPHONE FIRST (TX-00 -> TX-06)
+   Optimized for 375px - 440px phone viewports, one-thumb reach & night driving
+   ========================================================================== */
+
+/* Body frame wrapper on desktop */
+body.driver-phone-body {
+  background-color: #040d16;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: var(--font-family);
+  color: var(--text-light);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Mobile App Shell (Phone Container) */
+.mobile-app-wrapper.driver-mobile-app {
+  width: 100%;
+  max-width: 430px;
+  height: 100vh;
+  height: 100dvh;
+  background-color: var(--bg-main);
+  border: 1px solid #1a3247;
+  border-radius: 24px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+@media (max-width: 520px) {
+  body.driver-phone-body {
+    background-color: var(--bg-main);
+  }
+  .mobile-app-wrapper.driver-mobile-app {
+    max-width: 100%;
+    height: 100dvh;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
+    box-shadow: none;
+  }
+}
+
+/* Simulated Smartphone Status Bar */
+.driver-status-bar {
+  height: 24px;
+  background-color: #081827;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #94A3B8;
+  letter-spacing: 0.3px;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.driver-status-bar-icons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Mobile Header */
+.driver-mobile-header {
+  background-color: #081827;
+  border-bottom: 1px solid var(--border-main);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.driver-header-main-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.driver-vehicle-selector-btn {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-accent);
+  border-radius: 20px;
+  padding: 5px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.driver-vehicle-selector-btn:hover, .driver-vehicle-selector-btn:active {
+  background: var(--bg-elevated);
+  border-color: #38BDF8;
+}
+
+.driver-plate-code {
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 13.5px;
+  color: #FFFFFF;
+  letter-spacing: 0.5px;
+}
+
+.driver-sub-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: #94A3B8;
+  padding-top: 2px;
+}
+
+.driver-gps-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #34D399;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 10.5px;
+}
+
+/* Central Dispatch Change Notice Banner */
+.driver-notice-banner {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.22) 0%, rgba(14, 36, 53, 0.95) 100%);
+  border: 1px solid #D97706;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 10px 14px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  animation: slideDown 0.25s ease-out;
+}
+
+.driver-notice-banner.danger {
+  background: linear-gradient(90deg, rgba(229, 37, 33, 0.25) 0%, rgba(14, 36, 53, 0.95) 100%);
+  border-color: var(--red-vivid);
+}
+
+/* Mobile Scrollable Content Area */
+.driver-main-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 14px 76px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Tab Panels */
+.driver-tab-panel {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  animation: tabFadeIn 0.2s ease-out;
+}
+
+.driver-tab-panel.active {
+  display: flex;
+}
+
+@keyframes tabFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mission & Case Card */
+.driver-case-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-main);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.driver-case-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid rgba(24, 52, 73, 0.6);
+  padding-bottom: 10px;
+}
+
+.driver-case-code-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #FFFFFF;
+  margin: 2px 0 0 0;
+  line-height: 1.35;
+}
+
+.driver-eta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  padding: 3px 9px;
+  border-radius: 16px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Quick Action Call Trio (Call Caller, Dispatcher, Hospital) */
+.quick-action-trio {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.quick-call-btn {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-accent);
+  border-radius: 8px;
+  padding: 8px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: #E2E8F0;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  min-height: 52px;
+}
+
+.quick-call-btn:active {
+  transform: scale(0.96);
+  background: #183750;
+  border-color: #38BDF8;
+}
+
+.quick-call-btn span {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #CBD5E1;
+  text-align: center;
+}
+
+/* Mobile Stepper 4 Mốc */
+.driver-mobile-stepper {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  position: relative;
+  padding: 8px 0 2px;
+}
+
+.driver-step-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+}
+
+.driver-step-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #081827;
+  border: 2px solid #29465A;
+  color: #94A3B8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  margin-bottom: 6px;
+  z-index: 2;
+  transition: all var(--transition-normal);
+}
+
+.driver-step-col.completed .driver-step-dot {
+  background: #047857;
+  border-color: #10B981;
+  color: #FFFFFF;
+}
+
+.driver-step-col.active .driver-step-dot {
+  background: var(--red-primary);
+  border-color: #FF6B67;
+  color: #FFFFFF;
+  box-shadow: 0 0 14px rgba(229, 37, 33, 0.6);
+  animation: pulse-step 1.5s infinite;
+}
+
+@keyframes pulse-step {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.driver-step-text {
+  font-size: 10px;
+  font-weight: 600;
+  color: #94A3B8;
+  line-height: 1.2;
+}
+
+.driver-step-col.active .driver-step-text {
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+.driver-step-col.completed .driver-step-text {
+  color: #34D399;
+}
+
+/* ==========================================================================
+   FULL-BLEED GPS NAVIGATION MAP (Tab 2: BẢN ĐỒ DẪN ĐƯỜNG)
+   Immersive Turn-by-Turn GPS Map for Smartphone
+   ========================================================================== */
+
+#tab-navigation.driver-tab-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0;
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  z-index: 10;
+}
+
+#tab-navigation.driver-tab-panel.active {
+  display: block;
+}
+
+.driver-full-map-wrap {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background: #050d17;
+}
+
+#driver-map-container {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+}
+
+/* Floating Turn-by-Turn HUD */
+.nav-floating-hud {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  z-index: 500;
+  background: rgba(10, 27, 42, 0.94);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1.5px solid #234664;
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  pointer-events: auto;
+}
+
+.nav-direction-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: #081827;
+  border: 1.5px solid #38BDF8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #38BDF8;
+  flex-shrink: 0;
+}
+
+.nav-hud-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.nav-next-dist {
+  font-size: 18px;
+  font-weight: 800;
+  color: #FFFFFF;
+  font-family: var(--font-mono);
+  line-height: 1;
+}
+
+.nav-next-street {
+  font-size: 13px;
+  font-weight: 600;
+  color: #CBD5E1;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-telemetry-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 11px;
+}
+
+/* Floating Action Tools Stack (Right Side) */
+.nav-floating-tools {
+  position: absolute;
+  right: 10px;
+  top: 96px;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.nav-tool-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(10, 27, 42, 0.92);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid #29465A;
+  color: #CBD5E1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  transition: all var(--transition-fast);
+}
+
+.nav-tool-btn:active, .nav-tool-btn.active {
+  background: #183750;
+  border-color: #38BDF8;
+  color: #38BDF8;
+  transform: scale(0.95);
+}
+
+.nav-tool-btn.emergency-active {
+  background: rgba(229, 37, 33, 0.25);
+  border-color: var(--red-vivid);
+  color: #FF5A55;
+  box-shadow: 0 0 14px rgba(229, 37, 33, 0.5);
+}
+
+/* Floating Bottom Destination Drawer */
+.nav-floating-destination-card {
+  position: absolute;
+  bottom: 12px;
+  left: 10px;
+  right: 10px;
+  z-index: 500;
+  background: rgba(10, 27, 42, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1.5px solid #1E3A56;
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  pointer-events: auto;
+}
+
+/* Mobile Vitals Card Grid */
+.driver-vitals-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.vital-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-accent);
+  border-radius: 8px;
+  padding: 8px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vital-card.alert {
+  border-color: var(--red-vivid);
+  background: rgba(229, 37, 33, 0.1);
+}
+
+.vital-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94A3B8;
+  text-transform: uppercase;
+}
+
+.vital-value-input {
+  background: transparent;
+  border: none;
+  color: #FFFFFF;
+  font-size: 18px;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  text-align: center;
+  width: 100%;
+  outline: none;
+}
+
+.vital-unit {
+  font-size: 9.5px;
+  color: #64748B;
+}
+
+/* 1-Tap Quick Intervention Chips */
+.quick-chips-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.quick-chip {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-main);
+  border-radius: 16px;
+  padding: 6px 11px;
+  font-size: 11.5px;
+  color: #CBD5E1;
+  cursor: pointer;
+  user-select: none;
+  transition: all var(--transition-fast);
+}
+
+.quick-chip.active {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: #10B981;
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+/* Fixed Bottom Navigation Bar */
+.driver-bottom-nav {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background-color: #081827;
+  border-top: 1px solid var(--border-main);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  z-index: 100;
+  user-select: none;
+}
+
+.driver-nav-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: #94A3B8;
+  cursor: pointer;
+  position: relative;
+  transition: all var(--transition-fast);
+  padding: 6px 0;
+}
+
+.driver-nav-tab:active {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.driver-nav-tab.active {
+  color: #FFFFFF;
+  background: rgba(229, 37, 33, 0.08);
+}
+
+.driver-nav-tab.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 3px;
+  background-color: var(--red-primary);
+  border-radius: 0 0 3px 3px;
+}
+
+.driver-nav-tab-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  text-align: center;
+  line-height: 1.15;
+}
+
+.driver-nav-badge {
+  position: absolute;
+  top: 6px;
+  right: calc(50% - 16px);
+  width: 7px;
+  height: 7px;
+  background-color: var(--red-vivid);
+  border-radius: 50%;
+}
+
+/* Fullscreen Dispatch Alert Overlay (TX-01) */
+.dispatch-alert-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(7, 21, 34, 0.96);
+  z-index: 300;
+  display: none;
+  flex-direction: column;
+  padding: 20px;
+  animation: alertPulseBorder 1.5s infinite alternate;
+}
+
+.dispatch-alert-overlay.active {
+  display: flex;
+}
+
+@keyframes alertPulseBorder {
+  from { box-shadow: inset 0 0 20px rgba(229, 37, 33, 0.4); }
+  to { box-shadow: inset 0 0 45px rgba(229, 37, 33, 0.85); }
+}
+
+/* Driver SOS Modal Options */
+.driver-sos-option-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-accent);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.driver-sos-option-card:hover, .driver-sos-option-card:active {
+  border-color: var(--red-primary);
+  background: rgba(229, 37, 33, 0.15);
+}
+
+/* Patient Info Form Grid for Mobile */
+.epcr-patient-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-accent);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.epcr-field-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.epcr-field-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94A3B8;
+  text-transform: uppercase;
+}
+
+.epcr-patient-input {
+  width: 100%;
+  background: #081827;
+  border: 1px solid var(--border-main);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #FFFFFF;
+  font-size: 13px;
+  outline: none;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: all var(--transition-fast);
+}
+
+.epcr-patient-input:focus {
+  border-color: #38BDF8;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.25);
+}
+
+.epcr-2col-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* Realtime sync pulse effect */
+@keyframes syncPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    border-color: #10B981 !important;
+    background-color: rgba(16, 185, 129, 0.15) !important;
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+    border-color: #10B981 !important;
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.sync-highlight {
+  animation: syncPulse 1.6s ease-out;
+  border-color: #10B981 !important;
+}
+
+

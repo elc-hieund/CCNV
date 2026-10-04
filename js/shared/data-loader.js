@@ -14,11 +14,47 @@
       this.state = null;
       this.listeners = [];
       this.currentUser = null;
+
+      // Realtime cross-tab communication bus
+      if (typeof window !== 'undefined' && window.BroadcastChannel) {
+        try {
+          this.channel = new BroadcastChannel('ccnv_realtime_bus');
+          this.channel.onmessage = (msg) => {
+            if (msg.data && msg.data.state) {
+              this.state = msg.data.state;
+              window.appState = this.state;
+              const { event, payload } = msg.data;
+              this.listeners.forEach(fn => {
+                try { fn(event, payload, this.state); } catch (e) { console.error('Error in listener:', e); }
+              });
+              window.dispatchEvent(new CustomEvent('ccnvStateUpdate', { detail: { event, payload, fromRemote: true } }));
+            }
+          };
+        } catch (e) {
+          console.warn('BroadcastChannel init warning:', e);
+        }
+      }
+
+      // Storage event fallback for cross-tab sync
+      if (typeof window !== 'undefined') {
+        window.addEventListener('storage', (e) => {
+          if (e.key === STORAGE_KEY_STATE && e.newValue) {
+            try {
+              this.state = JSON.parse(e.newValue);
+              window.appState = this.state;
+              this.listeners.forEach(fn => {
+                try { fn('STORAGE_SYNC', null, this.state); } catch (err) { console.error(err); }
+              });
+              window.dispatchEvent(new CustomEvent('ccnvStateUpdate', { detail: { event: 'STORAGE_SYNC', fromRemote: true } }));
+            } catch (err) {}
+          }
+        });
+      }
     }
 
     async init() {
-      // Check session storage first or fetch data.json
-      let cached = sessionStorage.getItem(STORAGE_KEY_STATE);
+      // Check local/session storage first or fetch data.json
+      let cached = localStorage.getItem(STORAGE_KEY_STATE) || sessionStorage.getItem(STORAGE_KEY_STATE);
       if (cached) {
         try {
           this.state = JSON.parse(cached);
@@ -63,9 +99,11 @@
 
     saveToSession() {
       try {
-        sessionStorage.setItem(STORAGE_KEY_STATE, JSON.stringify(this.state));
+        const serialized = JSON.stringify(this.state);
+        localStorage.setItem(STORAGE_KEY_STATE, serialized);
+        sessionStorage.setItem(STORAGE_KEY_STATE, serialized);
       } catch (e) {
-        console.warn('Session storage save warning:', e);
+        console.warn('Storage save warning:', e);
       }
     }
 
@@ -80,6 +118,11 @@
 
     notify(event, payload) {
       this.saveToSession();
+      if (this.channel) {
+        try {
+          this.channel.postMessage({ event, payload, state: this.state });
+        } catch (e) {}
+      }
       this.listeners.forEach(fn => {
         try {
           fn(event, payload, this.state);
@@ -213,7 +256,21 @@
       this.notify('AUDIT_LOG_ADDED', logEntry);
     }
 
+    updateCasePatient(caseId, patientPatch) {
+      const c = this.state.cases.find(item => item.id === caseId || item.code === caseId);
+      if (!c) return null;
+      c.patient = c.patient || {};
+      Object.assign(c.patient, patientPatch);
+      if (patientPatch.symptom && c.incident) {
+        c.incident.description = patientPatch.symptom;
+      }
+      this.addCaseLog(caseId, `Cập nhật thông tin bệnh nhân: ${c.patient.name || 'Bệnh nhân'}`);
+      this.notify('PATIENT_UPDATED', { caseId, patient: c.patient, vehiclePlate: c.dispatch?.vehiclePlate });
+      return c;
+    }
+
     resetAllData() {
+      localStorage.removeItem(STORAGE_KEY_STATE);
       sessionStorage.removeItem(STORAGE_KEY_STATE);
       sessionStorage.removeItem(STORAGE_KEY_CURRENT_USER);
       window.location.reload();
