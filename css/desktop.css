@@ -677,18 +677,26 @@
   height: 100%;
 }
 
+/* NOTE: Không đặt transform/transition lên phần tử gốc — Leaflet dùng transform để định vị marker */
 .map-leaflet-marker {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   pointer-events: auto;
   cursor: pointer;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), z-index 0.2s ease;
+}
+
+.map-leaflet-marker > * {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .map-leaflet-marker:hover {
-  transform: translateY(-4px) scale(1.08);
   z-index: 9999 !important;
+}
+
+.map-leaflet-marker:hover > * {
+  transform: translateY(-3px) scale(1.06);
 }
 
 /* --- 1. VEHICLE MARKER: CAPSULE PILL DESIGN --- */
@@ -698,10 +706,10 @@
   gap: 6px;
   background: rgba(11, 23, 38, 0.94);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(56, 189, 248, 0.4);
+  border: 1px solid rgba(16, 185, 129, 0.5);
   border-radius: 20px;
   padding: 4px 10px 4px 5px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7), 0 0 12px rgba(56, 189, 248, 0.25);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7), 0 0 12px rgba(16, 185, 129, 0.25);
   position: relative;
   white-space: nowrap;
   user-select: none;
@@ -725,11 +733,11 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #0284c7, #0369a1);
+  background: linear-gradient(135deg, #10b981, #047857);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
   flex-shrink: 0;
 }
 
@@ -756,27 +764,37 @@
   border: 1px solid rgba(16, 185, 129, 0.4);
 }
 
-.map-veh-status-pill.emergency {
-  background: rgba(239, 68, 68, 0.25);
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.6);
-  animation: pulse-border-red 1.5s infinite;
+/* Xe đang làm nhiệm vụ: vẫn xanh lá, viền sáng + nhãn tốc độ đặc */
+.map-veh-status-pill.mission {
+  background: #10b981;
+  color: #022c1d;
+  border: 1px solid #6ee7b7;
+  font-family: var(--font-mono);
+  text-transform: none;
 }
 
-.map-veh-capsule.is-emergency {
-  border-color: #ef4444;
-  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.5), 0 0 15px rgba(239, 68, 68, 0.4);
+.map-veh-capsule.is-mission {
+  border-color: #34d399;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.45), 0 0 16px rgba(52, 211, 153, 0.45);
 }
 
-.map-veh-capsule.is-emergency .map-veh-icon-bubble {
-  background: linear-gradient(135deg, #ef4444, #b91c1c);
-  box-shadow: 0 0 12px rgba(239, 68, 68, 0.8);
+.map-veh-capsule.is-mission .map-veh-icon-bubble {
+  animation: veh-mission-glow 1.6s ease-in-out infinite;
+}
+
+@keyframes veh-mission-glow {
+  0%, 100% { box-shadow: 0 0 6px rgba(52, 211, 153, 0.6); }
+  50% { box-shadow: 0 0 16px rgba(52, 211, 153, 1); }
+}
+
+.map-leaflet-marker.is-active-marker {
+  z-index: 9000 !important;
 }
 
 .map-leaflet-marker.is-active-marker .map-veh-capsule {
-  border-color: #38bdf8 !important;
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.5), 0 0 25px rgba(56, 189, 248, 0.9) !important;
-  transform: scale(1.15);
+  border-color: #6ee7b7 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.45), 0 0 25px rgba(52, 211, 153, 0.9) !important;
+  transform: scale(1.12);
 }
 
 /* --- 2. HOSPITAL MARKER: FLOATING MEDICAL HUB BADGE --- */
@@ -794,10 +812,10 @@
   gap: 6px;
   background: rgba(7, 19, 32, 0.94);
   backdrop-filter: blur(8px);
-  border: 1.5px solid rgba(16, 185, 129, 0.6);
+  border: 1.5px solid rgba(56, 189, 248, 0.65);
   border-radius: 18px;
   padding: 3px 8px 3px 4px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6), 0 0 12px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6), 0 0 12px rgba(56, 189, 248, 0.3);
   position: relative;
 }
 
@@ -818,12 +836,12 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: linear-gradient(135deg, #38bdf8, #0369a1);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #FFFFFF;
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.7);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.7);
   flex-shrink: 0;
 }
 
@@ -841,11 +859,11 @@
 .map-hosp-bed-chip {
   font-size: 10px;
   font-weight: 700;
-  background: rgba(16, 185, 129, 0.2);
-  color: #34d399;
+  background: rgba(56, 189, 248, 0.18);
+  color: #7dd3fc;
   padding: 1px 6px;
   border-radius: 8px;
-  border: 1px solid rgba(16, 185, 129, 0.35);
+  border: 1px solid rgba(56, 189, 248, 0.35);
   font-family: var(--font-mono);
 }
 
@@ -931,6 +949,60 @@
   100% { transform: scale(2.6); opacity: 0; }
 }
 
+/* Rung nhẹ theo nhịp ~1.5s */
+.map-incident-shake {
+  position: relative;
+  z-index: 5;
+  transform-origin: 50% 100%;
+  animation: incident-shake 1.5s ease-in-out infinite;
+}
+
+@keyframes incident-shake {
+  0%, 62%, 100% { transform: translateX(0) rotate(0); }
+  66% { transform: translateX(-3px) rotate(-3deg); }
+  70% { transform: translateX(3px) rotate(3deg); }
+  74% { transform: translateX(-3px) rotate(-2deg); }
+  78% { transform: translateX(2px) rotate(2deg); }
+  82% { transform: translateX(-1px) rotate(-1deg); }
+  86% { transform: translateX(0) rotate(0); }
+}
+
+.map-incident-code {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 1px 6px 1px 4px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--code-color);
+}
+
+.map-incident-code::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--code-color);
+  box-shadow: 0 0 6px var(--code-color);
+}
+
+.map-incident-eta {
+  font-size: 9.5px;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.3);
+  font-family: var(--font-mono);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-incident-shake,
+  .map-incident-banner,
+  .map-veh-capsule.is-mission .map-veh-icon-bubble { animation: none; }
+}
+
 @keyframes pulse-border-red {
   0%, 100% { border-color: rgba(239, 68, 68, 0.6); }
   50% { border-color: rgba(255, 255, 255, 0.9); }
@@ -1004,32 +1076,192 @@
 
 .map-tactical-legend {
   position: absolute;
-  bottom: 12px;
+  top: 12px;
   right: 12px;
   z-index: 1000;
-  background: rgba(8, 20, 34, 0.9);
+  width: 200px;
+  max-height: calc(100% - 24px);
+  overflow-y: auto;
+  background: rgba(8, 20, 34, 0.92);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
-  padding: 6px 10px;
+  border-radius: 8px;
+  padding: 8px 10px;
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 6px;
   font-size: 10.5px;
   color: #cbd5e1;
   pointer-events: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  transition: width 0.2s ease;
+}
+
+.map-tactical-legend:has(.legend-codes:not([hidden])) {
+  width: 300px;
+}
+
+.legend-title {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #64748b;
 }
 
 .legend-item {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 7px;
 }
 
 .legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--c);
+  box-shadow: 0 0 6px var(--c);
+}
+
+.legend-dot-pulse {
+  animation: legend-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes legend-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  50% { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
+}
+
+.legend-line {
+  width: 18px;
+  height: 0;
+  flex-shrink: 0;
+  border-top: 3px solid #38bdf8;
+  border-radius: 2px;
+}
+
+.legend-line-dashed {
+  border-top: 3px dashed #fca5a5;
+}
+
+.legend-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2px;
+  padding: 5px 8px;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 6px;
+  color: #93c5fd;
+  font-size: 10.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.legend-toggle:hover {
+  background: rgba(56, 189, 248, 0.16);
+}
+
+.legend-caret {
+  transition: transform 0.2s ease;
+}
+
+.legend-toggle.is-open .legend-caret {
+  transform: rotate(180deg);
+}
+
+.legend-codes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.legend-codes[hidden] {
+  display: none;
+}
+
+.legend-code-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
+}
+
+.legend-code-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.legend-code-swatch {
+  width: 12px;
+  height: 12px;
+  margin-top: 1px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  background: var(--c);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.legend-code-name {
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.legend-code-desc {
+  color: #cbd5e1;
+  line-height: 1.35;
+}
+
+.legend-code-note {
+  color: #64748b;
+  font-style: italic;
+  line-height: 1.35;
+}
+
+/* Chip chế độ theo dõi xe (góc trên trái) */
+.map-focus-chip {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(6, 40, 30, 0.92);
+  border: 1px solid rgba(52, 211, 153, 0.45);
+  border-radius: 20px;
+  font-size: 11px;
+  color: #d1fae5;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+.map-focus-chip[hidden] {
+  display: none;
+}
+
+.map-focus-chip strong {
+  font-family: var(--font-mono);
+  color: #ffffff;
+}
+
+.map-focus-chip-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.map-focus-chip-hint {
+  color: #6ee7b7;
+  opacity: 0.75;
+  font-size: 10px;
 }
 
 /* Leaflet Overrides */

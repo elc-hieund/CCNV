@@ -636,10 +636,16 @@
     renderRealtimeMapView(container) {
       const state = window.StateManager.getState();
       const vehicles = state.vehicles || [];
-      const activeCases = state.activeCases || [];
-      let currentSelectedPlate = '65A-012.34';
-      const initialVeh = vehicles.find(v => v.plate === currentSelectedPlate) || vehicles[0];
-      const initialCase = activeCases.find(c => c.dispatch?.vehiclePlate === initialVeh?.plate);
+      const activeCases = (state.cases || []).filter(c => !['COMPLETED', 'CANCELLED', 'CLOSED'].includes(c.status));
+      const caseOfPlate = (plate) => activeCases.find(c => c.dispatch?.vehiclePlate === plate);
+      // Xe hiển thị mặc định ở dải dưới khi chưa chọn xe (ưu tiên xe đang có ca)
+      const defaultVeh = vehicles.find(v => caseOfPlate(v.plate)) || vehicles[0];
+      if (this.realtimeSelectedPlate && !vehicles.some(v => v.plate === this.realtimeSelectedPlate)) {
+        this.realtimeSelectedPlate = null;
+      }
+      let currentSelectedPlate = this.realtimeSelectedPlate || null;
+      const initialVeh = vehicles.find(v => v.plate === currentSelectedPlate) || defaultVeh;
+      const initialCase = caseOfPlate(initialVeh?.plate);
 
       container.innerHTML = `
         <div class="command-viewport">
@@ -679,102 +685,95 @@
         </div>
       `;
 
-      // Mount Can Tho SVG Map
+      // Mount Can Tho Map (hủy instance cũ để không rò vòng lặp animation)
+      if (this.mapInstance) this.mapInstance.destroy();
       this.mapInstance = new window.CanThoMap('cantho-map-viewport');
       this.mapInstance.render();
 
       const listEl = container.querySelector('#vehicle-card-list');
+      const bottomStrip = container.querySelector('#realtime-bottom-strip');
 
-      // Helper to update selected vehicle & bottom strip
-      const updateSelectedVehicle = (plate) => {
-        currentSelectedPlate = plate;
-        const targetVeh = vehicles.find(v => v.plate === plate);
-        if (!targetVeh) return;
-
-        // 1. Update selection styling on list
-        if (listEl) {
-          listEl.querySelectorAll('.vehicle-card').forEach(c => {
-            if (c.getAttribute('data-plate') === plate) {
-              c.classList.add('is-selected');
-              c.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      const bindBottomFocusBtn = () => {
+        bottomStrip?.querySelectorAll('.btn-focus-selected-vehicle, .btn-focus-incident-vehicle').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const plate = btn.getAttribute('data-plate');
+            if (!plate) return;
+            if (plate === currentSelectedPlate) {
+              this.mapInstance?.focusVehicle(plate); // canh lại khung nhìn
             } else {
-              c.classList.remove('is-selected');
+              setSelection(plate);
             }
           });
-        }
-
-        // 2. Find active case if any
-        const currentCase = activeCases.find(c => c.dispatch?.vehiclePlate === plate);
-
-        // 3. Update bottom strip
-        const bottomStrip = container.querySelector('#realtime-bottom-strip');
-        if (bottomStrip) {
-          bottomStrip.innerHTML = this.renderRealtimeBottomStrip(targetVeh, currentCase);
-
-          // Re-bind focus button in bottom strip
-          bottomStrip.querySelector('.btn-focus-selected-vehicle')?.addEventListener('click', () => {
-            if (this.mapInstance) {
-              this.mapInstance.showVehiclePopup(plate);
-            }
-          });
-        }
-
-        // 4. Focus vehicle on map
-        if (this.mapInstance) {
-          this.mapInstance.showVehiclePopup(plate);
-        }
+        });
       };
 
-      // Bind vehicle card clicks
+      // Chọn xe (plate) hoặc hủy chọn (null) → đồng bộ panel, dải dưới và bản đồ
+      const setSelection = (plate, { animate = true } = {}) => {
+        currentSelectedPlate = plate;
+        this.realtimeSelectedPlate = plate;
+
+        listEl?.querySelectorAll('.vehicle-card').forEach(c => {
+          const selected = !!plate && c.getAttribute('data-plate') === plate;
+          c.classList.toggle('is-selected', selected);
+          if (selected && animate) c.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+
+        const targetVeh = (plate && vehicles.find(v => v.plate === plate)) || defaultVeh;
+        if (bottomStrip) {
+          bottomStrip.innerHTML = this.renderRealtimeBottomStrip(targetVeh, caseOfPlate(targetVeh?.plate));
+          bindBottomFocusBtn();
+        }
+
+        if (!this.mapInstance) return;
+        if (plate) this.mapInstance.focusVehicle(plate, { animate });
+        else this.mapInstance.clearFocus();
+      };
+
+      // Thẻ xe: bấm lại thẻ đang chọn → hủy chọn, về giao diện bình thường
       const bindCardClicks = () => {
         if (!listEl) return;
         listEl.querySelectorAll('.vehicle-card').forEach(card => {
           card.addEventListener('click', () => {
             const plate = card.getAttribute('data-plate');
-            if (plate) {
-              updateSelectedVehicle(plate);
-            }
+            if (!plate) return;
+            setSelection(plate === currentSelectedPlate ? null : plate);
           });
         });
       };
       bindCardClicks();
+      bindBottomFocusBtn();
 
       // Hook map marker clicks (vehicles, incident, hospitals)
       if (this.mapInstance) {
         this.mapInstance.onVehicleSelect = (plate) => {
-          updateSelectedVehicle(plate);
+          if (plate !== currentSelectedPlate) setSelection(plate);
         };
 
-        this.mapInstance.onIncidentSelect = () => {
-          updateSelectedVehicle('65A-012.34');
-          const bottomStrip = container.querySelector('#realtime-bottom-strip');
+        this.mapInstance.onIncidentSelect = (caseId) => {
+          const c = activeCases.find(item => item.id === caseId);
+          const plate = c?.dispatch?.vehiclePlate;
+          if (!plate) return;
+          if (plate !== currentSelectedPlate) setSelection(plate);
           if (bottomStrip) {
-            bottomStrip.innerHTML = this.renderRealtimeIncidentBottomStrip();
-            bottomStrip.querySelector('.btn-focus-incident-vehicle')?.addEventListener('click', () => {
-              updateSelectedVehicle('65A-012.34');
-            });
+            bottomStrip.innerHTML = this.renderRealtimeIncidentBottomStrip(c);
+            bindBottomFocusBtn();
           }
         };
 
         this.mapInstance.onHospitalSelect = (hid) => {
           const h = (state.hospitals || []).find(item => item.id === hid);
-          if (!h) return;
-          const bottomStrip = container.querySelector('#realtime-bottom-strip');
-          if (bottomStrip) {
-            bottomStrip.innerHTML = this.renderRealtimeHospitalBottomStrip(h);
-            bottomStrip.querySelector('.btn-call-hosp-bottom')?.addEventListener('click', () => {
-              window.CCNV_UI.Toast.show('Đang quay số...', `Kết nối Hotline Cấp cứu: ${h.name} (${h.hotline})`);
-            });
-          }
+          if (!h || !bottomStrip) return;
+          bottomStrip.innerHTML = this.renderRealtimeHospitalBottomStrip(h);
+          bottomStrip.querySelector('.btn-call-hosp-bottom')?.addEventListener('click', () => {
+            window.CCNV_UI.Toast.show('Đang quay số...', `Kết nối Hotline Cấp cứu: ${h.name} (${h.hotline})`);
+          });
         };
-      }
 
-      // Initial binding for focus button in bottom strip
-      container.querySelector('#realtime-bottom-strip .btn-focus-selected-vehicle')?.addEventListener('click', () => {
-        if (this.mapInstance) {
-          this.mapInstance.showVehiclePopup(currentSelectedPlate);
+        // Khôi phục chế độ theo dõi sau khi view re-render (ví dụ khi ca được cập nhật)
+        if (currentSelectedPlate) {
+          this.mapInstance.focusVehicle(currentSelectedPlate, { animate: false });
         }
-      });
+      }
 
       // Filter vehicle search input
       const searchInput = container.querySelector('#filter-vehicle-input');
@@ -817,12 +816,12 @@
                 </div>
                 <div style="font-size:12px;color:var(--text-white);margin-top:2px;">${c.patient?.name} (${c.patient?.age}t, ${c.patient?.gender})</div>
                 <div class="vehicle-meta-row">
-                  <span>${c.patient?.symptom}</span>
+                  <span>${c.incident?.name || '—'}</span>
                   <span>Xe: <strong style="color:var(--yellow-vivid);font-family:var(--font-mono);">${c.dispatch?.vehiclePlate}</strong></span>
                 </div>
                 <div class="vehicle-meta-row" style="border-top:1px dashed var(--border-main);padding-top:4px;margin-top:4px;">
                   <span style="font-size:11px;color:var(--text-muted);">Đến: ${c.dispatch?.hospitalName}</span>
-                  <span style="color:var(--yellow-vivid);font-weight:600;">ETA: ${c.eta}</span>
+                  <span style="color:var(--yellow-vivid);font-weight:600;">ETA: ${c.eta || '—'}</span>
                 </div>
               </div>
             `).join('');
@@ -988,22 +987,24 @@
       return leftStripHtml + rightStripHtml;
     }
 
-    renderRealtimeIncidentBottomStrip() {
+    renderRealtimeIncidentBottomStrip(c = {}) {
+      const plate = c.dispatch?.vehiclePlate || '—';
+      const patient = c.patient?.name ? `BN ${c.patient.name}${c.patient.age ? ` ${c.patient.age}T` : ''}` : 'Chưa rõ danh tính';
       const leftStripHtml = `
         <div class="emergency-alert-strip" style="background: linear-gradient(90deg, rgba(229, 37, 33, 0.22) 0%, transparent 100%);">
           <div>
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
               <span class="live-dot"></span>
-              <strong style="color:var(--red-vivid);font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">Điểm Hiện Trường Cấp Cứu Khẩn Cấp</strong>
+              <strong style="color:var(--red-vivid);font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">Điểm Hiện Trường Cấp Cứu Khẩn Cấp · ${c.code || ''}</strong>
             </div>
             <div style="font-size:13px;color:var(--text-white);">
-              Hiện trường: <strong style="color:var(--red-vivid);">Cầu Hưng Lợi</strong> — Tai nạn giao thông (BN Phan Văn Đức 34T)
+              Hiện trường: <strong style="color:var(--red-vivid);">${c.location?.address || '—'}</strong> — ${c.incident?.name || 'Cấp cứu'} (${patient})
             </div>
             <div style="font-size:11px;color:var(--text-muted);">
-              Xe phụ trách: <strong style="color:var(--yellow-vivid);font-family:var(--font-mono);">65A-012.34</strong> (Kíp Cái Răng) · Hướng di chuyển: Về BVĐK TP Cần Thơ · ETA: ~6 phút
+              Xe phụ trách: <strong style="color:var(--yellow-vivid);font-family:var(--font-mono);">${plate}</strong>${c.dispatch?.crewName ? ` (${c.dispatch.crewName})` : ''} · Về: ${c.dispatch?.hospitalName || '—'}${c.eta ? ` · ETA: ${c.eta}` : ''}
             </div>
           </div>
-          <button class="btn btn-emergency btn-sm btn-focus-incident-vehicle" data-plate="65A-012.34">Theo Dõi Xe</button>
+          <button class="btn btn-emergency btn-sm btn-focus-incident-vehicle" data-plate="${plate}">Theo Dõi Xe</button>
         </div>
       `;
 
@@ -1015,7 +1016,7 @@
           </div>
           <div style="font-size:12px;">
             <div style="color:var(--text-white);font-weight:600;">Camera Cabin Khoang Bệnh Nhân</div>
-            <div style="color:var(--text-muted);font-size:11px;">Xe 65A-012.34 · 25 FPS · 1080p</div>
+            <div style="color:var(--text-muted);font-size:11px;">Xe ${plate} · 25 FPS · 1080p</div>
             <div style="color:#10B981;font-size:11px;">Tín hiệu truyền ổn định (5G)</div>
           </div>
         </div>
@@ -1259,59 +1260,6 @@
 
                 <div style="background:rgba(30, 41, 59, 0.7);padding:8px 10px;border-radius:6px;font-size:11.5px;color:var(--text-slate);border:1px solid #1E3A8A;">
                   <em>"Bệnh nhân ngã xe máy bất tỉnh khoảng 2 phút, hiện đang thở dốc, chảy máu nhiều vùng trán..."</em>
-                </div>
-              </div>
-
-              <!-- 3. SOP First Aid Guidance (Đọc trực tiếp cho người nhà theo tình huống) -->
-              <div class="first-aid-protocol-card" id="first-aid-protocol-card">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                  <h4 style="margin:0;display:flex;align-items:center;gap:6px;">
-                    ${window.CCNV_UI.ICONS.activity}
-                    <span>HƯỚNG DẪN SƠ CẤP CỨU CHO NGƯỜI GỌI</span>
-                  </h4>
-                </div>
-                <p style="font-size:11px;color:var(--text-muted);margin-bottom:10px;">
-                  Điều phối viên đọc to các bước sau để hướng dẫn người nhà xử trí tại chỗ trong khi chờ xe:
-                </p>
-                <div class="first-aid-steps-list" id="first-aid-steps-container">
-                  <!-- Injected dynamically based on current incident -->
-                </div>
-
-                <!-- FAST DISPATCH GUIDANCE DOCUMENTS / SMS & ZALO INSTANT DISPATCH -->
-                <div style="margin-top:14px;padding-top:12px;border-top:1px dashed #1E3A8A;">
-                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                    <span style="font-size:11.5px;font-weight:700;color:#93C5FD;display:flex;align-items:center;gap:5px;">
-                      <span>📄 Tài liệu gửi nhanh cho người gọi:</span>
-                    </span>
-                  </div>
-
-                  <div style="display:flex;flex-direction:column;gap:6px;">
-                    <div style="display:flex;align-items:center;justify-content:space-between;background:#061423;padding:7px 10px;border-radius:6px;border:1px solid #142E46;">
-                      <div style="display:flex;align-items:center;gap:7px;">
-                        <span style="font-size:13px;"></span>
-                        <div>
-                          <div style="font-size:11.5px;font-weight:600;color:var(--text-white);">Kỹ thuật Ép tim & Hô hấp nhân tạo (CPR)</div>
-                          <div style="font-size:10.5px;color:var(--text-muted);">Hình ảnh đồ họa động + Đếm nhịp 100-120 l/phút</div>
-                        </div>
-                      </div>
-                      <button type="button" class="btn btn-primary btn-xs btn-send-doc-fast" data-doc="CPR" style="font-size:11px;padding:3px 9px;white-space:nowrap;background:#2563EB;border-color:#3B82F6;">
-                        <span>Gửi ngay</span> ➔
-                      </button>
-                    </div>
-
-                    <div style="display:flex;align-items:center;justify-content:space-between;background:#061423;padding:7px 10px;border-radius:6px;border:1px solid #142E46;">
-                      <div style="display:flex;align-items:center;gap:7px;">
-                        <span style="font-size:13px;"></span>
-                        <div>
-                          <div style="font-size:11.5px;font-weight:600;color:var(--text-white);">Cầm máu khẩn cấp & Cố định chấn thương</div>
-                          <div style="font-size:10.5px;color:var(--text-muted);">Hướng dẫn ép chặt vết thương & bất động chi</div>
-                        </div>
-                      </div>
-                      <button type="button" class="btn btn-primary btn-xs btn-send-doc-fast" data-doc="BLEED" style="font-size:11px;padding:3px 9px;white-space:nowrap;background:#2563EB;border-color:#3B82F6;">
-                        <span>Gửi ngay</span> ➔
-                      </button>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -1583,7 +1531,7 @@
                 <div class="rapid-field-header">
                   <div class="rapid-field-title">
                     <span class="rapid-step-num">7</span>
-                    <span>Diễn biến triệu chứng qua điện thoại</span>
+                    <span>GHI CHÚ</span>
                   </div>
                   <div class="rapid-field-hint">
                     <kbd class="quick-kbd">Ctrl+Enter</kbd> Phát lệnh ngay

@@ -1,7 +1,7 @@
 {
   "system": {
     "name": "HỆ THỐNG ĐIỀU HÀNH CẤP CỨU NGOẠI VIỆN (CCNV) TP. CẦN THƠ",
-    "version": "2.1.0",
+    "version": "2.1.1",
     "deploymentDate": "2026-10-01",
     "demoDate": "2026-10-09",
     "center": "Bệnh viện Đa khoa thành phố Cần Thơ",
@@ -20,17 +20,6 @@
       "badge": "Trực ban 01"
     },
     {
-      "id": "dpv02",
-      "username": "dpv02",
-      "fullName": "Trần Thị Bình",
-      "role": "DISPATCHER",
-      "roleName": "Điều phối viên trực",
-      "organization": "Trung tâm Cấp cứu 115 - BVĐK TP Cần Thơ",
-      "hospitalId": "HOSP_BVDK",
-      "avatar": "TB",
-      "badge": "Trực ban 02"
-    },
-    {
       "id": "bvdk.tn",
       "username": "bvdk.tn",
       "fullName": "BS. Lê Hoàng Long",
@@ -40,28 +29,6 @@
       "hospitalId": "HOSP_BVDK",
       "avatar": "HL",
       "badge": "BV Tiếp nhận Hạng I"
-    },
-    {
-      "id": "bv02.tn",
-      "username": "bv02.tn",
-      "fullName": "BS. Đặng Minh Tuấn",
-      "role": "HOSPITAL_RECEIVER",
-      "roleName": "Khoa Cấp cứu - BVĐK TW Cần Thơ",
-      "organization": "BV Đa khoa Trung ương Cần Thơ",
-      "hospitalId": "HOSP_BVTU",
-      "avatar": "MT",
-      "badge": "BV Tiếp nhận Đặc biệt"
-    },
-    {
-      "id": "bv03.tn",
-      "username": "bv03.tn",
-      "fullName": "BS. Phạm Thu Thảo",
-      "role": "HOSPITAL_RECEIVER",
-      "roleName": "Khoa Cấp cứu - BV Nhi đồng Cần Thơ",
-      "organization": "Bệnh viện Nhi đồng Cần Thơ",
-      "hospitalId": "HOSP_BVND",
-      "avatar": "TT",
-      "badge": "BV Chuyên khoa Nhi"
     }
   ],
   "hospitals": [
@@ -140,44 +107,6 @@
       "ventilatorsAvailable": 3,
       "isCenter": false,
       "notice": "Tiếp nhận các ca cấp cứu chuyên biệt bệnh nhân ung bướu"
-    },
-    {
-      "id": "HOSP_BVCR",
-      "name": "TTYT Quận Cái Răng",
-      "code": "TTYT-CR-05",
-      "address": "Số 08 Trần Hưng Đạo, P. Lê Bình, Q. Cái Răng",
-      "phone": "0292.3861.341",
-      "hotline": "0908.777.666",
-      "coords": [10.0050, 105.7610],
-      "mapPos": { "x": 530, "y": 590 },
-      "grade": "Hạng II",
-      "specialties": ["Sơ cứu chấn thương ban đầu", "Hồi sức cấp cứu cơ bản", "Cấp cứu nội tổng hợp"],
-      "status": "RESTRICTED",
-      "statusText": "Hạn chế",
-      "emergencyBeds": 8,
-      "availableBeds": 2,
-      "ventilatorsAvailable": 1,
-      "isCenter": false,
-      "notice": "Đang bảo trì 01 buồng tiểu phẫu, chỉ tiếp nhận ca mức độ Trung bình / Nhẹ"
-    },
-    {
-      "id": "HOSP_BVBT",
-      "name": "TTYT Quận Bình Thủy",
-      "code": "TTYT-BT-06",
-      "address": "QL91, P. Trà Nóc, Q. Bình Thủy",
-      "phone": "0292.3844.512",
-      "hotline": "0913.666.555",
-      "coords": [10.0780, 105.7280],
-      "mapPos": { "x": 390, "y": 180 },
-      "grade": "Hạng II",
-      "specialties": ["Cấp cứu ngoại viện ban đầu", "Chấn thương lao động KCN"],
-      "status": "SUSPENDED",
-      "statusText": "Tạm ngưng",
-      "emergencyBeds": 6,
-      "availableBeds": 0,
-      "ventilatorsAvailable": 0,
-      "isCenter": false,
-      "notice": "Tạm ngưng tiếp nhận ca chuyển viện do kiểm định hệ thống oxy trung tâm (dự kiến mở lại 18:00)"
     }
   ],
   "vehicles": [
@@ -580,7 +509,7 @@
       },
       "location": {
         "address": "Khu vực Cầu Hưng Lợi, Đường 30/4, P. Hưng Lợi, Q. Ninh Kiều",
-        "coords": [10.0210, 105.7790],
+        "coords": [10.0235, 105.7730],
         "mapPos": { "x": 585, "y": 475 },
         "district": "Ninh Kiều"
       },
