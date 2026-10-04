@@ -98,7 +98,7 @@
   const missionProgress = {};
 
   function initialPhase(status) {
-    if (['TRANSPORTING', 'LEAVING_SCENE', 'LEFT_SCENE'].includes(status)) return 'TO_HOSP';
+    if (['LEAVING_SCENE', 'LEFT_SCENE'].includes(status)) return 'TO_HOSP';
     return 'TO_SCENE';
   }
 
@@ -385,20 +385,88 @@
       if (p.pauseUntil) {
         if (now < p.pauseUntil) return;
         p.pauseUntil = 0;
-        if (p.phase === 'PICKUP') { p.phase = 'TO_HOSP'; p.dist = 0; }
-        else if (p.phase === 'ARRIVED') { p.phase = 'TO_SCENE'; p.dist = 0; }
+        if (p.phase === 'PICKUP') {
+          p.phase = 'TO_HOSP';
+          p.dist = 0;
+          this.applyVisibility(); // Ẩn điểm tai nạn sau 3s dừng đón
+        } else if (p.phase === 'ARRIVED') {
+          p.phase = 'TO_SCENE';
+          p.dist = 0;
+          this.applyVisibility(); // Hiện lại điểm tai nạn khi lặp lại chu kỳ mới
+        }
       }
 
       const leg = p.phase === 'TO_SCENE' ? m.leg1 : m.leg2;
       p.dist += SIM_SPEED_MPS * dt;
       if (p.dist >= leg.total) {
         p.dist = leg.total;
-        if (p.phase === 'TO_SCENE') { p.phase = 'PICKUP'; p.pauseUntil = now + PICKUP_PAUSE_MS; }
-        else { p.phase = 'ARRIVED'; p.pauseUntil = now + ARRIVED_PAUSE_MS; }
+        if (p.phase === 'TO_SCENE') {
+          p.phase = 'PICKUP';
+          p.pauseUntil = now + PICKUP_PAUSE_MS;
+        } else {
+          p.phase = 'ARRIVED';
+          p.pauseUntil = now + ARRIVED_PAUSE_MS;
+        }
       }
 
       m.pos = pointAt(leg, p.dist);
       this.vehicleMarkers[m.plate]?.marker.setLatLng(m.pos.latlng);
+
+      // Cập nhật ETA giảm dần theo khoảng cách thực tế còn lại
+      this.updateMissionETA(m);
+    }
+
+    updateMissionETA(m) {
+      const p = m.progress;
+      let etaStr = '';
+
+      if (p.phase === 'TO_SCENE') {
+        const remainingDist = Math.max(0, (m.leg1?.total || 1800) - p.dist);
+        const remSec = Math.round(remainingDist / SIM_SPEED_MPS);
+        if (remSec <= 5) {
+          etaStr = 'Đang tiếp cận';
+        } else if (remSec < 60) {
+          etaStr = `${remSec} giây`;
+        } else {
+          const mRemain = Math.ceil(remSec / 60);
+          etaStr = `${mRemain} phút`;
+        }
+      } else if (p.phase === 'PICKUP') {
+        etaStr = 'Đã đến điểm đón';
+      } else if (p.phase === 'TO_HOSP') {
+        const remainingDist = Math.max(0, (m.leg2?.total || 2200) - p.dist);
+        const remSec = Math.round(remainingDist / SIM_SPEED_MPS);
+        if (remSec <= 5) {
+          etaStr = 'Sắp đến BV';
+        } else if (remSec < 60) {
+          etaStr = `${remSec} giây`;
+        } else {
+          const mRemain = Math.ceil(remSec / 60);
+          etaStr = `${mRemain} phút`;
+        }
+      } else if (p.phase === 'ARRIVED') {
+        etaStr = 'Đã đến BV';
+      }
+
+      m.currentEta = etaStr;
+
+      // 1. Cập nhật thẻ ETA trực tiếp trên marker hiện trường (nếu đang hiển thị)
+      const incItem = this.incidentMarkers[m.caseId];
+      if (incItem?.marker) {
+        const etaEl = incItem.marker.getElement()?.querySelector('.map-incident-eta');
+        if (etaEl) {
+          etaEl.textContent = `ETA ${etaStr}`;
+        }
+      }
+
+      // 2. Cập nhật nhãn trạng thái và ETA trong thanh Strip bên dưới
+      const bottomStrip = document.getElementById('realtime-bottom-strip');
+      if (bottomStrip && this.focusPlate === m.plate) {
+        const etaValueEl = bottomStrip.querySelector('.eta-value-live');
+        if (etaValueEl) {
+          etaValueEl.textContent = etaStr;
+        }
+      }
     }
 
     updateSpeedPills() {
@@ -407,7 +475,7 @@
         const pill = item?.marker.getElement()?.querySelector('.map-veh-status-pill');
         if (!pill) return;
         const phase = m.progress.phase;
-        if (phase === 'PICKUP') pill.textContent = 'Đón BN';
+        if (phase === 'PICKUP') pill.textContent = 'Đón BN (3s)';
         else if (phase === 'ARRIVED') pill.textContent = 'Đã đến BV';
         else {
           item.data.speed = Math.floor(45 + Math.random() * 12);
@@ -455,7 +523,14 @@
 
       Object.entries(this.vehicleMarkers).forEach(([plate, item]) => setVisible(item.marker, !focus || plate === focus));
       Object.entries(this.hospitalMarkers).forEach(([id, item]) => setVisible(item.marker, !focus || (m && m.hospId === id)));
-      Object.entries(this.incidentMarkers).forEach(([cid, item]) => setVisible(item.marker, !focus || (m && m.caseId === cid)));
+      
+      // Marker điểm tai nạn (sự cố): Ẩn đi khi xe đã đón bệnh nhân xong (sau 3s, chuyển sang TO_HOSP hoặc ARRIVED)
+      Object.entries(this.incidentMarkers).forEach(([cid, item]) => {
+        const mission = item.mission || Object.values(this.missions).find(mis => mis.caseId === cid);
+        const isPastPickup = mission && (mission.progress.phase === 'TO_HOSP' || mission.progress.phase === 'ARRIVED');
+        const shouldShow = (!focus || (m && m.caseId === cid)) && !isPastPickup;
+        setVisible(item.marker, shouldShow);
+      });
 
       // Re-apply highlight (marker element is recreated when re-added)
       if (focus) this.vehicleMarkers[focus]?.marker.getElement()?.classList.add('is-active-marker');

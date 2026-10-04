@@ -859,7 +859,7 @@
                 Xe <strong style="color:var(--red-vivid);font-family:var(--font-mono);">${v.plate}</strong> đang vận chuyển ${patientDesc} về ${destHospital}
               </div>
               <div style="font-size:11px;color:var(--text-muted);">
-                Vị trí: ${locationText} · Tốc độ: <strong style="color:var(--text-white);">${v.speed} km/h</strong> · ETA: <strong style="color:var(--yellow-vivid);">${etaText}</strong>
+                Vị trí: ${locationText} · Tốc độ: <strong style="color:var(--text-white);">${v.speed} km/h</strong> · ETA: <strong class="eta-value-live" style="color:var(--yellow-vivid);">${etaText}</strong>
               </div>
             </div>
             <button class="btn btn-emergency btn-sm btn-focus-selected-vehicle" data-plate="${v.plate}">Xem Vị Trí</button>

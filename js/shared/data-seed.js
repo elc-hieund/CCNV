@@ -1,7 +1,7 @@
 window.SEED_DATA = {
   "system": {
     "name": "HỆ THỐNG ĐIỀU HÀNH CẤP CỨU NGOẠI VIỆN (CCNV) TP. CẦN THƠ",
-    "version": "2.1.1",
+    "version": "2.1.2",
     "deploymentDate": "2026-10-01",
     "demoDate": "2026-10-09",
     "center": "Bệnh viện Đa khoa thành phố Cần Thơ",
@@ -530,14 +530,14 @@ window.SEED_DATA = {
         "dispatcherId": "dpv01",
         "dispatcherName": "Nguyễn Văn An"
       },
-      "status": "TRANSPORTING",
-      "statusText": "Đang vận chuyển",
-      "stageLabel": "Đang chuyển đến BV",
+      "status": "EN_ROUTE",
+      "statusText": "Đang đến hiện trường",
+      "stageLabel": "Xe đang đến hiện trường",
       "orderStatus": "MOVING",
       "orderStatusText": "Đang di chuyển",
       "hospitalResponse": "ACCEPTED",
       "hospitalResponseText": "Đã xác nhận",
-      "eta": "6 phút",
+      "eta": "4 phút",
       "speed": 52,
       "milestones": [
         { "step": "CALL_RECEIVED", "name": "Tiếp nhận cuộc gọi", "time": "08:10:15", "done": true },
