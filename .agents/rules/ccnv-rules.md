@@ -17,5 +17,9 @@ Tập luật này tự động kích hoạt cho mọi tác vụ trong dự án C
   - Dark Navy (`#071522`, `#081827`, `#0A1B2A`, `#0E2435`, `#183449`): Chiếm ~80% diện tích.
   - White / Light Gray (`#FFFFFF`, `#CBD5E1`, `#AAB8C2`): Chiếm ~15% diện tích (thể hiện thông tin, số liệu, nhãn).
   - Emergency Red (`#E52521`, `#FF3B35`, `#B91C1C`): Chiếm ~5% diện tích (chỉ dành cho điểm nóng cấp cứu, SOS, cảnh báo, live pulse, nút Gọi 115).
-- **Bộ icon chuẩn:** Sử dụng Lucide Icons (SVG chuẩn web), tuyệt đối không dùng icon tự gen AI, không dùng Emoji làm icon hệ thống.
+- **Bộ icon chuẩn (NGHIÊM NGẶT):**
+  - CẤM TUYỆT ĐỐI việc tự chèn Emoji unicode (như 📍, 🧭, 🏥, 📞, ✕, 🟢, ⚠️, ✚...) làm icon trong các nút bấm (button), nhãn hành động, chip lọc, bảng biểu, danh sách hay popup bản đồ.
+  - Toàn bộ icon trong button/label PHẢI dùng inline SVG chuẩn (Lucide Icons vector) hoặc chữ text chuyên nghiệp rõ ràng.
+  - Emoji CHỈ ĐƯỢC PHÉP dùng trong ngữ cảnh tiêu đề chính (title) hoặc thanh điều hướng (navbar) nếu thật sự phù hợp, không bao giờ dùng trong button tương tác hay nội dung bảng dữ liệu.
 - **Độ phân giải chuẩn:** Desktop 1920×1080 (không xuất hiện thanh cuộn ngang, mật độ thông tin cao, dễ đọc).
+

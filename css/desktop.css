@@ -540,6 +540,10 @@
   flex-shrink: 0;
 }
 
+body.hospital-mode .kpi-header-grid {
+  display: none !important;
+}
+
 .kpi-card {
   background-color: var(--bg-panel);
   border: 1px solid var(--border-main);
@@ -859,12 +863,13 @@
 .map-hosp-bed-chip {
   font-size: 10px;
   font-weight: 700;
-  background: rgba(56, 189, 248, 0.18);
-  color: #7dd3fc;
-  padding: 1px 6px;
+  background: rgba(16, 185, 129, 0.18);
+  color: #34d399;
+  padding: 1px 7px;
   border-radius: 8px;
-  border: 1px solid rgba(56, 189, 248, 0.35);
-  font-family: var(--font-mono);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  font-family: inherit;
+  white-space: nowrap;
 }
 
 .map-hosp-shield.restricted {
@@ -2836,6 +2841,46 @@ body.critical-focus-active .kpi-header-grid {
 
 .rapid-chip-btn.active .chip-desc {
   color: #E2E8F0;
+}
+
+/* Recommended option badge (Đánh dấu sao ⭐) */
+.chip-star-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  color: #FCD34D;
+  letter-spacing: 0.2px;
+  animation: starPulseGlow 2.5s infinite ease-in-out;
+}
+
+.chip-star-badge .star-icon {
+  color: #F59E0B;
+  font-size: 11px;
+  line-height: 1;
+}
+
+@keyframes starPulseGlow {
+  0%, 100% { box-shadow: 0 0 0 rgba(245, 158, 11, 0); }
+  50% { box-shadow: 0 0 8px rgba(245, 158, 11, 0.35); }
+}
+
+.rapid-chip-btn.is-recommended {
+  border-color: rgba(245, 158, 11, 0.45);
+  position: relative;
+}
+
+.rapid-chip-btn.is-recommended:hover {
+  border-color: #F59E0B;
+}
+
+.rapid-chip-btn.is-recommended.active {
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
 }
 
 /* 5. Live Vehicle Match HUD Box */

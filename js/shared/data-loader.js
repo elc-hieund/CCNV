@@ -22,6 +22,9 @@
           this.channel.onmessage = (msg) => {
             if (msg.data && msg.data.state) {
               this.state = msg.data.state;
+              if (Array.isArray(this.state?.vehicles)) {
+                this.state.vehicles = this.state.vehicles.filter(v => v.plate !== '65A-017.22' && v.plate !== '65A-015.67');
+              }
               window.appState = this.state;
               const { event, payload } = msg.data;
               this.listeners.forEach(fn => {
@@ -41,6 +44,9 @@
           if (e.key === STORAGE_KEY_STATE && e.newValue) {
             try {
               this.state = JSON.parse(e.newValue);
+              if (Array.isArray(this.state?.vehicles)) {
+                this.state.vehicles = this.state.vehicles.filter(v => v.plate !== '65A-017.22' && v.plate !== '65A-015.67');
+              }
               window.appState = this.state;
               this.listeners.forEach(fn => {
                 try { fn('STORAGE_SYNC', null, this.state); } catch (err) { console.error(err); }
@@ -58,9 +64,12 @@
       if (cached) {
         try {
           this.state = JSON.parse(cached);
-          const seedVersion = window.SEED_DATA?.system?.version;
-          if (seedVersion && this.state?.system?.version !== seedVersion) {
-            // Dữ liệu mẫu đã đổi phiên bản → bỏ cache cũ, nạp lại từ seed
+          const seedVersion = window.SEED_DATA?.system?.version || '3.3.0';
+          const hasOldPlates = Array.isArray(this.state?.vehicles) && this.state.vehicles.some(v => v.plate === '65A-017.22' || v.plate === '65A-015.67');
+          const invalidVehicleCount = Array.isArray(this.state?.vehicles) && this.state.vehicles.length !== 6;
+
+          if (this.state?.system?.version !== seedVersion || hasOldPlates || invalidVehicleCount) {
+            // Dữ liệu mẫu đã đổi phiên bản hoặc còn sót xe cũ → xóa sạch cache cũ, nạp lại mới
             this.state = null;
             try {
               localStorage.removeItem(STORAGE_KEY_STATE);
@@ -69,6 +78,11 @@
           } else if (window.SEED_DATA) {
             if (window.SEED_DATA.accounts) this.state.accounts = window.SEED_DATA.accounts;
             if (window.SEED_DATA.hospitals) this.state.hospitals = window.SEED_DATA.hospitals;
+            if (window.SEED_DATA.vehicles) this.state.vehicles = window.SEED_DATA.vehicles;
+            if (window.SEED_DATA.incidentTypes) this.state.incidentTypes = window.SEED_DATA.incidentTypes;
+          }
+          if (Array.isArray(this.state?.vehicles)) {
+            this.state.vehicles = this.state.vehicles.filter(v => v.plate !== '65A-017.22' && v.plate !== '65A-015.67');
           }
         } catch (e) {
           console.warn('Failed to parse cached state, reloading from data.json');

@@ -204,9 +204,9 @@
       this.filterDropdownOpen = false;
       this.statusOptions = options.statusOptions || null;
       this.categoryOptions = options.categoryOptions || null;
-      this.sortKey = options.defaultSortKey || (this.columns[0] ? this.columns[0].key : '');
       this.sortDirection = (options.defaultSortOrder === 'OLDEST' || options.defaultSortOrder === 'desc') ? 'OLDEST' : 'NEWEST';
       this.onRowClick = options.onRowClick || null;
+      this.emptyText = options.emptyText || 'Không có ca nào hiện tại';
     }
 
     getAvailableStatuses() {
@@ -497,8 +497,11 @@
               <tbody>
                 ${pageItems.length === 0 ? `
                   <tr>
-                    <td colspan="${this.columns.length + 1}" style="text-align: center; padding: 36px; color: #64748B;">
-                      Không tìm thấy bản ghi dữ liệu phù hợp
+                    <td colspan="${this.columns.length + 1}" style="text-align: center; padding: 42px 20px; color: var(--text-muted);">
+                      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+                        <span style="font-size:20px;opacity:0.6;">📋</span>
+                        <span style="font-size:13.5px;color:var(--text-slate);font-weight:500;">${this.emptyText || 'Không có ca nào hiện tại'}</span>
+                      </div>
                     </td>
                   </tr>
                 ` : pageItems.map((item, rowIdx) => {

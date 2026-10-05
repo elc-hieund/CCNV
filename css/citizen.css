@@ -649,7 +649,7 @@
 /* Leaflet Map Container for Citizen (Isolate Stacking Context) */
 .citizen-map-container {
   width: 100%;
-  height: 240px;
+  height: 270px;
   border-radius: 10px;
   border: 1px solid #1E3A56;
   overflow: hidden;
@@ -675,6 +675,163 @@
   align-items: center;
   gap: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+/* --- CLONED CENTRAL APP GIS MARKERS --- */
+.map-leaflet-marker {
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.map-leaflet-marker:hover > * {
+  transform: translateY(-2px) scale(1.05);
+}
+
+/* 1. Vehicle Capsule */
+.map-veh-capsule {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(11, 23, 38, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(245, 158, 11, 0.8);
+  border-radius: 20px;
+  padding: 3px 10px 3px 5px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7), 0 0 14px rgba(245, 158, 11, 0.45);
+  position: relative;
+  white-space: nowrap;
+  user-select: none;
+}
+.map-veh-capsule::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid rgba(11, 23, 38, 0.95);
+}
+.map-veh-icon-bubble {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+  flex-shrink: 0;
+}
+.map-veh-plate {
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  font-size: 11px;
+  color: #FFFFFF;
+  letter-spacing: 0.4px;
+}
+.map-veh-status-pill {
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: rgba(245, 158, 11, 0.25);
+  color: #fbbf24;
+}
+
+/* 2. Hospital Hub Badge */
+.map-hosp-hub-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(11, 23, 38, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(16, 185, 129, 0.8);
+  border-radius: 20px;
+  padding: 3px 10px 3px 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7), 0 0 14px rgba(16, 185, 129, 0.45);
+  position: relative;
+  white-space: nowrap;
+  user-select: none;
+}
+.map-hosp-hub-badge::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid rgba(11, 23, 38, 0.95);
+}
+.map-hosp-cross-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981, #047857);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+  color: #FFFFFF;
+  font-weight: 900;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.map-hosp-title-text {
+  font-weight: 700;
+  font-size: 11px;
+  color: #34d399;
+}
+.map-hosp-bed-chip {
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+/* 3. Incident Location Capsule */
+.map-incident-capsule {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(18, 24, 38, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(239, 68, 68, 0.85);
+  border-radius: 20px;
+  padding: 3px 10px 3px 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7), 0 0 16px rgba(239, 68, 68, 0.5);
+  position: relative;
+  white-space: nowrap;
+  user-select: none;
+}
+.map-incident-capsule::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid rgba(18, 24, 38, 0.95);
+}
+.legend-dot-pulse {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 10px #ef4444;
+  display: inline-block;
+  animation: pulse 1.4s infinite;
+  flex-shrink: 0;
 }
 
 /* First Aid Cards Grid */
@@ -1254,4 +1411,29 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Floating Route Info HUD on Citizen Healthcare Map */
+#hosp-floating-route-hud {
+  animation: slideDownFade 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes slideDownFade {
+  from {
+    transform: translateY(-8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.hospital-card {
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+}
+
+.hospital-card:hover {
+  border-color: rgba(56, 189, 248, 0.5);
 }

@@ -26,16 +26,15 @@
     constructor() {
       this.currentTab = 'tab-home';
       this.activeSubProfileTab = 'sub-emergency-contacts';
-      this.hospFilterCategory = 'ALL';
-      this.hospSearchQuery = '';
       this.mapTracking = null;
-      this.mapHospitals = null;
-      this.hospitalMarkersLayer = null;
-      this.hospMarkersById = {};
-      this.hospRouteLayer = null;
       this.mapHomeFacilities = null;
+      this.homeFacilitiesMarkers = {};
+      this.homeCitizenMarker = null;
+      this.hospSearchQuery = '';
+      this.hospSortMode = 'dist_asc';
       this.vehicleMarker = null;
       this.citizenMarker = null;
+      this.hospitalMarker = null;
       this.routePolyline = null;
       this.vehicleSimInterval = null;
       this.cprInterval = null;
@@ -57,7 +56,7 @@
         dob: '1985-06-12',
         gender: 'Nam',
         idCard: '092095001234',
-        address: 'Số 3/2, P. Xuân Khánh, Q. Ninh Kiều, TP. Cần Thơ',
+        address: 'Số 3/2, P. Xuân Khánh, TP. Cần Thơ',
         bloodType: 'O+',
         allergies: 'Dị ứng thuốc nhóm Penicillin, dị ứng hải sản',
         chronicDiseases: 'Tăng huyết áp độ 2 (đang điều trị), Tiền sử hen phế quản nhẹ',
@@ -82,9 +81,17 @@
         lastAuditLog: 'BS. CKI. Nguyễn Văn Thành (Kíp xe 65A-011.15) truy cập lúc 08:15:32'
       };
 
+      this.isDispatchPending = false;
+      this.dispatchPendingInterval = null;
+      this.simRafId = null;
+      this.simMission = null;
+      this.focusLines = null;
+      this.routeVehToSceneBg = null;
+      this.routeSceneToHospBg = null;
+
       // Active Emergency Case State
       this.activeCase = {
-        isActive: true, // Default active for immediate interactive review
+        isActive: false, // Mặc định ở màn hình idle (home-idle-view)
         id: 'CC-261002-002',
         code: 'CC-261002-002',
         createdAt: '08:12:15',
@@ -94,14 +101,14 @@
         distanceKm: 1.6,
         speedKmH: 48,
         patientLocation: {
-          name: 'Đại học Cần Thơ - Cổng A đường 3/2, P. Xuân Khánh, Q. Ninh Kiều',
+          name: 'Đại học Cần Thơ - Cổng A đường 3/2, P. Xuân Khánh, TP. Cần Thơ',
           coords: [10.0298, 105.7702]
         },
         vehicle: {
-          plate: '65A-011.15',
+          plate: '65A-012.34',
           type: 'Type B - Cứu thương tiêu chuẩn',
-          coords: [10.0210, 105.7790],
-          station: 'Trạm Cấp cứu Trung tâm (BVĐK Cần Thơ)'
+          coords: [10.0150, 105.7760],
+          station: 'Trạm Cấp cứu Cái Răng'
         },
         crew: {
           doctor: 'BS. CKI. Nguyễn Văn Thành',
@@ -110,9 +117,10 @@
           phone: '0903.115.115'
         },
         hospital: {
-          id: 'HOSP_BVDK',
-          name: 'BV Đa khoa TP Cần Thơ',
-          address: 'Số 04 Châu Văn Liêm, P. An Lạc, Q. Ninh Kiều'
+          id: 'HOSP_BVTU',
+          name: 'BV Đa khoa Trung ương Cần Thơ',
+          address: '315 Nguyễn Văn Linh, P. An Khánh, Q. Ninh Kiều, TP. Cần Thơ',
+          coords: [10.0265, 105.7588]
         },
         incident: {
           code: 'INC_RESPIRATORY',
@@ -144,11 +152,11 @@
           id: 'CC-261001-018',
           date: '01/10/2026 21:40',
           incident: 'Đột quỵ não / Nghi ngờ tai biến',
-          vehicle: '65A-015.67',
+          vehicle: '65A-016.88',
           hospital: 'BV Đa khoa TP Cần Thơ',
           status: 'Hoàn tất',
           statusClass: 'ready',
-          address: 'Đường 30/4, P. Hưng Lợi, Q. Ninh Kiều',
+          address: 'Đường 30/4, P. Hưng Lợi, TP. Cần Thơ',
           summary: 'Tiếp cận sau 6 phút, chẩn đoán đột quỵ thiếu máu cục bộ cấp giờ thứ 2, chuyển thẳng phòng Can thiệp mạch BVĐK.'
         },
         {
@@ -159,7 +167,7 @@
           hospital: 'BV Đa khoa TW Cần Thơ',
           status: 'Hoàn tất',
           statusClass: 'ready',
-          address: 'Cầu Quang Trung, P. Hưng Phú, Q. Cái Răng',
+          address: 'Cầu Quang Trung, P. Hưng Phú, TP. Cần Thơ',
           summary: 'Nẹp cố định cẳng tay trái gãy kín, băng ép cầm máu, chuyển khoa Cấp cứu an toàn.'
         },
         {
@@ -167,10 +175,10 @@
           date: '01/10/2026 17:30',
           incident: 'Chấn thương phần mềm nhẹ',
           vehicle: 'Tự di chuyển',
-          hospital: 'TTYT Quận Ninh Kiều',
+          hospital: 'TTYT Khu vực Ninh Kiều',
           status: 'Tự di chuyển / Đã hủy xe',
           statusClass: 'maintenance',
-          address: 'Đường Nguyễn Văn Cừ, P. An Khánh',
+          address: 'Đường Nguyễn Văn Cừ, P. An Khánh, TP. Cần Thơ',
           summary: 'Người dân chọn tự đưa người bệnh bằng taxi sau khi được ĐPV 115 tư vấn hướng dẫn sơ cứu.'
         }
       ];
@@ -212,6 +220,10 @@
 
         const savedCase = localStorage.getItem(STORAGE_KEY_ACTIVE_CASE);
         if (savedCase) this.activeCase = Object.assign(this.activeCase, JSON.parse(savedCase));
+        // Đảm bảo bắt đầu ở màn mặc định nếu chưa bấm gọi 115 trong phiên hiện tại
+        if (sessionStorage.getItem('ccnv_citizen_demo_dispatched') !== '1') {
+          this.activeCase.isActive = false;
+        }
 
         localStorage.removeItem(STORAGE_KEY_NAV_STATE);
       } catch (err) {
@@ -250,7 +262,7 @@
 
     // --- NAVIGATION CONTROLLER ---
     switchTab(tabId) {
-      if (tabId === 'tab-emergency-request') tabId = 'tab-home';
+      if (tabId === 'tab-emergency-request' || tabId === 'tab-hospitals') tabId = 'tab-home';
       this.currentTab = tabId;
 
       document.querySelectorAll('.citizen-tab-panel').forEach(panel => {
@@ -263,34 +275,37 @@
         btn.classList.toggle('active', btn.getAttribute('data-target') === tabId);
       });
 
+      const activeCaseView = document.getElementById('home-active-case-view');
+      const idleView = document.getElementById('home-idle-view');
+
       // Special Tab-Switching Actions
       if (tabId === 'tab-home') {
         if (this.activeCase.isActive && this.activeCase.status !== 'CANCELLED') {
+          if (activeCaseView) activeCaseView.style.display = 'block';
+          if (idleView) idleView.style.display = 'none';
           setTimeout(() => this.initOrRefreshTrackingMap(), 150);
         } else {
+          if (activeCaseView) activeCaseView.style.display = 'none';
+          if (idleView) idleView.style.display = 'block';
+          this.renderHomeNearestHospitals();
           setTimeout(() => this.initOrRefreshHomeFacilitiesMap(), 150);
         }
-      } else if (tabId === 'tab-hospitals') {
-        this.renderHospitalsList(this.hospSearchQuery || '', this.hospFilterCategory || 'ALL');
-        setTimeout(() => this.initOrRefreshHospitalMap(), 150);
       }
     }
 
     // --- BOTTOM NAVIGATION CONTROLLER (Cố định ở đáy màn hình) ---
     applyNavState() {
-      // Thanh điều hướng cố định dưới cùng, không cần logic đóng mở
+      // Thanh điều hướng cố định dưới cùng
     }
 
     invalidateAllActiveMaps() {
       setTimeout(() => {
-        if (this.mapHomeFacilities) this.mapHomeFacilities.invalidateSize();
         if (this.mapTracking) this.mapTracking.invalidateSize();
-        if (this.mapHospitals) this.mapHospitals.invalidateSize();
+        if (this.mapHomeFacilities) this.mapHomeFacilities.invalidateSize();
       }, 100);
       setTimeout(() => {
-        if (this.mapHomeFacilities) this.mapHomeFacilities.invalidateSize();
         if (this.mapTracking) this.mapTracking.invalidateSize();
-        if (this.mapHospitals) this.mapHospitals.invalidateSize();
+        if (this.mapHomeFacilities) this.mapHomeFacilities.invalidateSize();
       }, 250);
     }
 
@@ -376,20 +391,31 @@
       // SOS Touch & Hold Handlers (ND-04)
       this.bindSosTrigger();
 
+      // Search & Sort for Healthcare Facilities Map & List
+      const inputHospSearch = document.getElementById('input-hosp-search');
+      if (inputHospSearch) {
+        inputHospSearch.addEventListener('input', (e) => {
+          this.hospSearchQuery = e.target.value.trim().toLowerCase();
+          this.renderHomeNearestHospitals();
+          this.filterHomeFacilitiesMap();
+        });
+      }
+
+      const selectHospSort = document.getElementById('select-hosp-sort');
+      if (selectHospSort) {
+        selectHospSort.addEventListener('change', (e) => {
+          this.hospSortMode = e.target.value;
+          this.renderHomeNearestHospitals();
+        });
+      }
+
       // Countdown Handlers
       const btnCancelCountdown = document.getElementById('btn-cancel-sos-countdown');
       if (btnCancelCountdown) {
         btnCancelCountdown.addEventListener('click', () => this.cancelCountdown());
       }
 
-      // Quick incident triggers
-      document.querySelectorAll('.quick-incident-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const incidentCode = btn.getAttribute('data-incident');
-          const incidentName = btn.querySelector('span strong').textContent;
-          this.triggerEmergencySos(incidentCode, incidentName);
-        });
-      });
+
 
       // Floating Active Banner click -> jump to tracking on Home tab
       const activeBanner = document.getElementById('citizen-active-banner');
@@ -492,41 +518,6 @@
         card.addEventListener('click', () => {
           const type = card.getAttribute('data-aid-type');
           this.openFirstAidGuide(type);
-        });
-      });
-
-      // Hospital search, clear button & specialty filters
-      const searchHosp = document.getElementById('input-hospital-search');
-      const btnClearSearch = document.getElementById('btn-clear-hosp-search');
-
-      if (searchHosp) {
-        searchHosp.addEventListener('input', (e) => {
-          const val = e.target.value;
-          if (btnClearSearch) btnClearSearch.style.display = val.length > 0 ? 'block' : 'none';
-          this.hospSearchQuery = val;
-          this.renderHospitalsList(val, this.hospFilterCategory);
-        });
-      }
-
-      if (btnClearSearch) {
-        btnClearSearch.addEventListener('click', () => {
-          if (searchHosp) {
-            searchHosp.value = '';
-            searchHosp.focus();
-          }
-          btnClearSearch.style.display = 'none';
-          this.hospSearchQuery = '';
-          this.renderHospitalsList('', this.hospFilterCategory);
-        });
-      }
-
-      document.querySelectorAll('.hospital-filter-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.hospital-filter-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          const filter = btn.getAttribute('data-filter');
-          this.hospFilterCategory = filter;
-          this.renderHospitalsList(searchHosp ? searchHosp.value : '', filter);
         });
       });
 
@@ -766,9 +757,9 @@
       }
     }
 
-    // --- SOS CALL TRIGGER FROM HEADER & OVERLAY (ND-04) ---
+    // --- SOS CALL TRIGGER FROM HEADER, HERO CENTER & OVERLAY (ND-04) ---
     bindSosTrigger() {
-      // Header SOS Call Button (Icon cuộc gọi trên header)
+      // 1. Header SOS Call Button (Icon cuộc gọi trên header)
       const headerSosBtn = document.getElementById('header-btn-sos');
       if (headerSosBtn) {
         headerSosBtn.addEventListener('click', (e) => {
@@ -777,20 +768,75 @@
         });
       }
 
-      // Nút GỌI NGAY trong overlay đếm ngược 5 giây (Bỏ qua thời gian chờ)
+      // 2. Nút Gọi Cấp cứu 115 Khẩn cấp trên màn hình Trang chủ (Dải đỏ nổi bật)
+      const btnHomeSosCall = document.getElementById('btn-home-emergency-sos-call');
+      if (btnHomeSosCall) {
+        btnHomeSosCall.addEventListener('click', (e) => {
+          e.preventDefault();
+          this.start5SecondCountdown();
+        });
+      }
+
+      // 3. Fallback nút SOS cũ (nếu có trong DOM)
+      const mainSosBtn = document.getElementById('main-sos-btn');
+      const mainSosRing = document.getElementById('main-sos-ring');
+      let holdTimer = null;
+      let isHoldTriggered = false;
+
+      if (mainSosBtn && mainSosRing) {
+        // Click / Touch trigger
+        mainSosBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (isHoldTriggered) {
+            isHoldTriggered = false;
+            return;
+          }
+          this.start5SecondCountdown();
+        });
+
+        // Touch & Hold (1.5s) gesture handlers
+        const startHold = () => {
+          isHoldTriggered = false;
+          mainSosRing.classList.add('holding');
+          holdTimer = setTimeout(() => {
+            isHoldTriggered = true;
+            mainSosRing.classList.remove('holding');
+            if (navigator.vibrate) navigator.vibrate(200);
+            window.CCNV_UI.SoundFx.playEmergencyTone?.();
+            this.triggerEmergencySos('INC_HOLD_SOS', 'Cấp cứu SOS khẩn cấp (Nhấn giữ nút SOS 1.5s)');
+          }, 1500);
+        };
+
+        const cancelHold = () => {
+          if (holdTimer) clearTimeout(holdTimer);
+          mainSosRing.classList.remove('holding');
+        };
+
+        mainSosBtn.addEventListener('mousedown', startHold);
+        mainSosBtn.addEventListener('mouseup', cancelHold);
+        mainSosBtn.addEventListener('mouseleave', cancelHold);
+
+        mainSosBtn.addEventListener('touchstart', (e) => {
+          startHold();
+        }, { passive: true });
+        mainSosBtn.addEventListener('touchend', cancelHold);
+        mainSosBtn.addEventListener('touchcancel', cancelHold);
+      }
+
+      // 3. Quick Call 115 Strip in Hotlines Bar
+      const quickCall115 = document.getElementById('home-quick-call-115');
+      if (quickCall115) {
+        quickCall115.addEventListener('click', () => {
+          this.start5SecondCountdown();
+        });
+      }
+
+      // 4. Nút GỌI NGAY trong overlay đếm ngược 5 giây (Bỏ qua thời gian chờ)
       const btnCallNow = document.getElementById('btn-call-sos-now');
       if (btnCallNow) {
         btnCallNow.addEventListener('click', (e) => {
           e.preventDefault();
           this.triggerEmergencySos('INC_CALL_NOW', 'Cấp cứu SOS khẩn cấp (Người dân bấm Gọi ngay)');
-        });
-      }
-
-      // Link xem toàn bộ danh sách bệnh viện trên màn hình chính
-      const linkViewAllHosp = document.getElementById('home-link-view-all-hospitals');
-      if (linkViewAllHosp) {
-        linkViewAllHosp.addEventListener('click', () => {
-          this.switchTab('tab-hospitals');
         });
       }
     }
@@ -824,13 +870,110 @@
       window.CCNV_UI.Toast.show('ĐÃ HỦY ĐẾM NGƯỢC', 'Yêu cầu gọi cấp cứu chưa được gửi đi.');
     }
 
-    // --- EMERGENCY SOS ACTIVATION (ND-05) ---
+    // --- EMERGENCY SOS ACTIVATION WITH 10-SECOND REALISTIC IN-CALL PHONE BAR (ND-05) ---
     triggerEmergencySos(incidentCode, incidentName) {
       if (this.countdownInterval) clearInterval(this.countdownInterval);
       const overlay = document.getElementById('countdown-overlay');
       if (overlay) overlay.style.display = 'none';
 
-      // Setup active emergency case
+      if (this.isDispatchPending) return;
+
+      // 1. Chuyển về màn mặc định (home-idle-view)
+      this.activeCase.isActive = false;
+      this.isDispatchPending = true;
+      this.switchTab('tab-home');
+      this.renderAllViews();
+
+      // 2. Hiển thị UI cuộc gọi thoại 115 thông thường tại đỉnh màn hình
+      const banner = document.getElementById('citizen-dispatch-pending-banner');
+      const callTimerEl = document.getElementById('call-timer-duration');
+      const countEl = document.getElementById('pending-dispatch-countdown-val');
+      if (banner) banner.style.display = 'block';
+
+      // Format thời gian cuộc gọi dạng mm:ss như điện thoại thông thường
+      const formatCallTime = (sec) => {
+        const m = Math.floor(sec / 60);
+        const s = sec % 60;
+        return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      };
+
+      let callElapsedSec = 0;
+      const totalDurationSec = 10; // Tăng thời gian hiển thị lên 10s theo yêu cầu
+      if (callTimerEl) callTimerEl.textContent = '00:00';
+      if (countEl) countEl.textContent = `${totalDurationSec}s`;
+
+      window.CCNV_UI.Toast.show(
+        'ĐANG KẾT NỐI TỔNG ĐÀI 115',
+        'Cuộc gọi thoại cấp cứu đang diễn ra (10s). Tọa độ GPS hiện trường đã truyền đến kíp trực điều phối...',
+        true
+      );
+
+      // Xử lý các nút điều khiển cuộc gọi thoại (Loa ngoài, Mic, Gác máy)
+      const btnSpeaker = document.getElementById('btn-incall-speaker');
+      const lblSpeaker = document.getElementById('lbl-incall-speaker');
+      const btnMute = document.getElementById('btn-incall-mute');
+      const lblMute = document.getElementById('lbl-incall-mute');
+      const btnEndCall = document.getElementById('btn-incall-end');
+
+      let isSpeakerOn = true;
+      let isMicMuted = false;
+
+      if (btnSpeaker && !btnSpeaker._hasInCallHandler) {
+        btnSpeaker._hasInCallHandler = true;
+        btnSpeaker.addEventListener('click', (e) => {
+          e.stopPropagation();
+          isSpeakerOn = !isSpeakerOn;
+          btnSpeaker.classList.toggle('active', isSpeakerOn);
+          if (lblSpeaker) lblSpeaker.textContent = isSpeakerOn ? 'Loa ngoài: BẬT' : 'Loa ngoài: TẮT';
+        });
+      }
+
+      if (btnMute && !btnMute._hasInCallHandler) {
+        btnMute._hasInCallHandler = true;
+        btnMute.addEventListener('click', (e) => {
+          e.stopPropagation();
+          isMicMuted = !isMicMuted;
+          btnMute.classList.toggle('active', isMicMuted);
+          if (lblMute) lblMute.textContent = isMicMuted ? 'Micro: TẮT' : 'Micro: BẬT';
+        });
+      }
+
+      if (btnEndCall && !btnEndCall._hasInCallHandler) {
+        btnEndCall._hasInCallHandler = true;
+        btnEndCall.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.completeEmergencyDispatch(incidentCode, incidentName, true);
+        });
+      }
+
+      if (this.dispatchPendingInterval) clearInterval(this.dispatchPendingInterval);
+
+      // Đếm giây cuộc gọi thoại (từ 00:01 đến 00:10)
+      this.dispatchPendingInterval = setInterval(() => {
+        callElapsedSec++;
+        if (callTimerEl) callTimerEl.textContent = formatCallTime(callElapsedSec);
+        if (countEl) countEl.textContent = `${Math.max(0, totalDurationSec - callElapsedSec)}s`;
+        window.CCNV_UI.SoundFx.playBeep?.();
+
+        // Sau đúng 10 giây: Đàm thoại hoàn tất, ĐPV phân công xe và BV tiếp nhận đồng ý
+        if (callElapsedSec >= totalDurationSec) {
+          this.completeEmergencyDispatch(incidentCode, incidentName, false);
+        }
+      }, 1000);
+    }
+
+    // Hoàn tất cuộc gọi thoại và chuyển mượt sang màn theo dõi xe đang đến
+    completeEmergencyDispatch(incidentCode, incidentName, isEarlyEnd = false) {
+      if (this.dispatchPendingInterval) {
+        clearInterval(this.dispatchPendingInterval);
+        this.dispatchPendingInterval = null;
+      }
+      this.isDispatchPending = false;
+
+      const banner = document.getElementById('citizen-dispatch-pending-banner');
+      if (banner) banner.style.display = 'none';
+
+      // Thiết lập ca cấp cứu chính thức
       this.activeCase.isActive = true;
       this.activeCase.status = 'MOVING';
       this.activeCase.stageLabel = 'Xe đang đến';
@@ -838,85 +981,377 @@
       this.activeCase.incident.name = incidentName || 'Cấp cứu khẩn cấp 115';
       this.activeCase.etaMinutes = 4;
       this.activeCase.distanceKm = 1.6;
-      this.activeCase.vehicle.coords = [10.0210, 105.7790];
+      this.activeCase.speedKmH = 48;
+      this.activeCase.vehicle.plate = '65A-012.34';
+      this.activeCase.vehicle.coords = [10.0150, 105.7760];
+      this.activeCase.hospital = {
+        id: 'HOSP_BVTU',
+        name: 'BV Đa khoa Trung ương Cần Thơ',
+        address: '315 Nguyễn Văn Linh, P. An Khánh, Q. Ninh Kiều, TP. Cần Thơ',
+        coords: [10.0265, 105.7588]
+      };
 
-      // Add audit log
       this.activeCase.messages.push({
         sender: 'dispatcher',
         time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-        text: `ĐPV 115 tiếp nhận tín hiệu khẩn: "${incidentName}". Xe 65A-011.15 đang vượt đèn ưu tiên di chuyển về vị trí của bạn!`
+        text: `ĐPV 115 tiếp nhận: "${incidentName || 'Cấp cứu 115'}". Đã điều động xe 65A-012.34 (Kíp 3 - Cái Răng) và BV Đa khoa Trung ương Cần Thơ đã đồng ý tiếp nhận ca!`
       });
 
+      sessionStorage.setItem('ccnv_citizen_demo_dispatched', '1');
       this.saveToStorage();
       this.renderAllViews();
 
       if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
+      window.CCNV_UI.SoundFx.playEmergencyTone?.();
 
       window.CCNV_UI.Toast.show(
-        'ĐÃ KÍCH HOẠT CẤP CỨU 115',
-        'Tọa độ GPS đã gửi về Trung tâm Điều hành Cần Thơ. Xe 65A-011.15 đang khẩn trương xuất phát.',
+        isEarlyEnd ? 'KẾT THÚC ĐÀM THOẠI 115' : 'ĐIỀU ĐỘNG THÀNH CÔNG',
+        'ĐPV 115 đã phân công xe 65A-012.34 (ETA ~4P). BV Đa khoa Trung ương Cần Thơ đã sẵn sàng tiếp nhận!',
         true
       );
 
-      // Jump directly to Home Screen (shows active case details)
       this.switchTab('tab-home');
       this.startAmbulanceSimulation();
     }
 
-    // --- REALTIME AMBULANCE SIMULATION (MAP & MOVEMENT) ---
-    startAmbulanceSimulation() {
-      if (this.vehicleSimInterval) clearInterval(this.vehicleSimInterval);
+    // =========================================================================
+    // CCNV REALTIME GIS AMBULANCE SIMULATION ENGINE (ĐỒNG BỘ 100% VỚI BẢN ĐỒ TRUNG TÂM)
+    // Các thông số: SIM_SPEED_MPS = 55, OSRM routing, co đường theo vị trí xe,
+    // dừng đón BN 3s tại hiện trường rồi chuyển tiếp về BVĐK Trung ương Cần Thơ.
+    // =========================================================================
 
-      // Coordinates route from Hung Loi bridge to Can Tho University gate A
-      const routePoints = [
-        [10.0210, 105.7790], // Hung Loi
-        [10.0235, 105.7760], // 30/4 St
-        [10.0260, 105.7735], // Mau Than junction
-        [10.0280, 105.7715], // 3/2 St
-        [10.0298, 105.7702]  // Can Tho Univ
-      ];
-
-      let step = 0;
-      this.vehicleSimInterval = setInterval(() => {
-        if (!this.activeCase.isActive || this.activeCase.status === 'CANCELLED') {
-          clearInterval(this.vehicleSimInterval);
-          return;
+    // --- Helpers: Routing & Path Mathematics ---
+    async fetchRoadRoute(a, b, fallbackPoints) {
+      if (!this._citizenRouteCache) this._citizenRouteCache = new Map();
+      const key = `${a.join(',')};${b.join(',')}`;
+      if (this._citizenRouteCache.has(key)) return this._citizenRouteCache.get(key);
+      try {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 4000);
+        const url = `https://router.project-osrm.org/route/v1/driving/${a[1]},${a[0]};${b[1]},${b[0]}?overview=full&geometries=geojson`;
+        const res = await fetch(url, { signal: ctrl.signal });
+        clearTimeout(timer);
+        const json = await res.json();
+        if (json.routes && json.routes[0] && json.routes[0].geometry && json.routes[0].geometry.coordinates) {
+          const pts = json.routes[0].geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+          const route = [a, ...pts, b];
+          this._citizenRouteCache.set(key, route);
+          return route;
         }
-
-        if (step < routePoints.length - 1) {
-          step++;
-          this.activeCase.vehicle.coords = routePoints[step];
-          const remainingSteps = routePoints.length - 1 - step;
-          this.activeCase.etaMinutes = Math.max(1, remainingSteps + 1);
-          this.activeCase.distanceKm = (remainingSteps * 0.4).toFixed(1);
-
-          this.updateTrackingStatsUI();
-          this.updateVehicleMarkerPos(this.activeCase.vehicle.coords);
-
-          if (step === routePoints.length - 1) {
-            this.activeCase.status = 'AT_SCENE';
-            this.activeCase.stageLabel = 'Đã đến hiện trường';
-            this.updateTrackingStatsUI();
-            window.CCNV_UI.Toast.show(
-              'XE CẤP CỨU ĐÃ ĐẾN NƠI',
-              'Xe 65A-011.15 đã tiếp cận cổng Đại học Cần Thơ. Bác sĩ đang vào sơ cứu.',
-              true
-            );
-          }
-        }
-      }, 7000);
+      } catch (e) {
+        console.warn('OSRM routing unavailable, using realistic road network fallback:', e);
+      }
+      return fallbackPoints || [a, b];
     }
 
-    updateTrackingStatsUI() {
+    buildPath(points) {
+      const ll = points.map(p => window.L.latLng(p));
+      const cum = [0];
+      for (let i = 1; i < ll.length; i++) cum.push(cum[i - 1] + ll[i - 1].distanceTo(ll[i]));
+      return { ll, cum, total: cum[cum.length - 1] };
+    }
+
+    pointAt(path, d) {
+      const last = path.ll.length - 1;
+      if (d <= 0 || last === 0) return { latlng: path.ll[0], idx: 0 };
+      if (d >= path.total) return { latlng: path.ll[last], idx: last };
+      let lo = 0, hi = last;
+      while (hi - lo > 1) {
+        const mid = (lo + hi) >> 1;
+        if (path.cum[mid] <= d) lo = mid; else hi = mid;
+      }
+      const seg = path.cum[hi] - path.cum[lo];
+      const t = seg ? (d - path.cum[lo]) / seg : 0;
+      const a = path.ll[lo], b = path.ll[hi];
+      return { latlng: window.L.latLng(a.lat + (b.lat - a.lat) * t, a.lng + (b.lng - a.lng) * t), idx: lo };
+    }
+
+    // --- REALTIME AMBULANCE SIMULATION (MAP & MOVEMENT - Y NGUYÊN BÊN TRUNG TÂM) ---
+    startAmbulanceSimulation() {
+      this.stopAmbulanceSimulation();
+
+      const origin = [10.0105, 105.7700]; // Kíp 3 - Trạm Cái Răng (xe 65A-012.34 chuẩn CCNV)
+      const scene = this.activeCase.patientLocation.coords || [10.0298, 105.7702];
+      const hosp = [10.0265, 105.7588]; // BV Đa khoa Trung ương Cần Thơ
+
+      this.simMission = {
+        origin,
+        scene,
+        hospCoords: hosp,
+        phase: 'TO_SCENE',
+        dist: 0,
+        pauseUntil: 0,
+        lastTs: 0,
+        lastSpeedUpdate: 0,
+        leg1: null,
+        leg2: null,
+        pos: null
+      };
+
+      // Tọa độ bám đường phố thực tế Cần Thơ (Cầu Hưng Lợi -> 30/4 -> Trần Văn Hoài -> 3/2 -> Nguyễn Văn Linh)
+      const FALLBACK_LEG1 = [
+        [10.0105, 105.7700], // Trạm Cái Răng
+        [10.0122, 105.7725], // Dốc Cầu Hưng Lợi
+        [10.0145, 105.7752], // Cầu Hưng Lợi vượt sông Cần Thơ
+        [10.0175, 105.7762], // Nút giao đường 30/4
+        [10.0205, 105.7755], // Trục đường 30/4
+        [10.0232, 105.7745], // Đường 30/4 qua Xuân Khánh
+        [10.0255, 105.7735], // Ngã tư 30/4 - Trần Văn Hoài
+        [10.0272, 105.7722], // Rẽ sang đường 3/2
+        [10.0288, 105.7710], // Đường 3/2 tiếp cận ĐH Cần Thơ
+        [10.0298, 105.7702]  // Đến Cổng A ĐH Cần Thơ (Hiện trường)
+      ];
+
+      const FALLBACK_LEG2 = [
+        [10.0298, 105.7702], // Cổng A ĐH Cần Thơ
+        [10.0290, 105.7682], // Đường 3/2
+        [10.0282, 105.7655], // Nút giao 3/2 - Nguyễn Văn Linh
+        [10.0275, 105.7625], // Trục đường Nguyễn Văn Linh
+        [10.0268, 105.7602], // Đoạn Nguyễn Văn Linh tiếp cận BV
+        [10.0265, 105.7588]  // BV Đa khoa Trung ương Cần Thơ
+      ];
+
+      Promise.all([
+        this.fetchRoadRoute(origin, scene, FALLBACK_LEG1),
+        this.fetchRoadRoute(scene, hosp, FALLBACK_LEG2)
+      ]).then(([pts1, pts2]) => {
+        if (!this.simMission) return;
+        this.simMission.leg1 = this.buildPath(pts1);
+        this.simMission.leg2 = this.buildPath(pts2);
+
+        if (this.mapTracking) {
+          this.setupTrackingMapRoutes();
+        }
+
+        // Khởi động vòng lặp requestAnimationFrame mượt mà 60fps
+        this.simRafId = requestAnimationFrame((ts) => this.tickSimulation(ts));
+      });
+    }
+
+    stopAmbulanceSimulation() {
+      if (this.simRafId) {
+        cancelAnimationFrame(this.simRafId);
+        this.simRafId = null;
+      }
+      if (this.vehicleSimInterval) {
+        clearInterval(this.vehicleSimInterval);
+        this.vehicleSimInterval = null;
+      }
+    }
+
+    setupTrackingMapRoutes() {
+      if (!this.mapTracking || !this.simMission?.leg1 || !this.simMission?.leg2) return;
+      const m = this.simMission;
+      const L = window.L;
+
+      // Xóa các routes cũ nếu có
+      if (this.routeVehToSceneBg) this.mapTracking.removeLayer(this.routeVehToSceneBg);
+      if (this.routeSceneToHospBg) this.mapTracking.removeLayer(this.routeSceneToHospBg);
+      if (this.focusLines) {
+        if (this.focusLines.glow1) this.mapTracking.removeLayer(this.focusLines.glow1);
+        if (this.focusLines.line1) this.mapTracking.removeLayer(this.focusLines.line1);
+        if (this.focusLines.glow2) this.mapTracking.removeLayer(this.focusLines.glow2);
+        if (this.focusLines.line2) this.mapTracking.removeLayer(this.focusLines.line2);
+      }
+
+      // 1. Toàn tuyến (mờ ở dưới) — thể hiện chặng đã đi qua (y nguyên bên Trung tâm)
+      this.routeVehToSceneBg = L.polyline(m.leg1.ll, {
+        color: '#f59e0b',
+        weight: 3.5,
+        opacity: 0.22,
+        dashArray: '6, 8'
+      }).addTo(this.mapTracking);
+
+      this.routeSceneToHospBg = L.polyline(m.leg2.ll, {
+        color: '#38bdf8',
+        weight: 3.5,
+        opacity: 0.22,
+        dashArray: '5, 7'
+      }).addTo(this.mapTracking);
+
+      // 2. Chặng còn lại trước mặt xe (sáng rực rỡ, co dần lại theo xe)
+      this.focusLines = {
+        glow1: L.polyline([], { color: '#f59e0b', weight: 8, opacity: 0.28, lineCap: 'round' }).addTo(this.mapTracking),
+        line1: L.polyline([], { color: '#fbbf24', weight: 3.5, opacity: 0.95, dashArray: '7, 6', lineCap: 'round' }).addTo(this.mapTracking),
+        glow2: L.polyline([], { color: '#0284c7', weight: 8, opacity: 0.28, lineCap: 'round' }).addTo(this.mapTracking),
+        line2: L.polyline([], { color: '#38bdf8', weight: 3.5, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }).addTo(this.mapTracking)
+      };
+
+      this.updateRemainingLines(m.pos || { latlng: m.leg1.ll[0], idx: 0 });
+    }
+
+    updateRemainingLines(pos) {
+      if (!this.focusLines || !this.simMission?.leg1 || !this.simMission?.leg2) return;
+      const m = this.simMission;
+      const phase = m.phase;
+      const remaining = (leg) => [pos.latlng, ...leg.ll.slice(pos.idx + 1)];
+
+      let rem1 = [], rem2 = [];
+      if (phase === 'TO_SCENE') {
+        rem1 = remaining(m.leg1);
+        rem2 = m.leg2.ll;
+      } else if (phase === 'PICKUP') {
+        rem1 = [];
+        rem2 = m.leg2.ll;
+      } else if (phase === 'TO_HOSP') {
+        rem1 = [];
+        rem2 = remaining(m.leg2);
+      } else {
+        rem1 = [];
+        rem2 = [];
+      }
+
+      this.focusLines.glow1.setLatLngs(rem1);
+      this.focusLines.line1.setLatLngs(rem1);
+      this.focusLines.glow2.setLatLngs(rem2);
+      this.focusLines.line2.setLatLngs(rem2);
+    }
+
+    tickSimulation(now) {
+      if (!this.mapTracking || !this.simMission || !this.activeCase.isActive || this.activeCase.status === 'CANCELLED') {
+        this.stopAmbulanceSimulation();
+        return;
+      }
+
+      const m = this.simMission;
+      if (!m.leg1 || !m.leg2) {
+        this.simRafId = requestAnimationFrame((ts) => this.tickSimulation(ts));
+        return;
+      }
+
+      const dt = m.lastTs ? Math.min((now - m.lastTs) / 1000, 0.1) : 0;
+      m.lastTs = now;
+
+      // Xử lý tạm dừng (dừng đón BN 3 giây tại hiện trường y hệt bên Trung tâm)
+      if (m.pauseUntil) {
+        if (now < m.pauseUntil) {
+          this.simRafId = requestAnimationFrame((ts) => this.tickSimulation(ts));
+          return;
+        }
+        m.pauseUntil = 0;
+        if (m.phase === 'PICKUP') {
+          m.phase = 'TO_HOSP';
+          m.dist = 0;
+          this.activeCase.status = 'TRANSPORTING';
+          this.activeCase.stageLabel = 'Đang chuyển viện';
+          this.updateTrackingStatsUI(null, null, 'Đang chuyển viện');
+          window.CCNV_UI.Toast.show(
+            'BỆNH NHÂN ĐÃ LÊN XE',
+            'Xe 65A-012.34 đang di chuyển khẩn cấp về BV Đa khoa Trung ương Cần Thơ.',
+            true
+          );
+        } else if (m.phase === 'ARRIVED') {
+          m.phase = 'COMPLETED';
+          this.activeCase.status = 'COMPLETED';
+          this.activeCase.stageLabel = 'Đã đến BVĐK Trung ương';
+          this.updateTrackingStatsUI(0, 'Đã đến BV', 'Đã đến BVĐK Trung ương');
+          window.CCNV_UI.Toast.show(
+            'ĐÃ ĐẾN BỆNH VIỆN TIẾP NHẬN',
+            'Bệnh nhân đã được bàn giao an toàn cho Khoa Cấp cứu BV Đa khoa Trung ương Cần Thơ.',
+            true
+          );
+          this.stopAmbulanceSimulation();
+          return;
+        }
+      }
+
+      if (m.phase === 'COMPLETED') {
+        this.stopAmbulanceSimulation();
+        return;
+      }
+
+      const SIM_SPEED_MPS = 55; // Chuẩn 55 m/s y nguyên bên Trung tâm
+      const currentLeg = m.phase === 'TO_SCENE' ? m.leg1 : m.leg2;
+      m.dist += SIM_SPEED_MPS * dt;
+
+      if (m.dist >= currentLeg.total) {
+        m.dist = currentLeg.total;
+        if (m.phase === 'TO_SCENE') {
+          m.phase = 'PICKUP';
+          m.pauseUntil = now + 3000; // Dừng đón bệnh nhân 3s y hệt bên Trung tâm
+          this.activeCase.status = 'AT_SCENE';
+          this.activeCase.stageLabel = 'Đã đến hiện trường';
+          this.updateTrackingStatsUI(0, 'Đã đến hiện trường', 'Đã đến hiện trường');
+          if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+          window.CCNV_UI.SoundFx.playEmergencyTone?.();
+          window.CCNV_UI.Toast.show(
+            'XE CẤP CỨU ĐÃ ĐẾN NƠI',
+            'Xe 65A-012.34 đã tiếp cận hiện trường Cổng A ĐH Cần Thơ. Kíp cấp cứu đang đưa nạn nhân lên xe.',
+            true
+          );
+        } else if (m.phase === 'TO_HOSP') {
+          m.phase = 'ARRIVED';
+          m.pauseUntil = now + 1500;
+        }
+      }
+
+      // Lấy vị trí nội suy mượt mà
+      m.pos = this.pointAt(currentLeg, m.dist);
+      if (this.vehicleMarker && m.pos) {
+        this.vehicleMarker.setLatLng(m.pos.latlng);
+        this.activeCase.vehicle.coords = [m.pos.latlng.lat, m.pos.latlng.lng];
+      }
+
+      // Cập nhật đường polyline co lại
+      this.updateRemainingLines(m.pos);
+
+      // Cập nhật tốc độ xe dao động 46-53 km/h sau mỗi 2s
+      if (now - m.lastSpeedUpdate > 2000) {
+        m.lastSpeedUpdate = now;
+        const speedPill = this.vehicleMarker?.getElement()?.querySelector('.map-veh-status-pill');
+        if (speedPill) {
+          if (m.phase === 'PICKUP') {
+            speedPill.textContent = 'Đón BN (3s)';
+          } else if (m.phase === 'ARRIVED' || m.phase === 'COMPLETED') {
+            speedPill.textContent = 'Đã đến BV';
+          } else {
+            this.activeCase.speedKmH = Math.floor(46 + Math.random() * 8);
+            speedPill.textContent = `${this.activeCase.speedKmH} km/h`;
+          }
+        }
+      }
+
+      // Cập nhật ETA và khoảng cách trên UI Citizen
+      if (m.phase === 'TO_SCENE') {
+        const remDistMeters = Math.max(0, m.leg1.total - m.dist);
+        const remSec = Math.round(remDistMeters / SIM_SPEED_MPS);
+        this.activeCase.distanceKm = (remDistMeters / 1000).toFixed(1);
+        this.activeCase.etaMinutes = Math.max(1, Math.ceil(remSec / 60));
+        this.updateTrackingStatsUI(remSec);
+      } else if (m.phase === 'PICKUP') {
+        this.activeCase.distanceKm = '0.0';
+        this.activeCase.etaMinutes = 0;
+        this.updateTrackingStatsUI(0, 'Đã đến điểm đón', 'Đã đến hiện trường');
+      } else if (m.phase === 'TO_HOSP') {
+        const remDistMeters = Math.max(0, m.leg2.total - m.dist);
+        const remSec = Math.round(remDistMeters / SIM_SPEED_MPS);
+        this.activeCase.distanceKm = (remDistMeters / 1000).toFixed(1);
+        this.activeCase.etaMinutes = Math.max(1, Math.ceil(remSec / 60));
+        this.updateTrackingStatsUI(remSec, null, 'Đang chuyển viện');
+      }
+
+      this.simRafId = requestAnimationFrame((ts) => this.tickSimulation(ts));
+    }
+
+    updateTrackingStatsUI(remSec = null, customEtaText = null, customStageText = null) {
       const etaEl = document.getElementById('track-eta-value');
       const distEl = document.getElementById('track-dist-value');
       const mapEtaBadge = document.getElementById('map-eta-badge');
       const statusTitle = document.getElementById('track-case-status-title');
 
-      if (etaEl) etaEl.textContent = `~${this.activeCase.etaMinutes} PHÚT`;
-      if (distEl) distEl.textContent = `${this.activeCase.distanceKm} km (Tốc độ: 48 km/h)`;
-      if (mapEtaBadge) mapEtaBadge.textContent = `ETA: ~${this.activeCase.etaMinutes}P`;
-      if (statusTitle) statusTitle.textContent = this.activeCase.stageLabel.toUpperCase();
+      let etaDisplay = `~${this.activeCase.etaMinutes} PHÚT`;
+      if (customEtaText) {
+        etaDisplay = customEtaText;
+      } else if (remSec !== null) {
+        if (remSec <= 5) etaDisplay = 'Đang tiếp cận';
+        else if (remSec < 60) etaDisplay = `${remSec} GIÂY`;
+        else etaDisplay = `~${Math.ceil(remSec / 60)} PHÚT`;
+      }
+
+      if (etaEl) etaEl.textContent = etaDisplay;
+      if (distEl) distEl.textContent = `${this.activeCase.distanceKm} km (Tốc độ: ${this.activeCase.speedKmH || 48} km/h)`;
+      if (mapEtaBadge) mapEtaBadge.textContent = `ETA: ${etaDisplay}`;
+      if (statusTitle) statusTitle.textContent = (customStageText || this.activeCase.stageLabel).toUpperCase();
 
       this.updateStepperUI();
     }
@@ -934,7 +1369,7 @@
       }
     }
 
-    // --- LEAFLET REALTIME MAP CONTROLLER ---
+    // --- LEAFLET REALTIME MAP CONTROLLER (Clone giao diện GIS app Trung tâm) ---
     initOrRefreshTrackingMap() {
       const container = document.getElementById('citizen-tracking-map');
       if (!container) return;
@@ -944,14 +1379,20 @@
         return;
       }
 
+      const sceneCoords = this.activeCase.patientLocation.coords || [10.0298, 105.7702];
+      const originCoords = [10.0105, 105.7700]; // Kíp 3 - Trạm Cái Răng
+      const vehCoords = (this.simMission?.pos?.latlng)
+        ? [this.simMission.pos.latlng.lat, this.simMission.pos.latlng.lng]
+        : originCoords;
+      const hospCoords = [10.0265, 105.7588]; // BV Đa khoa Trung ương Cần Thơ
+
       if (!this.mapTracking) {
-        const centerCoords = this.activeCase.patientLocation.coords;
         this.mapTracking = L.map('citizen-tracking-map', {
           zoomControl: false,
           attributionControl: false
-        }).setView(centerCoords, 14);
+        }).setView(sceneCoords, 14);
 
-        // Dark tile map (ArcGIS Canvas Dark)
+        // ArcGIS Canvas Dark Base & Reference (Chuẩn GIS giao diện Trung tâm CCNV)
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
           attribution: '&copy; Esri, DeLorme, NAVTEQ',
           maxNativeZoom: 16,
@@ -964,58 +1405,412 @@
           maxZoom: 18
         }).addTo(this.mapTracking);
 
-        // Citizen Marker (Red Pulse)
-        const citizenIcon = L.divIcon({
-          className: 'citizen-gis-marker',
-          html: `<div style="width:16px;height:16px;border-radius:50%;background:#EF4444;border:2.5px solid #FFFFFF;box-shadow:0 0 14px #EF4444;"></div>`,
-          iconSize: [16, 16],
-          iconAnchor: [8, 8]
+        // 1. Marker Vị trí tai nạn (Beacon đỏ nhấp nháy clone Central App)
+        const incidentIcon = L.divIcon({
+          className: 'map-leaflet-marker',
+          html: `
+            <div class="map-incident-capsule">
+              <span class="legend-dot-pulse"></span>
+              <span style="font-weight:700;font-size:11px;color:#fca5a5;letter-spacing:0.3px;">VỊ TRÍ TAI NẠN (BẠN)</span>
+            </div>
+          `,
+          iconSize: [180, 32],
+          iconAnchor: [90, 32]
         });
 
-        this.citizenMarker = L.marker(this.activeCase.patientLocation.coords, { icon: citizenIcon })
+        this.citizenMarker = L.marker(sceneCoords, { icon: incidentIcon, zIndexOffset: 500 })
           .addTo(this.mapTracking)
-          .bindPopup('<b>VỊ TRÍ CỦA BẠN</b><br>Cổng A Đại học Cần Thơ');
+          .bindPopup('<b>VỊ TRÍ TAI NẠN</b><br>Cổng A Đại học Cần Thơ');
 
-        // Ambulance Marker (Lucide Style Vehicle)
+        // 2. Marker Xe cấp cứu đang đến (Capsule xe màu hổ phách/amber clone Central App)
         const ambulanceIcon = L.divIcon({
-          className: 'ambulance-gis-marker',
-          html: `<div style="background:#0A1B2A;border:2px solid #E52521;border-radius:8px;padding:4px 6px;color:#FFFFFF;display:flex;align-items:center;gap:4px;box-shadow:0 0 12px rgba(229,37,33,0.7);font-size:10.5px;font-weight:700;">
-                  <span style="color:#FF3B35;">🚑</span>
-                  <span>65A-011.15</span>
-                 </div>`,
-          iconSize: [85, 26],
-          iconAnchor: [42, 13]
+          className: 'map-leaflet-marker',
+          html: `
+            <div class="map-veh-capsule is-mission">
+              <div class="map-veh-icon-bubble">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1 .4-1 1v9h2"></path>
+                  <circle cx="7" cy="17" r="2"></circle>
+                  <path d="M9 17h6"></path>
+                  <circle cx="17" cy="17" r="2"></circle>
+                </svg>
+              </div>
+              <span class="map-veh-plate">65A-012.34</span>
+              <span class="map-veh-status-pill mission">48 km/h</span>
+            </div>
+          `,
+          iconSize: [160, 36],
+          iconAnchor: [80, 36]
         });
 
-        this.vehicleMarker = L.marker(this.activeCase.vehicle.coords, { icon: ambulanceIcon })
+        this.vehicleMarker = L.marker(vehCoords, { icon: ambulanceIcon, zIndexOffset: 1000 })
           .addTo(this.mapTracking)
-          .bindPopup('<b>XE CẤP CỨU ĐANG ĐẾN</b><br>Kíp 1 - BVĐK TP Cần Thơ');
+          .bindPopup('<b>XE CẤP CỨU ĐANG ĐẾN</b><br>Biển số: 65A-012.34 (BV Đa khoa Trung ương)');
 
-        // Route Polyline
-        this.routePolyline = L.polyline([
-          this.activeCase.vehicle.coords,
-          [10.0260, 105.7735],
-          this.activeCase.patientLocation.coords
-        ], {
-          color: '#E52521',
-          weight: 4,
-          opacity: 0.85,
-          dashArray: '6, 8'
-        }).addTo(this.mapTracking);
+        // 3. Marker Bệnh viện đích (Shield xanh y tế clone Central App)
+        const hospitalIcon = L.divIcon({
+          className: 'map-leaflet-marker',
+          html: `
+            <div class="map-hosp-hub-badge">
+              <div class="map-hosp-cross-icon">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" style="display:block;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              </div>
+              <span class="map-hosp-title-text">BVĐK TRUNG ƯƠNG</span>
+              <span class="map-hosp-bed-chip">Đích đến</span>
+            </div>
+          `,
+          iconSize: [210, 36],
+          iconAnchor: [105, 36]
+        });
+
+        this.hospitalMarker = L.marker(hospCoords, { icon: hospitalIcon, zIndexOffset: 300 })
+          .addTo(this.mapTracking)
+          .bindPopup('<b>BỆNH VIỆN TIẾP NHẬN</b><br>BV Đa khoa Trung ương Cần Thơ');
+
+        // Tự động bao quát cả 3 điểm: Xe, Hiện trường, Bệnh viện đích
+        try {
+          this.mapTracking.fitBounds([originCoords, sceneCoords, hospCoords], {
+            padding: [28, 28],
+            maxZoom: 15
+          });
+        } catch (e) {
+          console.warn('fitBounds error:', e);
+        }
+
+        // Khởi tạo hoặc vẽ route nếu đã có
+        if (this.simMission?.leg1 && this.simMission?.leg2) {
+          this.setupTrackingMapRoutes();
+        } else {
+          this.startAmbulanceSimulation();
+        }
       } else {
         this.mapTracking.invalidateSize();
+        if (this.vehicleMarker) this.vehicleMarker.setLatLng(vehCoords);
+        if (this.citizenMarker) this.citizenMarker.setLatLng(sceneCoords);
+        if (this.hospitalMarker) this.hospitalMarker.setLatLng(hospCoords);
+        if (this.simMission?.leg1 && this.simMission?.leg2) {
+          this.setupTrackingMapRoutes();
+        }
+        try {
+          this.mapTracking.fitBounds([originCoords, sceneCoords, hospCoords], {
+            padding: [28, 28],
+            maxZoom: 15
+          });
+        } catch (e) { }
       }
     }
 
-    updateVehicleMarkerPos(newCoords) {
-      if (this.vehicleMarker) {
-        this.vehicleMarker.setLatLng(newCoords);
+    // --- HOME HEALTHCARE FACILITIES GIS MAP (HIỂN THỊ MẶC ĐỊNH TRÊN TRANG CHỦ) ---
+    initOrRefreshHomeFacilitiesMap() {
+      const mapContainer = document.getElementById('home-facilities-map');
+      if (!mapContainer) return;
+
+      const citizenCoords = [10.0298, 105.7702]; // Cổng A ĐH Cần Thơ
+
+      if (!this.mapHomeFacilities) {
+        this.mapHomeFacilities = L.map('home-facilities-map', {
+          zoomControl: false,
+          attributionControl: false
+        }).setView(citizenCoords, 13);
+
+        // ArcGIS Canvas Dark Base & Reference (Đồng bộ chuẩn GIS giao diện Trung tâm)
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+          attribution: '&copy; Esri, DeLorme, NAVTEQ',
+          maxNativeZoom: 16,
+          maxZoom: 18
+        }).addTo(this.mapHomeFacilities);
+
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+          attribution: '',
+          maxNativeZoom: 16,
+          maxZoom: 18
+        }).addTo(this.mapHomeFacilities);
+
+        // 1. Marker Vị trí của bạn (Đỏ pulse chuẩn CCNV)
+        const citizenIcon = L.divIcon({
+          className: 'map-leaflet-marker',
+          html: `
+            <div class="map-incident-capsule" style="background:rgba(239,68,68,0.22);border-color:#EF4444;">
+              <span class="legend-dot-pulse"></span>
+              <span style="font-weight:700;font-size:11px;color:#FCA5A5;letter-spacing:0.3px;">VỊ TRÍ CỦA BẠN</span>
+            </div>
+          `,
+          iconSize: [160, 32],
+          iconAnchor: [80, 32]
+        });
+
+        this.homeCitizenMarker = L.marker(citizenCoords, { icon: citizenIcon, zIndexOffset: 900 })
+          .addTo(this.mapHomeFacilities)
+          .bindPopup(`
+            <div style="font-size:12px;color:#FFFFFF;padding:2px;">
+              <strong style="color:#EF4444;font-size:13px;display:block;margin-bottom:3px;">VỊ TRÍ HIỆN TẠI (GPS)</strong>
+              <div>Đại học Cần Thơ - Cổng A đường 3/2, P. Xuân Khánh</div>
+              <div style="font-size:11px;color:#34D399;margin-top:4px;">● Tọa độ: 10.0298°B, 105.7702°Đ</div>
+            </div>
+          `);
+
+        // 2. Hospital Markers
+        this.homeFacilitiesMarkers = {};
+        const allPoints = [citizenCoords];
+
+        const hospList = (this.hospitals && this.hospitals.length > 0) ? this.hospitals : (window.SEED_DATA?.hospitals || []);
+        hospList.forEach(h => {
+          if (!h.coords) return;
+          allPoints.push(h.coords);
+
+          const shortName = h.code ? h.code : (h.name.replace('Bệnh viện', 'BV').replace('Đa khoa', 'ĐK'));
+
+          const hospIcon = L.divIcon({
+            className: 'map-leaflet-marker',
+            html: `
+              <div class="map-hosp-hub-badge">
+                <div class="map-hosp-cross-icon">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" style="display:block;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </div>
+                <span class="map-hosp-title-text">${shortName}</span>
+              </div>
+            `,
+            iconSize: [140, 36],
+            iconAnchor: [70, 36]
+          });
+
+          const marker = L.marker(h.coords, { icon: hospIcon, zIndexOffset: 400 })
+            .addTo(this.mapHomeFacilities)
+            .bindPopup(`
+              <div style="font-size:12px;color:#FFFFFF;padding:2px;">
+                <strong style="color:#38BDF8;font-size:13px;display:block;margin-bottom:3px;">${h.name}</strong>
+                <div style="color:#CBD5E1;font-size:11.5px;margin-bottom:4px;">${h.address}</div>
+                <div style="color:#34D399;font-weight:600;font-size:11px;margin-bottom:6px;">
+                  Sẵn sàng tiếp nhận cấp cứu
+                </div>
+                <div style="display:flex;gap:6px;">
+                  <a href="tel:${h.hotline || h.phone || '115'}" style="background:#E52521;color:#FFFFFF;padding:4px 8px;border-radius:4px;text-decoration:none;font-size:10.5px;font-weight:700;">
+                    Gọi hotline
+                  </a>
+                  <a href="https://www.google.com/maps/dir/?api=1&destination=${h.coords[0]},${h.coords[1]}" target="_blank" style="background:#0A1B2A;border:1px solid #38BDF8;color:#38BDF8;padding:4px 8px;border-radius:4px;text-decoration:none;font-size:10.5px;">
+                    Chỉ đường
+                  </a>
+                </div>
+              </div>
+            `);
+
+          this.homeFacilitiesMarkers[h.id] = marker;
+        });
+
+        // Fit bounds bao quát vị trí người dân và các cơ sở y tế
+        try {
+          if (allPoints.length > 1) {
+            this.mapHomeFacilities.fitBounds(allPoints, {
+              padding: [24, 24],
+              maxZoom: 14
+            });
+          }
+        } catch (e) {
+          console.warn('fitBounds facilities map error:', e);
+        }
+      } else {
+        this.mapHomeFacilities.invalidateSize();
       }
-      if (this.routePolyline && this.citizenMarker) {
-        this.routePolyline.setLatLngs([
-          newCoords,
-          this.citizenMarker.getLatLng()
-        ]);
+    }
+
+    // --- DANH SÁCH CƠ SỞ Y TẾ GẦN NHẤT TRÊN TRANG CHỦ (TÍCH HỢP SEARCH & SORT) ---
+    renderHomeNearestHospitals() {
+      const container = document.getElementById('home-nearest-hospitals-list');
+      const countEl = document.getElementById('home-facilities-count');
+      if (!container) return;
+
+      const hospList = (this.hospitals && this.hospitals.length > 0) ? this.hospitals : (window.SEED_DATA?.hospitals || []);
+      if (!hospList || hospList.length === 0) return;
+
+      const citizenCoords = [10.0298, 105.7702];
+
+      const calculateDistKm = (lat1, lon1, lat2, lon2) => {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      };
+
+      // 1. Tính khoảng cách cho từng cơ sở y tế
+      let processedList = hospList.map(h => {
+        const dist = (h.coords && h.coords.length === 2)
+          ? calculateDistKm(citizenCoords[0], citizenCoords[1], h.coords[0], h.coords[1])
+          : 999;
+        return { ...h, distKm: dist };
+      });
+
+      // 2. Tìm kiếm (theo Tên, Mã, Địa chỉ, Chuyên khoa)
+      if (this.hospSearchQuery) {
+        const q = this.hospSearchQuery;
+        processedList = processedList.filter(h => {
+          const nameMatch = (h.name || '').toLowerCase().includes(q);
+          const codeMatch = (h.code || '').toLowerCase().includes(q);
+          const addrMatch = (h.address || '').toLowerCase().includes(q);
+          const specMatch = (h.specialties || []).some(s => s.toLowerCase().includes(q));
+          return nameMatch || codeMatch || addrMatch || specMatch;
+        });
+      }
+
+      // 3. Sắp xếp (Sort)
+      const gradeWeight = (grade) => {
+        if (!grade) return 0;
+        if (grade.includes('Đặc biệt')) return 4;
+        if (grade.includes('I') || grade.includes('1')) return 3;
+        if (grade.includes('II') || grade.includes('2')) return 2;
+        return 1;
+      };
+
+      if (this.hospSortMode === 'beds_desc') {
+        processedList.sort((a, b) => {
+          const bedsA = (a.availableBeds !== undefined) ? a.availableBeds : 0;
+          const bedsB = (b.availableBeds !== undefined) ? b.availableBeds : 0;
+          return bedsB - bedsA;
+        });
+      } else if (this.hospSortMode === 'grade_desc') {
+        processedList.sort((a, b) => (gradeWeight(b.grade) - gradeWeight(a.grade)) || (a.distKm - b.distKm));
+      } else if (this.hospSortMode === 'name_asc') {
+        processedList.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'vi'));
+      } else {
+        // Mặc định: Gần nhất (dist_asc)
+        processedList.sort((a, b) => a.distKm - b.distKm);
+      }
+
+      if (countEl) {
+        countEl.textContent = `${processedList.length} cơ sở tiếp nhận`;
+      }
+
+      if (processedList.length === 0) {
+        container.innerHTML = `
+          <div style="background:#081827;border:1px dashed #1E3A56;border-radius:10px;padding:22px;text-align:center;color:#94A3B8;font-size:12px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2" style="margin-bottom:6px;display:inline-block;">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <div>Không tìm thấy cơ sở y tế phù hợp với từ khóa "<strong>${this.hospSearchQuery}</strong>"</div>
+            <div style="font-size:11px;color:#64748B;margin-top:4px;">Vui lòng thử tìm kiếm với tên viện hoặc địa chỉ khác</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = processedList.map(h => {
+        const distFormatted = h.distKm < 1 ? `${Math.round(h.distKm * 1000)}m` : `${h.distKm.toFixed(1)} km`;
+        const hotlineNum = h.hotline || h.phone || '115';
+
+        return `
+          <div class="home-nearest-card" data-hosp-id="${h.id}">
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+                <span class="badge badge-success" style="font-size:9.5px;padding:2px 6px;font-weight:700;">TIẾP NHẬN</span>
+                <span style="font-size:11px;color:#38BDF8;font-weight:700;">~${distFormatted}</span>
+              </div>
+              <div style="font-size:13.5px;font-weight:700;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                ${h.name}
+              </div>
+              <div style="font-size:11px;color:#94A3B8;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                ${h.address}
+              </div>
+              <div style="font-size:11.5px;color:#94A3B8;margin-top:4px;display:flex;align-items:center;gap:5px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.3">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+                <span>Hotline: <strong style="font-family:var(--font-mono);color:#38BDF8;font-weight:700;">${hotlineNum}</strong></span>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0;">
+              <a href="tel:${hotlineNum}" class="btn btn-emergency btn-xs"
+                style="padding:6px 10px;font-size:11px;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:5px;border-radius:6px;"
+                title="Gọi đường dây nóng cấp cứu ${hotlineNum}">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+                <span>Gọi</span>
+              </a>
+              <button type="button" class="btn btn-default btn-xs btn-hosp-locate" data-hosp-id="${h.id}"
+                style="padding:5px 9px;font-size:11px;border:1px solid #1E3A56;color:#38BDF8;background:#0A1B2A;display:flex;align-items:center;gap:5px;border-radius:6px;"
+                title="Xem trên bản đồ">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <span>Vị trí</span>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Gắn sự kiện click nút "Vị trí" hoặc click vào thẻ viện để zoom tới marker trên bản đồ
+      container.querySelectorAll('.btn-hosp-locate').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const hospId = btn.getAttribute('data-hosp-id');
+          this.focusHospitalOnHomeMap(hospId);
+        });
+      });
+
+      container.querySelectorAll('.home-nearest-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const hospId = card.getAttribute('data-hosp-id');
+          this.focusHospitalOnHomeMap(hospId);
+        });
+      });
+    }
+
+    filterHomeFacilitiesMap() {
+      if (!this.mapHomeFacilities || !this.homeFacilitiesMarkers) return;
+
+      const q = (this.hospSearchQuery || '').toLowerCase().trim();
+      const hospList = (this.hospitals && this.hospitals.length > 0) ? this.hospitals : (window.SEED_DATA?.hospitals || []);
+      const matchedCoords = [[10.0298, 105.7702]];
+
+      hospList.forEach(h => {
+        const marker = this.homeFacilitiesMarkers[h.id];
+        if (!marker) return;
+
+        if (!q) {
+          marker.setOpacity(1.0);
+          if (marker._icon) marker._icon.style.filter = 'none';
+          if (h.coords) matchedCoords.push(h.coords);
+        } else {
+          const nameMatch = (h.name || '').toLowerCase().includes(q);
+          const codeMatch = (h.code || '').toLowerCase().includes(q);
+          const addrMatch = (h.address || '').toLowerCase().includes(q);
+          const specMatch = (h.specialties || []).some(s => s.toLowerCase().includes(q));
+
+          if (nameMatch || codeMatch || addrMatch || specMatch) {
+            marker.setOpacity(1.0);
+            if (marker._icon) marker._icon.style.filter = 'drop-shadow(0 0 6px rgba(56,189,248,0.8))';
+            if (h.coords) matchedCoords.push(h.coords);
+          } else {
+            marker.setOpacity(0.2);
+            if (marker._icon) marker._icon.style.filter = 'grayscale(100%)';
+          }
+        }
+      });
+
+      if (q && matchedCoords.length > 1) {
+        try {
+          this.mapHomeFacilities.fitBounds(matchedCoords, { padding: [24, 24], maxZoom: 15 });
+        } catch (e) { }
+      }
+    }
+
+    focusHospitalOnHomeMap(hospId) {
+      if (!this.mapHomeFacilities || !this.homeFacilitiesMarkers) return;
+      const marker = this.homeFacilitiesMarkers[hospId];
+      if (marker) {
+        const latlng = marker.getLatLng();
+        this.mapHomeFacilities.setView(latlng, 15, { animate: true });
+        marker.openPopup();
+
+        const mapEl = document.getElementById('home-facilities-map');
+        if (mapEl) {
+          mapEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
       }
     }
 
@@ -1092,7 +1887,7 @@
             'ĐÃ SAO CHÉP LIÊN KẾT VỊ TRÍ',
             'Đã sao chép link GPS trực tiếp vào bộ nhớ tạm. Bạn có thể gửi cho người thân qua Zalo hoặc SMS.'
           );
-        }).catch(() => {});
+        }).catch(() => { });
       } else {
         window.CCNV_UI.Toast.show('ĐÃ BẬT PHÁT SÓNG GPS', 'Tọa độ WGS84: 10.0298N, 105.7702E đang chia sẻ liên tục.');
       }
@@ -1117,7 +1912,7 @@
           </div>
           <div style="font-size:11.5px;color:#94A3B8;margin-top:4px;">${h.address}</div>
           <div style="font-size:11px;color:#38BDF8;margin-top:4px;font-weight:600;">
-            Khoảng cách: ~${(1.2 + idx * 0.9).toFixed(1)} km · Cấp cứu 24/7 (${h.availableBeds || 10} giường trống)
+            Khoảng cách: ~${(1.2 + idx * 0.9).toFixed(1)} km · Trực Cấp cứu 24/7
           </div>
         </div>
       `).join('');
@@ -1176,15 +1971,31 @@
     // --- CANCELLATION OF EMERGENCY CASE ---
     confirmCancelCase() {
       const cancelSheet = document.getElementById('cancel-bottom-sheet');
-      const selectedBtn = cancelSheet.querySelector('.bottom-sheet-reason-btn.selected');
+      const selectedBtn = cancelSheet ? cancelSheet.querySelector('.bottom-sheet-reason-btn.selected') : null;
       const reason = selectedBtn ? selectedBtn.textContent.trim() : 'Người dân tự hủy';
 
       this.activeCase.isActive = false;
       this.activeCase.status = 'CANCELLED';
       this.activeCase.stageLabel = 'Đã hủy yêu cầu';
 
-      if (this.vehicleSimInterval) clearInterval(this.vehicleSimInterval);
-      cancelSheet.classList.remove('active');
+      this.isDispatchPending = false;
+      if (this.dispatchPendingInterval) {
+        clearInterval(this.dispatchPendingInterval);
+        this.dispatchPendingInterval = null;
+      }
+      const banner = document.getElementById('citizen-dispatch-pending-banner');
+      if (banner) banner.style.display = 'none';
+      try {
+        sessionStorage.removeItem('ccnv_citizen_demo_dispatched');
+      } catch (e) { }
+
+      this.stopAmbulanceSimulation();
+      this.simMission = null;
+      if (this.mapTracking) {
+        this.mapTracking.remove();
+        this.mapTracking = null;
+      }
+      if (cancelSheet) cancelSheet.classList.remove('active');
 
       this.saveToStorage();
       this.renderAllViews();
@@ -1213,30 +2024,7 @@
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
             </svg>
             <div>
-              <strong style="color:#FFFFFF;font-size:12.5px;">NHỊP ĐẾM CHUẨN: 100 - 120 NHỊP / PHÚT</strong>
-              <div style="font-size:11px;color:#CBD5E1;">Ép theo nhịp tim nhấp nháy bên cạnh</div>
-            </div>
-          </div>
-          <ol style="font-size:12.5px;color:#CBD5E1;line-height:1.6;margin-top:12px;padding-left:18px;">
-            <li><strong>Vị trí đặt tay:</strong> Đặt gót bàn tay vào chính giữa 1/2 dưới xương ức nạn nhân. Bàn tay kia đan lên trên.</li>
-            <li><strong>Tư thế người ép:</strong> Quỳ vuông góc bên cạnh ngực nạn nhân, hai cánh tay thẳng tuyệt đối.</li>
-            <li><strong>Kỹ thuật ép:</strong> Ép sâu ít nhất 5 cm - không quá 6 cm. Để ngực nở hoàn toàn sau mỗi lần ép.</li>
-            <li><strong>Tần số:</strong> 30 lần ép tim kết hợp 2 lần thổi ngạt (hoặc ép tim liên tục không ngừng nếu không quen thổi ngạt).</li>
-          </ol>
-        `;
-      } else if (type === 'stroke') {
-        title = 'XỬ TRÍ ĐỘT QUỴ NÃO CẤP (FAST)';
-        html = `
-          <div style="background:#0E2435;border:1px solid #1E3A5F;border-radius:8px;padding:12px;margin-bottom:12px;">
-            <strong style="color:#38BDF8;font-size:13px;">QUY TẮC NHẬN BIẾT NHANH FAST:</strong>
-            <ul style="font-size:12px;color:#CBD5E1;line-height:1.6;margin:6px 0 0 0;padding-left:16px;">
-              <li><strong>F (Face - Mặt):</strong> Mặt bị méo một bên, cười lệch miệng.</li>
-              <li><strong>A (Arm - Tay):</strong> Yêu cầu giơ 2 tay lên, một bên tay yếu rũ xuống.</li>
-              <li><strong>S (Speech - Lời nói):</strong> Nói ngọng, không nói được hoặc nói vô nghĩa.</li>
-              <li><strong>T (Time - Thời gian vàng):</strong> Cần đưa đến BV có Can thiệp mạch trước 4.5 giờ!</li>
-            </ul>
-          </div>
-          <div style="font-size:12px;color:#EF4444;font-weight:700;">⚠️ TUYỆT ĐỐI KHÔNG:</div>
+              <strong styl          <div style="font-size:12px;color:#EF4444;font-weight:700;">LƯU Ý ĐẶC BIỆT NGUY HIỂM:</div>
           <div style="font-size:12px;color:#CBD5E1;margin-top:4px;">
             Không chích máu đầu ngón tay/dái tai; Không cạo gió; Không cho uống thuốc hạ huyết áp hay ngậm An Cung Trúc Hoàn.
           </div>
@@ -1259,395 +2047,6 @@
 
       const btnClose = document.getElementById('btn-close-first-aid');
       if (btnClose) btnClose.onclick = () => modal.classList.remove('active');
-    }
-
-    // --- HEALTHCARE FACILITIES DIRECTORY & GIS SEARCH MAP (ND-06) ---
-    getFilteredHospitals(searchQuery = '', filterCategory = 'ALL') {
-      let list = this.hospitals;
-
-      // Filter by category
-      if (filterCategory && filterCategory !== 'ALL') {
-        list = list.filter(h => {
-          if (filterCategory === 'PEDIATRIC') return h.id === 'HOSP_BVND' || (h.specialties && h.specialties.some(s => s.toLowerCase().includes('nhi')));
-          if (filterCategory === 'STROKE') return (h.specialties && h.specialties.some(s => s.toLowerCase().includes('đột quỵ') || s.toLowerCase().includes('mạch')));
-          if (filterCategory === 'EMERGENCY') return (h.specialties && h.specialties.some(s => s.toLowerCase().includes('cấp cứu')));
-          return true;
-        });
-      }
-
-      // Filter by search query
-      if (searchQuery && searchQuery.trim() !== '') {
-        const q = searchQuery.toLowerCase().trim();
-        list = list.filter(h => 
-          (h.name && h.name.toLowerCase().includes(q)) || 
-          (h.code && h.code.toLowerCase().includes(q)) ||
-          (h.address && h.address.toLowerCase().includes(q)) || 
-          (h.specialties && h.specialties.some(s => s.toLowerCase().includes(q)))
-        );
-      }
-
-      return list;
-    }
-
-    renderHospitalsList(searchQuery = '', filterCategory = 'ALL') {
-      this.hospSearchQuery = searchQuery;
-      this.hospFilterCategory = filterCategory;
-
-      const listContainer = document.getElementById('hospitals-card-list');
-      const countBadge = document.getElementById('hosp-count-badge');
-      const searchInfo = document.getElementById('map-hosp-search-info');
-
-      const list = this.getFilteredHospitals(searchQuery, filterCategory);
-
-      // Update counters
-      if (countBadge) {
-        countBadge.textContent = list.length > 0 ? `${list.length} Cơ sở sẵn sàng` : '0 Cơ sở';
-        countBadge.className = list.length > 0 ? 'badge badge-ready' : 'badge badge-restricted';
-      }
-
-      if (searchInfo) {
-        if (searchQuery && searchQuery.trim() !== '') {
-          searchInfo.textContent = `Tìm thấy ${list.length}/${this.hospitals.length} cơ sở`;
-        } else if (filterCategory !== 'ALL') {
-          searchInfo.textContent = `Lọc: ${list.length}/${this.hospitals.length} cơ sở`;
-        } else {
-          searchInfo.textContent = `Hiển thị ${list.length}/${this.hospitals.length} cơ sở`;
-        }
-      }
-
-      // Sync Realtime Map Markers
-      if (this.mapHospitals) {
-        this.updateHospitalMapMarkers(list);
-      } else {
-        setTimeout(() => this.initOrRefreshHospitalMap(), 100);
-      }
-
-      if (!listContainer) return;
-
-      if (list.length === 0) {
-        listContainer.innerHTML = `
-          <div style="text-align:center;padding:32px 16px;background:#0A1B2A;border:1px solid #1E3A56;border-radius:10px;color:#94A3B8;">
-            <div style="font-size:24px;margin-bottom:8px;">🔍</div>
-            <strong style="color:#FFFFFF;font-size:14px;display:block;">Không tìm thấy cơ sở y tế</strong>
-            <p style="font-size:12px;margin-top:4px;">Không có bệnh viện nào phù hợp với từ khóa "${searchQuery}". Vui lòng thử từ khóa khác hoặc bấm nút "Tất cả".</p>
-          </div>
-        `;
-        return;
-      }
-
-      listContainer.innerHTML = list.map((h, i) => `
-        <div class="hospital-card" data-hosp-id="${h.id}">
-          <div class="hospital-card-header">
-            <div>
-              <strong style="color:#FFFFFF;font-size:14px;display:block;">${h.name}</strong>
-              <div style="font-size:11.5px;color:#94A3B8;margin-top:2px;">${h.address}</div>
-            </div>
-            <span class="hospital-badge-status ${h.status === 'AVAILABLE' ? 'available' : 'restricted'}">
-              ${h.statusText || 'Đang nhận'}
-            </span>
-          </div>
-
-          <div style="font-size:11.5px;color:#CBD5E1;margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;">
-            ${(h.specialties || []).slice(0, 3).map(s => `
-              <span style="background:#081827;border:1px solid #1E3A56;border-radius:4px;padding:2px 6px;color:#38BDF8;font-size:10.5px;">${s}</span>
-            `).join('')}
-          </div>
-
-          <div style="display:flex;align-items:center;justify-content:flex-end;margin-top:10px;font-size:11.5px;">
-            <span style="color:#94A3B8;font-family:var(--font-mono);">
-              Khoảng cách: ${(1.2 + i * 0.7).toFixed(1)} km
-            </span>
-          </div>
-
-          <div class="hospital-action-row">
-            <button class="btn btn-default btn-xs btn-focus-hosp-map" data-hosp-id="${h.id}" style="flex:1;padding:8px;color:#38BDF8;border:1px solid #29465A;display:flex;align-items:center;justify-content:center;gap:4px;">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/></svg>
-              <span>Đường đi</span>
-            </button>
-            <a href="tel:${h.hotline || '115'}" class="btn btn-default btn-xs" style="flex:1;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:4px;padding:8px;color:#FFFFFF;border:1px solid #29465A;">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-              <span>Hotline 115</span>
-            </a>
-          </div>
-        </div>
-      `).join('');
-
-      listContainer.querySelectorAll('.btn-focus-hosp-map').forEach(b => {
-        b.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const hospId = b.getAttribute('data-hosp-id');
-          this.focusHospitalOnMap(hospId);
-        });
-      });
-    }
-
-    initOrRefreshHospitalMap() {
-      const container = document.getElementById('hospitals-leaflet-map');
-      if (!container || !window.L) return;
-
-      const userCoords = [10.0298, 105.7702]; // Đại học Cần Thơ, Cổng A 3/2
-
-      if (!this.mapHospitals) {
-        this.mapHospitals = L.map('hospitals-leaflet-map', {
-          zoomControl: false,
-          attributionControl: false
-        }).setView(userCoords, 13);
-
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-          attribution: '&copy; Esri, DeLorme, NAVTEQ',
-          maxNativeZoom: 16,
-          maxZoom: 18
-        }).addTo(this.mapHospitals);
-
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
-          attribution: '',
-          maxNativeZoom: 16,
-          maxZoom: 18
-        }).addTo(this.mapHospitals);
-
-        this.hospitalMarkersLayer = L.layerGroup().addTo(this.mapHospitals);
-      } else {
-        this.mapHospitals.invalidateSize();
-      }
-
-      const currentList = this.getFilteredHospitals(this.hospSearchQuery, this.hospFilterCategory);
-      this.updateHospitalMapMarkers(currentList);
-    }
-
-    updateHospitalMapMarkers(filteredHospitals) {
-      if (!this.mapHospitals || !this.hospitalMarkersLayer) return;
-
-      this.hospitalMarkersLayer.clearLayers();
-      this.hospMarkersById = {};
-
-      const userCoords = [10.0298, 105.7702]; // Đại học Cần Thơ
-
-      // Citizen Marker (Red Pulse)
-      const citizenIcon = L.divIcon({
-        className: 'citizen-gis-marker',
-        html: `<div style="width:16px;height:16px;border-radius:50%;background:#EF4444;border:2.5px solid #FFFFFF;box-shadow:0 0 14px #EF4444;"></div>`,
-        iconSize: [16, 16],
-        iconAnchor: [8, 8]
-      });
-
-      L.marker(userCoords, { icon: citizenIcon })
-        .addTo(this.hospitalMarkersLayer)
-        .bindPopup('<b>VỊ TRÍ CỦA BẠN</b><br>Đại học Cần Thơ (Cổng A 3/2)');
-
-      const validPoints = [userCoords];
-
-      filteredHospitals.forEach(h => {
-        if (!h.coords) return;
-        validPoints.push(h.coords);
-
-        const shortName = h.code || h.name.replace('Bệnh viện ', 'BV ').replace('BV Đa khoa ', 'BVĐK ').split(' ')[0];
-        const hospIcon = L.divIcon({
-          className: 'hosp-map-pin',
-          html: `<div style="background:#0A1B2A;border:2px solid #38BDF8;border-radius:6px;padding:3px 8px;color:#FFFFFF;font-size:10.5px;font-weight:700;box-shadow:0 0 10px rgba(56,189,248,0.5);display:flex;align-items:center;gap:4px;white-space:nowrap;cursor:pointer;"><span style="color:#38BDF8;">🏥</span> <span>${shortName}</span></div>`,
-          iconSize: [84, 26],
-          iconAnchor: [42, 13]
-        });
-
-        const marker = L.marker(h.coords, { icon: hospIcon })
-          .addTo(this.hospitalMarkersLayer)
-          .bindPopup(`
-            <div style="font-size:12px;color:#FFFFFF;min-width:210px;">
-              <strong style="color:#38BDF8;font-size:13px;display:block;margin-bottom:2px;">${h.name}</strong>
-              <div style="font-size:11px;color:#CBD5E1;margin-bottom:8px;">${h.address}</div>
-              <div style="display:flex;gap:6px;">
-                <a href="tel:${h.hotline || '115'}" style="flex:1;background:#E52521;color:#FFFFFF;text-decoration:none;padding:6px;border-radius:5px;font-weight:700;font-size:11px;text-align:center;display:flex;align-items:center;justify-content:center;gap:4px;">
-                  Gọi 115
-                </a>
-                <button type="button" class="btn-popup-draw-route" data-hosp-id="${h.id}" style="flex:1;background:#1E3A5F;color:#38BDF8;border:1px solid #38BDF8;border-radius:5px;font-weight:600;font-size:11px;padding:6px;cursor:pointer;">
-                  Đường đi
-                </button>
-              </div>
-            </div>
-          `);
-
-        marker.on('popupopen', () => {
-          const btn = document.querySelector('.btn-popup-draw-route[data-hosp-id="' + h.id + '"]');
-          if (btn) {
-            btn.onclick = () => this.focusHospitalOnMap(h.id);
-          }
-        });
-
-        this.hospMarkersById[h.id] = marker;
-      });
-
-      // Fit map bounds to show all search results
-      if (filteredHospitals.length === 1 && filteredHospitals[0].coords) {
-        this.mapHospitals.setView(filteredHospitals[0].coords, 15);
-        setTimeout(() => {
-          if (this.hospMarkersById[filteredHospitals[0].id]) {
-            this.hospMarkersById[filteredHospitals[0].id].openPopup();
-          }
-        }, 150);
-      } else if (validPoints.length > 1) {
-        this.mapHospitals.fitBounds(validPoints, { padding: [30, 30], maxZoom: 15 });
-      } else {
-        this.mapHospitals.setView(userCoords, 13);
-      }
-    }
-
-    focusHospitalOnMap(hospId) {
-      const h = this.hospitals.find(item => item.id === hospId);
-      if (!h || !h.coords || !this.mapHospitals) return;
-
-      const userCoords = [10.0298, 105.7702]; // Đại học Cần Thơ
-
-      // Draw or update route polyline from citizen location to hospital
-      if (this.hospRouteLayer) {
-        this.mapHospitals.removeLayer(this.hospRouteLayer);
-        this.hospRouteLayer = null;
-      }
-
-      // Generate intermediate waypoints for a realistic city road path
-      const midLat = (userCoords[0] + h.coords[0]) / 2 + (Math.random() * 0.002 - 0.001);
-      const midLng = (userCoords[1] + h.coords[1]) / 2 + (Math.random() * 0.002 - 0.001);
-      const routePoints = [userCoords, [midLat, midLng], h.coords];
-
-      this.hospRouteLayer = L.layerGroup([
-        L.polyline(routePoints, {
-          color: '#38BDF8',
-          weight: 6,
-          opacity: 0.85,
-          dashArray: '8, 8',
-          lineJoin: 'round'
-        }),
-        L.polyline(routePoints, {
-          color: '#0284C7',
-          weight: 10,
-          opacity: 0.35,
-          lineCap: 'round'
-        })
-      ]).addTo(this.mapHospitals);
-
-      // Fit bounds to show entire route from user to hospital
-      this.mapHospitals.fitBounds([userCoords, h.coords], { padding: [40, 40], maxZoom: 16 });
-
-      setTimeout(() => {
-        if (this.hospMarkersById[hospId]) {
-          this.hospMarkersById[hospId].openPopup();
-        }
-      }, 350);
-
-      const mapEl = document.getElementById('hospitals-leaflet-map');
-      if (mapEl) {
-        mapEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
-    }
-
-    // --- HOME SCREEN LEAFLET MAP OF NEAREST HEALTHCARE FACILITIES ---
-    initOrRefreshHomeFacilitiesMap() {
-      const container = document.getElementById('home-facilities-map');
-      if (!container || !window.L) return;
-
-      const userCoords = [10.0298, 105.7702]; // Đại học Cần Thơ, Cổng A 3/2
-
-      if (!this.mapHomeFacilities) {
-        this.mapHomeFacilities = L.map('home-facilities-map', {
-          zoomControl: false,
-          attributionControl: false
-        }).setView(userCoords, 14);
-
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-          attribution: '&copy; Esri, DeLorme, NAVTEQ',
-          maxNativeZoom: 16,
-          maxZoom: 18
-        }).addTo(this.mapHomeFacilities);
-
-        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
-          attribution: '',
-          maxNativeZoom: 16,
-          maxZoom: 18
-        }).addTo(this.mapHomeFacilities);
-
-        // Citizen Marker (Red Pulse)
-        const citizenIcon = L.divIcon({
-          className: 'citizen-gis-marker',
-          html: `<div style="width:16px;height:16px;border-radius:50%;background:#EF4444;border:2.5px solid #FFFFFF;box-shadow:0 0 14px #EF4444;"></div>`,
-          iconSize: [16, 16],
-          iconAnchor: [8, 8]
-        });
-
-        L.marker(userCoords, { icon: citizenIcon })
-          .addTo(this.mapHomeFacilities)
-          .bindPopup('<b>VỊ TRÍ CỦA BẠN</b><br>Đại học Cần Thơ (Cổng A 3/2)');
-
-        // Hospital markers
-        const facilities = (this.hospitals && this.hospitals.length > 0) ? this.hospitals : [
-          { name: 'BV Đa khoa TP Cần Thơ', code: 'BVĐK', address: 'Số 04 Châu Văn Liêm, Q. Ninh Kiều', coords: [10.0332, 105.7865], availableBeds: 14, hotline: '0292.382.1234' },
-          { name: 'BV Đa khoa TW Cần Thơ', code: 'TWCT', address: 'Số 315 Nguyễn Văn Linh, Q. Ninh Kiều', coords: [10.0092, 105.7533], availableBeds: 20, hotline: '0292.389.9440' },
-          { name: 'BV Tim Mạch Cần Thơ', code: 'TIM', address: 'Số 204 Trần Hưng Đạo, Q. Ninh Kiều', coords: [10.0381, 105.7794], availableBeds: 8, hotline: '0292.383.1115' },
-          { name: 'BV Quân Y 121', code: 'QY121', address: 'Số 01 đường 30/4, Q. Ninh Kiều', coords: [10.0360, 105.7720], availableBeds: 12, hotline: '0292.382.0121' },
-          { name: 'BV Nhi Đồng Cần Thơ', code: 'NHI', address: 'Nguyễn Văn Cừ nối dài, Q. Ninh Kiều', coords: [10.0315, 105.7480], availableBeds: 16, hotline: '0292.374.8355' }
-        ];
-
-        facilities.forEach(h => {
-          if (!h.coords) return;
-          const shortName = (h.code || h.name.replace('BV ', '').split(' ')[0] || 'BV');
-          const hospIcon = L.divIcon({
-            className: 'home-hosp-pin',
-            html: `<div style="background:#0E2435;border:2px solid #38BDF8;border-radius:6px;padding:2px 6px;color:#FFFFFF;font-size:10px;font-weight:700;display:flex;align-items:center;gap:3px;box-shadow:0 0 8px rgba(56,189,248,0.5);"><span style="color:#38BDF8;">🏥</span> <span>${shortName}</span></div>`,
-            iconSize: [64, 22],
-            iconAnchor: [32, 11]
-          });
-
-          L.marker(h.coords, { icon: hospIcon })
-            .addTo(this.mapHomeFacilities)
-            .bindPopup(`
-              <div style="font-size:12px;color:#FFFFFF;min-width:180px;">
-                <strong style="color:#38BDF8;">${h.name}</strong><br>
-                <span style="color:#94A3B8;font-size:11px;">${h.address}</span><br>
-                <div style="margin:4px 0;color:#34D399;font-weight:600;font-size:11px;">
-                  Sẵn sàng ${h.availableBeds || 12} giường cấp cứu
-                </div>
-                <div style="display:flex;gap:6px;margin-top:6px;">
-                  <a href="tel:${h.hotline || '115'}" class="btn btn-emergency btn-xs" style="text-decoration:none;padding:3px 8px;font-size:10.5px;color:#fff;">Gọi ngay</a>
-                  <a href="https://www.google.com/maps/dir/?api=1&destination=${h.coords[0]},${h.coords[1]}" target="_blank" class="btn btn-default btn-xs" style="text-decoration:none;padding:3px 8px;font-size:10.5px;color:#cbd5e1;">Chỉ đường</a>
-                </div>
-              </div>
-            `);
-        });
-      } else {
-        this.mapHomeFacilities.invalidateSize();
-      }
-    }
-
-    renderHomeNearestHospitals() {
-      const container = document.getElementById('home-nearest-hospitals-list');
-      if (!container) return;
-
-      const facilities = [
-        { name: 'BV Đa khoa TP Cần Thơ', distance: '1.2 km', beds: 14, hotline: '0292.382.1234', coords: [10.0332, 105.7865] },
-        { name: 'BV Tim Mạch Cần Thơ', distance: '1.5 km', beds: 8, hotline: '0292.383.1115', coords: [10.0381, 105.7794] },
-        { name: 'BV Quân Y 121', distance: '1.8 km', beds: 12, hotline: '0292.382.0121', coords: [10.0360, 105.7720] },
-        { name: 'BV Đa khoa TW Cần Thơ', distance: '2.6 km', beds: 20, hotline: '0292.389.9440', coords: [10.0092, 105.7533] }
-      ];
-
-      container.innerHTML = facilities.map(f => `
-        <div class="home-nearest-card">
-          <div style="flex:1;min-width:0;">
-            <div style="display:flex;align-items:center;gap:6px;">
-              <strong style="color:#FFFFFF;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${f.name}</strong>
-              <span class="badge badge-ready" style="font-size:9.5px;padding:2px 5px;white-space:nowrap;">~${f.distance}</span>
-            </div>
-            <div style="font-size:11px;color:#34D399;margin-top:2px;">
-              ${f.beds} giường cấp cứu sẵn sàng tiếp nhận
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-            <a href="tel:${f.hotline}" class="btn btn-default btn-xs" style="padding:6px 10px;text-decoration:none;color:#FFFFFF;border:1px solid #29465A;display:flex;align-items:center;gap:4px;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-              <span>Gọi</span>
-            </a>
-            <a href="https://www.google.com/maps/dir/?api=1&destination=${f.coords[0]},${f.coords[1]}" target="_blank" class="btn btn-primary btn-xs" style="padding:6px 8px;text-decoration:none;background:#1E3A5F;border-color:#38BDF8;color:#FFFFFF;">
-              Đường đi
-            </a>
-          </div>
-        </div>
-      `).join('');
     }
 
     // --- PERSONAL PROFILE & SUB-TABS (ND-07, ND-08, ND-09, ND-10) ---
@@ -1685,8 +2084,8 @@
             <a href="tel:${c.phone}" class="btn btn-default btn-xs" style="padding:6px 10px;text-decoration:none;color:#FFFFFF;border:1px solid #29465A;">
               Gọi
             </a>
-            <button class="btn btn-default btn-xs btn-delete-contact" data-idx="${idx}" style="padding:6px 10px;color:#EF4444;border:1px solid #29465A;">
-              ✕
+            <button class="btn btn-default btn-xs btn-delete-contact" data-idx="${idx}" style="padding:6px 8px;color:#EF4444;border:1px solid #29465A;display:flex;align-items:center;" title="Xóa">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
           </div>
         </div>
@@ -1836,7 +2235,7 @@
       const userPhoneEl = document.getElementById('header-user-phone');
       if (userPhoneEl) userPhoneEl.textContent = this.auth.phone;
 
-      // Active Emergency Case vs Idle Facilities View on Home Screen
+      // Active Emergency Case vs Idle View on Home Screen
       const activeCaseView = document.getElementById('home-active-case-view');
       const idleView = document.getElementById('home-idle-view');
       const banner = document.getElementById('citizen-active-banner');
@@ -1856,14 +2255,13 @@
         if (banner) banner.style.display = 'none';
         if (navBadge) navBadge.classList.remove('active');
         if (this.currentTab === 'tab-home') {
+          this.renderHomeNearestHospitals();
           setTimeout(() => this.initOrRefreshHomeFacilitiesMap(), 120);
         }
-        this.renderHomeNearestHospitals();
       }
 
       this.updateTrackingStatsUI();
       this.renderChatMessages();
-      this.renderHospitalsList();
       this.renderEmergencyContactsList();
       this.renderHistoryCasesList();
 
@@ -1911,7 +2309,7 @@
     if (window.StateManager && window.StateManager.init) {
       try {
         await window.StateManager.init();
-      } catch (e) {}
+      } catch (e) { }
     }
 
     const app = new CitizenApp();

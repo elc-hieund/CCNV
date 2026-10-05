@@ -22,6 +22,15 @@
       // 1. Initialize State
       await window.StateManager.init();
 
+      const currentUser = window.StateManager.getCurrentUser();
+      const isHospital = currentUser?.role === 'HOSPITAL_RECEIVER';
+      if (isHospital) {
+        this.currentMenu = 'hospital-map';
+        document.body.classList.add('hospital-mode');
+      } else {
+        document.body.classList.remove('hospital-mode');
+      }
+
       // Đảm bảo trạng thái ban đầu sạch sẽ khi chưa bắt đầu demo:
       // Không có ca cấp cứu nào, toàn bộ xe và kíp trực ở trạng thái Sẵn sàng
       if (!this.demoRunning) {
@@ -55,10 +64,10 @@
           this.renderSidebar();
           // Reset default menu for role
           const role = window.StateManager.getCurrentUser()?.role;
-          this.currentMenu = (role === 'HOSPITAL_RECEIVER') ? 'hospital-incoming' : 'realtime-map';
+          this.currentMenu = (role === 'HOSPITAL_RECEIVER') ? 'hospital-map' : 'realtime-map';
           this.renderCurrentView();
         } else if (event === 'CASE_CREATED' || event === 'CASE_UPDATED' || event === 'PATIENT_UPDATED' || event === 'STORAGE_SYNC') {
-          if (this.currentMenu === 'cases-list' || this.currentMenu === 'hospital-incoming' || this.currentMenu === 'realtime-map') {
+          if (['cases-list', 'hospital-cases', 'hospital-incoming', 'hospital-map', 'realtime-map'].includes(this.currentMenu)) {
             this.renderCurrentView();
           }
           // If case detail modal is open for this case, refresh it live
@@ -76,7 +85,7 @@
               const vehText = payload.vehiclePlate ? `Xe ${payload.vehiclePlate} · ` : '';
               window.CCNV_UI.Toast.show(
                 'ĐỒNG BỘ THÔNG TIN BỆNH NHÂN (ePCR)',
-                `${vehText}Đã cập nhật: ${p.name || 'Bệnh nhân'} (${p.age || '—'}T, ${p.gender || '—'}) · Nhóm máu: ${p.bloodType || '—'} · Tiền sử: ${p.history || 'Không'}`,
+                `${vehText}Đã cập nhật: ${p.name || 'Bệnh nhân'} (${p.age || '-'}T, ${p.gender || '-'}) · Nhóm máu: ${p.bloodType || '-'} · Tiền sử: ${p.history || 'Không'}`,
                 true
               );
             }
@@ -111,7 +120,11 @@
       const state = window.StateManager.getState();
       if (!loginOverlay || !state) return;
 
-      const loggedInUserId = sessionStorage.getItem('ccnv_logged_in_user');
+      let loggedInUserId = sessionStorage.getItem('ccnv_logged_in_user');
+      if (loggedInUserId === 'bvdk.tn') {
+        loggedInUserId = 'bvtu.tn';
+        sessionStorage.setItem('ccnv_logged_in_user', 'bvtu.tn');
+      }
       if (loggedInUserId && state.accounts.some(a => a.id === loggedInUserId)) {
         window.StateManager.setCurrentUser(loggedInUserId);
         loginOverlay.classList.add('hidden');
@@ -150,7 +163,8 @@
         loginForm.addEventListener('submit', (e) => {
           e.preventDefault();
           const usernameInput = document.getElementById('login-username-input');
-          const val = usernameInput ? usernameInput.value.trim() : 'dpv01';
+          let val = usernameInput ? usernameInput.value.trim() : 'dpv01';
+          if (val.toLowerCase() === 'bvdk.tn') val = 'bvtu.tn';
           const matched = state.accounts.find(a => a.username.toLowerCase() === val.toLowerCase() || a.id.toLowerCase() === val.toLowerCase()) || state.accounts[0];
           this.loginAs(matched.id);
         });
@@ -158,8 +172,9 @@
     }
 
     loginAs(accountId) {
+      if (accountId === 'bvdk.tn') accountId = 'bvtu.tn';
       const state = window.StateManager.getState();
-      const acc = state.accounts.find(a => a.id === accountId) || state.accounts[0];
+      const acc = state.accounts.find(a => a.id === accountId) || state.accounts.find(a => a.role === 'HOSPITAL_RECEIVER') || state.accounts[0];
       sessionStorage.setItem('ccnv_logged_in_user', acc.id);
       window.StateManager.setCurrentUser(acc.id);
 
@@ -170,7 +185,7 @@
       this.renderSidebar();
 
       const role = acc.role;
-      this.currentMenu = (role === 'HOSPITAL_RECEIVER') ? 'hospital-incoming' : 'realtime-map';
+      this.currentMenu = (role === 'HOSPITAL_RECEIVER') ? 'hospital-map' : 'realtime-map';
       this.renderCurrentView();
 
       window.CCNV_UI.Toast.show(
@@ -183,6 +198,9 @@
       const user = window.StateManager.getCurrentUser();
       if (!user) return;
 
+      const isHospital = user.role === 'HOSPITAL_RECEIVER';
+      document.body.classList.toggle('hospital-mode', isHospital);
+
       const avatarEl = document.getElementById('header-user-avatar');
       const nameEl = document.getElementById('header-user-name');
       const roleEl = document.getElementById('header-user-role');
@@ -190,14 +208,37 @@
 
       if (avatarEl) avatarEl.textContent = user.avatar || user.fullName.split(' ').pop().slice(0, 2).toUpperCase();
       if (nameEl) nameEl.textContent = user.fullName;
-      if (roleEl) roleEl.textContent = user.role === 'DISPATCHER' ? 'Điều phối viên 115' : 'Tiếp nhận BV';
-      // Demo điều phối chỉ dành cho Trung tâm (BV không có Bản đồ ca)
-      document.getElementById('btn-demo-start')?.toggleAttribute('hidden', user.role === 'HOSPITAL_RECEIVER');
+      if (roleEl) roleEl.textContent = isHospital ? 'Tiếp nhận BV' : 'Điều phối viên 115';
+      // Demo: Khả dụng cho cả Trung tâm và Bệnh viện tiếp nhận
+      const demoBtn = document.getElementById('btn-demo-start');
+      if (demoBtn) {
+        demoBtn.removeAttribute('hidden');
+        if (isHospital) {
+          demoBtn.title = this.hospitalDemoRunning
+            ? 'Kết thúc demo tiếp nhận bệnh nhân'
+            : 'Bắt đầu demo: Thông báo nhận bệnh nhân → Xác nhận / Xem chi tiết → Hiển thị ca tiếp nhận';
+          this.setDemoButton(Boolean(this.hospitalDemoRunning));
+        } else {
+          demoBtn.title = this.demoRunning
+            ? 'Kết thúc ca demo và đưa tất cả xe về trạng thái sẵn sàng'
+            : 'Chạy kịch bản demo: cuộc gọi đến → nhập thông tin → điều xe trên bản đồ';
+          this.setDemoButton(Boolean(this.demoRunning));
+        }
+      }
+
+      // Ẩn thanh KPI header cho tài khoản bệnh viện tiếp nhận
+      const kpiGrid = document.querySelector('.kpi-header-grid');
+      if (kpiGrid) {
+        kpiGrid.style.display = isHospital ? 'none' : 'grid';
+      }
 
       if (logoutBtn && !logoutBtn._bound) {
         logoutBtn._bound = true;
         logoutBtn.addEventListener('click', () => {
           sessionStorage.removeItem('ccnv_logged_in_user');
+          document.body.classList.remove('hospital-mode');
+          const gridEl = document.querySelector('.kpi-header-grid');
+          if (gridEl) gridEl.style.display = 'grid';
           const loginOverlay = document.getElementById('login-screen-overlay');
           if (loginOverlay) loginOverlay.classList.remove('hidden');
           window.CCNV_UI.Toast.show('Đã đăng xuất', 'Vui lòng chọn hoặc nhập tài khoản để đăng nhập lại.');
@@ -208,6 +249,24 @@
     updateKpiBar() {
       const state = window.StateManager.getState();
       if (!state) return;
+
+      const user = window.StateManager.getCurrentUser();
+      const isHospital = user?.role === 'HOSPITAL_RECEIVER';
+      document.body.classList.toggle('hospital-mode', isHospital);
+      const kpiGrid = document.querySelector('.kpi-header-grid');
+      if (kpiGrid) {
+        kpiGrid.style.display = isHospital ? 'none' : 'grid';
+      }
+      if (isHospital) return;
+
+      // Bảo đảm loại bỏ triệt để mọi tàn dư xe cũ nếu có
+      if (Array.isArray(state.vehicles)) {
+        const cleaned = state.vehicles.filter(v => v.plate !== '65A-017.22' && v.plate !== '65A-015.67');
+        if (cleaned.length !== state.vehicles.length) {
+          state.vehicles = cleaned;
+          window.StateManager.saveToSession?.();
+        }
+      }
 
       const vehicles = state.vehicles || [];
       const totalVehicles = vehicles.length;
@@ -268,11 +327,11 @@
         // --- DISPATCHER ACCORDION (TRUNG TÂM ĐIỀU HÀNH - SITEMAP 8.1) ---
         const isCallCenterActive = ['call-current', 'call-history', 'call-directory', 'call-transfer', 'call-center'].includes(this.currentMenu);
         const isEmergencyActive = ['cases-list', 'case-lookup', 'receiving-incoming', 'receiving-handover', 'receiving-status'].includes(this.currentMenu);
-        const isMonitoringActive = ['realtime-map', 'vehicles-status', 'crews-status', 'hospitals-status'].includes(this.currentMenu);
+        const isMonitoringActive = ['realtime-map', 'vehicles-status', 'hospitals-status'].includes(this.currentMenu);
         const isShiftsActive = ['shifts-assignment', 'shifts-calendar', 'shifts-schedule'].includes(this.currentMenu);
-        const isReportsActive = ['report-cases', 'reports-overview', 'reports-detail', 'reports-stats', 'reports'].includes(this.currentMenu);
-        const isCategoriesActive = ['cat-vehicles', 'cat-hospitals', 'cat-directory', 'cat-incidents', 'cat-statuses', 'cat-equipment', 'cat-close-reasons', 'cat-templates', 'categories'].includes(this.currentMenu);
-        const isAdminActive = ['admin-users', 'admin-roles', 'admin-audit', 'admin-backup', 'admin'].includes(this.currentMenu);
+        const isReportsActive = ['report-cases', 'report-sla', 'reports-overview', 'reports-detail', 'reports-stats', 'reports'].includes(this.currentMenu);
+        const isCategoriesActive = ['cat-vehicles', 'cat-hospitals', 'cat-directory', 'cat-incidents', 'categories'].includes(this.currentMenu);
+        const isAdminActive = ['admin-users', 'admin-roles', 'admin-audit', 'admin'].includes(this.currentMenu);
 
         html = `
           <!-- 1. TỔNG ĐÀI [Nhóm menu] -->
@@ -294,24 +353,18 @@
             ${chevronSvg}
           </div>
           <div class="nav-submenu">
-            <div class="nav-subitem ${this.currentMenu === 'realtime-map' ? 'active' : ''}" data-menu="realtime-map">Bản đồ ca (GIS)</div>
+            <div class="nav-subitem ${this.currentMenu === 'realtime-map' ? 'active' : ''}" data-menu="realtime-map">Bản đồ</div>
             <div class="nav-subitem ${this.currentMenu === 'vehicles-status' ? 'active' : ''}" data-menu="vehicles-status">Tình trạng xe</div>
-            <div class="nav-subitem ${this.currentMenu === 'crews-status' ? 'active' : ''}" data-menu="crews-status">Tình trạng kíp</div>
             <div class="nav-subitem ${this.currentMenu === 'hospitals-status' ? 'active' : ''}" data-menu="hospitals-status">Tình trạng bệnh viện</div>
           </div>
 
-          <!-- 5. CA TRỰC [Nhóm menu] -->
-          <div class="nav-parent-item ${isShiftsActive ? 'active expanded' : ''}" data-nav-group="shifts" title="Ca trực">
+          <!-- 4. CA TRỰC [Menu đơn duy nhất - Lịch trực] -->
+          <div class="nav-parent-item ${isShiftsActive ? 'active' : ''}" data-menu="shifts-calendar" title="Ca trực">
             <span class="nav-parent-icon">${window.CCNV_UI.ICONS.calendar}</span>
             <span class="nav-parent-label">Ca trực</span>
-            ${chevronSvg}
-          </div>
-          <div class="nav-submenu">
-            <div class="nav-subitem ${this.currentMenu === 'shifts-assignment' ? 'active' : ''}" data-menu="shifts-assignment">Phân công ca trực</div>
-            <div class="nav-subitem ${['shifts-calendar', 'shifts-schedule'].includes(this.currentMenu) ? 'active' : ''}" data-menu="shifts-calendar">Lịch trực</div>
           </div>
 
-          <!-- 6. BÁO CÁO [Nhóm menu] -->
+          <!-- 5. BÁO CÁO [Nhóm menu] -->
           <div class="nav-parent-item ${isReportsActive ? 'active expanded' : ''}" data-nav-group="reports" title="Báo cáo">
             <span class="nav-parent-icon">${window.CCNV_UI.ICONS.barChart}</span>
             <span class="nav-parent-label">Báo cáo</span>
@@ -319,9 +372,10 @@
           </div>
           <div class="nav-submenu">
             <div class="nav-subitem ${['report-cases', 'reports-overview', 'reports-detail', 'reports-stats', 'reports'].includes(this.currentMenu) ? 'active' : ''}" data-menu="report-cases">Số ca tiếp nhận</div>
+            <div class="nav-subitem ${this.currentMenu === 'report-sla' ? 'active' : ''}" data-menu="report-sla">Thời gian đáp ứng chuẩn</div>
           </div>
 
-          <!-- 7. DANH MỤC & CẤU HÌNH [Nhóm menu] -->
+          <!-- 6. DANH MỤC & CẤU HÌNH [Nhóm menu] -->
           <div class="nav-parent-item ${isCategoriesActive ? 'active expanded' : ''}" data-nav-group="categories" title="Danh mục & cấu hình">
             <span class="nav-parent-icon">${window.CCNV_UI.ICONS.layers}</span>
             <span class="nav-parent-label">Danh mục & cấu hình</span>
@@ -331,14 +385,10 @@
             <div class="nav-subitem ${this.currentMenu === 'cat-vehicles' ? 'active' : ''}" data-menu="cat-vehicles">Xe cứu thương</div>
             <div class="nav-subitem ${this.currentMenu === 'cat-hospitals' ? 'active' : ''}" data-menu="cat-hospitals">Bệnh viện</div>
             <div class="nav-subitem ${this.currentMenu === 'cat-directory' ? 'active' : ''}" data-menu="cat-directory">Danh bạ bệnh viện</div>
-            <div class="nav-subitem ${this.currentMenu === 'cat-incidents' ? 'active' : ''}" data-menu="cat-incidents">Loại tình huống</div>
-            <div class="nav-subitem ${this.currentMenu === 'cat-statuses' ? 'active' : ''}" data-menu="cat-statuses">Trạng thái</div>
-            <div class="nav-subitem ${['cat-equipment', 'categories'].includes(this.currentMenu) ? 'active' : ''}" data-menu="cat-equipment">Trang thiết bị trên xe</div>
-            <div class="nav-subitem ${this.currentMenu === 'cat-close-reasons' ? 'active' : ''}" data-menu="cat-close-reasons">Lý do kết thúc ca</div>
-            <div class="nav-subitem ${this.currentMenu === 'cat-templates' ? 'active' : ''}" data-menu="cat-templates">Mẫu biểu</div>
+            <div class="nav-subitem ${['cat-incidents', 'categories'].includes(this.currentMenu) ? 'active' : ''}" data-menu="cat-incidents">Loại tình huống</div>
           </div>
 
-          <!-- 8. QUẢN TRỊ HỆ THỐNG [Nhóm menu] -->
+          <!-- 7. QUẢN TRỊ HỆ THỐNG [Nhóm menu] -->
           <div class="nav-parent-item ${isAdminActive ? 'active expanded' : ''}" data-nav-group="admin" title="Quản trị hệ thống">
             <span class="nav-parent-icon">${window.CCNV_UI.ICONS.settings}</span>
             <span class="nav-parent-label">Quản trị hệ thống</span>
@@ -348,38 +398,38 @@
             <div class="nav-subitem ${this.currentMenu === 'admin-users' ? 'active' : ''}" data-menu="admin-users">Người dùng</div>
             <div class="nav-subitem ${this.currentMenu === 'admin-roles' ? 'active' : ''}" data-menu="admin-roles">Phân quyền</div>
             <div class="nav-subitem ${['admin-audit', 'admin'].includes(this.currentMenu) ? 'active' : ''}" data-menu="admin-audit">Nhật ký thao tác</div>
-            <div class="nav-subitem ${this.currentMenu === 'admin-backup' ? 'active' : ''}" data-menu="admin-backup">Sao lưu & khôi phục</div>
           </div>
         `;
       } else {
         // --- HOSPITAL ACCORDION (TIẾP NHẬN BỆNH VIỆN - SITEMAP 8.2) ---
-        const isIncomingActive = ['hospital-incoming', 'hospital-handover', 'hospital-epcr', 'hospital-reception-status', 'hospital-specialty'].includes(this.currentMenu);
+        const isMapActive = this.currentMenu === 'hospital-map';
+        const isCasesActive = ['hospital-cases', 'hospital-incoming', 'hospital-handover', 'hospital-epcr'].includes(this.currentMenu);
+        const isReceptionStatusActive = ['hospital-reception-status', 'hospital-specialty'].includes(this.currentMenu);
         const isHospReportActive = ['hospital-report-detail', 'hospital-report-stats', 'hospital-reports'].includes(this.currentMenu);
 
         html = `
-          <!-- 1. TIẾP NHẬN HỒ SƠ [Nhóm menu] -->
-          <div class="nav-parent-item ${isIncomingActive ? 'active expanded' : ''}" data-nav-group="hospital-flow" title="Tiếp nhận hồ sơ">
-            <span class="nav-parent-icon">${window.CCNV_UI.ICONS.hospital}</span>
-            <span class="nav-parent-label">Tiếp nhận hồ sơ</span>
-            ${chevronSvg}
-          </div>
-          <div class="nav-submenu">
-            <div class="nav-subitem ${this.currentMenu === 'hospital-incoming' ? 'active' : ''}" data-menu="hospital-incoming">Ca đang đến</div>
-            <div class="nav-subitem ${this.currentMenu === 'hospital-handover' ? 'active' : ''}" data-menu="hospital-handover">Tiếp nhận & bàn giao</div>
-            <div class="nav-subitem ${this.currentMenu === 'hospital-epcr' ? 'active' : ''}" data-menu="hospital-epcr">Phiếu cấp cứu (ePCR)</div>
-            <div class="nav-subitem ${this.currentMenu === 'hospital-reception-status' ? 'active' : ''}" data-menu="hospital-reception-status">Cập nhật trạng thái tiếp nhận</div>
-            <div class="nav-subitem ${this.currentMenu === 'hospital-specialty' ? 'active' : ''}" data-menu="hospital-specialty">Khai báo chuyên khoa / năng lực</div>
+          <!-- 1. BẢN ĐỒ [Menu đơn] -->
+          <div class="nav-parent-item ${isMapActive ? 'active' : ''}" data-menu="hospital-map" title="Bản đồ">
+            <span class="nav-parent-icon">${window.CCNV_UI.ICONS.map}</span>
+            <span class="nav-parent-label">Bản đồ</span>
           </div>
 
-          <!-- 2. BÁO CÁO [Nhóm menu] -->
-          <div class="nav-parent-item ${isHospReportActive ? 'active expanded' : ''}" data-nav-group="hospital-reports" title="Báo cáo">
-            <span class="nav-parent-icon">${window.CCNV_UI.ICONS.barChart}</span>
-            <span class="nav-parent-label">Báo cáo</span>
-            ${chevronSvg}
+          <!-- 2. CẤP CỨU [Menu đơn duy nhất] -->
+          <div class="nav-parent-item ${isCasesActive ? 'active' : ''}" data-menu="hospital-cases" title="Cấp cứu">
+            <span class="nav-parent-icon">${window.CCNV_UI.ICONS.ambulance}</span>
+            <span class="nav-parent-label">Cấp cứu</span>
           </div>
-          <div class="nav-submenu">
-            <div class="nav-subitem ${['hospital-report-detail', 'hospital-reports'].includes(this.currentMenu) ? 'active' : ''}" data-menu="hospital-report-detail">Chi tiết</div>
-            <div class="nav-subitem ${this.currentMenu === 'hospital-report-stats' ? 'active' : ''}" data-menu="hospital-report-stats">Thống kê tiếp nhận</div>
+
+          <!-- 3. TRẠNG THÁI TIẾP NHẬN & CHUYÊN KHOA [Gộp chung thành 1 menu] -->
+          <div class="nav-parent-item ${isReceptionStatusActive ? 'active' : ''}" data-menu="hospital-reception-status" title="Trạng thái & Chuyên khoa tiếp nhận">
+            <span class="nav-parent-icon">${window.CCNV_UI.ICONS.hospital}</span>
+            <span class="nav-parent-label">Trạng thái & Chuyên khoa</span>
+          </div>
+
+          <!-- 4. BÁO CÁO TIẾP NHẬN [Menu đơn gộp - Clone app trung tâm với Tab Tổng quan & Chi tiết] -->
+          <div class="nav-parent-item ${isHospReportActive ? 'active' : ''}" data-menu="hospital-reports" title="Báo cáo tiếp nhận">
+            <span class="nav-parent-icon">${window.CCNV_UI.ICONS.barChart}</span>
+            <span class="nav-parent-label">Báo cáo tiếp nhận</span>
           </div>
         `;
       }
@@ -434,22 +484,45 @@
       // Kept clean without cluttering
     }
 
+    isHospitalMode() {
+      const user = window.StateManager.getCurrentUser();
+      return user?.role === 'HOSPITAL_RECEIVER';
+    }
+
+    navigateTo(menuId) {
+      const sidebarContainer = document.getElementById('sidebar-menu-wrapper');
+      if (sidebarContainer) {
+        sidebarContainer.querySelectorAll('.nav-parent-item, .nav-subitem').forEach(el => el.classList.remove('active'));
+        const targetEl = sidebarContainer.querySelector(`[data-menu="${menuId}"]`);
+        if (targetEl) {
+          targetEl.classList.add('active');
+          const parent = targetEl.closest('.nav-submenu')?.previousElementSibling;
+          if (parent && parent.classList.contains('nav-parent-item')) {
+            parent.classList.add('active');
+            parent.classList.add('expanded');
+          }
+        }
+      }
+      this.currentMenu = menuId;
+      this.renderCurrentView();
+    }
+
     renderCurrentView() {
       const container = document.getElementById('main-content-viewport');
       if (!container) return;
 
       // Clean up previous map if switching away
-      if (this.mapInstance && this.currentMenu !== 'realtime-map') {
+      if (this.mapInstance && this.currentMenu !== 'realtime-map' && this.currentMenu !== 'hospital-map') {
         this.mapInstance.destroy();
         this.mapInstance = null;
       }
 
       const menuTitles = {
         // 1. Tổng đài
-        'call-current': 'Tổng đài — Cuộc gọi Hiện tại & Tiếp nhận Thông tin',
-        'call-history': 'Tổng đài — Lịch sử Cuộc gọi Khẩn cấp 115',
-        'call-directory': 'Tổng đài — Danh bạ Bệnh viện TP. Cần Thơ',
-        'call-transfer': 'Tổng đài — Chuyển tiếp',
+        'call-current': 'Tổng đài - Cuộc gọi Hiện tại & Tiếp nhận Thông tin',
+        'call-history': 'Tổng đài - Lịch sử Cuộc gọi Khẩn cấp 115',
+        'call-directory': 'Tổng đài - Danh bạ Bệnh viện TP. Cần Thơ',
+        'call-transfer': 'Tổng đài - Chuyển tiếp',
         'call-center': 'Tổng đài Tiếp nhận Khẩn cấp 115',
         // 2. Cấp cứu (Hợp nhất vòng đời & tiếp nhận)
         'cases-list': 'Quản lý Vòng đời Ca Cấp cứu & Tiếp nhận',
@@ -458,15 +531,16 @@
         'receiving-handover': 'Quản lý Vòng đời Ca Cấp cứu & Tiếp nhận',
         'receiving-status': 'Quản lý Vòng đời Ca Cấp cứu & Tiếp nhận',
         // 3. Giám sát
-        'realtime-map': 'Bản đồ Realtime (GIS)',
+        'realtime-map': 'Bản đồ Điều hành Trực tuyến',
         'vehicles-status': 'Tình trạng Xe cứu thương',
         'crews-status': 'Tình trạng Kíp trực',
         'hospitals-status': 'Mạng lưới Bệnh viện Tiếp nhận',
         // 4. Ca trực
-        'shifts-assignment': 'Phân công Ca trực & Thành viên Kíp',
-        'shifts-calendar': 'Lịch trực Ban 24/7 Các Trạm Vệ tinh',
-        'shifts-schedule': 'Phân công & Lịch trực Ban',
+        'shifts-calendar': 'Ca trực - Lịch trực Ban 24/7 Các Trạm Vệ tinh',
+        'shifts-schedule': 'Ca trực - Lịch trực Ban 24/7 Các Trạm Vệ tinh',
         // 5. Báo cáo
+        'report-cases': 'Báo cáo Số ca Tiếp nhận Cấp cứu',
+        'report-sla': 'Báo cáo Đo lường Thời gian Đáp ứng Chuẩn Cấp cứu',
         'reports-overview': 'Báo cáo Tổng quan & Đo lường KPI',
         'reports-detail': 'Báo cáo Chi tiết & Thời gian Xử lý Ca',
         'reports-stats': 'Báo cáo Thống kê & Phân tích Dữ liệu',
@@ -488,11 +562,13 @@
         'admin-backup': 'Sao lưu & Khôi phục Dữ liệu',
         'admin': 'Quản trị Hệ thống & Nhật ký Thao tác',
         // Web BV Tiếp nhận (Sitemap 8.2)
-        'hospital-incoming': 'Khoa Cấp cứu — Tiếp nhận Ca đang đến',
-        'hospital-handover': 'Biên bản Bàn giao & Tiếp nhận Bệnh nhân',
-        'hospital-epcr': 'Hồ sơ Bệnh án Điện tử ePCR',
-        'hospital-reception-status': 'Cập nhật Trạng thái Tiếp nhận Bệnh viện',
-        'hospital-specialty': 'Khai báo Năng lực Chuyên khoa Tiếp nhận',
+        'hospital-map': 'Bản đồ',
+        'hospital-cases': 'Cấp cứu - Khoa Cấp cứu',
+        'hospital-incoming': 'Cấp cứu - Khoa Cấp cứu',
+        'hospital-handover': 'Cấp cứu - Khoa Cấp cứu',
+        'hospital-epcr': 'Cấp cứu - Khoa Cấp cứu',
+        'hospital-reception-status': 'Trạng thái Tiếp nhận & Khai báo Chuyên khoa',
+        'hospital-specialty': 'Trạng thái Tiếp nhận & Khai báo Chuyên khoa',
         'hospital-report-detail': 'Báo cáo Chi tiết Ca đã tiếp nhận (BV)',
         'hospital-report-stats': 'Thống kê Tiếp nhận Bệnh viện',
         'hospital-reports': 'Báo cáo Tiếp nhận Cấp cứu Bệnh viện'
@@ -564,6 +640,9 @@
         case 'reports-overview':
           this.renderReportCasesView(container, 'overview');
           break;
+        case 'report-sla':
+          this.renderReportSlaView(container, 'overview');
+          break;
         case 'reports-detail':
           this.renderReportCasesView(container, 'detail');
           break;
@@ -614,27 +693,25 @@
           break;
 
         // Web Bệnh viện tiếp nhận (Sitemap 8.2)
+        case 'hospital-map':
+          this.renderRealtimeMapView(container);
+          break;
+        case 'hospital-cases':
         case 'hospital-incoming':
-          this.renderHospitalIncomingView(container);
-          break;
         case 'hospital-handover':
-          this.renderHospitalHandoverView(container);
-          break;
         case 'hospital-epcr':
-          this.renderHospitalEPCRView(container);
+          this.renderHospitalCasesView(container);
           break;
         case 'hospital-reception-status':
+        case 'hospital-specialty':
           this.renderHospitalReceptionStatusView(container);
           break;
-        case 'hospital-specialty':
-          this.renderHospitalSpecialtyView(container);
-          break;
         case 'hospital-reports':
-        case 'hospital-report-detail':
-          this.renderHospitalReportDetailView(container);
-          break;
         case 'hospital-report-stats':
-          this.renderHospitalReportStatsView(container);
+          this.renderHospitalReportsView(container, 'overview');
+          break;
+        case 'hospital-report-detail':
+          this.renderHospitalReportsView(container, 'detail');
           break;
 
         default:
@@ -664,7 +741,7 @@
             <div class="map-toolbar">
               <div class="map-title">
                 ${window.CCNV_UI.ICONS.map}
-                <span>BẢN ĐỒ GIÁM SÁT THỜI GIAN THỰC — TP. CẦN THƠ</span>
+                <span>BẢN ĐỒ GIÁM SÁT THỜI GIAN THỰC - TP. CẦN THƠ</span>
               </div>
             </div>
 
@@ -831,12 +908,12 @@
                 </div>
                 <div style="font-size:12px;color:var(--text-white);margin-top:2px;">${c.patient?.name} (${c.patient?.age}t, ${c.patient?.gender})</div>
                 <div class="vehicle-meta-row">
-                  <span>${c.incident?.name || '—'}</span>
+                  <span>${c.incident?.name || '-'}</span>
                   <span>Xe: <strong style="color:var(--yellow-vivid);font-family:var(--font-mono);">${c.dispatch?.vehiclePlate}</strong></span>
                 </div>
                 <div class="vehicle-meta-row" style="border-top:1px dashed var(--border-main);padding-top:4px;margin-top:4px;">
                   <span style="font-size:11px;color:var(--text-muted);">Đến: ${c.dispatch?.hospitalName}</span>
-                  <span style="color:var(--yellow-vivid);font-weight:600;">ETA: ${c.eta || '—'}</span>
+                  <span style="color:var(--yellow-vivid);font-weight:600;">ETA: ${c.eta || '-'}</span>
                 </div>
               </div>
             `).join('');
@@ -860,7 +937,7 @@
         const patientDesc = activeCase?.patient?.name
           ? `BN ${activeCase.patient.name} (${activeCase.patient.symptom || 'chấn thương'})`
           : 'bệnh nhân cấp cứu';
-        const locationText = activeCase?.location?.address || 'Cầu Hưng Lợi, P. Hưng Lợi, Q. Ninh Kiều';
+        const locationText = activeCase?.location?.address || 'Cầu Hưng Lợi, P. Hưng Lợi, TP. Cần Thơ';
         const etaText = activeCase?.eta || '~6 phút';
 
         leftStripHtml = `
@@ -970,13 +1047,13 @@
           <div>
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
               <span style="width:8px;height:8px;border-radius:50%;background:#3B82F6;display:inline-block;box-shadow:0 0 8px #3B82F6;"></span>
-              <strong style="color:#60A5FA;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">Điểm Tiếp Nhận Cấp Cứu — Bệnh Viện</strong>
+              <strong style="color:#60A5FA;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">Điểm Tiếp Nhận Cấp Cứu - Bệnh Viện</strong>
             </div>
             <div style="font-size:13px;color:var(--text-white);">
               <strong style="color:#FFFFFF;">${h.name}</strong> · ${h.address}
             </div>
             <div style="font-size:11px;color:var(--text-muted);">
-              Giường CC trống: <strong style="color:#10B981;">${h.availableBeds || 12} / ${h.emergencyBeds || 20}</strong> · Máy thở sẵn sàng: <strong style="color:#10B981;">${h.ventilatorsAvailable || 5} máy</strong> · Trạng thái: <strong style="color:${isReady ? '#10B981' : isLimited ? '#F59E0B' : '#EF4444'};">${h.statusText || 'Đang nhận'}</strong>
+              Khả năng tiếp nhận: <strong style="color:${isReady ? '#10B981' : isLimited ? '#F59E0B' : '#EF4444'};">${h.statusText || 'Đang nhận'}</strong>
             </div>
           </div>
           <button class="btn btn-default btn-sm btn-call-hosp-bottom" data-hosp="${h.name}" data-phone="${h.hotline}">
@@ -1003,7 +1080,7 @@
     }
 
     renderRealtimeIncidentBottomStrip(c = {}) {
-      const plate = c.dispatch?.vehiclePlate || '—';
+      const plate = c.dispatch?.vehiclePlate || '-';
       const patient = c.patient?.name ? `BN ${c.patient.name}${c.patient.age ? ` ${c.patient.age}T` : ''}` : 'Chưa rõ danh tính';
       const leftStripHtml = `
         <div class="emergency-alert-strip" style="background: linear-gradient(90deg, rgba(229, 37, 33, 0.22) 0%, transparent 100%);">
@@ -1013,10 +1090,10 @@
               <strong style="color:var(--red-vivid);font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">Điểm Hiện Trường Cấp Cứu Khẩn Cấp · ${c.code || ''}</strong>
             </div>
             <div style="font-size:13px;color:var(--text-white);">
-              Hiện trường: <strong style="color:var(--red-vivid);">${c.location?.address || '—'}</strong> — ${c.incident?.name || 'Cấp cứu'} (${patient})
+              Hiện trường: <strong style="color:var(--red-vivid);">${c.location?.address || '-'}</strong> - ${c.incident?.name || 'Cấp cứu'} (${patient})
             </div>
             <div style="font-size:11px;color:var(--text-muted);">
-              Xe phụ trách: <strong style="color:var(--yellow-vivid);font-family:var(--font-mono);">${plate}</strong>${c.dispatch?.crewName ? ` (${c.dispatch.crewName})` : ''} · Về: ${c.dispatch?.hospitalName || '—'}${c.eta ? ` · ETA: ${c.eta}` : ''}
+              Xe phụ trách: <strong style="color:var(--yellow-vivid);font-family:var(--font-mono);">${plate}</strong>${c.dispatch?.crewName ? ` (${c.dispatch.crewName})` : ''} · Về: ${c.dispatch?.hospitalName || '-'}${c.eta ? ` · ETA: ${c.eta}` : ''}
             </div>
           </div>
           <button class="btn btn-emergency btn-sm btn-focus-incident-vehicle" data-plate="${plate}">Theo Dõi Xe</button>
@@ -1068,7 +1145,7 @@
     }
 
     // --- 2. CALL CENTER (TỔNG ĐÀI 115) VIEW (SITEMAP 8.1) ---
-    // demo (tuỳ chọn): { call, plate, crewIds, onDispatch, onCancel } — dùng form này đè lên Bản đồ ca khi chạy demo
+    // demo (tuỳ chọn): { call, plate, crewIds, onDispatch, onCancel } - dùng form này đè lên Bản đồ ca khi chạy demo
     renderCallCenterView(container, activeTab = 'active', demo = null) {
       const state = window.StateManager.getState();
       const calls = state.callHistory || [];
@@ -1081,7 +1158,7 @@
         patientName: 'Nguyễn Văn Hưng',
         patientAge: 34,
         patientGender: 'Nam',
-        address: 'Chân cầu Hưng Lợi, P. Hưng Lợi, Q. Ninh Kiều, Cần Thơ',
+        address: 'Chân cầu Hưng Lợi, P. Hưng Lợi, TP. Cần Thơ',
         incidentCode: 'INC_TNGT',
         incidentName: 'Tai nạn giao thông có người bất tỉnh',
         severity: 'CRITICAL',
@@ -1212,6 +1289,15 @@
             : (state.personnel ? state.personnel.slice(0, 6) : []));
         // Default select first team of 3 (1 Doctor, 1 Nurse, 1 Driver)
         let currentSelectedPersonnel = new Set(demo ? demo.crewIds : availablePersonnel.slice(0, 3).map(p => p.id));
+
+        // Hospitals list from Danh mục & Cấu hình (state.hospitals)
+        let availableHospitals = state.hospitals && state.hospitals.length > 0 ? state.hospitals : [
+          { id: 'HOSP_BVDK', name: 'BV Đa khoa TP Cần Thơ', hotline: '0967.891.115', address: 'Số 04 Châu Văn Liêm, P. Tân An, TP. Cần Thơ', availableBeds: 12, statusText: 'Đang nhận' },
+          { id: 'HOSP_BVTU', name: 'BV Đa khoa Trung ương Cần Thơ', hotline: '0901.234.567', address: '315 Nguyễn Văn Linh, P. An Khánh, TP. Cần Thơ', availableBeds: 8, statusText: 'Đang nhận' },
+          { id: 'HOSP_BVND', name: 'Bệnh viện Nhi đồng Cần Thơ', hotline: '0918.456.789', address: '345 Nguyễn Văn Cừ nối dài, P. An Bình, TP. Cần Thơ', availableBeds: 15, statusText: 'Đang nhận' },
+          { id: 'HOSP_BVUB', name: 'Bệnh viện Ung bướu Cần Thơ', hotline: '0292.3817.901', address: 'Số 20 Châu Văn Liêm, P. An Lạc, TP. Cần Thơ', availableBeds: 6, statusText: 'Đang nhận' }
+        ];
+        let currentHospitalId = (availableHospitals[0] && availableHospitals[0].id) || 'HOSP_BVDK';
 
         let currentSeverity = activeCall.severity || 'CRITICAL';
         let currentGender = activeCall.patientGender || 'Nam';
@@ -1360,7 +1446,7 @@
 
                 <div class="form-field">
                   <label class="form-label">Địa chỉ hiện trường đón cấp cứu</label>
-                  <input type="text" id="rapid-address" value="${activeCall.address || 'Chân cầu Hưng Lợi, P. Hưng Lợi, Q. Ninh Kiều, Cần Thơ'}" placeholder="Số nhà, tên đường, phường/xã, điểm mốc nhận diện..." />
+                  <input type="text" id="rapid-address" value="${activeCall.address || 'Chân cầu Hưng Lợi, P. Hưng Lợi, TP. Cần Thơ'}" placeholder="Số nhà, tên đường, phường/xã, điểm mốc nhận diện..." />
                 </div>
 
 
@@ -1500,9 +1586,12 @@
                       <button type="button" tabindex="-1" class="rapid-chip-btn ${typeClass} ${isSelected ? 'active' : ''}" data-veh-plate="${v.plate}" data-veh-type="${v.type}" data-key="${idx + 1}" style="text-align:left;padding:9px 12px;height:auto;display:flex;align-items:flex-start;gap:9px;">
                         <kbd class="quick-kbd" style="margin-top:2px;">${idx + 1}</kbd>
                         <div class="chip-content" style="flex:1;">
-                          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
+                          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;gap:4px;">
                             <span class="chip-title" style="font-size:13px;font-family:var(--font-mono);font-weight:700;color:var(--text-white);">${v.plate}</span>
-                            <span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,0.08);color:${typeBadgeColor};">${v.type}</span>
+                            <div style="display:flex;align-items:center;gap:4px;">
+                              <span class="rec-badge-slot" data-slot="veh-${v.plate}"></span>
+                              <span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,0.08);color:${typeBadgeColor};">${v.type}</span>
+                            </div>
                           </div>
                           <div class="chip-desc" style="font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                             ${v.station}
@@ -1514,7 +1603,7 @@
                 </div>
               </div>
 
-              <!-- FORM CARD 6: Chọn Kíp Cấp Cứu (Danh sách người trực trong ca hiện tại — Chọn nhiều) -->
+              <!-- FORM CARD 6: Chọn Kíp Cấp Cứu (Danh sách người trực trong ca hiện tại - Chọn nhiều) -->
               <div class="rapid-field-card" id="card-crew-members" data-step-id="6" tabindex="0">
                 <div class="rapid-field-header">
                   <div class="rapid-field-title">
@@ -1534,9 +1623,12 @@
                       <button type="button" tabindex="-1" class="rapid-chip-btn ${isSelected ? 'active' : ''}" data-person-id="${p.id}" data-key="${idx + 1}" style="text-align:left;padding:9px 12px;height:auto;display:flex;align-items:flex-start;gap:9px;">
                         <kbd class="quick-kbd" style="margin-top:2px;">${idx + 1}</kbd>
                         <div class="chip-content" style="flex:1;">
-                          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
+                          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;gap:4px;">
                             <span class="chip-title" style="font-size:12.5px;font-weight:700;color:var(--text-white);">${p.name}</span>
-                            <span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,0.08);color:${roleBadgeColor};">${p.roleName}</span>
+                            <div style="display:flex;align-items:center;gap:4px;">
+                              <span class="rec-badge-slot" data-slot="person-${p.id}"></span>
+                              <span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,0.08);color:${roleBadgeColor};">${p.roleName}</span>
+                            </div>
                           </div>
                           <div class="chip-desc" style="font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                             ${p.phone} · ${p.cert || 'Sẵn sàng'}
@@ -1548,11 +1640,46 @@
                 </div>
               </div>
 
-              <!-- FORM CARD 7: Ghi chú & Triệu chứng tóm tắt (Step 7) -->
-              <div class="rapid-field-card" id="card-notes" data-step-id="7">
+              <!-- FORM CARD 7: Chọn Bệnh Viện Tiếp Nhận (Lấy từ Danh mục & Cấu hình) -->
+              <div class="rapid-field-card" id="card-hospital" data-step-id="7" tabindex="0">
                 <div class="rapid-field-header">
                   <div class="rapid-field-title">
-                    <span class="rapid-step-num">7</span>
+                    <span class="rapid-step-num" style="background:#7C3AED;color:#FFF;">7</span>
+                    <span style="color:#C4B5FD;">CHỌN BỆNH VIỆN TIẾP NHẬN</span>
+                  </div>
+                  <div class="rapid-field-hint">
+                    <span>Bấm phím [1..${availableHospitals.length}] chọn BV tiếp nhận:</span>
+                  </div>
+                </div>
+
+                <div class="rapid-chip-grid" style="grid-template-columns: repeat(${availableHospitals.length > 2 ? 2 : availableHospitals.length}, 1fr); gap: 10px;">
+                  ${availableHospitals.map((h, idx) => {
+          const isSelected = currentHospitalId === h.id;
+          return `
+                      <button type="button" tabindex="-1" class="rapid-chip-btn ${isSelected ? 'active' : ''}" data-hosp-id="${h.id}" data-key="${idx + 1}" style="text-align:left;padding:10px 12px;height:auto;display:flex;align-items:flex-start;gap:9px;">
+                        <kbd class="quick-kbd" style="margin-top:2px;">${idx + 1}</kbd>
+                        <div class="chip-content" style="flex:1;">
+                          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;gap:6px;">
+                            <span class="chip-title" style="font-size:12.5px;font-weight:700;color:var(--text-white);">${h.name}</span>
+                            <div style="display:flex;align-items:center;gap:4px;">
+                              <span class="rec-badge-slot" data-slot="hosp-${h.id}"></span>
+                            </div>
+                          </div>
+                          <div class="chip-desc" style="font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                            ${h.hotline ? 'Hotline: ' + h.hotline : (h.phone || '')} · ${h.address || ''}
+                          </div>
+                        </div>
+                      </button>
+                    `;
+        }).join('')}
+                </div>
+              </div>
+
+              <!-- FORM CARD 8: Ghi chú & Triệu chứng tóm tắt (Step 8) -->
+              <div class="rapid-field-card" id="card-notes" data-step-id="8">
+                <div class="rapid-field-header">
+                  <div class="rapid-field-title">
+                    <span class="rapid-step-num">8</span>
                     <span>GHI CHÚ</span>
                   </div>
                   <div class="rapid-field-hint">
@@ -1623,6 +1750,14 @@
                   <div class="cheat-row">
                     <span>Chọn Xe 1..6 (hoặc A/B/C)</span>
                     <span><kbd class="quick-kbd">1..6</kbd> / <kbd class="quick-kbd">A/B/C</kbd></span>
+                  </div>
+                  <div class="cheat-row">
+                    <span>Chọn Kíp trực 1..6</span>
+                    <kbd class="quick-kbd">1..6</kbd>
+                  </div>
+                  <div class="cheat-row">
+                    <span>Chọn Bệnh viện tiếp nhận</span>
+                    <kbd class="quick-kbd">1..4</kbd>
                   </div>
                   <div class="cheat-row">
                     <span>Chọn Mức độ Tối khẩn / Khẩn / Thường</span>
@@ -1705,7 +1840,7 @@
           if (!vehicleMatchBox) return;
           const selectedPlatesList = Array.from(currentSelectedPlates);
           const veh = getRecommendedVehicle();
-          const targetHosp = state.hospitals?.[0] || { name: 'BVĐK TP Cần Thơ', availableBeds: 12 };
+          const targetHosp = availableHospitals.find(h => h.id === currentHospitalId) || availableHospitals[0] || state.hospitals?.[0] || { name: 'BVĐK TP Cần Thơ', availableBeds: 12 };
           const isCritical = currentSeverity === 'CRITICAL';
 
           const badgesHtml = selectedPlatesList.length > 0
@@ -1736,10 +1871,104 @@
             <div style="text-align:right;">
               <div style="font-size:11px;color:var(--text-muted);">Bệnh viện tiếp nhận:</div>
               <div style="font-size:12.5px;font-weight:600;color:#93C5FD;">
-                ${targetHosp.name} (${targetHosp.availableBeds} giường trống)
+                ${targetHosp.name}
               </div>
             </div>
           `;
+        };
+
+        const setHospital = (hospId, playSound = true) => {
+          currentHospitalId = hospId;
+          paneContainer.querySelectorAll('.rapid-chip-btn[data-hosp-id]').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-hosp-id') === hospId);
+          });
+          updateVehicleMatch();
+          if (playSound) window.CCNV_UI.SoundFx.playBeep();
+        };
+
+        // Smart Recommendation Engine (Đánh dấu sao ⭐ option phù hợp khi thông tin ở trên được fill)
+        const updateRecommendations = () => {
+          const ageVal = parseInt(paneContainer.querySelector('#rapid-patient-age')?.value, 10);
+          const patientAge = isNaN(ageVal) ? (activeCall.patientAge || 34) : ageVal;
+          const incObj = state.incidentTypes?.find(i => i.code === currentIncident);
+
+          // 1. Determine recommended vehicle types
+          // CRITICAL severity requires Type A (ICU). Certain incidents suggest specific types.
+          const recVehicleTypes = new Set();
+          if (currentSeverity === 'CRITICAL' || currentIncident === 'INC_CARDIAC' || currentIncident === 'INC_STROKE') {
+            recVehicleTypes.add('Type A');
+          } else if (incObj?.suggestedType) {
+            recVehicleTypes.add(incObj.suggestedType);
+          } else if (currentSeverity === 'EMERGENCY') {
+            recVehicleTypes.add('Type B');
+            recVehicleTypes.add('Type A');
+          } else {
+            recVehicleTypes.add('Type B');
+            recVehicleTypes.add('Type C');
+          }
+
+          // Mark recommended vehicles
+          availableVehicles.forEach(v => {
+            const isRec = recVehicleTypes.has(v.type);
+            const slot = paneContainer.querySelector(`.rec-badge-slot[data-slot="veh-${v.plate}"]`);
+            const btn = paneContainer.querySelector(`.rapid-chip-btn[data-veh-plate="${v.plate}"]`);
+            if (slot) {
+              slot.innerHTML = isRec ? `<span class="chip-star-badge" title="Gợi ý phù hợp với tình huống và mức độ khẩn"><span class="star-icon">⭐</span> Gợi ý</span>` : '';
+            }
+            if (btn) {
+              btn.classList.toggle('is-recommended', isRec);
+            }
+          });
+
+          // 2. Determine recommended crew personnel roles
+          // CRITICAL / CARDIAC / STROKE / OBSTETRIC: Doctors & Nurses are priority
+          const recPersonnelIds = new Set();
+          if (currentSeverity === 'CRITICAL' || currentIncident === 'INC_CARDIAC' || currentIncident === 'INC_STROKE' || currentIncident === 'INC_OBSTETRIC') {
+            availablePersonnel.filter(p => p.role === 'DOCTOR' || p.role === 'NURSE').forEach(p => recPersonnelIds.add(p.id));
+          } else if (currentSeverity === 'EMERGENCY') {
+            availablePersonnel.filter(p => p.role === 'DOCTOR' || p.role === 'NURSE').forEach(p => recPersonnelIds.add(p.id));
+          } else {
+            availablePersonnel.filter(p => p.role === 'NURSE' || p.role === 'DRIVER').forEach(p => recPersonnelIds.add(p.id));
+          }
+
+          availablePersonnel.forEach(p => {
+            const isRec = recPersonnelIds.has(p.id);
+            const slot = paneContainer.querySelector(`.rec-badge-slot[data-slot="person-${p.id}"]`);
+            const btn = paneContainer.querySelector(`.rapid-chip-btn[data-person-id="${p.id}"]`);
+            if (slot) {
+              slot.innerHTML = isRec ? `<span class="chip-star-badge" title="Gợi ý kíp trực chuyên khoa cho ca bệnh"><span class="star-icon">⭐</span> Gợi ý</span>` : '';
+            }
+            if (btn) {
+              btn.classList.toggle('is-recommended', isRec);
+            }
+          });
+
+          // 3. Determine recommended hospital based on age & incident
+          // If pediatric (age < 16 or incident INC_PEDIATRIC) -> Nhi đồng Cần Thơ (HOSP_BVND)
+          // If stroke / cardiac -> BV Đa khoa Trung ương Cần Thơ (HOSP_BVTU) or BV Đa khoa TP Cần Thơ (HOSP_BVDK)
+          // Default center hospital for general trauma/emergency -> BV Đa khoa TP Cần Thơ
+          const recHospitalIds = new Set();
+          if (patientAge < 16 || currentIncident === 'INC_PEDIATRIC') {
+            recHospitalIds.add('HOSP_BVND');
+          } else if (currentIncident === 'INC_STROKE' || currentIncident === 'INC_CARDIAC') {
+            recHospitalIds.add('HOSP_BVTU');
+            recHospitalIds.add('HOSP_BVDK');
+          } else {
+            recHospitalIds.add('HOSP_BVDK');
+            recHospitalIds.add('HOSP_BVTU');
+          }
+
+          availableHospitals.forEach(h => {
+            const isRec = recHospitalIds.has(h.id);
+            const slot = paneContainer.querySelector(`.rec-badge-slot[data-slot="hosp-${h.id}"]`);
+            const btn = paneContainer.querySelector(`.rapid-chip-btn[data-hosp-id="${h.id}"]`);
+            if (slot) {
+              slot.innerHTML = isRec ? `<span class="chip-star-badge" title="Bệnh viện có chuyên khoa & cơ sở vật chất phù hợp nhất"><span class="star-icon">⭐</span> Phù hợp</span>` : '';
+            }
+            if (btn) {
+              btn.classList.toggle('is-recommended', isRec);
+            }
+          });
         };
 
         // Selection Actions
@@ -1834,6 +2063,7 @@
             btn.classList.toggle('active', btn.getAttribute('data-sev') === sev);
           });
           updateVehicleMatch();
+          updateRecommendations();
           if (playSound) window.CCNV_UI.SoundFx.playBeep();
         };
 
@@ -1857,13 +2087,14 @@
           if (incObj?.suggestedType) {
             setVehicleType(incObj.suggestedType, false);
           }
+          updateRecommendations();
           if (playSound) window.CCNV_UI.SoundFx.playBeep();
         };
 
         const injectCellId = () => {
           const addrInput = paneContainer.querySelector('#rapid-address');
           if (addrInput) {
-            addrInput.value = 'BTS VTT-NK04 · P. Hưng Lợi, Q. Ninh Kiều, Cần Thơ';
+            addrInput.value = 'BTS VTT-NK04 · P. Hưng Lợi, TP. Cần Thơ';
             addrInput.focus();
             addrInput.classList.add('pulse-red-border');
             setTimeout(() => addrInput.classList.remove('pulse-red-border'), 1000);
@@ -1878,14 +2109,14 @@
           const phone = activeCall.callerPhone;
           const patientName = paneContainer.querySelector('#rapid-patient-name')?.value || 'Nguyễn Văn Hưng';
           const patientAge = Number(paneContainer.querySelector('#rapid-patient-age')?.value || 34);
-          const address = paneContainer.querySelector('#rapid-address')?.value || 'Chân cầu Hưng Lợi, P. Hưng Lợi, Q. Ninh Kiều';
+          const address = paneContainer.querySelector('#rapid-address')?.value || 'Chân cầu Hưng Lợi, P. Hưng Lợi, TP. Cần Thơ';
           const notes = paneContainer.querySelector('#rapid-symptoms-notes')?.value || activeCall.notes;
           const veh = getRecommendedVehicle();
-          const targetHosp = state.hospitals?.[0] || { id: 'HOSP_BVDK', name: 'BV Đa khoa TP Cần Thơ' };
+          const targetHosp = availableHospitals.find(h => h.id === currentHospitalId) || availableHospitals[0] || state.hospitals?.[0] || { id: 'HOSP_BVDK', name: 'BV Đa khoa TP Cần Thơ' };
           const incObj = state.incidentTypes?.find(i => i.code === currentIncident);
 
           if (demo) {
-            demo.onDispatch({ patientName, patientAge, gender: currentGender, address, notes, incidentCode: currentIncident, severity: currentSeverity });
+            demo.onDispatch({ patientName, patientAge, gender: currentGender, address, notes, incidentCode: currentIncident, severity: currentSeverity, hospital: targetHosp });
             return;
           }
 
@@ -1948,6 +2179,10 @@
         // Initialize display
         updateFirstAid(currentIncident);
         updateVehicleMatch(currentVehicleType);
+        updateRecommendations();
+
+        // Listen for patient age change to update recommendations (e.g. Nhi đồng)
+        paneContainer.querySelector('#rapid-patient-age')?.addEventListener('input', () => updateRecommendations());
 
         // Bind Clicks
         paneContainer.querySelectorAll('.rapid-chip-btn[data-veh-plate]').forEach(btn => {
@@ -1970,6 +2205,10 @@
           btn.addEventListener('click', () => setIncident(btn.getAttribute('data-incident')));
         });
 
+        paneContainer.querySelectorAll('.rapid-chip-btn[data-hosp-id]').forEach(btn => {
+          btn.addEventListener('click', () => setHospital(btn.getAttribute('data-hosp-id')));
+        });
+
 
 
         // Send Fast Guidance Documents to Caller
@@ -1989,7 +2228,7 @@
 
             // Visual feedback on button
             const originalText = btn.innerHTML;
-            btn.innerHTML = '✓ Đã gửi';
+            btn.innerHTML = ' Đã gửi';
             btn.style.background = '#059669';
             btn.style.borderColor = '#10B981';
             btn.style.color = '#FFFFFF';
@@ -2075,8 +2314,9 @@
           { id: 'card-incident', name: '3. Tình huống Cấp cứu', hint: 'Bấm số [1..8] để chọn tình huống · Tab sang Mức độ khẩn' },
           { id: 'card-severity', name: '4. Mức độ Khẩn', hint: 'Bấm [1] Đỏ / [2] Cam / [3] Xanh · Tab sang Chọn Loại xe' },
           { id: 'card-vehicle-type', name: '5. CHỌN XE CỨU THƯƠNG', hint: 'Bấm [1..6] chọn xe trong danh sách · [A/B/C] theo loại · Tab sang Kíp' },
-          { id: 'card-crew-members', name: '6. CHỌN KÍP CẤP CỨU TRỰC CA', hint: 'Bấm [1..6] chọn nhân sự trực ca (BS, ĐD, Lái xe) · Tab sang Ghi chú' },
-          { id: 'card-notes', name: '7. Triệu chứng & Ghi chú', hint: 'Bấm Ctrl+Enter để Phát lệnh xuất xe tức thì!' }
+          { id: 'card-crew-members', name: '6. CHỌN KÍP CẤP CỨU TRỰC CA', hint: 'Bấm [1..6] chọn nhân sự trực ca (BS, ĐD, Lái xe) · Tab sang Chọn bệnh viện' },
+          { id: 'card-hospital', name: '7. CHỌN BỆNH VIỆN TIẾP NHẬN', hint: `Bấm [1..${availableHospitals.length}] chọn BV tiếp nhận · Tab sang Ghi chú` },
+          { id: 'card-notes', name: '8. Triệu chứng & Ghi chú', hint: 'Bấm Ctrl+Enter để Phát lệnh xuất xe tức thì!' }
         ];
 
         stepCards.forEach(sc => {
@@ -2202,7 +2442,23 @@
               }
               if (e.key === 'Enter') {
                 e.preventDefault();
+                paneContainer.querySelector('#card-hospital')?.focus();
+                return;
+              }
+            }
+
+            // If on Hospital card (Block 7 - Chọn Bệnh viện tiếp nhận)
+            if (currentFocusedCard === 'card-hospital') {
+              const numKey = parseInt(e.key, 10);
+              if (numKey >= 1 && numKey <= availableHospitals.length && availableHospitals[numKey - 1]) {
+                e.preventDefault();
+                setHospital(availableHospitals[numKey - 1].id);
+                return;
+              }
+              if (e.key === 'Enter') {
+                e.preventDefault();
                 paneContainer.querySelector('#card-notes')?.focus();
+                paneContainer.querySelector('#rapid-symptoms-notes')?.focus();
                 return;
               }
             }
@@ -2296,6 +2552,8 @@
             }
 
             const onCrewMembers = currentFocusedCard === 'card-crew-members' || e.target.id === 'card-crew-members' || e.target.closest('#card-crew-members');
+            const onHospital = currentFocusedCard === 'card-hospital' || e.target.id === 'card-hospital' || e.target.closest('#card-hospital');
+            const onNotes = currentFocusedCard === 'card-notes' || e.target.id === 'card-notes' || e.target.closest('#card-notes');
 
             if (onVehicleType) {
               e.preventDefault();
@@ -2310,11 +2568,27 @@
             if (onCrewMembers) {
               e.preventDefault();
               if (!e.shiftKey) {
-                paneContainer.querySelector('#card-notes')?.focus();
-                paneContainer.querySelector('#rapid-symptoms-notes')?.focus();
+                paneContainer.querySelector('#card-hospital')?.focus();
               } else {
                 paneContainer.querySelector('#card-vehicle-type')?.focus();
               }
+              return;
+            }
+
+            if (onHospital) {
+              e.preventDefault();
+              if (!e.shiftKey) {
+                paneContainer.querySelector('#card-notes')?.focus();
+                paneContainer.querySelector('#rapid-symptoms-notes')?.focus();
+              } else {
+                paneContainer.querySelector('#card-crew-members')?.focus();
+              }
+              return;
+            }
+
+            if (onNotes && e.shiftKey) {
+              e.preventDefault();
+              paneContainer.querySelector('#card-hospital')?.focus();
               return;
             }
           }
@@ -2454,7 +2728,7 @@
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
                   <strong style="color:var(--text-white);font-size:15px;display:flex;align-items:center;gap:8px;">
                     ${window.CCNV_UI.ICONS.shield}
-                    <span>113 — Cảnh sát Phản ứng nhanh TP. Cần Thơ</span>
+                    <span>113 - Cảnh sát Phản ứng nhanh TP. Cần Thơ</span>
                   </strong>
                   <span class="status-pill status-pill-completed">Trực chiến 24/7</span>
                 </div>
@@ -2472,7 +2746,7 @@
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
                   <strong style="color:var(--text-white);font-size:15px;display:flex;align-items:center;gap:8px;">
                     ${window.CCNV_UI.ICONS.alertTriangle}
-                    <span>114 — Cảnh sát PCCC & Cứu nạn Cứu hộ TP. Cần Thơ</span>
+                    <span>114 - Cảnh sát PCCC & Cứu nạn Cứu hộ TP. Cần Thơ</span>
                   </strong>
                   <span class="status-pill status-pill-completed">Trực chiến 24/7</span>
                 </div>
@@ -2513,7 +2787,7 @@
                 <label class="form-label">Chọn ca cấp cứu cần chuyển tiếp thông tin</label>
                 <select id="transfer-case-select">
                   ${state.cases.map(c => `
-                    <option value="${c.id}">${c.code} — ${c.patient.name} (${c.location.address})</option>
+                    <option value="${c.id}">${c.code} - ${c.patient.name} (${c.location.address})</option>
                   `).join('')}
                 </select>
               </div>
@@ -2521,9 +2795,9 @@
               <div class="form-field" style="margin-bottom:12px;">
                 <label class="form-label">Đơn vị nhận tin phối hợp</label>
                 <select id="transfer-agency-select">
-                  <option value="113">113 — Cảnh sát Phản ứng nhanh (An ninh hiện trường, giải tỏa giao thông)</option>
-                  <option value="114">114 — Cứu nạn Cứu hộ (Cắt phá xe lật, kẹt người trong cabin)</option>
-                  <option value="GTVT">Sở GTVT — Mở làn sóng xanh đèn tín hiệu</option>
+                  <option value="113">113 - Cảnh sát Phản ứng nhanh (An ninh hiện trường, giải tỏa giao thông)</option>
+                  <option value="114">114 - Cứu nạn Cứu hộ (Cắt phá xe lật, kẹt người trong cabin)</option>
+                  <option value="GTVT">Sở GTVT - Mở làn sóng xanh đèn tín hiệu</option>
                 </select>
               </div>
 
@@ -2570,18 +2844,18 @@
         id: c.id,
         code: c.code,
         createdAt: c.createdAt,
-        patientName: c.patient?.name || '—',
+        patientName: c.patient?.name || '-',
         patientAge: c.patient?.age || '',
         patientGender: c.patient?.gender || '',
         incidentName: c.incident?.name || 'Cấp cứu',
         severity: c.incident?.severity || 'ROUTINE',
-        locationAddress: c.location?.address || '—',
-        vehiclePlate: c.dispatch?.vehiclePlate || '—',
-        crewName: c.dispatch?.crewName || '—',
-        hospitalName: c.dispatch?.hospitalName || '—',
+        locationAddress: c.location?.address || '-',
+        vehiclePlate: c.dispatch?.vehiclePlate || '-',
+        crewName: c.dispatch?.crewName || '-',
+        hospitalName: c.dispatch?.hospitalName || '-',
         status: c.status,
         statusText: c.statusText || (c.status === 'DISPATCHED' ? 'Đã điều động' : c.status === 'TRANSPORTING' ? 'Đang đến viện' : c.status === 'COMPLETED' ? 'Hoàn tất' : 'Đã hủy'),
-        eta: c.eta || (c.status === 'TRANSPORTING' ? '5 phút' : '—'),
+        eta: c.eta || (c.status === 'TRANSPORTING' ? '5 phút' : '-'),
         isHistory: false,
         raw: c
       }));
@@ -2591,18 +2865,18 @@
         code: h.code,
         createdAt: h.createdAt,
         completedAt: h.completedAt,
-        patientName: h.patientName || '—',
+        patientName: h.patientName || '-',
         patientAge: h.patientAge || '',
         patientGender: h.patientGender || 'Nam',
         incidentName: h.incidentName || 'Cấp cứu',
         severity: h.severity || 'ROUTINE',
         locationAddress: h.locationAddress || 'TP Cần Thơ',
-        vehiclePlate: h.vehiclePlate || '—',
+        vehiclePlate: h.vehiclePlate || '-',
         crewName: h.crewName || 'Kíp trực 115',
-        hospitalName: h.hospitalName || '—',
+        hospitalName: h.hospitalName || '-',
         status: h.status,
         statusText: h.statusText || (h.status === 'COMPLETED' ? 'Hoàn tất' : 'Đã hủy'),
-        eta: '—',
+        eta: '-',
         durations: h.durations,
         isHistory: true,
         raw: h
@@ -2789,7 +3063,7 @@
         <div class="view-container-full">
           <div style="margin-bottom:12px;">
             <h2 style="color:var(--text-white);font-size:18px;">Tình trạng Xe Cấp cứu</h2>
-            <p style="font-size:12px;color:var(--text-muted);">Trạng thái sẵn sàng, bảo trì, thông số oxy, pin và tín hiệu GPS thời gian thực</p>
+            <p style="font-size:12px;color:var(--text-muted);">Trạng thái sẵn sàng, bảo trì và thông tin đội xe thời gian thực</p>
           </div>
           <div class="content-card" style="padding:0;overflow:visible;">
             <div id="vehicles-status-table-mount"></div>
@@ -2826,9 +3100,7 @@
               if (v.status === 'DISPATCHING') return `<span class="status-pill status-pill-processing">Đang điều xe</span>`;
               return `<span class="status-pill status-pill-cancelled">Bảo trì</span>`;
             }
-          },
-          { key: 'speed', title: 'Tốc độ', sortable: true, render: v => `${v.speed} km/h` },
-          { key: 'battery', title: 'Mức Pin', sortable: false, render: v => window.CCNV_UI.renderBattery(v.battery) }
+          }
         ]
       }).render();
 
@@ -3026,10 +3298,6 @@
               <h2 style="color:var(--text-white);font-size:18px;">Lịch trực Ban 24/7 Các Trạm Vệ tinh</h2>
               <p style="font-size:12px;color:var(--text-muted);">Quản lý lịch trực / tổ xe luân phiên tại 5 trạm vệ tinh Cần Thơ</p>
             </div>
-            <div style="display:flex;gap:8px;">
-              <button class="btn btn-default btn-sm" id="btn-export-shift-calendar">Xuất file Lịch trực (PDF)</button>
-              <button class="btn btn-default btn-sm" id="btn-request-shift-swap">Đăng ký đổi ca</button>
-            </div>
           </div>
 
           <div class="content-card" style="margin-bottom:16px;">
@@ -3090,7 +3358,7 @@
                     <td style="padding:8px;">Kíp 05</td>
                     <td style="padding:8px;">Kíp 05</td>
                     <td style="padding:8px;">Kíp 04</td>
-                    <td style="padding:8px;background:rgba(30, 58, 95, 0.4);font-weight:600;color:#93C5FD;">Kíp 05 (Xe 65A-015.67)</td>
+                    <td style="padding:8px;background:rgba(30, 58, 95, 0.4);font-weight:600;color:#93C5FD;">Kíp 05 (Xe 65A-019.99)</td>
                     <td style="padding:8px;">Kíp 05</td>
                     <td style="padding:8px;">Kíp 04</td>
                   </tr>
@@ -3144,8 +3412,8 @@
           severityText: c.incident?.severityText || (c.severity === 'CRITICAL' ? 'Tối khẩn' : 'Khẩn cấp'),
           vehiclePlate: c.dispatch?.vehiclePlate || c.vehiclePlate || '65A-012.34',
           hospitalName: c.dispatch?.hospitalName || c.hospitalName || 'BV Đa khoa TP Cần Thơ',
-          address: c.location?.address || c.address || 'Đoạn ngã tư 30/4 - Nguyễn Văn Linh, P. Hưng Lợi',
-          district: c.location?.district || 'Ninh Kiều',
+          address: c.location?.address || c.address || 'Đoạn ngã tư 30/4 - Nguyễn Văn Linh, P. Hưng Lợi, TP. Cần Thơ',
+          district: c.location?.district || 'P. Hưng Lợi',
           status: 'IN_PROGRESS',
           statusText: 'Đang xử lý',
           callToDispatch: '0.8 phút',
@@ -3163,8 +3431,8 @@
           severityText: h.severity === 'CRITICAL' ? 'Tối khẩn' : (h.severity === 'EMERGENCY' ? 'Khẩn cấp' : 'Tiêu chuẩn'),
           vehiclePlate: h.vehiclePlate,
           hospitalName: h.hospitalName,
-          address: h.address || 'Đường 30/4, P. Xuân Khánh, Q. Ninh Kiều',
-          district: h.district || 'Ninh Kiều',
+          address: h.address || 'Đường 30/4, P. Xuân Khánh, TP. Cần Thơ',
+          district: h.district || 'P. Xuân Khánh',
           status: h.status || 'COMPLETED',
           statusText: h.status === 'COMPLETED' ? 'Hoàn tất bàn giao' : 'Đã hủy ca',
           callToDispatch: h.durations?.callToDispatch || '1.1 phút',
@@ -3181,10 +3449,10 @@
           incidentName: 'Đột quỵ não',
           severity: 'CRITICAL',
           severityText: 'Tối khẩn',
-          vehiclePlate: '65A-015.67',
+          vehiclePlate: '65A-016.88',
           hospitalName: 'BV Đa khoa TP Cần Thơ',
-          address: '128 Đường 3/2, P. Xuân Khánh, Q. Ninh Kiều',
-          district: 'Ninh Kiều',
+          address: '128 Đường 3/2, P. Xuân Khánh, TP. Cần Thơ',
+          district: 'P. Xuân Khánh',
           status: 'COMPLETED',
           statusText: 'Hoàn tất bàn giao',
           callToDispatch: '0.7 phút',
@@ -3202,8 +3470,8 @@
           severityText: 'Khẩn cấp',
           vehiclePlate: '65A-012.34',
           hospitalName: 'BV Đa khoa TW Cần Thơ',
-          address: 'Cầu Hưng Lợi, P. Hưng Phú, Q. Cái Răng',
-          district: 'Cái Răng',
+          address: 'Cầu Hưng Lợi, P. Hưng Phú, TP. Cần Thơ',
+          district: 'P. Hưng Phú',
           status: 'COMPLETED',
           statusText: 'Hoàn tất bàn giao',
           callToDispatch: '0.9 phút',
@@ -3219,10 +3487,10 @@
           incidentName: 'Ngừng tuần hoàn / Đau thắt ngực cấp',
           severity: 'CRITICAL',
           severityText: 'Tối khẩn',
-          vehiclePlate: '65A-015.67',
+          vehiclePlate: '65A-011.15',
           hospitalName: 'BV Tim mạch TP Cần Thơ',
-          address: 'Chợ An Khánh, Q. Ninh Kiều',
-          district: 'Ninh Kiều',
+          address: 'Chợ An Khánh, P. An Khánh, TP. Cần Thơ',
+          district: 'P. An Khánh',
           status: 'COMPLETED',
           statusText: 'Hoàn tất bàn giao',
           callToDispatch: '0.6 phút',
@@ -3239,9 +3507,9 @@
           severity: 'EMERGENCY',
           severityText: 'Khẩn cấp',
           vehiclePlate: '65A-018.89',
-          hospitalName: 'BV Nhi đồng Cần Thơ',
-          address: 'Đường CMT8, P. An Thới, Q. Bình Thủy',
-          district: 'Bình Thủy',
+          hospitalName: 'Bệnh viện Nhi đồng Cần Thơ',
+          address: 'Đường CMT8, P. An Thới, TP. Cần Thơ',
+          district: 'P. An Thới',
           status: 'COMPLETED',
           statusText: 'Hoàn tất bàn giao',
           callToDispatch: '0.8 phút',
@@ -3259,8 +3527,8 @@
           severityText: 'Tối khẩn',
           vehiclePlate: '65A-011.15',
           hospitalName: 'BV Đa khoa TP Cần Thơ',
-          address: 'KCN Trà Nóc 1, Q. Bình Thủy',
-          district: 'Bình Thủy',
+          address: 'KCN Trà Nóc 1, P. Trà Nóc, TP. Cần Thơ',
+          district: 'P. Trà Nóc',
           status: 'COMPLETED',
           statusText: 'Hoàn tất bàn giao',
           callToDispatch: '0.9 phút',
@@ -3277,9 +3545,9 @@
           severity: 'ROUTINE',
           severityText: 'Tiêu chuẩn',
           vehiclePlate: '65A-019.99',
-          hospitalName: 'TTYT Quận Ô Môn',
-          address: 'Quốc lộ 91, Phường Châu Văn Liêm, Q. Ô Môn',
-          district: 'Ô Môn',
+          hospitalName: 'TTYT Khu vực Ô Môn',
+          address: 'Quốc lộ 91, P. Châu Văn Liêm, TP. Cần Thơ',
+          district: 'P. Châu Văn Liêm',
           status: 'COMPLETED',
           statusText: 'Hoàn tất bàn giao',
           callToDispatch: '1.2 phút',
@@ -3297,7 +3565,7 @@
                 <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:rgba(229, 37, 33, 0.15);color:var(--red-vivid);border-radius:6px;">
                   ${window.CCNV_UI.ICONS.barChart}
                 </span>
-                <h2 style="color:var(--text-white);font-size:18px;margin:0;font-weight:700;">Báo Cáo Số Ca Tiếp Nhận</h2>
+                <h2 style="color:var(--text-white);font-size:18px;margin:0;font-weight:700;">Báo cáo Số ca Tiếp nhận</h2>
               </div>
               <p style="font-size:12.5px;color:var(--text-muted);margin:0;">
                 Theo dõi toàn diện số lượng ca cấp cứu ngoại viện được kích hoạt, phân tích KPI đáp ứng và trích xuất dữ liệu chi tiết
@@ -3344,56 +3612,56 @@
         const successRate = '98.6%';
 
         pane.innerHTML = `
-          <!-- 1. Quick Stats & KPI Cards Grid -->
+          <!-- 1. Quick Stats & KPI Cards Grid (Quieter Tonal Cards) -->
           <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:14px;margin-bottom:18px;">
-            <div class="kpi-card" style="position:relative;overflow:hidden;">
+            <div class="kpi-card" style="position:relative;overflow:hidden;border:1px solid rgba(255,255,255,0.06);">
               <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                 <span class="kpi-label">Tổng ca tiếp nhận</span>
-                <span style="font-size:11px;color:#10B981;font-weight:600;background:rgba(16,185,129,0.12);padding:2px 6px;border-radius:4px;">+12.4% ↑</span>
+                <span style="font-size:11px;color:#94A3B8;font-weight:600;background:rgba(148,163,184,0.12);padding:2px 6px;border-radius:4px;">+12.4% ↑</span>
               </div>
               <span class="kpi-value" style="color:var(--text-white);">${totalCount.toLocaleString()}</span>
               <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px;">
-                Hôm nay: <strong style="color:#93C5FD;">${stats.todayCases || 14} ca</strong> · Tháng này: <strong style="color:var(--text-white);">${stats.monthCases || 348} ca</strong>
+                Hôm nay: <strong style="color:var(--text-white);">${stats.todayCases || 14} ca</strong> · Tháng này: <strong style="color:var(--text-white);">${stats.monthCases || 348} ca</strong>
               </div>
             </div>
 
-            <div class="kpi-card" style="position:relative;overflow:hidden;">
+            <div class="kpi-card" style="position:relative;overflow:hidden;border:1px solid rgba(248,113,113,0.15);">
               <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-                <span class="kpi-label">Ca tối khẩn (Đỏ / Cam)</span>
-                <span style="font-size:11px;color:var(--red-vivid);font-weight:600;background:rgba(229,37,33,0.12);padding:2px 6px;border-radius:4px;">26.6%</span>
+                <span class="kpi-label">Ca tối khẩn</span>
+                <span style="font-size:11px;color:#F87171;font-weight:600;background:rgba(248,113,113,0.12);padding:2px 6px;border-radius:4px;">26.6%</span>
               </div>
-              <span class="kpi-value" style="color:var(--red-vivid);">${criticalCount}</span>
+              <span class="kpi-value" style="color:#F87171;">${criticalCount}</span>
               <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px;">
                 Đột quỵ, ngừng tuần hoàn, đa chấn thương nguy kịch
               </div>
             </div>
 
-            <div class="kpi-card" style="position:relative;overflow:hidden;">
+            <div class="kpi-card" style="position:relative;overflow:hidden;border:1px solid rgba(255,255,255,0.06);">
               <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-                <span class="kpi-label">Thời gian tiếp cận TB (Call-to-Scene)</span>
-                <span style="font-size:11px;color:#10B981;font-weight:600;background:rgba(16,185,129,0.12);padding:2px 6px;border-radius:4px;">Đạt chuẩn SLA</span>
+                <span class="kpi-label">Thời gian tiếp cận trung bình</span>
+                <span style="font-size:11px;color:#34D399;font-weight:600;background:rgba(52,211,153,0.12);padding:2px 6px;border-radius:4px;">Đạt chuẩn</span>
               </div>
-              <span class="kpi-value" style="color:#10B981;">${avgSLA}</span>
+              <span class="kpi-value" style="color:#38BDF8;">${avgSLA}</span>
               <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px;">
                 Mục tiêu toàn TP: &lt; 10 phút (Nội ô &lt; 8 phút)
               </div>
             </div>
 
-            <div class="kpi-card" style="position:relative;overflow:hidden;">
+            <div class="kpi-card" style="position:relative;overflow:hidden;border:1px solid rgba(255,255,255,0.06);">
               <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                 <span class="kpi-label">Tỷ lệ bàn giao thành công</span>
-                <span style="font-size:11px;color:#93C5FD;font-weight:600;background:rgba(59,130,246,0.12);padding:2px 6px;border-radius:4px;">Toàn mạng</span>
+                <span style="font-size:11px;color:#94A3B8;font-weight:600;background:rgba(148,163,184,0.12);padding:2px 6px;border-radius:4px;">Toàn mạng</span>
               </div>
-              <span class="kpi-value" style="color:#93C5FD;">${successRate}</span>
+              <span class="kpi-value" style="color:var(--text-white);">${successRate}</span>
               <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px;">
                 Số ca hủy / tự chuyển viện: <strong>1.4% (18 ca)</strong>
               </div>
             </div>
           </div>
 
-          <!-- 2. Visual Charts Row (SVG Column Chart & Donut breakdown) -->
+          <!-- 2. Visual Charts Row (Tonal 24h Bar Chart & Monochromatic Breakdown) -->
           <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:16px;margin-bottom:18px;">
-            <!-- Column Chart: Cases by Time Slot -->
+            <!-- Column Chart: Cases by Time Slot (Quieter Monochromatic Style) -->
             <div class="content-card">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
                 <div>
@@ -3403,50 +3671,59 @@
                 <span class="badge badge-normal" style="font-size:11px;">24 Giờ</span>
               </div>
 
-              <!-- SVG Bar Chart -->
-              <div style="height:190px;background:var(--bg-elevated);border-radius:6px;padding:16px 12px 8px 12px;border:1px solid var(--border-main);display:flex;flex-direction:column;justify-content:space-between;">
-                <div style="flex:1;display:flex;align-items:flex-end;gap:14px;padding:0 8px;">
-                  <!-- Bar 1: 00h-04h -->
-                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;">
-                    <span style="font-size:11px;color:#93C5FD;font-weight:600;">84</span>
-                    <div style="width:100%;max-width:38px;height:24%;background:linear-gradient(to top, #1E3A8A, #3B82F6);border-radius:4px 4px 0 0;" title="00:00 - 04:00: 84 ca"></div>
-                    <span style="font-size:10.5px;color:var(--text-muted);">00h-04h</span>
-                  </div>
-                  <!-- Bar 2: 04h-08h -->
-                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;">
-                    <span style="font-size:11px;color:#93C5FD;font-weight:600;">146</span>
-                    <div style="width:100%;max-width:38px;height:42%;background:linear-gradient(to top, #1E3A8A, #3B82F6);border-radius:4px 4px 0 0;" title="04:00 - 08:00: 146 ca"></div>
-                    <span style="font-size:10.5px;color:var(--text-muted);">04h-08h</span>
-                  </div>
-                  <!-- Bar 3: 08h-12h -->
-                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;">
-                    <span style="font-size:11px;color:#93C5FD;font-weight:600;">268</span>
-                    <div style="width:100%;max-width:38px;height:76%;background:linear-gradient(to top, #1E3A8A, #3B82F6);border-radius:4px 4px 0 0;" title="08:00 - 12:00: 268 ca"></div>
-                    <span style="font-size:10.5px;color:var(--text-muted);">08h-12h</span>
-                  </div>
-                  <!-- Bar 4: 12h-16h -->
-                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;">
-                    <span style="font-size:11px;color:#93C5FD;font-weight:600;">215</span>
-                    <div style="width:100%;max-width:38px;height:61%;background:linear-gradient(to top, #1E3A8A, #3B82F6);border-radius:4px 4px 0 0;" title="12:00 - 16:00: 215 ca"></div>
-                    <span style="font-size:10.5px;color:var(--text-muted);">12h-16h</span>
-                  </div>
-                  <!-- Bar 5: 16h-20h (Peak) -->
-                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;">
-                    <span style="font-size:11px;color:var(--red-vivid);font-weight:700;">352 ★</span>
-                    <div style="width:100%;max-width:38px;height:100%;background:linear-gradient(to top, #B91C1C, #EF4444);border-radius:4px 4px 0 0;" title="16:00 - 20:00 (Giờ cao điểm): 352 ca"></div>
-                    <span style="font-size:10.5px;color:var(--red-vivid);font-weight:600;">16h-20h</span>
-                  </div>
-                  <!-- Bar 6: 20h-24h -->
-                  <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;">
-                    <span style="font-size:11px;color:#93C5FD;font-weight:600;">219</span>
-                    <div style="width:100%;max-width:38px;height:62%;background:linear-gradient(to top, #1E3A8A, #3B82F6);border-radius:4px 4px 0 0;" title="20:00 - 24:00: 219 ca"></div>
-                    <span style="font-size:10.5px;color:var(--text-muted);">20h-24h</span>
-                  </div>
+              <!-- 24-Hour Distribution Bar Chart -->
+              <div style="height:210px;background:var(--bg-elevated);border-radius:6px;padding:16px 10px 8px 10px;border:1px solid var(--border-main);display:flex;flex-direction:column;justify-content:space-between;">
+                <div style="flex:1;display:flex;align-items:flex-end;gap:3px;padding:0 2px;">
+                  ${[
+            { hour: '0h', count: 18, isPeak: false },
+            { hour: '1h', count: 14, isPeak: false },
+            { hour: '2h', count: 12, isPeak: false },
+            { hour: '3h', count: 15, isPeak: false },
+            { hour: '4h', count: 25, isPeak: false },
+            { hour: '5h', count: 32, isPeak: false },
+            { hour: '6h', count: 42, isPeak: false },
+            { hour: '7h', count: 56, isPeak: false },
+            { hour: '8h', count: 68, isPeak: false },
+            { hour: '9h', count: 74, isPeak: false },
+            { hour: '10h', count: 65, isPeak: false },
+            { hour: '11h', count: 61, isPeak: false },
+            { hour: '12h', count: 52, isPeak: false },
+            { hour: '13h', count: 48, isPeak: false },
+            { hour: '14h', count: 55, isPeak: false },
+            { hour: '15h', count: 60, isPeak: false },
+            { hour: '16h', count: 78, isPeak: false },
+            { hour: '17h', count: 96, isPeak: true },
+            { hour: '18h', count: 104, isPeak: true, isMax: true },
+            { hour: '19h', count: 88, isPeak: true },
+            { hour: '20h', count: 72, isPeak: false },
+            { hour: '21h', count: 58, isPeak: false },
+            { hour: '22h', count: 52, isPeak: false },
+            { hour: '23h', count: 39, isPeak: false }
+          ].map(b => {
+            const pct = Math.round((b.count / 104) * 100);
+            const bg = b.isMax
+              ? '#38BDF8'
+              : (b.isPeak
+                ? 'rgba(56, 189, 248, 0.75)'
+                : (b.count >= 60
+                  ? '#475569'
+                  : '#334155'));
+            const valColor = b.isMax ? '#38BDF8' : (b.isPeak ? '#93C5FD' : '#64748B');
+            const nextH = (parseInt(b.hour, 10) + 1) % 24;
+            const titleText = `Khung giờ ${b.hour} - ${nextH}h: ${b.count} ca cấp cứu${b.isMax ? ' (Đỉnh cao điểm trong ngày)' : ''}`;
+            return `
+                      <div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;height:100%;justify-content:flex-end;" title="${titleText}">
+                        <span style="font-size:8.5px;color:${valColor};font-weight:${b.isPeak ? '700' : '500'};font-family:var(--font-mono);line-height:1;">${b.count}</span>
+                        <div style="width:100%;max-width:18px;height:${pct}%;background:${bg};border-radius:2px 2px 0 0;transition:all 0.2s ease;"></div>
+                        <span style="font-size:9px;color:${b.isPeak ? '#CBD5E1' : '#64748B'};font-family:var(--font-mono);line-height:1;margin-top:2px;">${b.hour}</span>
+                      </div>
+                    `;
+          }).join('')}
                 </div>
               </div>
             </div>
 
-            <!-- Horizontal Progress Bars: Incident Categories Breakdown -->
+            <!-- Horizontal Progress Bars: Incident Categories Breakdown (Tonal Slate/Cyan) -->
             <div class="content-card">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
                 <h3 style="color:var(--text-white);font-size:14px;margin:0;">Cơ cấu theo Loại tình huống</h3>
@@ -3455,41 +3732,41 @@
               <div style="display:flex;flex-direction:column;gap:12px;font-size:12.5px;">
                 <div>
                   <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                    <span style="color:var(--text-white);">Tai nạn giao thông (TNGT)</span>
-                    <strong style="color:var(--red-vivid);">42% (539 ca)</strong>
+                    <span style="color:var(--text-white);">Tai nạn giao thông</span>
+                    <strong style="color:#38BDF8;font-family:var(--font-mono);">42% <span style="font-weight:normal;color:var(--text-muted);font-size:11px;">(539 ca)</span></strong>
                   </div>
-                  <div style="height:7px;background:var(--bg-main);border-radius:4px;overflow:hidden;">
-                    <div style="width:42%;height:100%;background:var(--red-vivid);border-radius:4px;"></div>
+                  <div style="height:6px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:42%;height:100%;background:#38BDF8;border-radius:3px;"></div>
                   </div>
                 </div>
 
                 <div>
                   <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
                     <span style="color:var(--text-white);">Đột quỵ & Tim mạch cấp</span>
-                    <strong style="color:#F59E0B;">26% (334 ca)</strong>
+                    <strong style="color:#93C5FD;font-family:var(--font-mono);">26% <span style="font-weight:normal;color:var(--text-muted);font-size:11px;">(334 ca)</span></strong>
                   </div>
-                  <div style="height:7px;background:var(--bg-main);border-radius:4px;overflow:hidden;">
-                    <div style="width:26%;height:100%;background:#F59E0B;border-radius:4px;"></div>
+                  <div style="height:6px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:26%;height:100%;background:rgba(56, 189, 248, 0.75);border-radius:3px;"></div>
                   </div>
                 </div>
 
                 <div>
                   <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
                     <span style="color:var(--text-white);">Suy hô hấp / Dị vật đường thở</span>
-                    <strong style="color:#3B82F6;">18% (231 ca)</strong>
+                    <strong style="color:#CBD5E1;font-family:var(--font-mono);">18% <span style="font-weight:normal;color:var(--text-muted);font-size:11px;">(231 ca)</span></strong>
                   </div>
-                  <div style="height:7px;background:var(--bg-main);border-radius:4px;overflow:hidden;">
-                    <div style="width:18%;height:100%;background:#3B82F6;border-radius:4px;"></div>
+                  <div style="height:6px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:18%;height:100%;background:rgba(56, 189, 248, 0.5);border-radius:3px;"></div>
                   </div>
                 </div>
 
                 <div>
                   <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
                     <span style="color:var(--text-white);">Tai nạn sinh hoạt, ngã cao & Khác</span>
-                    <strong style="color:#10B981;">14% (180 ca)</strong>
+                    <strong style="color:var(--text-muted);font-family:var(--font-mono);">14% <span style="font-weight:normal;color:var(--text-muted);font-size:11px;">(180 ca)</span></strong>
                   </div>
-                  <div style="height:7px;background:var(--bg-main);border-radius:4px;overflow:hidden;">
-                    <div style="width:14%;height:100%;background:#10B981;border-radius:4px;"></div>
+                  <div style="height:6px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:14%;height:100%;background:rgba(148, 163, 184, 0.35);border-radius:3px;"></div>
                   </div>
                 </div>
               </div>
@@ -3498,93 +3775,93 @@
 
           <!-- 3. Bottom Row: Distribution by District and Destination Hospital -->
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-            <!-- District Distribution -->
+            <!-- District Distribution (Monochrome Progression) -->
             <div class="content-card">
-              <h3 style="color:var(--text-white);font-size:14px;margin-bottom:12px;">Phân bố Ca tiếp nhận theo Địa bàn Quận / Huyện</h3>
+              <h3 style="color:var(--text-white);font-size:14px;margin-bottom:12px;">Phân bố Ca tiếp nhận theo Địa bàn Phường / Xã</h3>
               <div style="display:flex;flex-direction:column;gap:10px;font-size:12.5px;">
                 <div>
                   <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
-                    <span>Quận Ninh Kiều (Trung tâm)</span>
-                    <strong style="color:#93C5FD;">54% (693 ca)</strong>
+                    <span style="color:var(--text-white);">Địa bàn P. Tân An, Xuân Khánh, Hưng Lợi (Trung tâm)</span>
+                    <strong style="color:#38BDF8;font-family:var(--font-mono);">54% <span style="font-weight:normal;color:var(--text-muted);font-size:11px;">(693 ca)</span></strong>
                   </div>
-                  <div style="height:6px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
-                    <div style="width:54%;height:100%;background:#3B82F6;"></div>
-                  </div>
-                </div>
-                <div>
-                  <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
-                    <span>Quận Cái Răng</span>
-                    <strong style="color:#93C5FD;">18% (231 ca)</strong>
-                  </div>
-                  <div style="height:6px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
-                    <div style="width:18%;height:100%;background:#10B981;"></div>
+                  <div style="height:5px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:54%;height:100%;background:#38BDF8;"></div>
                   </div>
                 </div>
                 <div>
                   <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
-                    <span>Quận Bình Thủy</span>
-                    <strong style="color:#93C5FD;">14% (180 ca)</strong>
+                    <span style="color:var(--text-white);">Địa bàn P. Hưng Phú, Lê Bình, Ba Láng</span>
+                    <strong style="color:#93C5FD;font-family:var(--font-mono);">18% <span style="font-weight:normal;color:var(--text-muted);font-size:11px;">(231 ca)</span></strong>
                   </div>
-                  <div style="height:6px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
-                    <div style="width:14%;height:100%;background:#F59E0B;"></div>
+                  <div style="height:5px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:18%;height:100%;background:rgba(56, 189, 248, 0.7);"></div>
                   </div>
                 </div>
                 <div>
                   <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
-                    <span>Quận Ô Môn & Thốt Nốt</span>
-                    <strong style="color:#93C5FD;">14% (180 ca)</strong>
+                    <span style="color:var(--text-white);">Địa bàn P. Trà Nóc, An Thới, Bình Thủy</span>
+                    <strong style="color:#CBD5E1;font-family:var(--font-mono);">14% <span style="font-weight:normal;color:var(--text-muted);font-size:11px;">(180 ca)</span></strong>
                   </div>
-                  <div style="height:6px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
-                    <div style="width:14%;height:100%;background:#8B5CF6;"></div>
+                  <div style="height:5px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:14%;height:100%;background:rgba(56, 189, 248, 0.5);"></div>
+                  </div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+                    <span style="color:var(--text-white);">Địa bàn P. Châu Văn Liêm, Thới Hòa, Thốt Nốt</span>
+                    <strong style="color:var(--text-muted);font-family:var(--font-mono);">14% <span style="font-weight:normal;color:var(--text-muted);font-size:11px;">(180 ca)</span></strong>
+                  </div>
+                  <div style="height:5px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:14%;height:100%;background:rgba(148, 163, 184, 0.35);"></div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Top Receiving Hospitals -->
+            <!-- Top Receiving Hospitals (Quiet Clean Ranking) -->
             <div class="content-card">
               <h3 style="color:var(--text-white);font-size:14px;margin-bottom:12px;">Top Bệnh viện Tiếp nhận Ca Cấp cứu</h3>
-              <div style="display:flex;flex-direction:column;gap:9px;font-size:12.5px;">
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg-elevated);border-radius:4px;border:1px solid var(--border-main);">
-                  <div style="display:flex;align-items:center;gap:8px;">
-                    <span style="font-weight:700;color:var(--red-vivid);width:16px;">1</span>
+              <div style="display:flex;flex-direction:column;gap:8px;font-size:12.5px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg-elevated);border-radius:6px;border:1px solid var(--border-main);">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-family:var(--font-mono);font-weight:700;color:var(--text-white);width:22px;height:22px;border-radius:4px;background:rgba(255,255,255,0.08);display:inline-flex;align-items:center;justify-content:center;font-size:11px;">01</span>
                     <span style="color:var(--text-white);font-weight:500;">BV Đa khoa TP Cần Thơ</span>
                   </div>
-                  <div style="display:flex;align-items:center;gap:12px;">
-                    <strong style="color:#93C5FD;">582 ca</strong>
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <strong style="color:var(--text-white);font-family:var(--font-mono);">${(582).toLocaleString()} ca</strong>
                     <span style="font-size:11px;color:var(--text-muted);">(45.3%)</span>
                   </div>
                 </div>
 
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg-elevated);border-radius:4px;border:1px solid var(--border-main);">
-                  <div style="display:flex;align-items:center;gap:8px;">
-                    <span style="font-weight:700;color:#F59E0B;width:16px;">2</span>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg-elevated);border-radius:6px;border:1px solid var(--border-main);">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-family:var(--font-mono);font-weight:700;color:var(--text-slate);width:22px;height:22px;border-radius:4px;background:rgba(255,255,255,0.05);display:inline-flex;align-items:center;justify-content:center;font-size:11px;">02</span>
                     <span style="color:var(--text-white);font-weight:500;">BV Đa khoa Trung ương Cần Thơ</span>
                   </div>
-                  <div style="display:flex;align-items:center;gap:12px;">
-                    <strong style="color:#93C5FD;">416 ca</strong>
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <strong style="color:var(--text-white);font-family:var(--font-mono);">${(416).toLocaleString()} ca</strong>
                     <span style="font-size:11px;color:var(--text-muted);">(32.4%)</span>
                   </div>
                 </div>
 
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg-elevated);border-radius:4px;border:1px solid var(--border-main);">
-                  <div style="display:flex;align-items:center;gap:8px;">
-                    <span style="font-weight:700;color:#3B82F6;width:16px;">3</span>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg-elevated);border-radius:6px;border:1px solid var(--border-main);">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-family:var(--font-mono);font-weight:700;color:var(--text-slate);width:22px;height:22px;border-radius:4px;background:rgba(255,255,255,0.05);display:inline-flex;align-items:center;justify-content:center;font-size:11px;">03</span>
                     <span style="color:var(--text-white);font-weight:500;">BV Nhi đồng Cần Thơ</span>
                   </div>
-                  <div style="display:flex;align-items:center;gap:12px;">
-                    <strong style="color:#93C5FD;">148 ca</strong>
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <strong style="color:var(--text-white);font-family:var(--font-mono);">${(148).toLocaleString()} ca</strong>
                     <span style="font-size:11px;color:var(--text-muted);">(11.5%)</span>
                   </div>
                 </div>
 
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg-elevated);border-radius:4px;border:1px solid var(--border-main);">
-                  <div style="display:flex;align-items:center;gap:8px;">
-                    <span style="font-weight:700;color:#10B981;width:16px;">4</span>
-                    <span style="color:var(--text-white);font-weight:500;">BV Tim mạch & TTYT Quận Huyện</span>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg-elevated);border-radius:6px;border:1px solid var(--border-main);">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-family:var(--font-mono);font-weight:700;color:var(--text-slate);width:22px;height:22px;border-radius:4px;background:rgba(255,255,255,0.05);display:inline-flex;align-items:center;justify-content:center;font-size:11px;">04</span>
+                    <span style="color:var(--text-white);font-weight:500;">BV Tim mạch & TTYT Khu vực</span>
                   </div>
-                  <div style="display:flex;align-items:center;gap:12px;">
-                    <strong style="color:#93C5FD;">138 ca</strong>
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <strong style="color:var(--text-white);font-family:var(--font-mono);">${(138).toLocaleString()} ca</strong>
                     <span style="font-size:11px;color:var(--text-muted);">(10.8%)</span>
                   </div>
                 </div>
@@ -3683,6 +3960,901 @@
                 if (item.status === 'COMPLETED') return `<span class="status-pill status-pill-completed">Hoàn tất</span>`;
                 if (item.status === 'IN_PROGRESS') return `<span class="status-pill status-pill-processing">Đang xử lý</span>`;
                 return `<span class="status-pill status-pill-cancelled">Đã hủy</span>`;
+              }
+            }
+          ]
+        }).render();
+      }
+    }
+
+    // ==========================================
+    // --- BÁO CÁO ĐO LƯỜNG THỜI GIAN ĐÁP ỨNG & CHUẨN SLA CẤP CỨU ---
+    // ==========================================
+    renderReportSlaView(container, activeTab = 'overview') {
+      const state = window.StateManager.getState();
+      const stats = state.stats || {};
+
+      // Unified response timeline dataset with full response milestones and delay reasons
+      const slaRecords = [
+        {
+          code: 'CC-261002-001',
+          createdAt: '2026-10-02T09:42:15',
+          patientName: 'Nguyễn Văn Nam',
+          patientAge: 58,
+          patientGender: 'Nam',
+          incidentName: 'Đột quỵ não cấp (Liệt nửa người)',
+          severity: 'CRITICAL',
+          severityText: 'Tối khẩn',
+          vehiclePlate: '65A-012.34',
+          hospitalName: 'BV Đa khoa TP Cần Thơ',
+          district: 'P. Tân An',
+          address: 'Số 45 Đường Hòa Bình, P. Tân An',
+          callToDispatch: '42s',
+          dispatchToMobile: '1.2 phút',
+          callToScene: '4.8 phút',
+          slaTarget: '< 8.0 phút',
+          slaStatus: 'MET',
+          slaEvaluation: 'Đạt chuẩn',
+          delayReason: 'Đạt chuẩn thời gian vàng',
+          status: 'COMPLETED'
+        },
+        {
+          code: 'CC-261002-002',
+          createdAt: '2026-10-02T08:50:30',
+          patientName: 'Trần Thị Thu Thảo',
+          patientAge: 32,
+          patientGender: 'Nữ',
+          incidentName: 'Tai nạn giao thông đa chấn thương',
+          severity: 'CRITICAL',
+          severityText: 'Tối khẩn',
+          vehiclePlate: '65A-001.15',
+          hospitalName: 'BV Đa khoa TW Cần Thơ',
+          district: 'P. Hưng Lợi',
+          address: 'Ngã tư 30/4 - Nguyễn Văn Linh',
+          callToDispatch: '38s',
+          dispatchToMobile: '1.5 phút',
+          callToScene: '5.4 phút',
+          slaTarget: '< 8.0 phút',
+          slaStatus: 'MET',
+          slaEvaluation: 'Đạt chuẩn',
+          delayReason: 'Đạt chuẩn thời gian vàng',
+          status: 'COMPLETED'
+        },
+        {
+          code: 'CC-261002-003',
+          createdAt: '2026-10-02T08:15:00',
+          patientName: 'Lê Hoàng Phong',
+          patientAge: 64,
+          patientGender: 'Nam',
+          incidentName: 'Ngừng tuần hoàn ngoại viện',
+          severity: 'CRITICAL',
+          severityText: 'Tối khẩn',
+          vehiclePlate: '65A-016.88',
+          hospitalName: 'BV Đa khoa TP Cần Thơ',
+          district: 'P. An Thới',
+          address: 'Đường CMT8, P. An Thới',
+          callToDispatch: '30s',
+          dispatchToMobile: '1.1 phút',
+          callToScene: '6.1 phút',
+          slaTarget: '< 8.0 phút',
+          slaStatus: 'MET',
+          slaEvaluation: 'Đạt chuẩn',
+          delayReason: 'Đạt chuẩn thời gian vàng',
+          status: 'COMPLETED'
+        },
+        {
+          code: 'CC-261002-004',
+          createdAt: '2026-10-02T07:40:12',
+          patientName: 'Ngô Tấn Tài',
+          patientAge: 41,
+          patientGender: 'Nam',
+          incidentName: 'Suy hô hấp cấp / Dị vật đường thở',
+          severity: 'EMERGENCY',
+          severityText: 'Khẩn cấp',
+          vehiclePlate: '65A-011.15',
+          hospitalName: 'BV Đa khoa TP Cần Thơ',
+          district: 'P. Trà Nóc',
+          address: 'KCN Trà Nóc 1, P. Trà Nóc',
+          callToDispatch: '45s',
+          dispatchToMobile: '1.6 phút',
+          callToScene: '7.2 phút',
+          slaTarget: '< 8.0 phút',
+          slaStatus: 'MET',
+          slaEvaluation: 'Đạt chuẩn',
+          delayReason: 'Đạt chuẩn thời gian nội ô',
+          status: 'COMPLETED'
+        },
+        {
+          code: 'CC-261002-005',
+          createdAt: '2026-10-02T07:10:00',
+          patientName: 'Vũ Quốc Cường',
+          patientAge: 45,
+          patientGender: 'Nam',
+          incidentName: 'Tai nạn lao động sập giàn giáo',
+          severity: 'EMERGENCY',
+          severityText: 'Khẩn cấp',
+          vehiclePlate: '65A-018.89',
+          hospitalName: 'TTYT Khu vực Ô Môn',
+          district: 'P. Châu Văn Liêm',
+          address: 'Quốc lộ 91, P. Châu Văn Liêm',
+          callToDispatch: '50s',
+          dispatchToMobile: '1.4 phút',
+          callToScene: '7.8 phút',
+          slaTarget: '< 8.0 phút',
+          slaStatus: 'NEAR',
+          slaEvaluation: 'Cận chuẩn',
+          delayReason: 'Gần ngưỡng 8 phút do phải tránh công trường',
+          status: 'COMPLETED'
+        },
+        {
+          code: 'CC-261002-006',
+          createdAt: '2026-10-02T06:45:00',
+          patientName: 'Huỳnh Văn Sang',
+          patientAge: 50,
+          patientGender: 'Nam',
+          incidentName: 'TNGT va chạm xe tải lớn dốc cầu',
+          severity: 'CRITICAL',
+          severityText: 'Tối khẩn',
+          vehiclePlate: '65A-002.15',
+          hospitalName: 'BV Đa khoa TW Cần Thơ',
+          district: 'P. Hưng Phú',
+          address: 'Dốc cầu Hưng Lợi, P. Hưng Phú',
+          callToDispatch: '55s',
+          dispatchToMobile: '2.1 phút',
+          callToScene: '10.4 phút',
+          slaTarget: '< 8.0 phút',
+          slaStatus: 'BREACH',
+          slaEvaluation: 'Chậm trễ',
+          delayReason: 'Ùn tắc dốc cầu Hưng Lợi giờ cao điểm (+3.2 phút)',
+          status: 'COMPLETED'
+        },
+        {
+          code: 'CC-261001-011',
+          createdAt: '2026-10-01T21:15:00',
+          patientName: 'Đỗ Thị Mai',
+          patientAge: 62,
+          patientGender: 'Nữ',
+          incidentName: 'Cơn đau thắt ngực nhồi máu cơ tim',
+          severity: 'CRITICAL',
+          severityText: 'Tối khẩn',
+          vehiclePlate: '65A-011.15',
+          hospitalName: 'BV Tim mạch TP Cần Thơ',
+          district: 'P. An Khánh',
+          address: 'Chợ An Khánh, P. An Khánh',
+          callToDispatch: '35s',
+          dispatchToMobile: '1.2 phút',
+          callToScene: '4.8 phút',
+          slaTarget: '< 8.0 phút',
+          slaStatus: 'MET',
+          slaEvaluation: 'Đạt chuẩn',
+          delayReason: 'Đạt chuẩn thời gian vàng',
+          status: 'COMPLETED'
+        },
+        {
+          code: 'CC-261001-010',
+          createdAt: '2026-10-01T19:30:00',
+          patientName: 'Trần Bảo Long',
+          patientAge: 7,
+          patientGender: 'Nam',
+          incidentName: 'Co giật sốt cao trẻ em',
+          severity: 'EMERGENCY',
+          severityText: 'Khẩn cấp',
+          vehiclePlate: '65A-018.89',
+          hospitalName: 'Bệnh viện Nhi đồng Cần Thơ',
+          district: 'P. An Thới',
+          address: 'Đường CMT8, P. An Thới',
+          callToDispatch: '40s',
+          dispatchToMobile: '1.3 phút',
+          callToScene: '5.9 phút',
+          slaTarget: '< 8.0 phút',
+          slaStatus: 'MET',
+          slaEvaluation: 'Đạt chuẩn',
+          delayReason: 'Đạt chuẩn thời gian tiếp cận',
+          status: 'COMPLETED'
+        },
+        {
+          code: 'CC-261001-009',
+          createdAt: '2026-10-01T17:45:00',
+          patientName: 'Phan Văn Hậu',
+          patientAge: 48,
+          patientGender: 'Nam',
+          incidentName: 'Điện giật bất tỉnh trong hẻm',
+          severity: 'CRITICAL',
+          severityText: 'Tối khẩn',
+          vehiclePlate: '65A-012.34',
+          hospitalName: 'BV Đa khoa TP Cần Thơ',
+          district: 'P. Xuân Khánh',
+          address: 'Hẻm 51 Đường 3/2, P. Xuân Khánh',
+          callToDispatch: '58s',
+          dispatchToMobile: '2.3 phút',
+          callToScene: '9.2 phút',
+          slaTarget: '< 8.0 phút',
+          slaStatus: 'BREACH',
+          slaEvaluation: 'Chậm trễ',
+          delayReason: 'Hẻm sâu xe cứu thương khó vào, phải đi bộ 150m (+2.5 phút)',
+          status: 'COMPLETED'
+        },
+        {
+          code: 'CC-261001-008',
+          createdAt: '2026-10-01T16:20:00',
+          patientName: 'Nguyễn Thị Hoa',
+          patientAge: 27,
+          patientGender: 'Nữ',
+          incidentName: 'Sản phụ chuyển dạ sinh rớt',
+          severity: 'EMERGENCY',
+          severityText: 'Khẩn cấp',
+          vehiclePlate: '65A-001.15',
+          hospitalName: 'BV Phụ sản TP Cần Thơ',
+          district: 'P. Ba Láng',
+          address: 'Đường Trần Hưng Đạo, P. Ba Láng',
+          callToDispatch: '42s',
+          dispatchToMobile: '1.4 phút',
+          callToScene: '7.1 phút',
+          slaTarget: '< 8.0 phút',
+          slaStatus: 'MET',
+          slaEvaluation: 'Đạt chuẩn',
+          delayReason: 'Đạt chuẩn thời gian tiếp cận',
+          status: 'COMPLETED'
+        },
+        {
+          code: 'CC-261001-007',
+          createdAt: '2026-10-01T14:10:00',
+          patientName: 'Lý Quốc Dũng',
+          patientAge: 53,
+          patientGender: 'Nam',
+          incidentName: 'Ngộ độc thực phẩm nặng, tụt HA',
+          severity: 'EMERGENCY',
+          severityText: 'Khẩn cấp',
+          vehiclePlate: '65A-016.88',
+          hospitalName: 'BV Đa khoa TW Cần Thơ',
+          district: 'P. Lê Bình',
+          address: 'Chợ nổi Cái Răng, P. Lê Bình',
+          callToDispatch: '44s',
+          dispatchToMobile: '1.5 phút',
+          callToScene: '6.8 phút',
+          slaTarget: '< 8.0 phút',
+          slaStatus: 'MET',
+          slaEvaluation: 'Đạt chuẩn',
+          delayReason: 'Đạt chuẩn thời gian tiếp cận',
+          status: 'COMPLETED'
+        },
+        {
+          code: 'CC-261001-006',
+          createdAt: '2026-10-01T11:05:00',
+          patientName: 'Võ Minh Trí',
+          patientAge: 39,
+          patientGender: 'Nam',
+          incidentName: 'TNGT va chạm liên hoàn Quốc lộ 91',
+          severity: 'CRITICAL',
+          severityText: 'Tối khẩn',
+          vehiclePlate: '65A-019.99',
+          hospitalName: 'BV Đa khoa TP Cần Thơ',
+          district: 'P. Thốt Nốt',
+          address: 'Km 38 Quốc lộ 91, P. Thốt Nốt',
+          callToDispatch: '68s',
+          dispatchToMobile: '2.0 phút',
+          callToScene: '13.2 phút',
+          slaTarget: '< 12.0 phút',
+          slaStatus: 'BREACH',
+          slaEvaluation: 'Chậm trễ',
+          delayReason: 'Mưa to tầm tã, mặt đường ngập sâu (+3.5 phút)',
+          status: 'COMPLETED'
+        },
+        {
+          code: 'CC-261001-005',
+          createdAt: '2026-10-01T09:15:00',
+          patientName: 'Đặng Thúy Kiều',
+          patientAge: 65,
+          patientGender: 'Nữ',
+          incidentName: 'Hạ đường huyết hôn mê sâu',
+          severity: 'EMERGENCY',
+          severityText: 'Khẩn cấp',
+          vehiclePlate: '65A-012.34',
+          hospitalName: 'BV Đa khoa TP Cần Thơ',
+          district: 'P. An Hòa',
+          address: 'Đường Nguyễn Văn Cừ, P. An Hòa',
+          callToDispatch: '32s',
+          dispatchToMobile: '1.1 phút',
+          callToScene: '4.9 phút',
+          slaTarget: '< 8.0 phút',
+          slaStatus: 'MET',
+          slaEvaluation: 'Đạt chuẩn',
+          delayReason: 'Đạt chuẩn thời gian vàng',
+          status: 'COMPLETED'
+        },
+        {
+          code: 'CC-261001-004',
+          createdAt: '2026-10-01T07:20:00',
+          patientName: 'Bùi Thanh Nhàn',
+          patientAge: 44,
+          patientGender: 'Nam',
+          incidentName: 'Bỏng nước sôi diện tích 25%',
+          severity: 'ROUTINE',
+          severityText: 'Tiêu chuẩn',
+          vehiclePlate: '65A-001.15',
+          hospitalName: 'BV Đa khoa TP Cần Thơ',
+          district: 'P. An Cư',
+          address: 'Đường Ngô Quyền, P. An Cư',
+          callToDispatch: '40s',
+          dispatchToMobile: '1.4 phút',
+          callToScene: '5.2 phút',
+          slaTarget: '< 8.0 phút',
+          slaStatus: 'MET',
+          slaEvaluation: 'Đạt chuẩn',
+          delayReason: 'Đạt chuẩn thời gian tiếp cận',
+          status: 'COMPLETED'
+        },
+        {
+          code: 'CC-261001-003',
+          createdAt: '2026-10-01T05:30:00',
+          patientName: 'Phạm Hồng Nhung',
+          patientAge: 71,
+          patientGender: 'Nữ',
+          incidentName: 'Hen phế quản cấp, SpO2 giảm 84%',
+          severity: 'CRITICAL',
+          severityText: 'Tối khẩn',
+          vehiclePlate: '65A-011.15',
+          hospitalName: 'BV Đa khoa TP Cần Thơ',
+          district: 'P. Tân An',
+          address: 'Đường Hai Bà Trưng, P. Tân An',
+          callToDispatch: '33s',
+          dispatchToMobile: '1.0 phút',
+          callToScene: '4.5 phút',
+          slaTarget: '< 8.0 phút',
+          slaStatus: 'MET',
+          slaEvaluation: 'Đạt chuẩn',
+          delayReason: 'Đạt chuẩn thời gian vàng',
+          status: 'COMPLETED'
+        }
+      ];
+
+      container.innerHTML = `
+        <div class="view-container-full">
+          <!-- Header Bar with Filter controls -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:12px;">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:rgba(16, 185, 129, 0.15);color:#10B981;border-radius:6px;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                </span>
+                <h2 style="color:var(--text-white);font-size:18px;margin:0;font-weight:700;">Báo Cáo Đo Lường Thời Gian Đáp Ứng Cấp Cứu</h2>
+              </div>
+              <p style="font-size:12.5px;color:var(--text-muted);margin:0;">
+                Giám sát chuỗi mốc thời gian tiếp cận hiện trường, tỷ lệ đạt chuẩn thời gian vàng và phân tích nguyên nhân chậm trễ toàn mạng
+              </p>
+            </div>
+
+            <!-- Action & Period controls -->
+            <div style="display:flex;align-items:center;gap:10px;">
+              <select class="form-select form-select-sm" id="select-sla-period" style="background:var(--bg-elevated);color:var(--text-white);border:1px solid var(--border-main);border-radius:4px;padding:5px 10px;font-size:12px;outline:none;">
+                <option value="today">Hôm nay (02/10/2026)</option>
+                <option value="week">Tuần này (Tuần 40)</option>
+                <option value="month" selected>Tháng 10/2026 (Toàn mạng)</option>
+                <option value="quarter">Quý 3/2026</option>
+              </select>
+              <button class="btn btn-default btn-sm" id="btn-export-sla-quick" title="Xuất báo cáo thời gian đáp ứng">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>Xuất Báo Cáo</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Internal Tab Navigation (2 Tabs) -->
+          <div style="display:flex;gap:8px;border-bottom:1px solid var(--border-main);padding-bottom:10px;margin-bottom:16px;">
+            <button class="btn ${activeTab === 'overview' ? 'btn-emergency' : 'btn-default'} btn-sm report-tab-btn" data-tab="overview">
+              ${window.CCNV_UI.ICONS.barChart}
+              <span>Tổng quan chuỗi mốc thời gian</span>
+            </button>
+            <button class="btn ${activeTab === 'detail' ? 'btn-emergency' : 'btn-default'} btn-sm report-tab-btn" data-tab="detail">
+              ${window.CCNV_UI.ICONS.layers}
+              <span>Chi tiết ca & Đánh giá thời gian</span>
+              <span class="badge ${activeTab === 'detail' ? 'badge-emergency' : 'badge-normal'}" style="margin-left:4px;padding:1px 6px;font-size:11px;">${slaRecords.length}</span>
+            </button>
+          </div>
+
+          <!-- Tab Content Mount Container -->
+          <div id="report-sla-pane"></div>
+        </div>
+      `;
+
+      // Quick export handler
+      container.querySelector('#btn-export-sla-quick')?.addEventListener('click', () => {
+        if (window.CCNV_UI?.Toast) {
+          window.CCNV_UI.Toast.show('XUẤT BÁO CÁO', 'Đã tạo và tải xuống bản báo cáo Đo lường Thời gian Đáp ứng Cấp cứu TP Cần Thơ');
+        }
+      });
+
+      // Tab switcher event handlers
+      container.querySelectorAll('.report-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tab = btn.getAttribute('data-tab');
+          this.renderReportSlaView(container, tab);
+        });
+      });
+
+      const pane = container.querySelector('#report-sla-pane');
+      if (!pane) return;
+
+      // ==========================================
+      // TAB 1: TỔNG QUAN CHUỖI MỐC THỜI GIAN (KPIs, Chuỗi Mốc, Nguyên nhân vi phạm, Phân bổ địa bàn)
+      // ==========================================
+      if (activeTab === 'overview') {
+        const avgCallToScene = '7.4 phút';
+        const avgCallToDispatch = '52 giây';
+        const avgDispatchToMobile = '1.8 phút';
+        const slaPassRate = '94.2%';
+
+        pane.innerHTML = `
+          <!-- 1. Quick Stats & Response KPI Cards Grid (Quieter Tonal Cards) -->
+          <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:14px;margin-bottom:18px;">
+            <div class="kpi-card" style="position:relative;overflow:hidden;border:1px solid rgba(255,255,255,0.06);">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <span class="kpi-label">Thời gian tiếp cận trung bình</span>
+                <span style="font-size:11px;color:#34D399;font-weight:600;background:rgba(52,211,153,0.12);padding:2px 6px;border-radius:4px;">Đạt chuẩn</span>
+              </div>
+              <span class="kpi-value" style="color:#38BDF8;">${avgCallToScene}</span>
+              <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px;">
+                Mục tiêu nội ô: <strong style="color:var(--text-white);">&lt; 8.0 phút</strong> · Ngoại ô: <strong style="color:var(--text-white);">&lt; 12.0 phút</strong>
+              </div>
+            </div>
+
+            <div class="kpi-card" style="position:relative;overflow:hidden;border:1px solid rgba(255,255,255,0.06);">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <span class="kpi-label">Thời gian phát lệnh điều xe</span>
+                <span style="font-size:11px;color:#94A3B8;font-weight:600;background:rgba(148,163,184,0.12);padding:2px 6px;border-radius:4px;">-8.5s so tháng trước</span>
+              </div>
+              <span class="kpi-value" style="color:var(--text-white);">${avgCallToDispatch}</span>
+              <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px;">
+                Mục tiêu điều phối viên: <strong style="color:var(--text-white);">&lt; 60 giây</strong> từ khi nhấc chuông
+              </div>
+            </div>
+
+            <div class="kpi-card" style="position:relative;overflow:hidden;border:1px solid rgba(255,255,255,0.06);">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <span class="kpi-label">Thời gian xuất xe rời trạm</span>
+                <span style="font-size:11px;color:#94A3B8;font-weight:600;background:rgba(148,163,184,0.12);padding:2px 6px;border-radius:4px;">Chuẩn kíp trực</span>
+              </div>
+              <span class="kpi-value" style="color:var(--text-white);">${avgDispatchToMobile}</span>
+              <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px;">
+                Kíp trực kiểm tra xe & xuất phát: <strong style="color:var(--text-white);">&lt; 2.0 phút</strong>
+              </div>
+            </div>
+
+            <div class="kpi-card" style="position:relative;overflow:hidden;border:1px solid rgba(255,255,255,0.06);">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <span class="kpi-label">Tỷ lệ đạt chuẩn thời gian vàng</span>
+                <span style="font-size:11px;color:#34D399;font-weight:600;background:rgba(52,211,153,0.12);padding:2px 6px;border-radius:4px;">1,210 / 1,284 ca</span>
+              </div>
+              <span class="kpi-value" style="color:#34D399;">${slaPassRate}</span>
+              <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px;">
+                Số ca vượt chuẩn: <strong style="color:#F87171;">74 ca (5.8%)</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Row 1: Timeline Progression Stages & Delay Causes Breakdown -->
+          <div style="display:grid;grid-template-columns:1.65fr 1fr;gap:16px;margin-bottom:18px;">
+            <!-- Progression Stages Card (Unified Serene Healthcare Timeline) -->
+            <div class="content-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                <div>
+                  <h3 style="color:var(--text-white);font-size:14px;margin:0 0 2px 0;">Phân Rã Chuỗi Thời Gian Cấp Cứu Ngoại Viện</h3>
+                  <span style="font-size:12px;color:var(--text-muted);">Đo lường chi tiết từng mốc từ tiếp nhận cuộc gọi đến bàn giao tại Khoa Cấp cứu</span>
+                </div>
+                <span class="badge badge-normal" style="font-size:11px;">6 Mốc Nghiệp Vụ</span>
+              </div>
+
+              <!-- Visual Stages Progression (Calm Tonal Blue System) -->
+              <div style="display:flex;flex-direction:column;gap:10px;font-size:12.5px;">
+                <!-- Stage 1: T0 -> T1 -->
+                <div style="background:var(--bg-elevated);border-radius:6px;padding:9px 12px;border:1px solid var(--border-main);">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="width:20px;height:20px;border-radius:4px;background:rgba(255,255,255,0.06);color:var(--text-white);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--font-mono);">1</span>
+                      <strong style="color:var(--text-white);font-weight:500;">Tiếp nhận & phân loại cuộc gọi</strong>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                      <span style="font-family:var(--font-mono);font-weight:600;color:var(--text-white);">52 giây</span>
+                      <span style="font-size:11px;color:var(--text-muted);">(Chuẩn &lt; 60 giây)</span>
+                      <span class="badge" style="background:rgba(52,211,153,0.1);color:#34D399;font-size:10.5px;padding:1px 6px;border-radius:4px;">98.2% Đạt</span>
+                    </div>
+                  </div>
+                  <div style="height:5px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:24%;height:100%;background:#38BDF8;border-radius:3px;"></div>
+                  </div>
+                </div>
+
+                <!-- Stage 2: T1 -> T2 -->
+                <div style="background:var(--bg-elevated);border-radius:6px;padding:9px 12px;border:1px solid var(--border-main);">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="width:20px;height:20px;border-radius:4px;background:rgba(255,255,255,0.06);color:var(--text-white);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--font-mono);">2</span>
+                      <strong style="color:var(--text-white);font-weight:500;">Kíp trực xuất xe rời trạm</strong>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                      <span style="font-family:var(--font-mono);font-weight:600;color:var(--text-white);">1.8 phút</span>
+                      <span style="font-size:11px;color:var(--text-muted);">(Chuẩn &lt; 2.0 phút)</span>
+                      <span class="badge" style="background:rgba(52,211,153,0.1);color:#34D399;font-size:10.5px;padding:1px 6px;border-radius:4px;">96.5% Đạt</span>
+                    </div>
+                  </div>
+                  <div style="height:5px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:42%;height:100%;background:#38BDF8;border-radius:3px;"></div>
+                  </div>
+                </div>
+
+                <!-- Stage 3: T2 -> T3 -->
+                <div style="background:var(--bg-elevated);border-radius:6px;padding:9px 12px;border:1px solid var(--border-main);">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="width:20px;height:20px;border-radius:4px;background:rgba(255,255,255,0.06);color:var(--text-white);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--font-mono);">3</span>
+                      <strong style="color:var(--text-white);font-weight:500;">Di chuyển đến hiện trường</strong>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                      <span style="font-family:var(--font-mono);font-weight:600;color:var(--text-white);">4.7 phút</span>
+                      <span style="font-size:11px;color:var(--text-muted);">(Chuẩn &lt; 5.0 phút)</span>
+                      <span class="badge" style="background:rgba(52,211,153,0.1);color:#34D399;font-size:10.5px;padding:1px 6px;border-radius:4px;">94.8% Đạt</span>
+                    </div>
+                  </div>
+                  <div style="height:5px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:68%;height:100%;background:#38BDF8;border-radius:3px;"></div>
+                  </div>
+                </div>
+
+                <!-- Stage 4: T3 -> T4 -->
+                <div style="background:var(--bg-elevated);border-radius:6px;padding:9px 12px;border:1px solid var(--border-main);">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="width:20px;height:20px;border-radius:4px;background:rgba(255,255,255,0.06);color:var(--text-white);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--font-mono);">4</span>
+                      <strong style="color:var(--text-white);font-weight:500;">Sơ cấp cứu tại hiện trường</strong>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                      <span style="font-family:var(--font-mono);font-weight:600;color:var(--text-white);">8.5 phút</span>
+                      <span style="font-size:11px;color:var(--text-muted);">(Chuẩn &lt; 10.0 phút)</span>
+                      <span class="badge" style="background:rgba(52,211,153,0.1);color:#34D399;font-size:10.5px;padding:1px 6px;border-radius:4px;">93.1% Đạt</span>
+                    </div>
+                  </div>
+                  <div style="height:5px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:78%;height:100%;background:#38BDF8;border-radius:3px;"></div>
+                  </div>
+                </div>
+
+                <!-- Stage 5: T4 -> T5 -->
+                <div style="background:var(--bg-elevated);border-radius:6px;padding:9px 12px;border:1px solid var(--border-main);">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="width:20px;height:20px;border-radius:4px;background:rgba(255,255,255,0.06);color:var(--text-white);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--font-mono);">5</span>
+                      <strong style="color:var(--text-white);font-weight:500;">Vận chuyển đến bệnh viện</strong>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                      <span style="font-family:var(--font-mono);font-weight:600;color:var(--text-white);">12.2 phút</span>
+                      <span style="font-size:11px;color:var(--text-muted);">(Chuẩn &lt; 15.0 phút)</span>
+                      <span class="badge" style="background:rgba(52,211,153,0.1);color:#34D399;font-size:10.5px;padding:1px 6px;border-radius:4px;">95.0% Đạt</span>
+                    </div>
+                  </div>
+                  <div style="height:5px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:85%;height:100%;background:#38BDF8;border-radius:3px;"></div>
+                  </div>
+                </div>
+
+                <!-- Stage 6: T5 -> T6 -->
+                <div style="background:var(--bg-elevated);border-radius:6px;padding:9px 12px;border:1px solid var(--border-main);">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span style="width:20px;height:20px;border-radius:4px;background:rgba(255,255,255,0.06);color:var(--text-white);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--font-mono);">6</span>
+                      <strong style="color:var(--text-white);font-weight:500;">Bàn giao tại khoa cấp cứu</strong>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                      <span style="font-family:var(--font-mono);font-weight:600;color:var(--text-white);">7.6 phút</span>
+                      <span style="font-size:11px;color:var(--text-muted);">(Chuẩn &lt; 10.0 phút)</span>
+                      <span class="badge" style="background:rgba(52,211,153,0.1);color:#34D399;font-size:10.5px;padding:1px 6px;border-radius:4px;">97.4% Đạt</span>
+                    </div>
+                  </div>
+                  <div style="height:5px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:72%;height:100%;background:#38BDF8;border-radius:3px;"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Summary Cycle Footer (Quiet Neutral) -->
+              <div style="margin-top:12px;padding:10px 14px;background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:6px;display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:12.5px;color:var(--text-white);font-weight:500;">Tổng thời gian toàn trình ca cấp cứu:</span>
+                <span style="font-size:13px;font-family:var(--font-mono);font-weight:600;color:#38BDF8;">35.7 phút <span style="font-size:11px;color:var(--text-muted);font-weight:normal;">(Chuẩn toàn trình &lt; 45.0 phút)</span></span>
+              </div>
+            </div>
+
+            <!-- Delay Causes Breakdown Card -->
+            <div class="content-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                <h3 style="color:var(--text-white);font-size:14px;margin:0;">Phân Tích Nguyên Nhân Chậm Trễ</h3>
+                <span style="font-size:11px;color:var(--text-muted);">74 ca vi phạm</span>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:12px;font-size:12.5px;">
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                    <span style="color:var(--text-white);">Ùn tắc giao thông giờ cao điểm</span>
+                    <strong style="color:#F87171;font-family:var(--font-mono);">46% <span style="font-weight:normal;color:var(--text-muted);font-size:11px;">(34 ca)</span></strong>
+                  </div>
+                  <div style="height:6px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:46%;height:100%;background:#F87171;border-radius:3px;"></div>
+                  </div>
+                  <span style="font-size:11px;color:var(--text-muted);margin-top:2px;display:block;">Đoạn dốc cầu Hưng Lợi, đường 30/4, CMT8</span>
+                </div>
+
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                    <span style="color:var(--text-white);">Hẻm sâu, số nhà nhánh khó định vị</span>
+                    <strong style="color:#FBBF24;font-family:var(--font-mono);">28% <span style="font-weight:normal;color:var(--text-muted);font-size:11px;">(21 ca)</span></strong>
+                  </div>
+                  <div style="height:6px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:28%;height:100%;background:#FBBF24;border-radius:3px;"></div>
+                  </div>
+                  <span style="font-size:11px;color:var(--text-muted);margin-top:2px;display:block;">Khu vực P. Xuân Khánh, An Khánh, Ba Láng</span>
+                </div>
+
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                    <span style="color:var(--text-white);">Thời tiết mưa giông, triều cường ngập</span>
+                    <strong style="color:#CBD5E1;font-family:var(--font-mono);">16% <span style="font-weight:normal;color:var(--text-muted);font-size:11px;">(12 ca)</span></strong>
+                  </div>
+                  <div style="height:6px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:16%;height:100%;background:rgba(148, 163, 184, 0.6);border-radius:3px;"></div>
+                  </div>
+                  <span style="font-size:11px;color:var(--text-muted);margin-top:2px;display:block;">Tuyến QL91, đường Bùi Hữu Nghĩa ngập sâu</span>
+                </div>
+
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                    <span style="color:var(--text-white);">Người gọi báo sai vị trí / nghẽn mạng</span>
+                    <strong style="color:var(--text-muted);font-family:var(--font-mono);">10% <span style="font-weight:normal;color:var(--text-muted);font-size:11px;">(7 ca)</span></strong>
+                  </div>
+                  <div style="height:6px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:10%;height:100%;background:rgba(148, 163, 184, 0.35);border-radius:3px;"></div>
+                  </div>
+                  <span style="font-size:11px;color:var(--text-muted);margin-top:2px;display:block;">Mất sóng tạm thời hoặc máy bận khi gọi lại</span>
+                </div>
+              </div>
+
+              <!-- Recommendation Note (Restrained Card) -->
+              <div style="margin-top:14px;padding:10px 12px;background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:6px;font-size:11.5px;color:var(--text-muted);line-height:1.5;">
+                <strong style="color:#FBBF24;">Khuyến nghị điều hành:</strong> Bố trí xe vệ tinh ứng trực sát chân cầu Hưng Lợi và tăng cường hướng dẫn người dân ghim vị trí GPS qua App Người dân CCNV.
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Row 2: Response by Ward & Response by Clinical Priority -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <!-- Ward Response Card (Monochrome Blue/Slate) -->
+            <div class="content-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <h3 style="color:var(--text-white);font-size:14px;margin:0;">Tỷ Lệ Đạt Chuẩn Thời Gian theo Địa Bàn Phường / Xã</h3>
+                <span style="font-size:11px;color:#34D399;">Toàn mạng &gt; 90%</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px;font-size:12.5px;">
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+                    <span style="color:var(--text-white);">Địa bàn P. Tân An, An Lạc, Xuân Khánh (Trung tâm)</span>
+                    <strong style="color:#38BDF8;font-family:var(--font-mono);">96.5% <span style="font-size:11px;color:var(--text-muted);font-weight:normal;">(TB: 6.2 phút · Chuẩn: &lt; 8.0p)</span></strong>
+                  </div>
+                  <div style="height:5px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:96.5%;height:100%;background:#38BDF8;"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+                    <span style="color:var(--text-white);">Địa bàn P. Hưng Phú, Lê Bình, Ba Láng (Nam Sông)</span>
+                    <strong style="color:#93C5FD;font-family:var(--font-mono);">93.8% <span style="font-size:11px;color:var(--text-muted);font-weight:normal;">(TB: 7.1 phút · Chuẩn: &lt; 8.0p)</span></strong>
+                  </div>
+                  <div style="height:5px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:93.8%;height:100%;background:rgba(56, 189, 248, 0.85);"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+                    <span style="color:var(--text-white);">Địa bàn P. Trà Nóc, An Thới, Bình Thủy</span>
+                    <strong style="color:#CBD5E1;font-family:var(--font-mono);">92.4% <span style="font-size:11px;color:var(--text-muted);font-weight:normal;">(TB: 7.6 phút · Chuẩn: &lt; 8.0p)</span></strong>
+                  </div>
+                  <div style="height:5px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:92.4%;height:100%;background:rgba(56, 189, 248, 0.7);"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+                    <span style="color:var(--text-white);">Địa bàn P. Châu Văn Liêm, Thới Hòa</span>
+                    <strong style="color:var(--text-muted);font-family:var(--font-mono);">88.6% <span style="font-size:11px;color:var(--text-muted);font-weight:normal;">(TB: 9.8 phút · Chuẩn: &lt; 12.0p)</span></strong>
+                  </div>
+                  <div style="height:5px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:88.6%;height:100%;background:rgba(56, 189, 248, 0.5);"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+                    <span style="color:var(--text-white);">Địa bàn P. Thốt Nốt, Trung Kiên & các xã ngoại thành</span>
+                    <strong style="color:var(--text-muted);font-family:var(--font-mono);">85.2% <span style="font-size:11px;color:var(--text-muted);font-weight:normal;">(TB: 11.4 phút · Chuẩn: &lt; 12.0p)</span></strong>
+                  </div>
+                  <div style="height:5px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:85.2%;height:100%;background:rgba(148, 163, 184, 0.35);"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Severity Clinical Priority Card (Refined Medical Cards) -->
+            <div class="content-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <h3 style="color:var(--text-white);font-size:14px;margin:0;">Tốc Độ Đáp Ứng theo Mức Độ Ưu Tiên Lâm Sàng</h3>
+                <span class="badge badge-normal" style="font-size:11px;">Phân loại ưu tiên cấp cứu</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px;font-size:12.5px;">
+                <div style="padding:10px 12px;background:rgba(248,113,113,0.04);border:1px solid rgba(248,113,113,0.18);border-radius:6px;display:flex;justify-content:space-between;align-items:center;">
+                  <div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span class="badge" style="background:rgba(248,113,113,0.15);color:#F87171;border:1px solid rgba(248,113,113,0.25);font-size:11px;font-weight:600;">Tối khẩn</span>
+                      <strong style="color:var(--text-white);">Đột quỵ não, ngừng tim, đa chấn thương</strong>
+                    </div>
+                    <span style="font-size:11.5px;color:var(--text-muted);display:block;margin-top:2px;">Cam kết tiếp cận &lt; 6.0 phút</span>
+                  </div>
+                  <div style="text-align:right;">
+                    <strong style="font-family:var(--font-mono);font-size:14px;color:#F87171;">5.8 phút</strong>
+                    <div style="font-size:11px;color:#34D399;font-weight:500;">97.8% Đạt chuẩn</div>
+                  </div>
+                </div>
+
+                <div style="padding:10px 12px;background:rgba(251,191,36,0.03);border:1px solid rgba(251,191,36,0.18);border-radius:6px;display:flex;justify-content:space-between;align-items:center;">
+                  <div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span class="badge" style="background:rgba(251,191,36,0.12);color:#FBBF24;border:1px solid rgba(251,191,36,0.22);font-weight:600;font-size:11px;">Khẩn cấp</span>
+                      <strong style="color:var(--text-white);">Suy hô hấp, gãy xương lớn, chấn thương sọ não</strong>
+                    </div>
+                    <span style="font-size:11.5px;color:var(--text-muted);display:block;margin-top:2px;">Cam kết tiếp cận &lt; 8.0 phút</span>
+                  </div>
+                  <div style="text-align:right;">
+                    <strong style="font-family:var(--font-mono);font-size:14px;color:#FBBF24;">7.4 phút</strong>
+                    <div style="font-size:11px;color:#34D399;font-weight:500;">94.1% Đạt chuẩn</div>
+                  </div>
+                </div>
+
+                <div style="padding:10px 12px;background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:6px;display:flex;justify-content:space-between;align-items:center;">
+                  <div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span class="badge badge-normal" style="font-size:11px;">Tiêu chuẩn</span>
+                      <strong style="color:var(--text-white);">Cấp cứu thông thường, chuyển viện theo dõi</strong>
+                    </div>
+                    <span style="font-size:11.5px;color:var(--text-muted);display:block;margin-top:2px;">Cam kết tiếp cận &lt; 12.0 phút</span>
+                  </div>
+                  <div style="text-align:right;">
+                    <strong style="font-family:var(--font-mono);font-size:14px;color:var(--text-white);">9.8 phút</strong>
+                    <div style="font-size:11px;color:#34D399;font-weight:500;">92.3% Đạt chuẩn</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // ==========================================
+      // TAB 2: CHI TIẾT CA & ĐÁNH GIÁ THỜI GIAN (DataTable, Search, Sort, Filter, Export Excel)
+      // ==========================================
+      else if (activeTab === 'detail') {
+        pane.innerHTML = `
+          <div class="content-card" style="padding:0;overflow:visible;">
+            <div id="report-sla-detail-table-mount"></div>
+          </div>
+        `;
+
+        new window.CCNV_UI.DataTable({
+          containerId: 'report-sla-detail-table-mount',
+          data: slaRecords,
+          pageSize: 10,
+          exportTitle: 'Báo cáo Đo lường Thời gian Đáp ứng Chuẩn Cấp cứu Ngoại viện TP Cần Thơ',
+          enableExport: true,
+          showSortSelect: true,
+          searchPlaceholder: 'Tìm mã ca, bệnh nhân, xe cấp cứu, địa bàn, ghi chú...',
+          defaultSortKey: 'createdAt',
+          defaultSortOrder: 'desc',
+          filterOptions: [
+            { label: 'Tất cả trạng thái', value: 'ALL', filterFn: () => true },
+            { label: 'Đạt chuẩn', value: 'MET', filterFn: item => item.slaStatus === 'MET' },
+            { label: 'Cận chuẩn', value: 'NEAR', filterFn: item => item.slaStatus === 'NEAR' },
+            { label: 'Chậm trễ', value: 'BREACH', filterFn: item => item.slaStatus === 'BREACH' },
+            { label: 'Tối khẩn', value: 'CRITICAL', filterFn: item => item.severity === 'CRITICAL' },
+            { label: 'Khẩn cấp', value: 'EMERGENCY', filterFn: item => item.severity === 'EMERGENCY' }
+          ],
+          columns: [
+            {
+              key: 'code',
+              title: 'Mã ca',
+              sortable: true,
+              render: item => `<strong style="font-family:var(--font-mono);color:#93C5FD;">${item.code}</strong>`
+            },
+            {
+              key: 'createdAt',
+              title: 'Thời điểm',
+              sortable: true,
+              render: item => `<span style="font-size:12px;color:var(--text-white);">${item.createdAt.replace('T', ' ')}</span>`
+            },
+            {
+              key: 'patientName',
+              title: 'Bệnh nhân',
+              sortable: true,
+              render: item => `<strong>${item.patientName}</strong> <span style="font-size:11.5px;color:var(--text-muted);">(${item.patientAge}T · ${item.patientGender})</span>`
+            },
+            {
+              key: 'incidentName',
+              title: 'Tình huống',
+              sortable: true,
+              render: item => `<span style="font-size:12px;">${item.incidentName}</span>`
+            },
+            {
+              key: 'severity',
+              title: 'Mức độ',
+              sortable: true,
+              render: item => {
+                if (item.severity === 'CRITICAL') return `<span class="badge badge-emergency" style="font-size:11px;">Tối khẩn</span>`;
+                if (item.severity === 'EMERGENCY') return `<span class="badge" style="background:#F59E0B;color:#000;font-weight:600;font-size:11px;">Khẩn cấp</span>`;
+                return `<span class="badge badge-normal" style="font-size:11px;">Tiêu chuẩn</span>`;
+              }
+            },
+            {
+              key: 'vehiclePlate',
+              title: 'Xe tiếp nhận',
+              sortable: true,
+              render: item => `<span style="font-family:var(--font-mono);font-weight:600;color:var(--text-white);">${item.vehiclePlate}</span>`
+            },
+            {
+              key: 'district',
+              title: 'Địa bàn (Phường/Xã)',
+              sortable: true,
+              render: item => `<span style="font-size:12px;">${item.district}</span>`
+            },
+            {
+              key: 'callToDispatch',
+              title: 'Phát lệnh',
+              sortable: false,
+              render: item => `<span style="font-family:var(--font-mono);color:#60A5FA;font-weight:600;">${item.callToDispatch}</span>`
+            },
+            {
+              key: 'callToScene',
+              title: 'Tiếp cận',
+              sortable: true,
+              render: item => {
+                const color = item.slaStatus === 'MET' ? '#10B981' : (item.slaStatus === 'NEAR' ? '#F59E0B' : '#EF4444');
+                return `<strong style="font-family:var(--font-mono);color:${color};font-size:12.5px;">${item.callToScene}</strong>`;
+              }
+            },
+            {
+              key: 'slaStatus',
+              title: 'Đánh giá thời gian',
+              sortable: true,
+              render: item => {
+                if (item.slaStatus === 'MET') {
+                  return `<span class="badge" style="background:rgba(16,185,129,0.18);color:#10B981;border:1px solid rgba(16,185,129,0.3);font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;">✓ Đạt chuẩn</span>`;
+                }
+                if (item.slaStatus === 'NEAR') {
+                  return `<span class="badge" style="background:rgba(245,158,11,0.18);color:#F59E0B;border:1px solid rgba(245,158,11,0.3);font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;">⚠ Cận chuẩn</span>`;
+                }
+                return `<span class="badge" style="background:rgba(239,68,68,0.18);color:#EF4444;border:1px solid rgba(239,68,68,0.3);font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;">✕ Chậm trễ</span>`;
+              }
+            },
+            {
+              key: 'delayReason',
+              title: 'Ghi chú / Nguyên nhân',
+              sortable: false,
+              render: item => {
+                const isDelay = item.slaStatus === 'BREACH';
+                return `<span style="font-size:11.5px;color:${isDelay ? '#FCA5A5' : 'var(--text-muted)'};">${item.delayReason}</span>`;
               }
             }
           ]
@@ -3814,19 +4986,34 @@
         data: incidents,
         pageSize: 10,
         exportTitle: 'Danh mục Loại tình huống',
-        searchPlaceholder: 'Tìm mã, tên tình huống...',
+        searchPlaceholder: 'Tìm mã, tên tình huống, triệu chứng...',
         defaultSortKey: 'code',
         defaultSortOrder: 'asc',
         columns: [
           { key: 'code', title: 'Mã tình huống', sortable: true, render: i => `<strong style="font-family:var(--font-mono);color:#93C5FD;">${i.code}</strong>` },
-          { key: 'name', title: 'Tên tình huống cấp cứu', sortable: true, render: i => `<strong>${i.name}</strong>` },
+          { key: 'name', title: 'Tên tình huống cấp cứu (Chuẩn Form Tạo ca)', sortable: true, render: i => `<strong style="color:var(--text-white);">${i.name}</strong>` },
           {
             key: 'severity',
             title: 'Mức độ ưu tiên',
             sortable: true,
-            render: i => `<span class="badge ${i.severity === 'CRITICAL' || i.severity === 'EMERGENCY' ? 'badge-emergency' : 'badge-normal'}">${i.severity}</span>`
+            render: i => {
+              if (i.severity === 'CRITICAL') return `<span class="badge badge-emergency" style="background:rgba(239, 68, 68, 0.2);color:#F87171;border:1px solid #DC2626;">🔴 Tối khẩn</span>`;
+              if (i.severity === 'EMERGENCY') return `<span class="badge" style="background:rgba(245, 158, 11, 0.2);color:#FBBF24;border:1px solid #D97706;">🟠 Khẩn cấp</span>`;
+              return `<span class="badge badge-normal" style="background:rgba(16, 185, 129, 0.2);color:#34D399;border:1px solid #059669;">🟢 Thường</span>`;
+            }
           },
-          { key: 'suggestedType', title: 'Loại xe / Kíp đề xuất', sortable: true, render: i => i.suggestedType || 'Type B' }
+          {
+            key: 'suggestedType',
+            title: 'Xe đề xuất',
+            sortable: true,
+            render: i => `<span class="status-pill status-pill-completed" style="font-weight:600;">${i.suggestedType || 'Type B'}</span>`
+          },
+          {
+            key: 'guide',
+            title: 'Hướng dẫn sơ cứu ban đầu',
+            sortable: false,
+            render: i => `<span style="font-size:12px;color:var(--text-slate);line-height:1.4;display:block;">${i.guide || '-'}</span>`
+          }
         ]
       }).render();
 
@@ -3844,23 +5031,23 @@
               <h3 style="color:var(--text-white);font-size:14px;margin-bottom:12px;">1. Danh mục Trạng thái Xe Cứu thương</h3>
               <ul style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--text-slate);list-style:none;padding:0;">
                 <li style="display:flex;align-items:center;justify-content:space-between;padding:8px;background:var(--bg-elevated);border-radius:4px;">
-                  <span><strong>READY</strong> — Sẵn sàng xuất kích</span>
+                  <span><strong>READY</strong> - Sẵn sàng xuất kích</span>
                   <span class="status-pill status-pill-completed">Sẵn sàng</span>
                 </li>
                 <li style="display:flex;align-items:center;justify-content:space-between;padding:8px;background:var(--bg-elevated);border-radius:4px;">
-                  <span><strong>DISPATCHED</strong> — Đã điều động tới hiện trường</span>
+                  <span><strong>DISPATCHED</strong> - Đã điều động tới hiện trường</span>
                   <span class="status-pill status-pill-processing">Đã điều động</span>
                 </li>
                 <li style="display:flex;align-items:center;justify-content:space-between;padding:8px;background:var(--bg-elevated);border-radius:4px;">
-                  <span><strong>ON_SCENE</strong> — Đang xử trí tại hiện trường</span>
+                  <span><strong>ON_SCENE</strong> - Đang xử trí tại hiện trường</span>
                   <span class="status-pill status-pill-new">Tại hiện trường</span>
                 </li>
                 <li style="display:flex;align-items:center;justify-content:space-between;padding:8px;background:var(--bg-elevated);border-radius:4px;">
-                  <span><strong>TRANSPORTING</strong> — Đang vận chuyển về BV</span>
+                  <span><strong>TRANSPORTING</strong> - Đang vận chuyển về BV</span>
                   <span class="status-pill status-pill-new">Đang chở BN</span>
                 </li>
                 <li style="display:flex;align-items:center;justify-content:space-between;padding:8px;background:var(--bg-elevated);border-radius:4px;">
-                  <span><strong>MAINTENANCE</strong> — Đang bảo dưỡng / Nạp oxy</span>
+                  <span><strong>MAINTENANCE</strong> - Đang bảo dưỡng / Nạp oxy</span>
                   <span class="status-pill status-pill-cancelled">Bảo trì</span>
                 </li>
               </ul>
@@ -3870,23 +5057,23 @@
               <h3 style="color:var(--text-white);font-size:14px;margin-bottom:12px;">2. Danh mục Trạng thái Ca Cấp cứu</h3>
               <ul style="display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--text-slate);list-style:none;padding:0;">
                 <li style="display:flex;align-items:center;justify-content:space-between;padding:8px;background:var(--bg-elevated);border-radius:4px;">
-                  <span><strong>NEW</strong> — Tiếp nhận cuộc gọi mới</span>
+                  <span><strong>NEW</strong> - Tiếp nhận cuộc gọi mới</span>
                   <span class="status-pill status-pill-new">Mới tạo</span>
                 </li>
                 <li style="display:flex;align-items:center;justify-content:space-between;padding:8px;background:var(--bg-elevated);border-radius:4px;">
-                  <span><strong>DISPATCHED</strong> — Đã phát lệnh điều xe</span>
+                  <span><strong>DISPATCHED</strong> - Đã phát lệnh điều xe</span>
                   <span class="status-pill status-pill-processing">Đã điều động</span>
                 </li>
                 <li style="display:flex;align-items:center;justify-content:space-between;padding:8px;background:var(--bg-elevated);border-radius:4px;">
-                  <span><strong>TRANSPORTING</strong> — Đang trên đường về BV</span>
+                  <span><strong>TRANSPORTING</strong> - Đang trên đường về BV</span>
                   <span class="status-pill status-pill-new">Đang chuyển</span>
                 </li>
                 <li style="display:flex;align-items:center;justify-content:space-between;padding:8px;background:var(--bg-elevated);border-radius:4px;">
-                  <span><strong>COMPLETED</strong> — Hoàn tất bàn giao cho BV</span>
+                  <span><strong>COMPLETED</strong> - Hoàn tất bàn giao cho BV</span>
                   <span class="status-pill status-pill-completed">Hoàn tất</span>
                 </li>
                 <li style="display:flex;align-items:center;justify-content:space-between;padding:8px;background:var(--bg-elevated);border-radius:4px;">
-                  <span><strong>CANCELLED</strong> — Hủy ca (có lý do)</span>
+                  <span><strong>CANCELLED</strong> - Hủy ca (có lý do)</span>
                   <span class="status-pill status-pill-cancelled">Đã hủy</span>
                 </li>
               </ul>
@@ -4240,483 +5427,1550 @@
       });
     }
 
-    // --- HOSPITAL VIEWS (BV-01 to BV-07) ---
-    renderHospitalIncomingView(container) {
+    // ============================================================
+    // DEMO FLOW TIẾP NHẬN BỆNH NHÂN (DÀNH CHO TÀI KHOẢN BỆNH VIỆN)
+    // B1: Nhận pop-up thông báo tiếp nhận BN -> 2 nút: Xác nhận / Chi tiết
+    //     - Xác nhận: tạo ca trên DS, chuyển về màn Bản đồ
+    //     - Chi tiết: chuyển vào màn Cấp cứu, mở chi tiết ca -> trong chi tiết ca nhấn Xác nhận mới tạo ca trên DS
+    // B2: Sau khi Xác nhận -> Danh sách cấp cứu & bản đồ hiển thị ca vừa tiếp nhận
+    // ============================================================
+    startHospitalDemo() {
       const state = window.StateManager.getState();
       const currentUser = window.StateManager.getCurrentUser();
-      const myHospId = currentUser?.hospitalId || 'HOSP_BVDK';
-      const myCases = (state.cases || []).filter(c => c.dispatch.hospitalId === myHospId && c.status !== 'COMPLETED');
+      const myHospId = currentUser?.hospitalId || 'HOSP_BVTU';
+      const myHosp = (state.hospitals || []).find(h => h.id === myHospId) || state.hospitals.find(h => h.id === 'HOSP_BVTU') || state.hospitals[0];
 
-      container.innerHTML = `
-        <div class="view-container-full">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <div>
-              <h2 style="color:var(--text-white);font-size:18px;">Khoa Cấp cứu — Tiếp nhận Ca đang đến</h2>
-              <p style="font-size:12px;color:var(--text-muted);">${currentUser?.organization} · Sẵn sàng đón tiếp bệnh nhân</p>
+      const seedCase = state.demoCase || window.SEED_DATA?.demoCase || (window.SEED_DATA?.cases && window.SEED_DATA.cases[0]);
+      const demoCase = seedCase ? JSON.parse(JSON.stringify(seedCase)) : {
+        id: 'CC-261002-001',
+        code: 'CC-261002-001',
+        createdAt: new Date().toISOString()
+      };
+
+      const now = new Date();
+      const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0');
+
+      demoCase.id = 'CC-261002-001';
+      demoCase.code = 'CC-261002-001';
+      demoCase.createdAt = `2026-10-05T${timeStr}`;
+      demoCase.dispatch = demoCase.dispatch || {};
+      demoCase.dispatch.hospitalId = myHosp.id;
+      demoCase.dispatch.hospitalName = myHosp.name;
+      demoCase.dispatch.vehiclePlate = demoCase.dispatch.vehiclePlate || '65A-012.34';
+      demoCase.dispatch.crewName = demoCase.dispatch.crewName || 'Kíp 3 - Cái Răng';
+      demoCase.status = 'TRANSPORTING';
+      demoCase.statusText = 'Đang đến viện';
+      demoCase.stageLabel = 'Xe đang đến viện';
+      demoCase.eta = '4 phút';
+      demoCase.hospitalResponse = 'PENDING';
+      demoCase.hospitalResponseText = 'Chờ BV tiếp nhận';
+
+      this.showHospitalIncomingAlertModal(demoCase);
+    }
+
+    showHospitalIncomingAlertModal(demoCase) {
+      let alertModal = document.getElementById('hospital-incoming-alert-modal');
+      if (!alertModal) {
+        alertModal = document.createElement('div');
+        alertModal.id = 'hospital-incoming-alert-modal';
+        alertModal.className = 'modal-overlay';
+        document.body.appendChild(alertModal);
+      }
+
+      window.CCNV_UI.SoundFx.playEmergencyTone?.();
+
+      const p = demoCase.patient || {};
+      const inc = demoCase.incident || {};
+      const d = demoCase.dispatch || {};
+      const vit = demoCase.epcr?.vitals || {};
+
+      alertModal.innerHTML = `
+        <div class="modal-box" style="border: 2px solid var(--red-primary); box-shadow: 0 0 50px rgba(239, 68, 68, 0.45); max-width: 620px; background: #0c1524; color: #f8fafc; border-radius: 12px; overflow: hidden; animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);">
+          <!-- Header -->
+          <div class="modal-header" style="background: linear-gradient(90deg, #3f0e15 0%, #1e1020 100%); border-bottom: 1px solid rgba(239,68,68,0.4); padding: 14px 20px; display:flex; align-items:center; justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <strong style="color:#ffffff;font-size:16px;text-transform:uppercase;letter-spacing:0.5px;">THÔNG BÁO TIẾP NHẬN BỆNH NHÂN</strong>
+                  <span class="badge badge-emergency" style="animation:pulse 1.8s infinite;padding:2px 8px;font-size:11px;">● KHẨN CẤP</span>
+                </div>
+                <div style="font-size:11.5px;color:var(--text-slate);margin-top:2px;">
+                  Trung tâm Điều phối 115 phát tín hiệu tiếp nhận bệnh nhân ngoại viện đến BV
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-ghost btn-sm" id="btn-close-hospital-alert" style="width:30px;height:30px;padding:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted);border-radius:6px;">
+              ${window.CCNV_UI.ICONS.x}
+            </button>
+          </div>
+
+          <!-- Body -->
+          <div class="modal-body" style="padding: 18px 20px; background: #0c1524; display:flex; flex-direction:column; gap: 14px;">
+            <!-- Banner ETA & Vehicle -->
+            <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 8px; padding: 10px 14px; display:flex; align-items:center; justify-content:space-between;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div>
+                  <strong style="color:var(--text-white);font-size:13.5px;">Xe cứu thương: <span style="color:#f59e0b;font-family:var(--font-mono);">${d.vehiclePlate || '65A-012.34'}</span></strong>
+                  <div style="font-size:11.5px;color:var(--text-slate);margin-top:1px;">Kíp trực: ${d.crewName || 'Kíp 3 - Cái Răng'} · Vận tốc: 52 km/h</div>
+                </div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:11px;color:var(--text-slate);">Dự kiến đến viện:</div>
+                <div style="font-size:16px;font-weight:800;color:var(--red-vivid);font-family:var(--font-mono);">${demoCase.eta || '4 phút'}</div>
+              </div>
+            </div>
+
+            <!-- Patient & Clinical Card -->
+            <div style="background: var(--bg-card); border: 1px solid var(--border-main); border-radius: 8px; padding: 12px 14px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;border-bottom:1px solid var(--border-main);padding-bottom:8px;">
+                <div style="font-size:14px;font-weight:700;color:var(--text-white);">
+                  ${p.name || 'Phan Văn Đức'} <span style="font-weight:normal;color:var(--text-muted);font-size:12px;">(${p.age || 58}T · ${p.gender || 'Nam'})</span>
+                </div>
+                <span class="badge badge-accent" style="font-family:var(--font-mono);font-size:11px;">Mã: ${demoCase.code || 'CC-261002-001'}</span>
+              </div>
+
+              <div style="font-size:12.5px;line-height:1.5;color:var(--text-light);margin-bottom:10px;">
+                <span style="color:var(--text-slate);">Tình huống / Chẩn đoán:</span>
+                <strong style="color:#ffffff;"> ${inc.name || 'Tai nạn giao thông'}</strong> - ${inc.description || 'Đa chấn thương phần mềm, xây xát cẳng tay, theo dõi chấn thương ngực kín.'}
+              </div>
+
+              <!-- 4 Ô Sinh hiệu nhanh -->
+              <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:8px;">
+                <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:6px;padding:6px;text-align:center;">
+                  <div style="font-size:10px;color:var(--text-slate);">Mạch</div>
+                  <div style="font-size:14px;font-weight:700;color:#ffffff;font-family:var(--font-mono);">${vit.pulse || 92} <span style="font-size:9px;color:var(--text-muted);">bpm</span></div>
+                </div>
+                <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:6px;padding:6px;text-align:center;">
+                  <div style="font-size:10px;color:var(--text-slate);">Huyết áp</div>
+                  <div style="font-size:14px;font-weight:700;color:#ffffff;font-family:var(--font-mono);">${vit.bp || '135/85'}</div>
+                </div>
+                <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:6px;padding:6px;text-align:center;">
+                  <div style="font-size:10px;color:var(--text-slate);">SpO2</div>
+                  <div style="font-size:14px;font-weight:700;color:#38bdf8;font-family:var(--font-mono);">${vit.spO2 || 95}%</div>
+                </div>
+                <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:6px;padding:6px;text-align:center;">
+                  <div style="font-size:10px;color:var(--text-slate);">Glasgow</div>
+                  <div style="font-size:14px;font-weight:700;color:#34d399;font-family:var(--font-mono);">${vit.gcs || 14}đ</div>
+                </div>
+              </div>
+
+              <div style="margin-top:10px;font-size:11.5px;color:var(--text-slate);display:flex;align-items:center;justify-content:space-between;">
+                <span>Hiện trường: <strong>${demoCase.location?.address || 'Cầu Hưng Lợi, TP Cần Thơ'}</strong></span>
+                <span style="color:#10b981;">✓ Sơ cứu & truyền dịch tại xe</span>
+              </div>
             </div>
           </div>
 
-          <div class="content-card" style="padding:0;overflow:visible;">
-            <div id="hospital-incoming-table-mount"></div>
+          <!-- Footer Buttons -->
+          <div class="modal-footer" style="padding: 12px 20px; background: #080f1a; border-top: 1px solid var(--border-main); display:flex; align-items:center; justify-content:flex-end; gap: 10px;">
+            <button class="btn btn-default" id="btn-hospital-alert-detail" style="padding: 8px 18px; font-size: 13px; display:inline-flex; align-items:center; gap:6px;">
+              ${window.CCNV_UI.ICONS.fileText || '📄'}
+              <span>Chi tiết</span>
+            </button>
+            <button class="btn btn-emergency" id="btn-hospital-alert-confirm" style="padding: 8px 22px; font-size: 13px; font-weight:700; display:inline-flex; align-items:center; gap:6px; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);">
+              ${window.CCNV_UI.ICONS.check || '✓'}
+              <span>Xác nhận</span>
+            </button>
           </div>
         </div>
       `;
 
-      new window.CCNV_UI.DataTable({
-        containerId: 'hospital-incoming-table-mount',
-        data: myCases,
-        pageSize: 10,
-        exportTitle: 'Ca Cấp cứu Đang đến BV',
-        searchPlaceholder: 'Tìm mã ca, bệnh nhân, xe chở, tình huống...',
-        defaultSortKey: 'code',
-        defaultSortOrder: 'asc',
-        filterOptions: [
-          { label: 'Đã xác nhận tiếp nhận', value: 'ACCEPTED', filterFn: c => c.hospitalResponse === 'ACCEPTED' },
-          { label: 'Chờ bệnh viện phản hồi', value: 'PENDING', filterFn: c => c.hospitalResponse !== 'ACCEPTED' }
-        ],
-        columns: [
-          { key: 'code', title: 'Mã ca', sortable: true, render: c => `<strong style="font-family:var(--font-mono);color:#93C5FD;">${c.code}</strong>` },
-          { key: 'patient', title: 'Bệnh nhân', sortable: false, render: c => `<strong>${c.patient.name}</strong> (${c.patient.age}T, ${c.patient.gender})` },
-          { key: 'incident', title: 'Tình trạng', sortable: false, render: c => `<span class="badge badge-emergency">${c.incident.name}</span>` },
-          { key: 'vehiclePlate', title: 'Xe đang chở', sortable: true, render: c => `<span style="font-family:var(--font-mono);font-weight:600;color:var(--text-white);">${c.dispatch.vehiclePlate}</span>` },
-          { key: 'crewName', title: 'Kíp trực', sortable: true, render: c => c.dispatch.crewName },
-          { key: 'eta', title: 'ETA', sortable: false, render: c => `<strong style="color:var(--red-vivid);font-size:13.5px;">${c.eta || '6 phút'}</strong>` },
-          {
-            key: 'hospitalResponse',
-            title: 'Phản hồi của BV',
-            sortable: true,
-            render: c => {
-              if (c.hospitalResponse === 'ACCEPTED') return `<span class="status-pill status-pill-completed">Đã xác nhận</span>`;
-              return `<span class="status-pill status-pill-processing">Chờ phản hồi</span>`;
-            }
-          },
-          {
-            key: 'actions',
-            title: 'Thao tác',
-            sortable: false,
-            render: c => `
-              <button class="btn btn-emergency btn-sm btn-hosp-accept" data-case-id="${c.id}">Xác nhận Đón</button>
-              <button class="btn btn-default btn-sm btn-open-case-detail" data-case-id="${c.id}" style="margin-left:6px;">Hồ sơ ePCR</button>
-            `
-          }
-        ]
-      }).render();
+      alertModal.classList.add('active');
 
+      const closeAlert = () => alertModal.classList.remove('active');
+      alertModal.querySelector('#btn-close-hospital-alert')?.addEventListener('click', closeAlert);
+
+      // B1 Flow 1: Nhấn Xác nhận -> Tạo ca trên danh sách, cập nhật view
+      alertModal.querySelector('#btn-hospital-alert-confirm')?.addEventListener('click', () => {
+        closeAlert();
+        this.commitHospitalDemoCase(demoCase);
+        window.CCNV_UI.Toast.show(
+          'Đã xác nhận tiếp nhận',
+          `Khoa Cấp cứu đã xác nhận tiếp nhận ca ${demoCase.code}. Xe ${demoCase.dispatch?.vehiclePlate || ''} đang chuyển viện đến.`
+        );
+        const mainVp = document.getElementById('main-content-viewport');
+        if (mainVp) {
+          if (this.currentMenu === 'hospital-cases') {
+            this.renderHospitalCasesView(mainVp);
+          } else {
+            this.renderCurrentView();
+          }
+        }
+      });
+
+      // B1 Flow 2: Nhấn Chi tiết -> Chuyển vào màn Cấp cứu và mở chi tiết ca (tiếp tục nhấn xác nhận trong modal mới tạo ca)
+      alertModal.querySelector('#btn-hospital-alert-detail')?.addEventListener('click', () => {
+        closeAlert();
+        this.navigateTo('hospital-cases');
+        this.openCaseDetailModal(demoCase.id, demoCase);
+      });
+    }
+
+    commitHospitalDemoCase(demoCase) {
+      const state = window.StateManager.getState();
+      const currentUser = window.StateManager.getCurrentUser();
+      const myHospId = currentUser?.hospitalId || demoCase.dispatch?.hospitalId || 'HOSP_BVTU';
+      const myHosp = (state.hospitals || []).find(h => h.id === myHospId) || state.hospitals?.[0] || { name: 'Khoa Cấp cứu' };
+
+      // 1. Cập nhật trạng thái phản hồi của bệnh viện
+      demoCase.hospitalResponse = 'ACCEPTED';
+      demoCase.hospitalResponseText = 'Đã xác nhận';
+      demoCase.status = 'TRANSPORTING';
+      demoCase.statusText = 'Đang đến viện';
+      demoCase.stageLabel = 'Xe đang đến viện';
+      demoCase.eta = demoCase.eta || '4 phút';
+
+      // Đảm bảo gán đúng bệnh viện tiếp nhận của tài khoản đang đăng nhập
+      if (!demoCase.dispatch) demoCase.dispatch = {};
+      demoCase.dispatch.hospitalId = myHosp.id;
+      demoCase.dispatch.hospitalName = myHosp.name;
+
+      // 2. Cập nhật thời gian tạo ca thành HÔM NAY (2026-10-05) để khớp bộ lọc mặc định của màn hình danh sách ca
+      const now = new Date();
+      const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ':' + String(now.getSeconds()).padStart(2, '0');
+      demoCase.createdAt = `2026-10-05T${timeStr}`;
+
+      // 3. Bổ sung sự kiện Xác nhận tiếp nhận vào timeline log của ca (Tab Nhật ký sự kiện)
+      demoCase.logs = Array.isArray(demoCase.logs) ? demoCase.logs : [];
+      const timeDisplay = `${timeStr} - 05/10/2026`;
+      const receiverName = currentUser?.fullname || currentUser?.username || 'BS. Trực Cấp cứu';
+      const hospName = myHosp.name || 'Bệnh viện';
+
+      const confirmLogEntry = {
+        time: timeDisplay,
+        type: 'HOSPITAL',
+        badge: 'BV TIẾP NHẬN',
+        color: '#34d399',
+        user: `${receiverName} (${hospName})`,
+        action: `Khoa Cấp cứu ${hospName} xác nhận tiếp nhận người bệnh ${demoCase.patient?.name || ''}. Sẵn sàng kíp trực & trang thiết bị đón tại sảnh cấp cứu.`
+      };
+
+      if (!demoCase.logs.some(l => l.badge === 'BV TIẾP NHẬN')) {
+        demoCase.logs.push(confirmLogEntry);
+      }
+
+      // 4. Ghi nhận nhật ký sự kiện vào StateManager Case Logs & Audit Logs
+      window.StateManager.addCaseLog(demoCase.id, `Khoa Cấp cứu ${hospName} xác nhận tiếp nhận người bệnh ${demoCase.patient?.name || ''}.`);
+      window.StateManager.addAuditLog(`Khoa Cấp cứu ${hospName} xác nhận tiếp nhận ca ${demoCase.code} (Xe ${demoCase.dispatch?.vehiclePlate || '65A-012.34'})`);
+
+      // 5. Đưa ca vào danh sách ca hoạt động (đặt lên đầu danh sách)
+      const existingIdx = (state.cases || []).findIndex(c => c.id === demoCase.id || c.code === demoCase.code);
+      if (existingIdx >= 0) {
+        state.cases[existingIdx] = demoCase;
+      } else {
+        state.cases.unshift(demoCase);
+      }
+
+      // 6. Cập nhật trạng thái xe di chuyển đến viện
+      const plate = demoCase.dispatch?.vehiclePlate || '65A-012.34';
+      const veh = (state.vehicles || []).find(v => v.plate === plate);
+      if (veh) {
+        veh.status = 'TRANSPORTING';
+        veh.statusText = 'Đang đến viện';
+        veh.speed = 52;
+        veh.coords = [10.0235, 105.7730];
+      }
+
+      this.hospitalDemoRunning = true;
+      this.setDemoButton(true);
+      window.StateManager.saveToSession?.();
+
+      // 7. Bắn sự kiện CASE_CREATED để đồng bộ toàn bộ giao diện: Danh sách ca, Bản đồ, KPI, Badges
+      window.StateManager.notify('CASE_CREATED', demoCase);
+    }
+
+    endHospitalDemo() {
+      const state = window.StateManager.getState();
+      state.cases = (state.cases || []).filter(c => c.id !== 'CC-261002-001' && c.code !== 'CC-261002-001');
+      const plate = '65A-012.34';
+      const veh = (state.vehicles || []).find(v => v.plate === plate);
+      if (veh) {
+        veh.status = 'READY';
+        veh.statusText = 'Sẵn sàng';
+        veh.speed = 0;
+        veh.coords = [10.0150, 105.7720];
+      }
+      this.hospitalDemoRunning = false;
+      this.setDemoButton(false);
+      window.StateManager.saveToSession?.();
+      window.CCNV_UI.Toast.show('Đã kết thúc demo', 'Đã đặt lại dữ liệu tiếp nhận của Khoa Cấp cứu.');
+      this.renderCurrentView();
+    }
+
+    // --- HOSPITAL VIEWS (BẢN ĐỒ XE ĐẾN, TIẾP NHẬN & BÀN GIAO GỘP, CHUYÊN KHOA) ---
+
+    // 1. BẢN ĐỒ GIÁM SÁT TIẾP NHẬN (REUSE NGUYÊN BẢN CODEBASE BẢN ĐỒ ĐIỀU HÀNH TRUNG TÂM)
+    renderHospitalMapView(container) {
+      return this.renderRealtimeMapView(container);
+    }
+
+    // 2. CONSOLIDATED CASES VIEW: CẤP CỨU - KHOA CẤP CỨU
+    renderHospitalCasesView(container, activeTab = 'active') {
+      const state = window.StateManager.getState();
+      const currentUser = window.StateManager.getCurrentUser();
+      const myHospId = currentUser?.hospitalId || 'HOSP_BVTU';
+
+      // Khởi tạo state bộ lọc nếu chưa có
+      if (this.hospitalCasesDateFilter === undefined) {
+        this.hospitalCasesDateFilter = '2026-10-05'; // Mặc định hôm nay: sẵn sàng demo
+      }
+      if (this.hospitalCasesSearchQuery === undefined) {
+        this.hospitalCasesSearchQuery = '';
+      }
+      if (this.hospitalCasesSortMode === undefined) {
+        this.hospitalCasesSortMode = 'NEWEST';
+      }
+
+      // 1. Chuẩn hóa dữ liệu ca của BV (Active + History)
+      const activeRaw = (state.cases || []).filter(c =>
+        (c.dispatch?.hospitalId === myHospId || !c.dispatch?.hospitalId) &&
+        !['COMPLETED', 'CANCELLED', 'CLOSED'].includes(c.status)
+      );
+      const historyRaw = (state.historyCases || []).filter(h => h.hospitalId === myHospId || !h.hospitalId);
+
+      const activeList = activeRaw.map(c => ({
+        id: c.id,
+        code: c.code,
+        createdAt: c.createdAt,
+        patientName: c.patient?.name || '-',
+        patientAge: c.patient?.age || '',
+        patientGender: c.patient?.gender || '',
+        incidentName: c.incident?.name || 'Cấp cứu',
+        severity: c.incident?.severity || 'ROUTINE',
+        locationAddress: c.location?.address || '-',
+        vehiclePlate: c.dispatch?.vehiclePlate || '-',
+        crewName: c.dispatch?.crewName || '-',
+        hospitalName: c.dispatch?.hospitalName || currentUser?.organization || '-',
+        hospitalResponse: c.hospitalResponse || 'PENDING',
+        status: c.status,
+        statusText: c.statusText || (c.status === 'TRANSPORTING' ? 'Đang đến viện' : c.status === 'COMPLETED' ? 'Hoàn tất' : 'Đang xử lý'),
+        eta: c.eta || (c.status === 'TRANSPORTING' ? '4 phút' : '-'),
+        isHistory: false,
+        raw: c
+      }));
+
+      const historyList = historyRaw.map(h => ({
+        id: h.id,
+        code: h.code,
+        createdAt: h.createdAt,
+        completedAt: h.completedAt,
+        patientName: h.patientName || '-',
+        patientAge: h.patientAge || '',
+        patientGender: h.patientGender || 'Nam',
+        incidentName: h.incidentName || 'Cấp cứu',
+        severity: h.severity || 'ROUTINE',
+        locationAddress: h.locationAddress || 'TP Cần Thơ',
+        vehiclePlate: h.vehiclePlate || '-',
+        crewName: h.crewName || 'Kíp trực 115',
+        hospitalName: h.hospitalName || currentUser?.organization || '-',
+        hospitalResponse: 'ACCEPTED',
+        status: h.status || 'COMPLETED',
+        statusText: h.statusText || 'Hoàn tất',
+        eta: '-',
+        isHistory: true,
+        raw: h
+      }));
+
+      // Gộp tất cả ca (Đang xử lý + Lịch sử) thành một nguồn duy nhất
+      const allCases = [...activeList, ...historyList];
+
+      // Hàm chuẩn hóa ngày YYYY-MM-DD
+      const getCaseDateStr = (dateVal) => {
+        if (!dateVal) return '';
+        if (typeof dateVal === 'string' && /^\d{4}-\d{2}-\d{2}/.test(dateVal)) {
+          return dateVal.substring(0, 10);
+        }
+        const d = new Date(dateVal);
+        if (!isNaN(d.getTime())) {
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          return `${y}-${m}-${day}`;
+        }
+        return '2026-10-05';
+      };
+
+      // 2. Lọc theo ngày được chọn (nếu có chọn ngày)
+      let filteredCases = allCases;
+      if (this.hospitalCasesDateFilter) {
+        filteredCases = filteredCases.filter(c => {
+          const cDate = getCaseDateStr(c.createdAt);
+          return cDate === this.hospitalCasesDateFilter;
+        });
+      }
+
+      // 3. Tìm kiếm theo từ khóa (Mã ca, Tên BN, Xe, Tình huống, Địa chỉ, Kíp trực)
+      const q = (this.hospitalCasesSearchQuery || '').trim().toLowerCase();
+      if (q) {
+        filteredCases = filteredCases.filter(c => {
+          return (
+            (c.code && c.code.toLowerCase().includes(q)) ||
+            (c.patientName && c.patientName.toLowerCase().includes(q)) ||
+            (c.vehiclePlate && c.vehiclePlate.toLowerCase().includes(q)) ||
+            (c.incidentName && c.incidentName.toLowerCase().includes(q)) ||
+            (c.locationAddress && c.locationAddress.toLowerCase().includes(q)) ||
+            (c.crewName && c.crewName.toLowerCase().includes(q))
+          );
+        });
+      }
+
+      // 4. Sắp xếp danh sách
+      if (this.hospitalCasesSortMode === 'OLDEST') {
+        filteredCases.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+      } else if (this.hospitalCasesSortMode === 'SEVERITY') {
+        const rank = { 'CRITICAL': 3, 'EMERGENCY': 2, 'ROUTINE': 1 };
+        filteredCases.sort((a, b) => (rank[b.severity] || 0) - (rank[a.severity] || 0));
+      } else {
+        // Mặc định: NEWEST
+        filteredCases.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      }
+
+      const isToday = this.hospitalCasesDateFilter === '2026-10-05';
+      const incomingCount = filteredCases.filter(c => c.status === 'TRANSPORTING').length;
+      const pendingCount = filteredCases.filter(c => c.hospitalResponse !== 'ACCEPTED' && c.status !== 'COMPLETED').length;
+
+      container.innerHTML = `
+        <div class="view-container-full">
+          <!-- Header Bar with Quick Summary Pills -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:12px;">
+            <div>
+              <h2 style="color:var(--text-white);font-size:18px;margin:0;display:flex;align-items:center;gap:8px;">
+                <span>Cấp cứu - Khoa Cấp cứu</span>
+              </h2>
+              <p style="font-size:12px;color:var(--text-muted);margin:2px 0 0 0;">
+                ${currentUser?.organization || 'BV Đa khoa Trung ương Cần Thơ'} · Tiếp nhận ca cấp cứu từ xe 115, kiểm tra sinh hiệu ePCR và bàn giao tại viện
+              </p>
+            </div>
+
+            <!-- Mini Summary Counter Pills -->
+            <div style="display:flex;gap:8px;font-size:12px;flex-wrap:wrap;">
+              <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:6px;padding:6px 12px;display:flex;align-items:center;gap:6px;">
+                <span style="color:var(--text-muted);">Tổng số ca:</span>
+                <strong style="color:${filteredCases.length > 0 ? 'var(--red-vivid)' : 'var(--text-white)'};font-family:var(--font-mono);">${filteredCases.length}</strong>
+              </div>
+              <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:6px;padding:6px 12px;display:flex;align-items:center;gap:6px;">
+                <span style="color:#f87171;">Đang đến viện:</span>
+                <strong style="color:var(--red-vivid);font-family:var(--font-mono);">${incomingCount}</strong>
+              </div>
+              <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:6px;padding:6px 12px;display:flex;align-items:center;gap:6px;">
+                <span style="color:#fbbf24;">Chờ đón:</span>
+                <strong style="color:#fbbf24;font-family:var(--font-mono);">${pendingCount}</strong>
+              </div>
+              <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:6px;padding:6px 12px;display:flex;align-items:center;gap:6px;">
+                <span style="color:#34d399;">Trực cấp cứu:</span>
+                <strong style="color:#10b981;font-weight:600;">Sẵn sàng 24/7</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Thanh tìm kiếm, lọc ngày và sắp xếp thống nhất (Không chia tab) -->
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:12px 14px;background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:8px;margin-bottom:16px;">
+            <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:260px;max-width:480px;">
+              <!-- Search Box -->
+              <div style="position:relative;flex:1;">
+                <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);display:flex;align-items:center;pointer-events:none;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                </span>
+                <input
+                  type="text"
+                  id="hosp-cases-search-input"
+                  value="${this.hospitalCasesSearchQuery || ''}"
+                  placeholder="Tìm mã ca, người bệnh, biển số xe, bệnh cảnh..."
+                  style="width:100%;box-sizing:border-box;background:var(--bg-input, #0B132B);border:1px solid var(--border-main);color:var(--text-white);padding:7px 12px 7px 32px;border-radius:6px;font-size:12.5px;outline:none;"
+                />
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <!-- Date Filter (Hôm nay / Chọn ngày để xem lịch sử) -->
+              <div style="display:flex;align-items:center;gap:6px;background:var(--bg-card);border:1px solid var(--border-main);padding:4px 10px;border-radius:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <label for="hosp-cases-date-input" style="font-size:12px;color:var(--text-muted);cursor:pointer;white-space:nowrap;">Ngày:</label>
+                <input
+                  type="date"
+                  id="hosp-cases-date-input"
+                  value="${this.hospitalCasesDateFilter || '2026-10-05'}"
+                  style="background:transparent;border:none;color:var(--text-white);font-size:12.5px;font-family:var(--font-mono);outline:none;cursor:pointer;"
+                  title="Chỉnh lại ngày để xem lịch sử các ca tiếp nhận trước đó"
+                />
+                ${!isToday ? `
+                  <button type="button" id="btn-hosp-cases-reset-today" class="btn btn-default btn-xs" style="padding:2px 8px;font-size:11px;margin-left:4px;" title="Quay về ngày Hôm nay (Sẵn sàng demo)">
+                    Hôm nay
+                  </button>
+                ` : `
+                  <span style="font-size:11px;padding:2px 6px;border-radius:4px;background:rgba(16,185,129,0.15);color:#34d399;font-weight:500;">Hôm nay</span>
+                `}
+              </div>
+
+              <!-- Sort Select -->
+              <div style="display:flex;align-items:center;gap:6px;">
+                <label for="hosp-cases-sort-select" style="font-size:12px;color:var(--text-muted);white-space:nowrap;">Sắp xếp:</label>
+                <select
+                  id="hosp-cases-sort-select"
+                  style="background:var(--bg-card);border:1px solid var(--border-main);color:var(--text-white);padding:6px 10px;border-radius:6px;font-size:12px;outline:none;cursor:pointer;"
+                >
+                  <option value="NEWEST" ${this.hospitalCasesSortMode === 'NEWEST' ? 'selected' : ''}>Mới nhất</option>
+                  <option value="OLDEST" ${this.hospitalCasesSortMode === 'OLDEST' ? 'selected' : ''}>Cũ nhất</option>
+                  <option value="SEVERITY" ${this.hospitalCasesSortMode === 'SEVERITY' ? 'selected' : ''}>Mức độ khẩn cấp</option>
+                </select>
+              </div>
+
+              <!-- Reset Filter Button -->
+              <button
+                type="button"
+                id="btn-hosp-cases-reset-all"
+                class="btn btn-default btn-sm"
+                style="padding:6px 10px;font-size:12px;display:flex;align-items:center;gap:4px;"
+                title="Đặt lại bộ lọc về mặc định"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+                  <path d="M21 3v5h-5"></path>
+                  <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+                  <path d="M3 21v-5h5"></path>
+                </svg>
+                <span>Đặt lại</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Main Content Area: 1 danh sách duy nhất -->
+          <div id="hospital-cases-pane"></div>
+        </div>
+      `;
+
+      const pane = container.querySelector('#hospital-cases-pane');
+      if (!pane) return;
+
+      if (filteredCases.length === 0) {
+        if (isToday) {
+          pane.innerHTML = `
+            <div class="content-card" style="padding:56px 24px;text-align:center;background:var(--bg-card);border:1px solid var(--border-main);border-radius:8px;">
+              <div style="display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:50%;background:rgba(59,130,246,0.1);color:#60A5FA;margin-bottom:16px;">
+                ${window.CCNV_UI.ICONS.ambulance}
+              </div>
+              <h3 style="color:var(--text-white);font-size:17px;margin:0 0 8px 0;font-weight:600;">Hôm nay chưa có ca cấp cứu nào</h3>
+              <p style="color:var(--text-muted);font-size:13px;max-width:520px;margin:0 auto 18px auto;line-height:1.6;">
+                Khoa Cấp cứu đã sẵn sàng nhận bệnh. Khi Trung tâm 115 tiếp nhận cuộc gọi và điều phối xe chuyển viện đến đây, hồ sơ ca bệnh và ePCR sẽ tự động hiển thị tức thời để phục vụ kíp trực demo tiếp nhận.
+              </p>
+              <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-top:14px;">
+                <button type="button" class="btn btn-default btn-sm" id="btn-quick-view-history" style="display:flex;align-items:center;gap:6px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                  <span>Xem lịch sử ngày 01/10/2026</span>
+                </button>
+              </div>
+            </div>
+          `;
+        } else {
+          pane.innerHTML = `
+            <div class="content-card" style="padding:56px 24px;text-align:center;background:var(--bg-card);border:1px solid var(--border-main);border-radius:8px;">
+              <div style="display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:50%;background:rgba(100,116,139,0.1);color:#94a3b8;margin-bottom:16px;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+              </div>
+              <h3 style="color:var(--text-white);font-size:17px;margin:0 0 8px 0;font-weight:600;">Không có ca cấp cứu nào trong ngày này</h3>
+              <p style="color:var(--text-muted);font-size:13px;max-width:500px;margin:0 auto 16px auto;line-height:1.6;">
+                Không tìm thấy dữ liệu ca tiếp nhận phù hợp với ngày hoặc từ khóa tìm kiếm đã chọn.
+              </p>
+              <button type="button" class="btn btn-default btn-sm" id="btn-quick-reset-date">
+                Quay về ngày Hôm nay
+              </button>
+            </div>
+          `;
+        }
+      } else {
+        pane.innerHTML = `
+          <div class="content-card" style="padding:0;overflow:visible;">
+            <div id="hospital-cases-table-mount"></div>
+          </div>
+        `;
+
+        new window.CCNV_UI.DataTable({
+          containerId: 'hospital-cases-table-mount',
+          data: filteredCases,
+          pageSize: 10,
+          exportTitle: `Danh_sach_ca_cap_cuu_${this.hospitalCasesDateFilter || 'tat_ca'}`,
+          emptyText: 'Không tìm thấy ca nào',
+          searchPlaceholder: 'Tìm nhanh trong bảng...',
+          defaultSortKey: 'createdAt',
+          defaultSortOrder: 'desc',
+          columns: this.getHospitalCasesColumns()
+        }).render();
+      }
+
+      // Bind search, date filter, sort controls
+      const searchInput = container.querySelector('#hosp-cases-search-input');
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          this.hospitalCasesSearchQuery = e.target.value;
+          this.renderHospitalCasesView(container);
+          const nextInput = container.querySelector('#hosp-cases-search-input');
+          if (nextInput) {
+            nextInput.focus();
+            nextInput.selectionStart = nextInput.selectionEnd = nextInput.value.length;
+          }
+        });
+      }
+
+      const dateInput = container.querySelector('#hosp-cases-date-input');
+      if (dateInput) {
+        dateInput.addEventListener('change', (e) => {
+          this.hospitalCasesDateFilter = e.target.value;
+          this.renderHospitalCasesView(container);
+        });
+      }
+
+      const sortSelect = container.querySelector('#hosp-cases-sort-select');
+      if (sortSelect) {
+        sortSelect.addEventListener('change', (e) => {
+          this.hospitalCasesSortMode = e.target.value;
+          this.renderHospitalCasesView(container);
+        });
+      }
+
+      const resetTodayBtn = container.querySelector('#btn-hosp-cases-reset-today, #btn-quick-reset-date');
+      if (resetTodayBtn) {
+        resetTodayBtn.addEventListener('click', () => {
+          this.hospitalCasesDateFilter = '2026-10-05';
+          this.renderHospitalCasesView(container);
+        });
+      }
+
+      const resetAllBtn = container.querySelector('#btn-hosp-cases-reset-all');
+      if (resetAllBtn) {
+        resetAllBtn.addEventListener('click', () => {
+          this.hospitalCasesDateFilter = '2026-10-05';
+          this.hospitalCasesSearchQuery = '';
+          this.hospitalCasesSortMode = 'NEWEST';
+          this.renderHospitalCasesView(container);
+        });
+      }
+
+      const quickHistoryBtn = container.querySelector('#btn-quick-view-history');
+      if (quickHistoryBtn) {
+        quickHistoryBtn.addEventListener('click', () => {
+          this.hospitalCasesDateFilter = '2026-10-01';
+          this.renderHospitalCasesView(container);
+        });
+      }
+
+      // Bind row actions (Accept, Handover, Open Detail)
       container.addEventListener('click', (e) => {
-        const acceptBtn = e.target.closest('.btn-hosp-accept');
+        // Quick Accept
+        const acceptBtn = e.target.closest('.btn-quick-accept-case');
         if (acceptBtn) {
+          e.stopPropagation();
           const cid = acceptBtn.getAttribute('data-case-id');
           window.StateManager.updateCase(cid, {
             hospitalResponse: 'ACCEPTED',
             hospitalResponseText: 'Đã xác nhận'
           });
-          window.StateManager.addCaseLog(cid, `${currentUser?.organization} xác nhận sẵn sàng tiếp nhận bệnh nhân`);
+          window.StateManager.addCaseLog(cid, `${currentUser?.organization || 'Khoa Cấp cứu'} xác nhận sẵn sàng tiếp nhận người bệnh`);
           window.CCNV_UI.Toast.show('Đã xác nhận tiếp nhận', `Khoa Cấp cứu sẵn sàng đón nhận ca ${cid}`);
-          this.renderHospitalIncomingView(container);
+          this.renderHospitalCasesView(container);
+          return;
         }
 
+        // Quick Handover
+        const handoverBtn = e.target.closest('.btn-quick-handover-case');
+        if (handoverBtn) {
+          e.stopPropagation();
+          const cid = handoverBtn.getAttribute('data-case-id');
+          const targetCase = state.cases.find(c => c.id === cid || c.code === cid);
+          if (targetCase) {
+            targetCase.status = 'COMPLETED';
+            targetCase.statusText = 'Hoàn tất';
+            targetCase.stageLabel = 'Đã bàn giao tại viện';
+            targetCase.hospitalResponse = 'ACCEPTED';
+            targetCase.hospitalResponseText = 'Đã bàn giao';
+            targetCase.completedAt = new Date().toISOString();
+
+            const plate = targetCase.dispatch?.vehiclePlate;
+            if (plate) {
+              window.StateManager.updateVehicle(plate, { status: 'READY', statusText: 'Sẵn sàng', speed: 0 });
+            }
+            window.StateManager.addCaseLog(cid, `${currentUser?.organization || 'Khoa Cấp cứu'} hoàn tất thủ tục bàn giao và tiếp nhận người bệnh. Ca hoàn tất.`);
+            window.CCNV_UI.Toast.show('Đã Hoàn Tất Bàn Giao', `Bàn giao thành công ca ${targetCase.code}. Xe ${plate || ''} đã sẵn sàng.`);
+            this.renderHospitalCasesView(container);
+          }
+          return;
+        }
+
+        // Open Case Detail / ePCR
         const detailBtn = e.target.closest('.btn-open-case-detail');
         if (detailBtn) {
+          e.stopPropagation();
           const cid = detailBtn.getAttribute('data-case-id');
           this.openCaseDetailModal(cid);
         }
       });
     }
 
+    getHospitalCasesColumns() {
+      return [
+        {
+          key: 'code',
+          title: 'Mã ca',
+          sortable: true,
+          render: c => `<strong style="font-family:var(--font-mono);color:#60A5FA;cursor:pointer;" class="btn-open-case-detail" data-case-id="${c.id}">${c.code}</strong>`
+        },
+        {
+          key: 'createdAt',
+          title: 'Thời gian',
+          sortable: true,
+          render: c => {
+            const d = new Date(c.createdAt);
+            if (!isNaN(d.getTime())) {
+              const day = String(d.getDate()).padStart(2, '0');
+              const month = String(d.getMonth() + 1).padStart(2, '0');
+              const year = d.getFullYear();
+              const hours = String(d.getHours()).padStart(2, '0');
+              const minutes = String(d.getMinutes()).padStart(2, '0');
+              return `<span style="font-family:var(--font-mono);font-size:12px;color:#CBD5E1;">${day}/${month}/${year} - ${hours}:${minutes}</span>`;
+            }
+            return `<span style="font-family:var(--font-mono);font-size:12px;">${c.createdAt}</span>`;
+          }
+        },
+        {
+          key: 'patient',
+          title: 'Bệnh nhân',
+          sortable: false,
+          render: c => `<strong>${c.patientName}</strong> ${c.patientAge ? `(${c.patientAge}T, ${c.patientGender})` : ''}`
+        },
+        {
+          key: 'incidentName',
+          title: 'Tình trạng',
+          sortable: true,
+          render: c => `<span class="badge ${c.severity === 'CRITICAL' || c.severity === 'EMERGENCY' ? 'badge-emergency' : 'badge-normal'}">${c.incidentName}</span>`
+        },
+        {
+          key: 'vehiclePlate',
+          title: 'Xe chở & Kíp trực',
+          sortable: true,
+          render: c => `
+            <div>
+              <strong style="font-family:var(--font-mono);color:var(--text-white);">${c.vehiclePlate}</strong>
+              <div style="font-size:11px;color:var(--text-muted);">${c.crewName}</div>
+            </div>
+          `
+        },
+        {
+          key: 'eta',
+          title: 'ETA',
+          sortable: false,
+          render: c => {
+            if (c.status === 'COMPLETED') return `<span style="color:var(--emerald-light);font-size:11.5px;">Đã bàn giao</span>`;
+            if (c.eta && c.eta !== '-') return `<strong style="color:var(--red-vivid);font-size:13px;font-family:var(--font-mono);">${c.eta}</strong>`;
+            return `<span style="color:var(--text-muted);">-</span>`;
+          }
+        },
+        {
+          key: 'hospitalResponse',
+          title: 'Phản hồi BV',
+          sortable: true,
+          render: c => {
+            if (c.status === 'COMPLETED' || c.hospitalResponse === 'ACCEPTED') {
+              return `<span class="status-pill status-pill-completed">Đã xác nhận</span>`;
+            }
+            return `<span class="status-pill status-pill-processing">Chờ phản hồi</span>`;
+          }
+        },
+        {
+          key: 'actions',
+          title: 'Thao tác',
+          sortable: false,
+          render: c => {
+            const actions = [];
+            if (c.status !== 'COMPLETED' && c.hospitalResponse !== 'ACCEPTED') {
+              actions.push(`<button class="btn btn-emergency btn-sm btn-quick-accept-case" data-case-id="${c.id}" title="Xác nhận sẵn sàng đón người bệnh">Xác nhận Đón</button>`);
+            }
+            if (c.status !== 'COMPLETED') {
+              actions.push(`<button class="btn btn-emergency btn-sm btn-quick-handover-case" data-case-id="${c.id}" title="Ký biên bản bàn giao và tiếp nhận người bệnh">Bàn giao</button>`);
+            }
+            actions.push(`<button class="btn btn-default btn-sm btn-open-case-detail" data-case-id="${c.id}">Hồ sơ ePCR</button>`);
+            return `<div style="display:flex;align-items:center;gap:6px;">${actions.join('')}</div>`;
+          }
+        }
+      ];
+    }
+
+    renderHospitalIncomingView(container) {
+      this.renderHospitalCasesView(container);
+    }
+
     renderHospitalHandoverView(container) {
-      const state = window.StateManager.getState();
-      const targetCase = state.cases.find(c => c.status !== 'COMPLETED') || state.cases[0];
-
-      container.innerHTML = `
-        <div class="view-container-full">
-          <h2 style="color:var(--text-white);font-size:18px;">Check-in & Lập Biên bản Bàn giao Bệnh nhân</h2>
-          <div class="content-card">
-            <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-main);padding-bottom:12px;margin-bottom:16px;">
-              <div>
-                <strong style="color:var(--text-white);font-size:16px;">Hồ sơ ca: ${targetCase ? targetCase.code : 'CC-261002-001'}</strong>
-                <div style="font-size:12px;color:var(--text-muted);">Bệnh nhân: ${targetCase ? targetCase.patient.name : 'Phan Văn Đức'} · Xe ${targetCase ? targetCase.dispatch.vehiclePlate : '65A-012.34'}</div>
-              </div>
-              <button class="btn btn-default" id="btn-checkin-vehicle">1. Check-in Xe Cập Bến</button>
-            </div>
-
-            <div class="form-grid-2">
-              <div class="form-field">
-                <label class="form-label">Chẩn đoán tiếp nhận tại Khoa Cấp cứu</label>
-                <textarea id="handover-diagnosis" rows="2">Đa chấn thương do tai nạn giao thông, rách phần mềm cẳng tay phải, theo dõi chấn động não.</textarea>
-              </div>
-              <div class="form-field">
-                <label class="form-label">Tình trạng người bệnh khi bàn giao</label>
-                <textarea id="handover-condition" rows="2">Bệnh nhân tỉnh táo, tiếp xúc tốt, huyết động ổn định. Mạch 88, HA 130/80.</textarea>
-              </div>
-            </div>
-
-            <div style="margin-top:16px;display:flex;justify-content:flex-end;gap:12px;">
-              <button class="btn btn-emergency btn-lg" id="btn-confirm-handover">
-                ${window.CCNV_UI.ICONS.check}
-                <span>Xác nhận Bàn giao (Ca Hoàn tất)</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-
-      container.querySelector('#btn-checkin-vehicle')?.addEventListener('click', () => {
-        window.CCNV_UI.Toast.show('Check-in Xe Thành Công', 'Đã ghi nhận giờ xe cứu thương cập bến sảnh cấp cứu.');
-        window.StateManager.addAuditLog('Check-in xe cứu thương tại sảnh Cấp cứu');
-      });
-
-      container.querySelector('#btn-confirm-handover')?.addEventListener('click', () => {
-        if (!targetCase) return;
-        window.StateManager.updateCase(targetCase.id, {
-          status: 'COMPLETED',
-          statusText: 'Hoàn tất',
-          stageLabel: 'Đã bàn giao'
-        });
-
-        // Set vehicle back to ready
-        window.StateManager.updateVehicle(targetCase.dispatch.vehiclePlate, {
-          status: 'READY',
-          statusText: 'Sẵn sàng',
-          speed: 0
-        });
-
-        window.StateManager.addCaseLog(targetCase.id, 'Bác sĩ Khoa Cấp cứu ký xác nhận bàn giao người bệnh. Ca hoàn tất.');
-        window.CCNV_UI.Toast.show('Ca Cấp cứu Đã Hoàn Tất', `Đã hoàn tất bàn giao ca ${targetCase.code}. Xe ${targetCase.dispatch.vehiclePlate} trở về trạng thái Sẵn sàng.`);
-        this.renderHospitalIncomingView(container);
-      });
+      this.renderHospitalCasesView(container);
     }
 
     renderHospitalEPCRView(container) {
-      container.innerHTML = `
-        <div class="view-container-full">
-          <h2 style="color:var(--text-white);font-size:18px;">Hồ sơ Bệnh án Cấp cứu Ngoại viện (ePCR)</h2>
-          <div class="content-card" id="hospital-epcr-form-container"></div>
-        </div>
-      `;
-
-      const state = window.StateManager.getState();
-      const currentCase = state.cases[0];
-      window.EPCRForm.render('hospital-epcr-form-container', currentCase?.epcr || {}, false, (updated) => {
-        if (currentCase) {
-          currentCase.epcr = updated;
-          window.StateManager.saveToSession();
-          window.StateManager.addCaseLog(currentCase.id, 'Bác sĩ tiếp nhận cập nhật diễn biến hồ sơ ePCR');
-        }
-      });
+      this.renderHospitalCasesView(container);
     }
 
     renderReceivingIncomingView(container) {
-      this.renderHospitalIncomingView(container);
-    }
-
-    renderHospitalReportsView(container) {
-      this.renderHospitalReportDetailView(container);
+      this.renderHospitalCasesView(container);
     }
 
     renderHospitalReceptionStatusView(container) {
       const state = window.StateManager.getState();
       const currentUser = window.StateManager.getCurrentUser();
-      const myHospId = currentUser?.hospitalId || 'HOSP_BVDK';
-      const hosp = state.hospitals.find(h => h.id === myHospId) || state.hospitals[0];
+      const myHospId = currentUser?.hospitalId || 'HOSP_BVTU';
+      const hosp = state.hospitals.find(h => h.id === myHospId) || state.hospitals.find(h => h.id === 'HOSP_BVTU') || state.hospitals[0];
+      const cap = hosp.capacity || {
+        erBeds: 20,
+        availableBeds: 4,
+        icuBeds: 12,
+        ventilators: 3,
+        dsaStatus: 'READY',
+        thrombolytic: 'YES',
+        orAvail: 2,
+        neuroSurgeons: 'ON_SITE',
+        obStatus: 'READY',
+        pedsStatus: 'READY'
+      };
 
       container.innerHTML = `
-        <div class="view-container-full">
-          <div style="margin-bottom:14px;">
-            <h2 style="color:var(--text-white);font-size:18px;">Cập nhật Trạng thái Tiếp nhận — ${hosp.name}</h2>
-            <p style="font-size:12px;color:var(--text-muted);">
-              Cập nhật trạng thái nhận bệnh ngoại viện: Đang nhận / Hạn chế / Tạm ngưng (không chặn cuộc gọi hay điều phối nhưng cảnh báo cho ĐPV)
-            </p>
+        <div class="view-container-full" style="padding-bottom:30px;">
+          <div style="margin-bottom:14px;display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <h2 style="color:var(--text-white);font-size:18px;margin-bottom:4px;">Trạng thái Tiếp nhận & Khai báo Chuyên khoa - ${hosp.name}</h2>
+              <p style="font-size:12px;color:var(--text-muted);margin:0;">
+                Cập nhật trạng thái nhận bệnh ngoại viện (Đang nhận / Hạn chế / Tạm ngưng) và công bố số liệu năng lực cấp cứu chuyên khoa tới Trung tâm Điều hành 115 Cần Thơ.
+              </p>
+            </div>
+            <div style="text-align:right;">
+              <span class="badge ${hosp.status === 'READY' ? 'badge-normal' : hosp.status === 'LIMITED' ? 'badge-warning' : 'badge-emergency'}" style="font-size:12px;padding:6px 12px;">
+                ${hosp.status === 'READY' ? '🟢 Đang tiếp nhận bình thường' : hosp.status === 'LIMITED' ? '🟡 Hạn chế tiếp nhận' : '🔴 Tạm ngưng tiếp nhận'}
+              </span>
+            </div>
           </div>
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            <!-- PHẦN 1: TRẠNG THÁI TIẾP NHẬN NGOẠI VIỆN -->
             <div class="content-card" style="padding:18px;">
-              <h3 style="color:var(--text-white);font-size:14px;margin-bottom:14px;">Chọn Trạng thái Tiếp nhận Bệnh viện</h3>
-
-              <div style="display:flex;flex-direction:column;gap:12px;">
-                <label style="display:flex;align-items:center;gap:12px;padding:12px;background:${hosp.status === 'READY' ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-elevated)'};border:2px solid ${hosp.status === 'READY' ? '#10B981' : 'var(--border-main)'};border-radius:8px;cursor:pointer;">
-                  <input type="radio" name="hosp-status-opt" value="READY" ${hosp.status === 'READY' ? 'checked' : ''} style="width:16px;height:16px;" />
-                  <div>
-                    <strong style="color:#10B981;font-size:13.5px;display:block;"> ĐANG TIẾP NHẬN BÌNH THƯỜNG</strong>
-                    <span style="font-size:12px;color:var(--text-slate);">Khoa Cấp cứu và các buồng hồi sức sẵn sàng đón mọi ca cấp cứu</span>
-                  </div>
-                </label>
-
-                <label style="display:flex;align-items:center;gap:12px;padding:12px;background:${hosp.status === 'LIMITED' ? 'rgba(245, 158, 11, 0.15)' : 'var(--bg-elevated)'};border:2px solid ${hosp.status === 'LIMITED' ? '#F59E0B' : 'var(--border-main)'};border-radius:8px;cursor:pointer;">
-                  <input type="radio" name="hosp-status-opt" value="LIMITED" ${hosp.status === 'LIMITED' ? 'checked' : ''} style="width:16px;height:16px;" />
-                  <div>
-                    <strong style="color:#F59E0B;font-size:13.5px;display:block;">HẠN CHẾ TIẾP NHẬN (CẢNH BÁO)</strong>
-                    <span style="font-size:12px;color:var(--text-slate);">Giường hồi sức cấp cứu đạt trên 90%, chỉ nhận ca tối khẩn nguy kịch</span>
-                  </div>
-                </label>
-
-                <label style="display:flex;align-items:center;gap:12px;padding:12px;background:${hosp.status === 'SUSPENDED' ? 'rgba(239, 68, 68, 0.15)' : 'var(--bg-elevated)'};border:2px solid ${hosp.status === 'SUSPENDED' ? 'var(--red-vivid)' : 'var(--border-main)'};border-radius:8px;cursor:pointer;">
-                  <input type="radio" name="hosp-status-opt" value="SUSPENDED" ${hosp.status === 'SUSPENDED' ? 'checked' : ''} style="width:16px;height:16px;" />
-                  <div>
-                    <strong style="color:var(--red-vivid);font-size:13.5px;display:block;">TẠM NGƯNG TIẾP NHẬN NGOẠI VIỆN</strong>
-                    <span style="font-size:12px;color:var(--text-slate);">Khoa Cấp cứu đang quá tải đột xuất hoặc có sự cố kỹ thuật nội bộ</span>
-                  </div>
-                </label>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;border-bottom:1px solid var(--border-main);padding-bottom:10px;">
+                <span style="color:#60A5FA;">${window.CCNV_UI.ICONS.hospital}</span>
+                <h3 style="color:var(--text-white);font-size:14px;margin:0;font-weight:600;">1. Trạng thái Nhận Bệnh Ngoại viện (Toàn Viện)</h3>
               </div>
 
-              <div class="form-field" style="margin-top:14px;">
-                <label class="form-label">Lý do thay đổi trạng thái / Ghi chú gửi ĐPV</label>
-                <textarea id="hosp-status-reason" rows="2" placeholder="Ví dụ: Khoa đang tiếp nhận đồng thời 4 ca TNGT nặng, đề nghị điều phối ca tiếp theo sang BVĐK Trung ương..."></textarea>
-              </div>
+              <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:16px;">
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                  <label style="display:flex;align-items:center;gap:12px;padding:12px;background:${hosp.status === 'READY' ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-elevated)'};border:2px solid ${hosp.status === 'READY' ? '#10B981' : 'var(--border-main)'};border-radius:8px;cursor:pointer;">
+                    <input type="radio" name="hosp-status-opt" value="READY" ${hosp.status === 'READY' ? 'checked' : ''} style="width:16px;height:16px;" />
+                    <div>
+                      <strong style="color:#10B981;font-size:13.5px;display:block;"> ĐANG TIẾP NHẬN BÌNH THƯỜNG</strong>
+                      <span style="font-size:12px;color:var(--text-slate);">Khoa Cấp cứu và các buồng hồi sức sẵn sàng đón mọi ca cấp cứu ngoại viện</span>
+                    </div>
+                  </label>
 
-              <div style="margin-top:16px;display:flex;justify-content:flex-end;">
-                <button class="btn btn-emergency btn-lg" id="btn-save-hosp-status">
-                  ${window.CCNV_UI.ICONS.check}
-                  <span>Lưu & Cập nhật Toàn Mạng lưới</span>
-                </button>
+                  <label style="display:flex;align-items:center;gap:12px;padding:12px;background:${hosp.status === 'LIMITED' ? 'rgba(245, 158, 11, 0.15)' : 'var(--bg-elevated)'};border:2px solid ${hosp.status === 'LIMITED' ? '#F59E0B' : 'var(--border-main)'};border-radius:8px;cursor:pointer;">
+                    <input type="radio" name="hosp-status-opt" value="LIMITED" ${hosp.status === 'LIMITED' ? 'checked' : ''} style="width:16px;height:16px;" />
+                    <div>
+                      <strong style="color:#F59E0B;font-size:13.5px;display:block;">HẠN CHẾ TIẾP NHẬN (CẢNH BÁO)</strong>
+                      <span style="font-size:12px;color:var(--text-slate);">Giường hồi sức cấp cứu đạt trên 90%, chỉ nhận ca tối khẩn nguy kịch</span>
+                    </div>
+                  </label>
+
+                  <label style="display:flex;align-items:center;gap:12px;padding:12px;background:${hosp.status === 'SUSPENDED' ? 'rgba(239, 68, 68, 0.15)' : 'var(--bg-elevated)'};border:2px solid ${hosp.status === 'SUSPENDED' ? 'var(--red-vivid)' : 'var(--border-main)'};border-radius:8px;cursor:pointer;">
+                    <input type="radio" name="hosp-status-opt" value="SUSPENDED" ${hosp.status === 'SUSPENDED' ? 'checked' : ''} style="width:16px;height:16px;" />
+                    <div>
+                      <strong style="color:var(--red-vivid);font-size:13.5px;display:block;">TẠM NGƯNG TIẾP NHẬN NGOẠI VIỆN</strong>
+                      <span style="font-size:12px;color:var(--text-slate);">Khoa Cấp cứu đang quá tải đột xuất hoặc có sự cố kỹ thuật nội bộ</span>
+                    </div>
+                  </label>
+                </div>
+
+                <div style="background:var(--bg-elevated);padding:14px;border-radius:8px;border:1px solid var(--border-main);display:flex;flex-direction:column;justify-content:space-between;">
+                  <div>
+                    <div class="form-field">
+                      <label class="form-label" style="font-size:12px;font-weight:600;">Lý do thay đổi trạng thái / Ghi chú gửi ĐPV</label>
+                      <textarea id="hosp-status-reason" rows="3" style="width:100%;font-size:12.5px;" placeholder="Ví dụ: Khoa đang tiếp nhận đồng thời 4 ca TNGT nặng, đề nghị điều phối ca tiếp theo sang BV lân cận..."></textarea>
+                    </div>
+                  </div>
+                  <div style="font-size:11.5px;color:var(--text-muted);line-height:1.5;margin-top:10px;padding-top:8px;border-top:1px dashed var(--border-main);">
+                    <strong style="color:var(--text-slate);">Quy chế điều phối 115:</strong> Khi chuyển sang <em>Tạm ngưng tiếp nhận</em>, hệ thống tự động cảnh báo màu đỏ trên bản đồ của Điều phối viên 115 để chuyển hướng ca bệnh phù hợp.
+                  </div>
+                </div>
               </div>
             </div>
 
-            <!-- Current Network Status Display -->
+            <!-- PHẦN 2: KHAI BÁO NĂNG LỰC CHUYÊN KHOA -->
             <div class="content-card" style="padding:18px;">
-              <h3 style="color:var(--text-white);font-size:14px;margin-bottom:12px;">Tình hình Tiếp nhận Hiện tại trên Bản đồ Điều phối</h3>
-              <div style="background:var(--bg-elevated);padding:14px;border-radius:6px;border:1px solid var(--border-main);margin-bottom:14px;font-size:13px;">
-                <div style="margin-bottom:6px;">Bệnh viện: <strong style="color:var(--text-white);">${hosp.name}</strong></div>
-                <div style="margin-bottom:6px;">Trạng thái hiện hành: <span class="badge ${hosp.status === 'READY' ? 'badge-normal' : 'badge-emergency'}">${hosp.statusText || 'Đang nhận'}</span></div>
-                <div style="margin-bottom:6px;">Số giường hồi sức cấp cứu: <strong style="color:#93C5FD;">${hosp.capacity?.icuBeds || 12} giường</strong></div>
-                <div>Giường trống sẵn sàng: <strong style="color:#10B981;">${hosp.capacity?.availableBeds || 3} giường</strong></div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;border-bottom:1px solid var(--border-main);padding-bottom:10px;">
+                <span style="color:#10B981;">${window.CCNV_UI.ICONS.layers}</span>
+                <h3 style="color:var(--text-white);font-size:14px;margin:0;font-weight:600;">2. Khai báo Năng lực Tiếp nhận & Chuyên khoa</h3>
               </div>
 
-              <div style="font-size:12px;color:var(--text-muted);line-height:1.5;">
-                * Lưu ý quy chế vận hành: Khi chuyển sang <em>Tạm ngưng tiếp nhận</em>, hệ thống CCNV sẽ hiển thị cảnh báo đỏ trên bản đồ của Điều phối viên 115 và gợi ý chuyển bệnh nhân tới bệnh viện lân cận phù hợp nhất.
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      container.querySelector('#btn-save-hosp-status')?.addEventListener('click', () => {
-        const selected = container.querySelector('input[name="hosp-status-opt"]:checked')?.value || 'READY';
-        const reason = container.querySelector('#hosp-status-reason').value;
-        const text = selected === 'READY' ? 'Đang nhận' : selected === 'LIMITED' ? 'Hạn chế' : 'Tạm ngưng';
-
-        hosp.status = selected;
-        hosp.statusText = text;
-        window.StateManager.saveToSession();
-        window.StateManager.addAuditLog(`${hosp.name} cập nhật trạng thái tiếp nhận thành: ${text} (${reason || 'Không có ghi chú'})`);
-        window.CCNV_UI.Toast.show('Đã cập nhật trạng thái', `Đã đồng bộ trạng thái ${text} của ${hosp.name} lên Trung tâm Điều hành 115`);
-        this.renderHospitalReceptionStatusView(container);
-      });
-    }
-
-    renderHospitalSpecialtyView(container) {
-      const state = window.StateManager.getState();
-      const currentUser = window.StateManager.getCurrentUser();
-      const myHospId = currentUser?.hospitalId || 'HOSP_BVDK';
-      const hosp = state.hospitals.find(h => h.id === myHospId) || state.hospitals[0];
-
-      container.innerHTML = `
-        <div class="view-container-full">
-          <div style="margin-bottom:14px;">
-            <h2 style="color:var(--text-white);font-size:18px;">Khai báo Chuyên khoa & Năng lực Tiếp nhận — ${hosp.name}</h2>
-            <p style="font-size:12px;color:var(--text-muted);">
-              Công bố năng lực hồi sức cấp cứu, can thiệp tim mạch và phẫu thuật để Trung tâm 115 điều phối chính xác bệnh viện đích
-            </p>
-          </div>
-
-          <div class="content-card" style="padding:18px;">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-              <!-- 1. Cấp cứu & ICU -->
-              <div class="form-section">
-                <div class="form-section-title">1. Khoa Cấp cứu & Hồi sức Tích cực (ICU)</div>
-                <div class="form-grid-2">
-                  <div class="form-field">
-                    <label class="form-label">Số giường Cấp cứu đang mở</label>
-                    <input type="number" id="spec-er-beds" value="20" />
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+                <!-- 1. Cấp cứu & ICU -->
+                <div class="form-section" style="background:var(--bg-elevated);padding:14px;border-radius:8px;border:1px solid var(--border-main);">
+                  <div class="form-section-title" style="color:#60A5FA;margin-bottom:10px;font-size:13px;font-weight:600;">A. Khoa Cấp cứu & Hồi sức Tích cực (ICU)</div>
+                  <div class="form-grid-2">
+                    <div class="form-field">
+                      <label class="form-label">Số giường Cấp cứu đang mở</label>
+                      <input type="number" id="spec-er-beds" value="${cap.erBeds || 20}" />
+                    </div>
+                    <div class="form-field">
+                      <label class="form-label">Giường Cấp cứu còn trống</label>
+                      <input type="number" id="spec-er-avail" value="${cap.availableBeds || 4}" />
+                    </div>
                   </div>
-                  <div class="form-field">
-                    <label class="form-label">Giường Cấp cứu còn trống</label>
-                    <input type="number" id="spec-er-avail" value="4" />
+                  <div class="form-grid-2" style="margin-top:10px;">
+                    <div class="form-field">
+                      <label class="form-label">Tổng giường Hồi sức ICU</label>
+                      <input type="number" id="spec-icu-beds" value="${cap.icuBeds || 12}" />
+                    </div>
+                    <div class="form-field">
+                      <label class="form-label">Máy thở sẵn sàng</label>
+                      <input type="number" id="spec-ventilators" value="${cap.ventilators || 3}" />
+                    </div>
                   </div>
                 </div>
-                <div class="form-grid-2" style="margin-top:10px;">
-                  <div class="form-field">
-                    <label class="form-label">Tổng giường Hồi sức ICU</label>
-                    <input type="number" id="spec-icu-beds" value="12" />
-                  </div>
-                  <div class="form-field">
-                    <label class="form-label">Máy thở xách tay & thở máy sẵn sàng</label>
-                    <input type="number" id="spec-ventilators" value="3" />
-                  </div>
-                </div>
-              </div>
 
-              <!-- 2. Tim mạch & Đột quỵ -->
-              <div class="form-section">
-                <div class="form-section-title">2. Can thiệp Tim mạch & Đột quỵ não (DSA)</div>
-                <div class="form-field" style="margin-bottom:10px;">
-                  <label class="form-label">Phòng can thiệp mạch máu (DSA)</label>
-                  <select id="spec-dsa-status">
-                    <option value="READY" selected>🟢 Sẵn sàng 24/7 (Kíp trực đang sẵn sàng tiếp nhận)</option>
-                    <option value="BUSY">🟡 Đang thực hiện ca can thiệp (Chờ 45 phút)</option>
-                    <option value="UNAVAILABLE">🔴 Tạm ngưng can thiệp</option>
-                  </select>
-                </div>
-                <div class="form-field">
-                  <label class="form-label">Thuốc tiêu sợi huyết (Alteplase) cấp cứu</label>
-                  <select id="spec-thrombolytic">
-                    <option value="YES" selected>Có sẵn trong tủ thuốc cấp cứu</option>
-                    <option value="NO">Hết cơ số</option>
-                  </select>
-                </div>
-              </div>
-
-              <!-- 3. Ngoại Chấn thương & Phẫu thuật -->
-              <div class="form-section">
-                <div class="form-section-title">3. Ngoại Chấn thương & Phẫu thuật Cấp cứu</div>
-                <div class="form-grid-2">
-                  <div class="form-field">
-                    <label class="form-label">Phòng mổ cấp cứu sẵn sàng</label>
-                    <input type="number" id="spec-or-avail" value="2" />
-                  </div>
-                  <div class="form-field">
-                    <label class="form-label">Kíp phẫu thuật Ngoại thần kinh / Lồng ngực</label>
-                    <select id="spec-neuro-surgeons">
-                      <option value="ON_SITE" selected>Đang trực tại viện</option>
-                      <option value="ON_CALL">Trực On-call (15 phút)</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 4. Sản - Nhi Cấp cứu -->
-              <div class="form-section">
-                <div class="form-section-title">4. Khả năng Tiếp nhận Sản - Nhi</div>
-                <div class="form-grid-2">
-                  <div class="form-field">
-                    <label class="form-label">Cấp cứu Sản - Đỡ đẻ khẩn cấp</label>
-                    <select id="spec-ob-status">
-                      <option value="READY" selected>Sẵn sàng tiếp nhận</option>
-                      <option value="TRANSFER">Đề nghị chuyển viện Chuyên khoa Sản</option>
+                <!-- 2. Tim mạch & Đột quỵ -->
+                <div class="form-section" style="background:var(--bg-elevated);padding:14px;border-radius:8px;border:1px solid var(--border-main);">
+                  <div class="form-section-title" style="color:#F59E0B;margin-bottom:10px;font-size:13px;font-weight:600;">B. Can thiệp Tim mạch & Đột quỵ não (DSA)</div>
+                  <div class="form-field" style="margin-bottom:10px;">
+                    <label class="form-label">Phòng can thiệp mạch máu (DSA)</label>
+                    <select id="spec-dsa-status">
+                      <option value="READY" ${cap.dsaStatus === 'READY' || !cap.dsaStatus ? 'selected' : ''}>🟢 Sẵn sàng 24/7 (Kíp trực đang sẵn sàng tiếp nhận)</option>
+                      <option value="BUSY" ${cap.dsaStatus === 'BUSY' ? 'selected' : ''}>🟡 Đang thực hiện ca can thiệp (Chờ 45 phút)</option>
+                      <option value="UNAVAILABLE" ${cap.dsaStatus === 'UNAVAILABLE' ? 'selected' : ''}>🔴 Tạm ngưng can thiệp</option>
                     </select>
                   </div>
                   <div class="form-field">
-                    <label class="form-label">Hồi sức Sơ sinh (NICU)</label>
-                    <select id="spec-peds-status">
-                      <option value="READY" selected>Sẵn sàng lồng ấp sơ sinh</option>
-                      <option value="TRANSFER">Đề nghị chuyển BV Nhi đồng Cần Thơ</option>
+                    <label class="form-label">Thuốc tiêu sợi huyết (Alteplase) cấp cứu</label>
+                    <select id="spec-thrombolytic">
+                      <option value="YES" ${cap.thrombolytic === 'YES' || !cap.thrombolytic ? 'selected' : ''}>Có sẵn trong tủ thuốc cấp cứu</option>
+                      <option value="NO" ${cap.thrombolytic === 'NO' ? 'selected' : ''}>Hết cơ số dự trữ</option>
                     </select>
+                  </div>
+                </div>
+
+                <!-- 3. Ngoại Chấn thương & Phẫu thuật -->
+                <div class="form-section" style="background:var(--bg-elevated);padding:14px;border-radius:8px;border:1px solid var(--border-main);">
+                  <div class="form-section-title" style="color:#EC4899;margin-bottom:10px;font-size:13px;font-weight:600;">C. Ngoại Chấn thương & Phẫu thuật Cấp cứu</div>
+                  <div class="form-grid-2">
+                    <div class="form-field">
+                      <label class="form-label">Phòng mổ cấp cứu sẵn sàng</label>
+                      <input type="number" id="spec-or-avail" value="${cap.orAvail || 2}" />
+                    </div>
+                    <div class="form-field">
+                      <label class="form-label">Kíp phẫu thuật Chấn thương / Ngoại</label>
+                      <select id="spec-neuro-surgeons">
+                        <option value="ON_SITE" ${cap.neuroSurgeons === 'ON_SITE' || !cap.neuroSurgeons ? 'selected' : ''}>Đang trực tại viện</option>
+                        <option value="ON_CALL" ${cap.neuroSurgeons === 'ON_CALL' ? 'selected' : ''}>Trực On-call (15 phút)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 4. Sản - Nhi Cấp cứu -->
+                <div class="form-section" style="background:var(--bg-elevated);padding:14px;border-radius:8px;border:1px solid var(--border-main);">
+                  <div class="form-section-title" style="color:#10B981;margin-bottom:10px;font-size:13px;font-weight:600;">D. Khả năng Tiếp nhận Sản - Nhi</div>
+                  <div class="form-grid-2">
+                    <div class="form-field">
+                      <label class="form-label">Cấp cứu Sản - Đỡ đẻ khẩn cấp</label>
+                      <select id="spec-ob-status">
+                        <option value="READY" ${cap.obStatus === 'READY' || !cap.obStatus ? 'selected' : ''}>Sẵn sàng tiếp nhận</option>
+                        <option value="TRANSFER" ${cap.obStatus === 'TRANSFER' ? 'selected' : ''}>Đề nghị chuyển viện Chuyên khoa Sản</option>
+                      </select>
+                    </div>
+                    <div class="form-field">
+                      <label class="form-label">Hồi sức Sơ sinh (NICU)</label>
+                      <select id="spec-peds-status">
+                        <option value="READY" ${cap.pedsStatus === 'READY' || !cap.pedsStatus ? 'selected' : ''}>Sẵn sàng lồng ấp sơ sinh</option>
+                        <option value="TRANSFER" ${cap.pedsStatus === 'TRANSFER' ? 'selected' : ''}>Đề nghị chuyển BV Nhi đồng Cần Thơ</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div style="margin-top:20px;display:flex;justify-content:flex-end;border-top:1px solid var(--border-main);padding-top:16px;">
-              <button class="btn btn-emergency btn-lg" id="btn-save-specialty-info">
+            <!-- THANH THAO TÁC LƯU CHUNG -->
+            <div style="display:flex;justify-content:flex-end;align-items:center;gap:12px;padding:12px 18px;background:var(--bg-elevated);border-radius:8px;border:1px solid var(--border-main);">
+              <span style="font-size:12px;color:var(--text-muted);">Mọi thay đổi sẽ được công bố tức thời tới mạng lưới cấp cứu 115</span>
+              <button class="btn btn-emergency btn-lg" id="btn-save-all-hosp-status" style="padding:10px 24px;font-size:14px;font-weight:600;">
                 ${window.CCNV_UI.ICONS.check}
-                <span>Cập nhật & Công bố Năng lực Chuyên khoa</span>
+                <span>Lưu & Đồng bộ Trạng thái Toàn Mạng lưới</span>
               </button>
             </div>
           </div>
         </div>
       `;
 
-      container.querySelector('#btn-save-specialty-info')?.addEventListener('click', () => {
-        window.CCNV_UI.Toast.show('Đã công bố năng lực', `Đã cập nhật dữ liệu năng lực chuyên khoa của ${hosp.name} tới Trung tâm Điều hành 115 Cần Thơ`);
-        window.StateManager.addAuditLog(`${hosp.name} cập nhật năng lực chuyên khoa: ICU trống 4 giường, DSA sẵn sàng, 2 phòng mổ cấp cứu`);
+      container.querySelector('#btn-save-all-hosp-status')?.addEventListener('click', () => {
+        const selected = container.querySelector('input[name="hosp-status-opt"]:checked')?.value || 'READY';
+        const reason = container.querySelector('#hosp-status-reason')?.value || '';
+        const text = selected === 'READY' ? 'Đang nhận' : selected === 'LIMITED' ? 'Hạn chế' : 'Tạm ngưng';
+
+        hosp.status = selected;
+        hosp.statusText = text;
+        hosp.capacity = {
+          erBeds: parseInt(container.querySelector('#spec-er-beds')?.value, 10) || 20,
+          availableBeds: parseInt(container.querySelector('#spec-er-avail')?.value, 10) || 4,
+          icuBeds: parseInt(container.querySelector('#spec-icu-beds')?.value, 10) || 12,
+          ventilators: parseInt(container.querySelector('#spec-ventilators')?.value, 10) || 3,
+          dsaStatus: container.querySelector('#spec-dsa-status')?.value || 'READY',
+          thrombolytic: container.querySelector('#spec-thrombolytic')?.value || 'YES',
+          orAvail: parseInt(container.querySelector('#spec-or-avail')?.value, 10) || 2,
+          neuroSurgeons: container.querySelector('#spec-neuro-surgeons')?.value || 'ON_SITE',
+          obStatus: container.querySelector('#spec-ob-status')?.value || 'READY',
+          pedsStatus: container.querySelector('#spec-peds-status')?.value || 'READY'
+        };
+
+        window.StateManager.saveToSession();
+        window.StateManager.addAuditLog(`${hosp.name} cập nhật trạng thái: ${text} & cập nhật năng lực chuyên khoa (ICU: ${hosp.capacity.icuBeds}, Máy thở: ${hosp.capacity.ventilators}, DSA: ${hosp.capacity.dsaStatus})`);
+        window.CCNV_UI.Toast.show('Đã đồng bộ mạng lưới', `Đã lưu trạng thái [${text}] và toàn bộ năng lực chuyên khoa của ${hosp.name} lên Trung tâm Điều hành 115 Cần Thơ`);
+        this.renderHospitalReceptionStatusView(container);
       });
     }
 
-    renderHospitalReportDetailView(container) {
+    renderHospitalSpecialtyView(container) {
+      this.renderHospitalReceptionStatusView(container);
+    }
+
+    // --- BÁO CÁO TIẾP NHẬN BỆNH VIỆN (CLONE BẢN APP TRUNG TÂM VỚI 2 TAB TỔNG QUAN & CHI TIẾT) ---
+    renderHospitalReportsView(container, activeTab = 'overview') {
       const state = window.StateManager.getState();
       const currentUser = window.StateManager.getCurrentUser();
-      const myHospId = currentUser?.hospitalId || 'HOSP_BVDK';
-      const history = (state.historyCases || []).filter(h => h.hospitalId === myHospId || !h.hospitalId);
+      const myHospId = currentUser?.hospitalId || 'HOSP_BVTU';
+      const hosp = state.hospitals.find(h => h.id === myHospId) || state.hospitals.find(h => h.id === 'HOSP_BVTU') || state.hospitals[0];
+
+      // Prepare comprehensive data records for Chi tiết tab
+      const rawHistory = (state.historyCases || []).filter(h => h.hospitalId === myHospId || !h.hospitalId);
+      const rawActive = (state.activeCases || []).filter(c => c.dispatch?.hospitalId === myHospId || !c.dispatch?.hospitalId);
+
+      const detailRecords = [
+        ...rawActive.map(c => ({
+          code: c.code || c.id,
+          createdAt: c.createdAt || '2026-10-02T08:10:15',
+          patientName: c.patient?.name || c.patientName || 'Nguyễn Văn Nam',
+          patientAge: c.patient?.age || c.patientAge || 34,
+          patientGender: c.patient?.gender || 'Nam',
+          incidentName: c.incident?.name || c.incidentName || 'Tai nạn giao thông',
+          severity: c.incident?.severity || c.severity || 'EMERGENCY',
+          severityText: c.incident?.severityText || (c.severity === 'CRITICAL' ? 'Tối khẩn' : 'Khẩn cấp'),
+          vehiclePlate: c.dispatch?.vehiclePlate || c.vehiclePlate || '65A-012.34',
+          doctor: 'BS. Lê Hoàng Long',
+          handoverTime: 'Đang bàn giao',
+          disposition: 'Phòng Cấp cứu Đang xử trí',
+          status: 'IN_PROGRESS',
+          statusText: 'Đang tiếp nhận'
+        })),
+        ...rawHistory.map(h => ({
+          code: h.code || h.id,
+          createdAt: h.createdAt || '2026-10-01T21:40:00',
+          patientName: h.patientName,
+          patientAge: h.patientAge || 45,
+          patientGender: h.patientAge > 50 ? 'Nữ' : 'Nam',
+          incidentName: h.incidentName,
+          severity: h.severity || 'EMERGENCY',
+          severityText: h.severity === 'CRITICAL' ? 'Tối khẩn' : (h.severity === 'EMERGENCY' ? 'Khẩn cấp' : 'Tiêu chuẩn'),
+          vehiclePlate: h.vehiclePlate || '65A-016.88',
+          doctor: 'BS. Trần Văn Hậu',
+          handoverTime: h.durations?.sceneTime || '4.2 phút',
+          disposition: h.severity === 'CRITICAL' ? 'Nhập ICU Hồi sức' : 'Theo dõi Khoa Cấp cứu',
+          status: 'COMPLETED',
+          statusText: 'Đã hoàn tất bàn giao'
+        })),
+        // Additional realistic hospital reception sample data
+        {
+          code: 'CC-261001-015',
+          createdAt: '2026-10-01T15:20:00',
+          patientName: 'Phạm Thị Lan',
+          patientAge: 68,
+          patientGender: 'Nữ',
+          incidentName: 'Đột quỵ não',
+          severity: 'CRITICAL',
+          severityText: 'Tối khẩn',
+          vehiclePlate: '65A-016.88',
+          doctor: 'BS. Nguyễn Thanh Tùng',
+          handoverTime: '3.8 phút',
+          disposition: 'Chuyển thẳng DSA Can thiệp Mạch máu',
+          status: 'COMPLETED',
+          statusText: 'Đã hoàn tất bàn giao'
+        },
+        {
+          code: 'CC-261001-014',
+          createdAt: '2026-10-01T14:05:00',
+          patientName: 'Trương Hoàng Hải',
+          patientAge: 29,
+          patientGender: 'Nam',
+          incidentName: 'Đa chấn thương do TNGT',
+          severity: 'CRITICAL',
+          severityText: 'Tối khẩn',
+          vehiclePlate: '65A-012.34',
+          doctor: 'BS. Lê Hoàng Long',
+          handoverTime: '4.5 phút',
+          disposition: 'Chuyển thẳng Phòng Mổ Cấp Cứu',
+          status: 'COMPLETED',
+          statusText: 'Đã hoàn tất bàn giao'
+        },
+        {
+          code: 'CC-261001-012',
+          createdAt: '2026-10-01T10:15:00',
+          patientName: 'Lý Quốc Bảo',
+          patientAge: 52,
+          patientGender: 'Nam',
+          incidentName: 'Nhồi máu cơ tim cấp',
+          severity: 'CRITICAL',
+          severityText: 'Tối khẩn',
+          vehiclePlate: '65A-014.22',
+          doctor: 'BS. Phan Thị Mai',
+          handoverTime: '3.5 phút',
+          disposition: 'Chuyển thẳng DSA Tim Mạch',
+          status: 'COMPLETED',
+          statusText: 'Đã hoàn tất bàn giao'
+        },
+        {
+          code: 'CC-261001-011',
+          createdAt: '2026-10-01T08:30:00',
+          patientName: 'Ngô Tấn Tài',
+          patientAge: 41,
+          patientGender: 'Nam',
+          incidentName: 'Suy hô hấp cấp / Dị vật đường thở',
+          severity: 'EMERGENCY',
+          severityText: 'Khẩn cấp',
+          vehiclePlate: '65A-011.15',
+          doctor: 'BS. Trần Văn Hậu',
+          handoverTime: '4.0 phút',
+          disposition: 'Nhập ICU Hồi sức Tích cực',
+          status: 'COMPLETED',
+          statusText: 'Đã hoàn tất bàn giao'
+        },
+        {
+          code: 'CC-261001-009',
+          createdAt: '2026-10-01T05:40:00',
+          patientName: 'Vũ Quốc Cường',
+          patientAge: 36,
+          patientGender: 'Nam',
+          incidentName: 'Chấn thương ngã cao',
+          severity: 'ROUTINE',
+          severityText: 'Tiêu chuẩn',
+          vehiclePlate: '65A-019.99',
+          doctor: 'BS. Lê Hoàng Long',
+          handoverTime: '5.1 phút',
+          disposition: 'Theo dõi & Xử trí tại Khoa CC',
+          status: 'COMPLETED',
+          statusText: 'Đã hoàn tất bàn giao'
+        }
+      ];
 
       container.innerHTML = `
         <div class="view-container-full">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <!-- Header Bar with Title and Subtitle -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:12px;">
             <div>
-              <h2 style="color:var(--text-white);font-size:18px;">Báo cáo Chi tiết Ca Bệnh viện đã Tiếp nhận</h2>
-              <p style="font-size:12px;color:var(--text-muted);">Danh sách toàn bộ các ca cấp cứu ngoại viện được chuyển đến Khoa Cấp cứu</p>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+                <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:rgba(229, 37, 33, 0.15);color:var(--red-vivid);border-radius:6px;">
+                  ${window.CCNV_UI.ICONS.barChart}
+                </span>
+                <h2 style="color:var(--text-white);font-size:18px;margin:0;font-weight:700;">Báo Cáo Tiếp Nhận Cấp Cứu Ngoại Viện - ${hosp.name}</h2>
+              </div>
+              <p style="font-size:12.5px;color:var(--text-muted);margin:0;">
+                Theo dõi số ca tiếp nhận ngoại viện, phân tích thời gian bàn giao, cơ cấu bệnh lý và trích xuất dữ liệu chi tiết ca bệnh tại Khoa Cấp cứu
+              </p>
             </div>
-            <button class="btn btn-default" id="btn-export-hosp-report">Xuất Báo cáo (Excel / PDF)</button>
           </div>
+
+          <!-- Internal Tab Navigation (Clone app trung tâm: Tổng quan / Chi tiết) -->
+          <div style="display:flex;gap:8px;border-bottom:1px solid var(--border-main);padding-bottom:10px;margin-bottom:16px;">
+            <button class="btn ${activeTab === 'overview' ? 'btn-emergency' : 'btn-default'} btn-sm hosp-report-tab-btn" data-tab="overview">
+              ${window.CCNV_UI.ICONS.barChart}
+              <span>Tổng quan</span>
+            </button>
+            <button class="btn ${activeTab === 'detail' ? 'btn-emergency' : 'btn-default'} btn-sm hosp-report-tab-btn" data-tab="detail">
+              ${window.CCNV_UI.ICONS.layers}
+              <span>Chi tiết ca tiếp nhận</span>
+              <span class="badge ${activeTab === 'detail' ? 'badge-emergency' : 'badge-normal'}" style="margin-left:4px;padding:1px 6px;font-size:11px;">${detailRecords.length}</span>
+            </button>
+          </div>
+
+          <!-- Tab Content Mount Container -->
+          <div id="hosp-report-pane"></div>
+        </div>
+      `;
+
+      // Tab switcher event handlers
+      container.querySelectorAll('.hosp-report-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tab = btn.getAttribute('data-tab');
+          this.renderHospitalReportsView(container, tab);
+        });
+      });
+
+      const pane = container.querySelector('#hosp-report-pane');
+      if (!pane) return;
+
+      // ==========================================
+      // TAB 1: TỔNG QUAN (KPIs, Thống kê, Biểu đồ 24h & Phân loại)
+      // ==========================================
+      if (activeTab === 'overview') {
+        pane.innerHTML = `
+          <!-- 1. Quick Stats & KPI Cards Grid -->
+          <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:14px;margin-bottom:18px;">
+            <div class="kpi-card" style="position:relative;overflow:hidden;border:1px solid rgba(255,255,255,0.06);">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <span class="kpi-label">Tổng ca tiếp nhận</span>
+                <span style="font-size:11px;color:#94A3B8;font-weight:600;background:rgba(148,163,184,0.12);padding:2px 6px;border-radius:4px;">+15.2% ↑</span>
+              </div>
+              <span class="kpi-value" style="color:var(--text-white);">582</span>
+              <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px;">
+                Hôm nay: <strong style="color:var(--text-white);">18 ca</strong> · Tháng này: <strong style="color:var(--text-white);">142 ca</strong>
+              </div>
+            </div>
+
+            <div class="kpi-card" style="position:relative;overflow:hidden;border:1px solid rgba(248,113,113,0.15);">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <span class="kpi-label">Ca tối khẩn (Đỏ / Cam)</span>
+                <span style="font-size:11px;color:#F87171;font-weight:600;background:rgba(248,113,113,0.12);padding:2px 6px;border-radius:4px;">28.9%</span>
+              </div>
+              <span class="kpi-value" style="color:#F87171;">168</span>
+              <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px;">
+                Đột quỵ não, ngừng tim ngoại viện, đa chấn thương
+              </div>
+            </div>
+
+            <div class="kpi-card" style="position:relative;overflow:hidden;border:1px solid rgba(255,255,255,0.06);">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <span class="kpi-label">Thời gian bàn giao TB (Handover)</span>
+                <span style="font-size:11px;color:#34D399;font-weight:600;background:rgba(52,211,153,0.12);padding:2px 6px;border-radius:4px;">Đạt chuẩn BYT</span>
+              </div>
+              <span class="kpi-value" style="color:#38BDF8;">4.2 phút</span>
+              <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px;">
+                Mục tiêu bàn giao tại Khoa Cấp cứu: &lt; 5 phút
+              </div>
+            </div>
+
+            <div class="kpi-card" style="position:relative;overflow:hidden;border:1px solid rgba(255,255,255,0.06);">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                <span class="kpi-label">Tiếp nhận chuyển ICU / Mổ</span>
+                <span style="font-size:11px;color:#94A3B8;font-weight:600;background:rgba(148,163,184,0.12);padding:2px 6px;border-radius:4px;">50.0%</span>
+              </div>
+              <span class="kpi-value" style="color:var(--text-white);">291 ca</span>
+              <div style="font-size:11.5px;color:var(--text-muted);margin-top:4px;">
+                Chuyển thẳng DSA, phòng mổ và buồng hồi sức tích cực
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Visual Charts Row (24-Hour Column Chart & Incident Breakdown - Quieter Style) -->
+          <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:16px;margin-bottom:18px;">
+            <!-- Column Chart: Cases by Time Slot -->
+            <div class="content-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                <div>
+                  <h3 style="color:var(--text-white);font-size:14px;margin:0 0 2px 0;">Phân bố Số ca Tiếp nhận Cấp cứu theo Khung giờ</h3>
+                  <span style="font-size:12px;color:var(--text-muted);">Cao điểm nhập viện Khoa Cấp cứu tập trung 17h-20h và đêm khuya</span>
+                </div>
+                <span class="badge badge-normal" style="font-size:11px;">24 Giờ</span>
+              </div>
+
+              <!-- 24-Hour Distribution Bar Chart -->
+              <div style="height:210px;background:var(--bg-elevated);border-radius:6px;padding:16px 10px 8px 10px;border:1px solid var(--border-main);display:flex;flex-direction:column;justify-content:space-between;">
+                <div style="flex:1;display:flex;align-items:flex-end;gap:3px;padding:0 2px;">
+                  ${[
+            { hour: '0h', count: 9, isPeak: false },
+            { hour: '1h', count: 7, isPeak: false },
+            { hour: '2h', count: 6, isPeak: false },
+            { hour: '3h', count: 8, isPeak: false },
+            { hour: '4h', count: 12, isPeak: false },
+            { hour: '5h', count: 16, isPeak: false },
+            { hour: '6h', count: 21, isPeak: false },
+            { hour: '7h', count: 28, isPeak: false },
+            { hour: '8h', count: 34, isPeak: false },
+            { hour: '9h', count: 37, isPeak: false },
+            { hour: '10h', count: 32, isPeak: false },
+            { hour: '11h', count: 30, isPeak: false },
+            { hour: '12h', count: 26, isPeak: false },
+            { hour: '13h', count: 24, isPeak: false },
+            { hour: '14h', count: 27, isPeak: false },
+            { hour: '15h', count: 30, isPeak: false },
+            { hour: '16h', count: 39, isPeak: false },
+            { hour: '17h', count: 48, isPeak: true },
+            { hour: '18h', count: 52, isPeak: true, isMax: true },
+            { hour: '19h', count: 44, isPeak: true },
+            { hour: '20h', count: 36, isPeak: false },
+            { hour: '21h', count: 29, isPeak: false },
+            { hour: '22h', count: 26, isPeak: false },
+            { hour: '23h', count: 19, isPeak: false }
+          ].map(b => {
+            const pct = Math.round((b.count / 52) * 100);
+            const bg = b.isMax
+              ? '#38BDF8'
+              : (b.isPeak
+                ? 'rgba(56, 189, 248, 0.75)'
+                : (b.count >= 30
+                  ? '#475569'
+                  : '#334155'));
+            const valColor = b.isMax ? '#38BDF8' : (b.isPeak ? '#93C5FD' : '#64748B');
+            const nextH = (parseInt(b.hour, 10) + 1) % 24;
+            const titleText = `Khung giờ ${b.hour} - ${nextH}h: ${b.count} ca tiếp nhận${b.isMax ? ' (Đỉnh cao điểm)' : ''}`;
+            return `
+                      <div style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;height:100%;justify-content:flex-end;" title="${titleText}">
+                        <span style="font-size:8.5px;color:${valColor};font-weight:${b.isPeak ? '700' : '500'};font-family:var(--font-mono);line-height:1;">${b.count}</span>
+                        <div style="width:100%;max-width:18px;height:${pct}%;background:${bg};border-radius:2px 2px 0 0;transition:all 0.2s ease;"></div>
+                        <span style="font-size:9px;color:${b.isPeak ? '#CBD5E1' : '#64748B'};font-family:var(--font-mono);line-height:1;margin-top:2px;">${b.hour}</span>
+                      </div>
+                    `;
+          }).join('')}
+                </div>
+              </div>
+            </div>
+
+            <!-- Horizontal Progress Bars: Incident Categories Breakdown (Tonal Palette) -->
+            <div class="content-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+                <h3 style="color:var(--text-white);font-size:14px;margin:0;">Cơ cấu Bệnh lý Tiếp nhận</h3>
+                <span style="font-size:11px;color:var(--text-muted);">582 ca</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:12px;font-size:12.5px;">
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                    <span style="color:var(--text-white);">Tai nạn giao thông & Đa chấn thương</span>
+                    <strong style="color:#38BDF8;font-family:var(--font-mono);">42% <span style="font-weight:normal;color:var(--text-muted);font-size:11px;">(244 ca)</span></strong>
+                  </div>
+                  <div style="height:6px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:42%;height:100%;background:#38BDF8;border-radius:3px;"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                    <span style="color:var(--text-white);">Đột quỵ não & Tim mạch cấp (DSA)</span>
+                    <strong style="color:#93C5FD;font-family:var(--font-mono);">26% <span style="font-weight:normal;color:var(--text-muted);font-size:11px;">(151 ca)</span></strong>
+                  </div>
+                  <div style="height:6px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:26%;height:100%;background:rgba(56, 189, 248, 0.75);border-radius:3px;"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                    <span style="color:var(--text-white);">Suy hô hấp cấp / Dị vật đường thở</span>
+                    <strong style="color:#CBD5E1;font-family:var(--font-mono);">18% <span style="font-weight:normal;color:var(--text-muted);font-size:11px;">(105 ca)</span></strong>
+                  </div>
+                  <div style="height:6px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:18%;height:100%;background:rgba(56, 189, 248, 0.5);border-radius:3px;"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                    <span style="color:var(--text-white);">Tai nạn sinh hoạt, ngã cao & Khác</span>
+                    <strong style="color:var(--text-muted);font-family:var(--font-mono);">14% <span style="font-weight:normal;color:var(--text-muted);font-size:11px;">(82 ca)</span></strong>
+                  </div>
+                  <div style="height:6px;background:var(--bg-main);border-radius:3px;overflow:hidden;">
+                    <div style="width:14%;height:100%;background:rgba(148, 163, 184, 0.35);border-radius:3px;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Bottom Row: Disposition after Handover & Top Ambulances Delivering -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <!-- Disposition after ER Handover (Refined Clean Metrics) -->
+            <div class="content-card">
+              <h3 style="color:var(--text-white);font-size:14px;margin-bottom:12px;">Phân loại Hướng xử trí sau Bàn giao Cấp cứu</h3>
+              <div style="display:grid;grid-template-columns:repeat(2, 1fr);gap:12px;text-align:center;">
+                <div style="background:var(--bg-elevated);padding:14px;border-radius:6px;border:1px solid var(--border-main);">
+                  <div style="font-size:22px;font-weight:700;font-family:var(--font-mono);color:var(--text-white);margin-bottom:4px;">28%</div>
+                  <div style="font-size:12px;color:#38BDF8;font-weight:500;">Nhập viện Hồi sức Tích cực (ICU)</div>
+                </div>
+                <div style="background:var(--bg-elevated);padding:14px;border-radius:6px;border:1px solid var(--border-main);">
+                  <div style="font-size:22px;font-weight:700;font-family:var(--font-mono);color:var(--text-white);margin-bottom:4px;">22%</div>
+                  <div style="font-size:12px;color:#F87171;font-weight:500;">Chuyển thẳng Phòng Mổ Cấp Cứu</div>
+                </div>
+                <div style="background:var(--bg-elevated);padding:14px;border-radius:6px;border:1px solid var(--border-main);">
+                  <div style="font-size:22px;font-weight:700;font-family:var(--font-mono);color:var(--text-white);margin-bottom:4px;">36%</div>
+                  <div style="font-size:12px;color:#34D399;font-weight:500;">Theo dõi & Xử trí tại Khoa CC</div>
+                </div>
+                <div style="background:var(--bg-elevated);padding:14px;border-radius:6px;border:1px solid var(--border-main);">
+                  <div style="font-size:22px;font-weight:700;font-family:var(--font-mono);color:var(--text-white);margin-bottom:4px;">14%</div>
+                  <div style="font-size:12px;color:#FBBF24;font-weight:500;">Chuyển Viện Tuyến Trên</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Top Delivering Ambulances / Stations (Quiet Clean Ranking) -->
+            <div class="content-card">
+              <h3 style="color:var(--text-white);font-size:14px;margin-bottom:12px;">Top Đội xe Cứu thương Chuyển viện đến</h3>
+              <div style="display:flex;flex-direction:column;gap:8px;font-size:12.5px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg-elevated);border-radius:6px;border:1px solid var(--border-main);">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-family:var(--font-mono);font-weight:700;color:var(--text-white);width:22px;height:22px;border-radius:4px;background:rgba(255,255,255,0.08);display:inline-flex;align-items:center;justify-content:center;font-size:11px;">01</span>
+                    <span style="color:var(--text-white);font-weight:500;">Đội xe Cấp cứu 115 Trung tâm</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <strong style="color:var(--text-white);font-family:var(--font-mono);">${(312).toLocaleString()} ca</strong>
+                    <span style="font-size:11px;color:var(--text-muted);">(53.6%)</span>
+                  </div>
+                </div>
+
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg-elevated);border-radius:6px;border:1px solid var(--border-main);">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-family:var(--font-mono);font-weight:700;color:var(--text-slate);width:22px;height:22px;border-radius:4px;background:rgba(255,255,255,0.05);display:inline-flex;align-items:center;justify-content:center;font-size:11px;">02</span>
+                    <span style="color:var(--text-white);font-weight:500;">Đội xe Cấp cứu Trạm Ninh Kiều</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <strong style="color:var(--text-white);font-family:var(--font-mono);">${(146).toLocaleString()} ca</strong>
+                    <span style="font-size:11px;color:var(--text-muted);">(25.1%)</span>
+                  </div>
+                </div>
+
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg-elevated);border-radius:6px;border:1px solid var(--border-main);">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-family:var(--font-mono);font-weight:700;color:var(--text-slate);width:22px;height:22px;border-radius:4px;background:rgba(255,255,255,0.05);display:inline-flex;align-items:center;justify-content:center;font-size:11px;">03</span>
+                    <span style="color:var(--text-white);font-weight:500;">Xe Cấp cứu BV Đa khoa Cái Răng</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <strong style="color:var(--text-white);font-family:var(--font-mono);">${(68).toLocaleString()} ca</strong>
+                    <span style="font-size:11px;color:var(--text-muted);">(11.7%)</span>
+                  </div>
+                </div>
+
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg-elevated);border-radius:6px;border:1px solid var(--border-main);">
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-family:var(--font-mono);font-weight:700;color:var(--text-slate);width:22px;height:22px;border-radius:4px;background:rgba(255,255,255,0.05);display:inline-flex;align-items:center;justify-content:center;font-size:11px;">04</span>
+                    <span style="color:var(--text-white);font-weight:500;">Xe Cấp cứu Tư nhân / Chuyển viện Huyện</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <strong style="color:var(--text-white);font-family:var(--font-mono);">${(56).toLocaleString()} ca</strong>
+                    <span style="font-size:11px;color:var(--text-muted);">(9.6%)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // ==========================================
+      // TAB 2: CHI TIẾT (Bản ghi, Search, Sort, Filter, Phân trang, Xuất Excel)
+      // ==========================================
+      else if (activeTab === 'detail') {
+        pane.innerHTML = `
           <div class="content-card" style="padding:0;overflow:visible;">
             <div id="hosp-report-detail-table-mount"></div>
           </div>
-        </div>
-      `;
+        `;
 
-      new window.CCNV_UI.DataTable({
-        containerId: 'hosp-report-detail-table-mount',
-        data: history,
-        pageSize: 10,
-        exportTitle: 'Danh sách Ca đã Tiếp nhận Bệnh viện',
-        searchPlaceholder: 'Tìm mã ca, bệnh nhân, chẩn đoán, xe chuyển...',
-        defaultSortKey: 'createdAt',
-        defaultSortOrder: 'desc',
-        columns: [
-          { key: 'code', title: 'Mã ca', sortable: true, render: h => `<strong style="font-family:var(--font-mono);color:#93C5FD;">${h.code}</strong>` },
-          { key: 'createdAt', title: 'Thời điểm đến', sortable: true, render: h => h.createdAt.replace('T', ' ') },
-          { key: 'patientName', title: 'Bệnh nhân', sortable: true, render: h => `<strong>${h.patientName}</strong> (${h.patientAge}T)` },
-          { key: 'incidentName', title: 'Chẩn đoán sơ bộ', sortable: true },
-          { key: 'vehiclePlate', title: 'Xe chuyển đến', sortable: true, render: h => `<span style="font-family:var(--font-mono);font-weight:600;color:var(--text-white);">${h.vehiclePlate}</span>` },
-          { key: 'doctor', title: 'Bác sĩ tiếp nhận', sortable: false, render: () => `BS. Lê Hoàng Long` },
-          {
-            key: 'status',
-            title: 'Trạng thái',
-            sortable: true,
-            render: () => `<span class="status-pill status-pill-completed">Đã tiếp nhận</span>`
-          }
-        ]
-      }).render();
+        new window.CCNV_UI.DataTable({
+          containerId: 'hosp-report-detail-table-mount',
+          data: detailRecords,
+          pageSize: 10,
+          exportTitle: `Báo cáo Chi tiết Tiếp nhận Cấp cứu Ngoại viện - ${hosp.name}`,
+          enableExport: true,
+          showSortSelect: true,
+          searchPlaceholder: 'Tìm mã ca, bệnh nhân, chẩn đoán, xe chuyển, bác sĩ...',
+          defaultSortKey: 'createdAt',
+          defaultSortOrder: 'desc',
+          filterOptions: [
+            { label: 'Tất cả mức độ', value: 'ALL', filterFn: () => true },
+            { label: 'Tối khẩn', value: 'CRITICAL', filterFn: item => item.severity === 'CRITICAL' },
+            { label: 'Khẩn cấp', value: 'EMERGENCY', filterFn: item => item.severity === 'EMERGENCY' },
+            { label: 'Tiêu chuẩn', value: 'ROUTINE', filterFn: item => item.severity === 'ROUTINE' },
+            { label: 'Hoàn tất bàn giao', value: 'COMPLETED', filterFn: item => item.status === 'COMPLETED' },
+            { label: 'Đang tiếp nhận', value: 'IN_PROGRESS', filterFn: item => item.status === 'IN_PROGRESS' }
+          ],
+          columns: [
+            {
+              key: 'code',
+              title: 'Mã ca',
+              sortable: true,
+              render: item => `<strong style="font-family:var(--font-mono);color:#93C5FD;">${item.code}</strong>`
+            },
+            {
+              key: 'createdAt',
+              title: 'Thời điểm đến',
+              sortable: true,
+              render: item => `<span style="font-size:12px;color:var(--text-white);">${item.createdAt.replace('T', ' ')}</span>`
+            },
+            {
+              key: 'patientName',
+              title: 'Bệnh nhân',
+              sortable: true,
+              render: item => `<strong>${item.patientName}</strong> <span style="font-size:11.5px;color:var(--text-muted);">(${item.patientAge}T · ${item.patientGender})</span>`
+            },
+            {
+              key: 'incidentName',
+              title: 'Chẩn đoán sơ bộ',
+              sortable: true,
+              render: item => `<span>${item.incidentName}</span>`
+            },
+            {
+              key: 'severity',
+              title: 'Mức độ',
+              sortable: true,
+              render: item => {
+                if (item.severity === 'CRITICAL') return `<span class="badge badge-emergency" style="font-size:11px;">Tối khẩn</span>`;
+                if (item.severity === 'EMERGENCY') return `<span class="badge badge-warning" style="font-size:11px;">Khẩn cấp</span>`;
+                return `<span class="badge badge-normal" style="font-size:11px;">Tiêu chuẩn</span>`;
+              }
+            },
+            {
+              key: 'vehiclePlate',
+              title: 'Xe chuyển đến',
+              sortable: true,
+              render: item => `<span style="font-family:var(--font-mono);font-weight:600;color:var(--text-white);">${item.vehiclePlate}</span>`
+            },
+            {
+              key: 'doctor',
+              title: 'Bác sĩ tiếp nhận',
+              sortable: false,
+              render: item => `<span style="color:#93C5FD;font-weight:500;">${item.doctor}</span>`
+            },
+            {
+              key: 'handoverTime',
+              title: 'TG Bàn giao',
+              sortable: true,
+              render: item => `<span style="font-family:var(--font-mono);color:#10B981;font-weight:600;">${item.handoverTime}</span>`
+            },
+            {
+              key: 'disposition',
+              title: 'Hướng xử trí',
+              sortable: true,
+              render: item => `<span style="font-size:12px;color:var(--text-slate);">${item.disposition}</span>`
+            },
+            {
+              key: 'status',
+              title: 'Trạng thái',
+              sortable: true,
+              render: item => {
+                if (item.status === 'COMPLETED') return `<span class="status-pill status-pill-completed">Đã tiếp nhận</span>`;
+                return `<span class="status-pill status-pill-emergency">Đang tiếp nhận</span>`;
+              }
+            }
+          ]
+        }).render();
+      }
+    }
 
-      container.querySelector('#btn-export-hosp-report')?.addEventListener('click', () => {
-        window.CCNV_UI.Toast.show('Xuất báo cáo', 'Đã tải xuống danh sách ca tiếp nhận cấp cứu ngoại viện');
-      });
+    renderHospitalReportDetailView(container) {
+      this.renderHospitalReportsView(container, 'detail');
     }
 
     renderHospitalReportStatsView(container) {
-      container.innerHTML = `
-        <div class="view-container-full">
-          <h2 style="color:var(--text-white);font-size:18px;margin-bottom:12px;">Báo cáo Thống kê Tiếp nhận Bệnh viện</h2>
-          <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:16px;">
-            <div class="kpi-card">
-              <span class="kpi-label">Số ca tiếp nhận trong tuần</span>
-              <span class="kpi-value">28 ca</span>
-            </div>
-            <div class="kpi-card">
-              <span class="kpi-label">Ca tối khẩn (Đỏ) tiếp nhận</span>
-              <span class="kpi-value" style="color:var(--red-vivid);">12 ca</span>
-            </div>
-            <div class="kpi-card">
-              <span class="kpi-label">Thời gian bàn giao TB (Handover)</span>
-              <span class="kpi-value" style="color:#10B981;">4.5 phút</span>
-            </div>
-            <div class="kpi-card">
-              <span class="kpi-label">Tỷ lệ cảnh báo trước từ 115</span>
-              <span class="kpi-value">100%</span>
-            </div>
-          </div>
-
-          <div class="content-card" style="margin-top:16px;">
-            <h3 style="color:var(--text-white);font-size:14px;margin-bottom:12px;">Phân loại hướng xử trí sau bàn giao cấp cứu ngoại viện</h3>
-            <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:14px;text-align:center;">
-              <div style="background:var(--bg-elevated);padding:14px;border-radius:6px;border:1px solid var(--border-main);">
-                <div style="font-size:20px;font-weight:700;color:#93C5FD;margin-bottom:4px;">28%</div>
-                <div style="font-size:12px;color:var(--text-slate);">Nhập viện Hồi sức Tích cực (ICU)</div>
-              </div>
-              <div style="background:var(--bg-elevated);padding:14px;border-radius:6px;border:1px solid var(--border-main);">
-                <div style="font-size:20px;font-weight:700;color:var(--red-vivid);margin-bottom:4px;">22%</div>
-                <div style="font-size:12px;color:var(--text-slate);">Chuyển thẳng Phòng Mổ Cấp Cứu</div>
-              </div>
-              <div style="background:var(--bg-elevated);padding:14px;border-radius:6px;border:1px solid var(--border-main);">
-                <div style="font-size:20px;font-weight:700;color:#10B981;margin-bottom:4px;">36%</div>
-                <div style="font-size:12px;color:var(--text-slate);">Theo dõi & Điều trị tại Khoa CC</div>
-              </div>
-              <div style="background:var(--bg-elevated);padding:14px;border-radius:6px;border:1px solid var(--border-main);">
-                <div style="font-size:20px;font-weight:700;color:#F59E0B;margin-bottom:4px;">14%</div>
-                <div style="font-size:12px;color:var(--text-slate);">Chuyển Viện Tuyến Trên</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
+      this.renderHospitalReportsView(container, 'overview');
     }
 
     // --- 7. DRAWER: CREATE CASE (TT-07) ---
@@ -4740,7 +6994,7 @@
         <div class="drawer-container">
           <!-- P0: Critical Incident Focus Mode Banner -->
           <div class="focus-mode-banner">
-            <span>⚡ CHẾ ĐỘ TẬP TRUNG XỬ LÝ KHẨN CẤP (FOCUS MODE)</span>
+            <span>⚡ CHẾ ĐỘ TẬP TRUNG XỬ LÝ KHẨN CẤP</span>
             <div class="focus-mode-shortcuts">
               <span>Phím tắt:</span>
               <span class="kbd-shortcut">Enter</span> Phát lệnh
@@ -4816,7 +7070,7 @@
                 <select id="form-incident-select">
                   ${incidentTypes.map(inc => `
                     <option value="${inc.code}" ${inc.code === defaultIncident ? 'selected' : ''}>
-                      ${inc.name} — [Gợi ý: ${inc.suggestedType}]
+                      ${inc.name} - [Gợi ý: ${inc.suggestedType}]
                     </option>
                   `).join('')}
                 </select>
@@ -4832,13 +7086,13 @@
                 </label>
                 <div class="severity-picker-grid">
                   <button type="button" class="severity-btn active sev-critical" data-sev="CRITICAL">
-                    <kbd class="quick-kbd kbd-red" style="margin-right:4px;">1</kbd> TỐI KHẨN (ĐỎ)
+                    <kbd class="quick-kbd kbd-red" style="margin-right:4px;">1</kbd> TỐI KHẨN
                   </button>
                   <button type="button" class="severity-btn sev-emergency" data-sev="EMERGENCY">
-                    <kbd class="quick-kbd kbd-amber" style="margin-right:4px;">2</kbd> KHẨN CẤP (CAM)
+                    <kbd class="quick-kbd kbd-amber" style="margin-right:4px;">2</kbd> KHẨN CẤP
                   </button>
                   <button type="button" class="severity-btn sev-routine" data-sev="ROUTINE">
-                    <kbd class="quick-kbd kbd-emerald" style="margin-right:4px;">3</kbd> THƯỜNG (XANH)
+                    <kbd class="quick-kbd kbd-emerald" style="margin-right:4px;">3</kbd> THƯỜNG
                   </button>
                 </div>
               </div>
@@ -5034,7 +7288,7 @@
             ĐANG ĐỔ CHUÔNG CUỘC GỌI KHẨN CẤP [KÊNH ${scenario.sourceName}]
           </div>
           <div style="font-size:15px;font-weight:700;color:#FFF;">
-            ${scenario.callerPhone} — ${scenario.callerName}
+            ${scenario.callerPhone} - ${scenario.callerName}
           </div>
           <div style="font-size:12px;color:#CBD5E1;">${scenario.address}</div>
         </div>
@@ -5056,9 +7310,12 @@
     }
 
     // --- 9. CASE DETAIL MODAL WITH 7 TABS (TT-08) ---
-    openCaseDetailModal(caseId) {
+    openCaseDetailModal(caseId, fallbackCase = null) {
       const state = window.StateManager.getState();
       let c = state.cases.find(item => item.id === caseId || item.code === caseId);
+      if (!c && fallbackCase) {
+        c = fallbackCase;
+      }
       if (!c && state.historyCases) {
         const h = state.historyCases.find(item => item.id === caseId || item.code === caseId);
         if (h) {
@@ -5069,25 +7326,25 @@
             completedAt: h.completedAt,
             status: h.status,
             statusText: h.statusText || 'Hoàn tất',
-            patient: { name: h.patientName, age: h.patientAge || '—', gender: h.patientGender || 'Nam', history: 'Không có tiền sử dị ứng' },
+            patient: { name: h.patientName, age: h.patientAge || '-', gender: h.patientGender || 'Nam', history: 'Không có tiền sử dị ứng' },
             location: { address: h.locationAddress || 'Khu vực TP Cần Thơ' },
             incident: { name: h.incidentName, severity: h.severity || 'ROUTINE', description: 'Đã hoàn tất vận chuyển và bàn giao người bệnh' },
-            dispatch: { vehiclePlate: h.vehiclePlate || '—', crewName: h.crewName || 'Kíp trực 115', hospitalName: h.hospitalName || '—' },
+            dispatch: { vehiclePlate: h.vehiclePlate || '-', crewName: h.crewName || 'Kíp trực 115', hospitalName: h.hospitalName || '-' },
             epcr: h.epcr || { chiefComplaint: h.incidentName, diagnosis: h.incidentName, treatment: 'Sơ cứu tại hiện trường và hỗ trợ hô hấp, huyết động trên đường vận chuyển.' },
             milestones: [
-              { name: 'Tiếp nhận cuộc gọi', time: h.createdAt ? h.createdAt.replace('T', ' ') : '—', done: true },
-              { name: 'Xuất phát', time: '—', done: true },
-              { name: 'Đến hiện trường', time: '—', done: true },
-              { name: 'Bàn giao tại viện', time: h.completedAt ? h.completedAt.replace('T', ' ') : '—', done: true }
+              { name: 'Tiếp nhận cuộc gọi', time: h.createdAt ? h.createdAt.replace('T', ' ') : '-', done: true },
+              { name: 'Xuất phát', time: '-', done: true },
+              { name: 'Đến hiện trường', time: '-', done: true },
+              { name: 'Bàn giao tại viện', time: h.completedAt ? h.completedAt.replace('T', ' ') : '-', done: true }
             ],
             logs: [
-              { time: h.createdAt ? h.createdAt.replace('T', ' ') : '—', user: 'dpv01', action: `Tiếp nhận yêu cầu và phát lệnh điều xe ${h.vehiclePlate || ''}` },
-              { time: h.completedAt ? h.completedAt.replace('T', ' ') : '—', user: 'Khoa Cấp cứu', action: `Bàn giao bệnh nhân tại ${h.hospitalName || 'Bệnh viện'}. Hoàn tất ca.` }
+              { time: h.createdAt ? h.createdAt.replace('T', ' ') : '-', user: 'dpv01', action: `Tiếp nhận yêu cầu và phát lệnh điều xe ${h.vehiclePlate || ''}` },
+              { time: h.completedAt ? h.completedAt.replace('T', ' ') : '-', user: 'Khoa Cấp cứu', action: `Bàn giao bệnh nhân tại ${h.hospitalName || 'Bệnh viện'}. Hoàn tất ca.` }
             ]
           };
         }
       }
-      c = c || state.cases[0];
+      c = c || fallbackCase || state.cases[0];
       if (!c) return;
 
       this.selectedCaseId = c.id;
@@ -5155,7 +7412,7 @@
                   <strong style="color:var(--text-white);font-size:17px;letter-spacing:0.8px;font-family:var(--font-mono);">HỒ SƠ CHI TIẾT CA CẤP CỨU: ${c.code}</strong>
                   ${window.CCNV_UI.Badges.forCaseStatus(c.status)}
                   <span class="badge ${c.incident?.severity === 'CRITICAL' ? 'badge-emergency' : 'badge-amber'}" style="font-weight:700;letter-spacing:0.5px;">
-                    ${c.incident?.severity === 'CRITICAL' ? '● TỐI KHẨN (ĐỎ)' : '● KHẨN CẤP (CAM)'}
+                    ${c.incident?.severity === 'CRITICAL' ? '● TỐI KHẨN' : '● KHẨN CẤP'}
                   </span>
                 </div>
                 <div style="font-size:11px;color:var(--text-slate);margin-top:2px;">
@@ -5165,6 +7422,12 @@
             </div>
 
             <div style="display:flex;align-items:center;gap:12px;">
+              ${(this.isHospitalMode() && (!state.cases.some(item => item.id === c.id || item.code === c.code) || c.hospitalResponse !== 'ACCEPTED')) ? `
+                <button class="btn btn-emergency btn-sm" id="btn-modal-confirm-hospital-case" style="font-weight:700;display:flex;align-items:center;gap:6px;box-shadow:0 0 16px rgba(239,68,68,0.45);padding:6px 14px;">
+                  ${window.CCNV_UI.ICONS.check || '✓'}
+                  <span>Xác nhận tiếp nhận</span>
+                </button>
+              ` : ''}
               <button class="btn btn-ghost btn-sm" id="btn-call-audio-quick" title="Bản ghi âm 115" style="border:1px solid var(--border-main);background:rgba(255,255,255,0.03);">
                 📞 Ghi âm tiếp nhận (${callTimeRaw})
               </button>
@@ -5178,13 +7441,9 @@
           <!-- 2. PHẦN TỔNG QUAN: KHUNG 7 THÔNG TIN TỔNG QUAN ĐIỀU HÀNH (TRẢI ĐỀU 100% CHIỀU NGANG) -->
           <div style="flex-shrink:0;background:var(--bg-panel);border-bottom:1px solid var(--border-main);padding:14px 24px;">
             <div style="background:var(--bg-elevated);border-radius:8px;border:1px solid var(--border-main);padding:12px 20px;">
-              <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-main);padding-bottom:8px;margin-bottom:10px;">
+              <div style="border-bottom:1px solid var(--border-main);padding-bottom:8px;margin-bottom:10px;">
                 <div style="font-size:13px;font-weight:700;color:var(--text-white);text-transform:uppercase;letter-spacing:0.6px;display:flex;align-items:center;gap:8px;">
                   <span style="color:var(--accent-cyan);font-size:14px;">✦</span> THÔNG TIN TỔNG QUAN ĐIỀU HÀNH CA CẤP CỨU
-                </div>
-                <div style="display:flex;align-items:center;gap:14px;">
-                  <span style="font-size:11.5px;color:var(--text-muted);">Mã cuộc gọi: <strong style="color:var(--text-white);font-family:var(--font-mono);">${c.callId || 'CALL-115-01'}</strong></span>
-                  <span style="font-size:11.5px;color:var(--text-muted);">· Mã phiên ePCR: <strong style="color:var(--accent-cyan);font-family:var(--font-mono);">${c.epcr?.id || 'EPCR-2610-09'}</strong></span>
                 </div>
               </div>
 
@@ -5257,10 +7516,11 @@
             </div>
           </div>
 
-          <!-- 3. THANH ĐIỀU HƯỚNG 4 TABS CHI TIẾT (FULL WIDTH) -->
+          <!-- 3. THANH ĐIỀU HƯỚNG 5 TABS CHI TIẾT (FULL WIDTH) -->
           <div style="display:flex;background:var(--bg-elevated);border-bottom:1px solid var(--border-main);padding:0 24px;flex-shrink:0;">
             <button class="panel-tab-btn active" data-tab="tab-overview" style="padding:10px 22px;font-size:13px;font-weight:600;">Tab Tổng quan</button>
             <button class="panel-tab-btn" data-tab="tab-dispatch" style="padding:10px 22px;font-size:13px;font-weight:600;">Tab Phân công / Điều phối</button>
+            <button class="panel-tab-btn" data-tab="tab-epcr-handover" style="padding:10px 22px;font-size:13px;font-weight:600;">Tab ePCR & Bàn giao BV</button>
             <button class="panel-tab-btn" data-tab="tab-documents" style="padding:10px 22px;font-size:13px;font-weight:600;">Tab Hồ sơ</button>
             <button class="panel-tab-btn" data-tab="tab-logs" style="padding:10px 22px;font-size:13px;font-weight:600;">Tab Lịch sử (Log)</button>
           </div>
@@ -5279,7 +7539,24 @@
 
         // --- TAB 1: TỔNG QUAN (Layout 50/50: Nửa Trái là Lâm sàng BN - Nửa Phải là Bản đồ Radar GIS) ---
         if (tabName === 'tab-overview') {
+          const isPendingAccept = this.isHospitalMode() && (!state.cases.some(item => item.id === c.id || item.code === c.code) || c.hospitalResponse !== 'ACCEPTED');
           body.innerHTML = `
+            ${isPendingAccept ? `
+              <div style="background: linear-gradient(90deg, rgba(239,68,68,0.18), rgba(245,158,11,0.12)); border: 1px solid rgba(239,68,68,0.45); border-radius: 8px; padding: 12px 18px; display:flex; align-items:center; justify-content:space-between; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.25);">
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <span style="font-size:26px;">🚑</span>
+                  <div>
+                    <strong style="color:var(--red-vivid);font-size:14px;letter-spacing:0.3px;display:block;">XE CẤP CỨU ĐANG ĐẾN - CHỜ KHOA CẤP CỨU XÁC NHẬN TIẾP NHẬN</strong>
+                    <div style="color:var(--text-light);font-size:12px;margin-top:2px;">
+                      Bệnh nhân đang được vận chuyển khẩn cấp từ hiện trường (Dự kiến đến sau 4 phút). Nhấn <strong>"Xác nhận tiếp nhận"</strong> để đưa ca vào danh sách cấp cứu chính thức.
+                    </div>
+                  </div>
+                </div>
+                <button class="btn btn-emergency btn-sm" id="btn-tab-overview-confirm-hospital-case" style="font-weight:700;padding:8px 20px;white-space:nowrap;box-shadow:0 0 15px rgba(239,68,68,0.4);display:flex;align-items:center;gap:6px;">
+                  <span>✓ Xác nhận tiếp nhận</span>
+                </button>
+              </div>
+            ` : ''}
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:stretch;height:100%;">
               
               <!-- NỬA TRÁI (50% LAYOUT): THÔNG TIN NGƯỜI BỆNH, LÂM SÀNG & SINH HIỆU -->
@@ -5367,8 +7644,8 @@
                     <div style="flex:1;min-width:0;">
                       <div style="font-size:15px;font-weight:700;color:var(--text-white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.patient?.name || 'Không rõ danh tính'}</div>
                       <div style="font-size:12px;color:var(--text-slate);margin-top:2px;">
-                        Tuổi: <strong style="color:var(--text-light);">${c.patient?.age || '—'}</strong> · 
-                        Giới tính: <strong style="color:var(--text-light);">${c.patient?.gender || '—'}</strong> · 
+                        Tuổi: <strong style="color:var(--text-light);">${c.patient?.age || '-'}</strong> · 
+                        Giới tính: <strong style="color:var(--text-light);">${c.patient?.gender || '-'}</strong> · 
                         Nhóm máu: <span class="badge badge-amber" style="padding:1px 6px;font-weight:700;">${c.patient?.bloodType || 'O+'}</span>
                       </div>
                     </div>
@@ -5383,7 +7660,7 @@
                         </tr>
                         <tr>
                           <td style="color:var(--text-slate);">Số điện thoại BN:</td>
-                          <td><span style="font-family:var(--font-mono);font-size:12.5px;color:var(--accent-cyan);font-weight:600;">${c.patient?.phone || c.callerPhone || '—'}</span></td>
+                          <td><span style="font-family:var(--font-mono);font-size:12.5px;color:var(--accent-cyan);font-weight:600;">${c.patient?.phone || c.callerPhone || '-'}</span></td>
                         </tr>
                         <tr>
                           <td style="color:var(--text-slate);">Người báo tin:</td>
@@ -5439,21 +7716,21 @@
                   </div>
                 </div>
 
-                <!-- 3. DẤU HIỆU SINH TỒN NGOẠI VIỆN (VITALS DASHBOARD + DẢI SÓNG ECG) -->
+                <!-- 3. DẤU HIỆU SINH TỒN NGOẠI VIỆN -->
                 <div class="form-section">
                   <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between;">
-                    <span>DẤU HIỆU SINH TỒN NGOẠI VIỆN (VITALS)</span>
-                    <span class="badge badge-emerald" style="font-family:var(--font-mono);">MONITOR LIVE</span>
+                    <span>DẤU HIỆU SINH TỒN NGOẠI VIỆN</span>
+                    <span class="badge badge-emerald">THEO DÕI TRỰC TIẾP</span>
                   </div>
 
                   <!-- 6 Ô SINH TỒN NGOẠI VIỆN -->
                   <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;margin-bottom:10px;">
                     <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:6px;padding:6px 8px;text-align:center;">
-                      <div style="font-size:10px;color:var(--text-slate);">Mạch (Pulse)</div>
+                      <div style="font-size:10px;color:var(--text-slate);">Mạch</div>
                       <div style="font-size:15px;font-weight:700;color:var(--text-white);font-family:var(--font-mono);margin-top:1px;">${c.epcr?.vitals?.pulse || 88} <span style="font-size:9.5px;color:var(--text-muted);font-weight:normal;">bpm</span></div>
                     </div>
                     <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:6px;padding:6px 8px;text-align:center;">
-                      <div style="font-size:10px;color:var(--text-slate);">Huyết áp (BP)</div>
+                      <div style="font-size:10px;color:var(--text-slate);">Huyết áp</div>
                       <div style="font-size:15px;font-weight:700;color:var(--text-white);font-family:var(--font-mono);margin-top:1px;">${c.epcr?.vitals?.bp || '130/80'} <span style="font-size:9.5px;color:var(--text-muted);font-weight:normal;">mmHg</span></div>
                     </div>
                     <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:6px;padding:6px 8px;text-align:center;">
@@ -5678,7 +7955,7 @@
                         </tr>
                         <tr>
                           <td style="color:var(--text-slate);">Địa chỉ BV:</td>
-                          <td>Số 04 Châu Văn Liêm, P. An Lạc, Q. Ninh Kiều, TP. Cần Thơ</td>
+                          <td>Số 04 Châu Văn Liêm, P. Tân An, TP. Cần Thơ</td>
                         </tr>
                         <tr>
                           <td style="color:var(--text-slate);">Người nhận tại viện:</td>
@@ -5689,8 +7966,8 @@
                           <td>Khoa Hồi sức Cấp cứu (A9) · Buồng Cấp cứu Ngoại</td>
                         </tr>
                         <tr>
-                          <td style="color:var(--text-slate);">Năng lực tiếp nhận:</td>
-                          <td><strong style="color:var(--emerald-light);">12 giường cấp cứu trống</strong> · 5 máy thở sẵn sàng</td>
+                          <td style="color:var(--text-slate);">Khả năng tiếp nhận:</td>
+                          <td><strong style="color:var(--emerald-light);">Sẵn sàng tiếp nhận</strong> (Trực cấp cứu 24/7)</td>
                         </tr>
                         <tr>
                           <td style="color:var(--text-slate);">Hotline trực viện:</td>
@@ -5742,7 +8019,7 @@
 
               <!-- KHỐI 4: THAO TÁC NGHIỆP VỤ ĐIỀU PHỐI (ĐỔI XE / ĐỔI BV / HỦY CA) -->
               <div class="form-section">
-                <div class="form-section-title">4. THAO TÁC ĐIỀU CHỈNH PHÂN CÔNG ĐIỀU PHỐI (NẾU CẦN THIẾT)</div>
+                <div class="form-section-title">4. THAO TÁC ĐIỀU CHỈNH PHÂN CÔNG ĐIỀU PHỐI</div>
                 <div class="form-grid-2">
                   <div>
                     <label class="form-label">Thu hồi & Đổi sang xe cứu thương khác</label>
@@ -5912,9 +8189,9 @@
               <!-- PHẦN 2: DANH MỤC TỆP TIN (FILE) ĐÍNH KÈM -->
               <div class="form-section">
                 <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between;">
-                  <span>2. DANH MỤC TỆP TIN ĐÍNH KÈM (FILES & DOCUMENTS)</span>
+                  <span>2. DANH MỤC TỆP TIN & HỒ SƠ ĐÍNH KÈM</span>
                   <button class="btn btn-default btn-sm" id="btn-upload-attachment">
-                    📁 + Đính kèm tệp tin mới
+                    + Đính kèm tệp tin mới
                   </button>
                 </div>
 
@@ -6028,7 +8305,7 @@
 
               <!-- KHU VỰC DROPZONE TẢI LÊN FILE MỚI -->
               <div style="border:2px dashed var(--border-accent);border-radius:8px;padding:22px;text-align:center;background:rgba(255,255,255,0.02);">
-                <div style="font-size:28px;margin-bottom:6px;">📤</div>
+                <div style="font-size:28px;margin-bottom:6px;"></div>
                 <div style="color:var(--text-white);font-weight:600;font-size:13.5px;">Kéo & Thả tài liệu, hình ảnh hoặc tệp tin ghi âm vào đây</div>
                 <div style="color:var(--text-muted);font-size:11.5px;margin-top:4px;">Hỗ trợ định dạng: PDF, DOCX, JPG, PNG, WAV, MP3 · Dung lượng tối đa: 50MB</div>
               </div>
@@ -6061,6 +8338,110 @@
 
           body.querySelector('#btn-upload-attachment')?.addEventListener('click', () => {
             window.CCNV_UI.Toast.show('Đính kèm', 'Mở hộp thoại chọn tệp tài liệu từ thiết bị');
+          });
+        }
+
+        // --- TAB ePCR & BÀN GIAO BỆNH VIỆN ---
+        else if (tabName === 'tab-epcr-handover') {
+          const isCompleted = c.status === 'COMPLETED';
+          body.innerHTML = `
+            <div style="display:flex;flex-direction:column;gap:18px;">
+              <!-- 1. BIÊN BẢN TIẾP NHẬN & BÀN GIAO TẠI KHOA CẤP CỨU -->
+              <div class="form-section">
+                <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span>1. BIÊN BẢN TIẾP NHẬN & BÀN GIAO BỆNH NHÂN TẠI VIỆN</span>
+                    <span class="badge ${isCompleted ? 'badge-emerald' : 'badge-amber'}">
+                      ${isCompleted ? '✓ Đã bàn giao hoàn tất' : 'Chờ hoàn tất bàn giao'}
+                    </span>
+                  </div>
+                  <button class="btn btn-default btn-sm" id="btn-modal-checkin-veh">
+                    🚑 Check-in Xe Cập Bến
+                  </button>
+                </div>
+
+                <div class="form-grid-2">
+                  <div class="form-field">
+                    <label class="form-label">Chẩn đoán tiếp nhận tại Khoa Cấp cứu</label>
+                    <textarea id="modal-handover-diagnosis" rows="2" placeholder="Nhập chẩn đoán tiếp nhận...">${c.handoverDiagnosis || c.incident?.name || 'Đa chấn thương do tai nạn giao thông, rách phần mềm cẳng tay, theo dõi chấn động não.'}</textarea>
+                  </div>
+                  <div class="form-field">
+                    <label class="form-label">Tình trạng người bệnh khi bàn giao</label>
+                    <textarea id="modal-handover-condition" rows="2" placeholder="Nhập tình trạng lâm sàng lúc bàn giao...">${c.handoverCondition || 'Bệnh nhân tỉnh táo, tiếp xúc tốt, huyết động ổn định. Mạch 88, HA 130/80.'}</textarea>
+                  </div>
+                </div>
+
+                <div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--border-main);display:flex;align-items:center;justify-content:space-between;">
+                  <div style="font-size:12px;color:var(--text-muted);">
+                    Bác sĩ tiếp nhận: <strong style="color:var(--text-white);">${currentUser?.fullName || 'BS. Trực Cấp cứu'}</strong> · ${currentUser?.organization || 'Bệnh viện tiếp nhận'}
+                  </div>
+                  <div style="display:flex;gap:10px;">
+                    ${!isCompleted ? `
+                      <button class="btn btn-emergency btn-md" id="btn-modal-confirm-handover">
+                        ${window.CCNV_UI.ICONS.check}
+                        <span>Ký Xác nhận Bàn giao (Ca Hoàn tất)</span>
+                      </button>
+                    ` : `
+                      <span class="status-pill status-pill-completed" style="font-size:12.5px;padding:6px 14px;">
+                        ✓ Ca đã hoàn tất bàn giao & lưu hồ sơ bệnh viện
+                      </span>
+                    `}
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2. HỒ SƠ BỆNH ÁN ĐIỆN TỬ TIỀN VIỆN (ePCR) -->
+              <div class="form-section">
+                <div class="form-section-title">
+                  <span>2. HỒ SƠ BỆNH ÁN ĐIỆN TỬ TIỀN VIỆN (ePCR)</span>
+                </div>
+                <div id="modal-epcr-form-mount"></div>
+              </div>
+            </div>
+          `;
+
+          // Mount ePCR Form
+          if (window.EPCRForm) {
+            window.EPCRForm.render('modal-epcr-form-mount', c.epcr || {}, false, (updated) => {
+              c.epcr = updated;
+              window.StateManager.saveToSession?.();
+              window.StateManager.addCaseLog(c.id, 'Bác sĩ cập nhật hồ sơ ePCR');
+            });
+          }
+
+          body.querySelector('#btn-modal-checkin-veh')?.addEventListener('click', () => {
+            window.CCNV_UI.Toast.show('Check-in Xe Thành Công', `Đã ghi nhận giờ xe cứu thương ${c.dispatch?.vehiclePlate || ''} cập bến sảnh cấp cứu.`);
+            window.StateManager.addAuditLog(`Check-in xe cứu thương ${c.dispatch?.vehiclePlate || ''} tại sảnh cấp cứu`);
+          });
+
+          body.querySelector('#btn-modal-confirm-handover')?.addEventListener('click', () => {
+            const diag = body.querySelector('#modal-handover-diagnosis')?.value;
+            const cond = body.querySelector('#modal-handover-condition')?.value;
+            window.StateManager.updateCase(c.id, {
+              status: 'COMPLETED',
+              statusText: 'Hoàn tất',
+              stageLabel: 'Đã bàn giao tại viện',
+              hospitalResponse: 'ACCEPTED',
+              hospitalResponseText: 'Đã bàn giao',
+              handoverDiagnosis: diag,
+              handoverCondition: cond,
+              completedAt: new Date().toISOString()
+            });
+
+            // Giải phóng xe
+            if (c.dispatch?.vehiclePlate) {
+              window.StateManager.updateVehicle(c.dispatch.vehiclePlate, {
+                status: 'READY',
+                statusText: 'Sẵn sàng',
+                speed: 0
+              });
+            }
+
+            window.StateManager.addCaseLog(c.id, `Khoa Cấp cứu ký xác nhận bàn giao người bệnh. Ca hoàn tất.`);
+            window.CCNV_UI.Toast.show('Bàn Giao Hoàn Tất', `Đã hoàn tất bàn giao ca ${c.code}. Xe ${c.dispatch?.vehiclePlate || ''} đã sẵn sàng tiếp nhận nhiệm vụ mới.`);
+            this.openCaseDetailModal(c.id);
+            const mainVp = document.getElementById('main-content-viewport');
+            if (mainVp) this.renderCurrentView();
           });
         }
 
@@ -6201,6 +8582,30 @@
       modalOverlay.querySelector('#btn-close-case-modal')?.addEventListener('click', closeModal);
       modalOverlay.querySelector('#btn-close-case-modal-footer')?.addEventListener('click', closeModal);
 
+      // Nút Xác nhận tiếp nhận từ Modal (Header & Tab Overview Banner)
+      const handleConfirmHospitalAccept = () => {
+        this.commitHospitalDemoCase(c);
+        window.CCNV_UI.Toast.show(
+          'Đã xác nhận tiếp nhận',
+          `Khoa Cấp cứu đã xác nhận tiếp nhận người bệnh ${c.patient?.name || ''} (Mã: ${c.code}). Ca đã được ghi nhận vào danh sách cấp cứu!`
+        );
+        closeModal();
+        const mainViewport = document.getElementById('main-content-viewport');
+        if (mainViewport) {
+          if (this.currentMenu === 'hospital-cases') {
+            this.renderHospitalCasesView(mainViewport);
+          } else {
+            this.renderCurrentView();
+          }
+        }
+      };
+      modalOverlay.querySelector('#btn-modal-confirm-hospital-case')?.addEventListener('click', handleConfirmHospitalAccept);
+      modalOverlay.addEventListener('click', (e) => {
+        if (e.target.closest('#btn-tab-overview-confirm-hospital-case')) {
+          handleConfirmHospitalAccept();
+        }
+      });
+
       // Nghe nhanh ghi âm từ header/footer
       modalOverlay.querySelector('#btn-call-audio-quick')?.addEventListener('click', () => {
         window.CCNV_UI.SoundFx.playBeep();
@@ -6259,7 +8664,7 @@
               Xe <strong style="color:var(--red-vivid);font-family:var(--font-mono);">65A-012.34</strong> vừa kích hoạt nút SOS Khẩn cấp!
             </p>
             <div style="font-size:13px;color:var(--text-slate);display:flex;flex-direction:column;gap:6px;">
-              <div>Vị trí: Cầu Hưng Lợi, Q. Cái Răng</div>
+              <div>Vị trí: Cầu Hưng Lợi, P. Hưng Phú, TP. Cần Thơ</div>
               <div>Lý do: Va chạm giao thông thứ cấp / Sự cố kíp xe cần hỗ trợ ngay lập tức</div>
               <div>Thời điểm: ${new Date().toTimeString().split(' ')[0]}</div>
             </div>
@@ -6315,7 +8720,7 @@
             <div style="font-size:13px;display:flex;flex-direction:column;gap:6px;color:var(--text-slate);">
               <div>Bệnh nhân: <strong style="color:var(--text-white);">${caseObj.patient.name}</strong> (${caseObj.patient.age}T)</div>
               <div>Tình trạng: <span class="badge badge-emergency">${caseObj.incident.name}</span></div>
-              <div>Thời gian dự kiến cập bến (ETA): <strong style="color:var(--red-vivid);font-size:15px;">~6 phút</strong></div>
+              <div>Thời gian dự kiến cập bến: <strong style="color:var(--red-vivid);font-size:15px;">~6 phút</strong></div>
               <div>Hiện trường xuất phát: ${caseObj.location.address}</div>
             </div>
           </div>
@@ -6351,6 +8756,14 @@
     bindGlobalEvents() {
       // Nút Bắt đầu / Kết thúc demo trên header
       document.getElementById('btn-demo-start')?.addEventListener('click', () => {
+        if (this.isHospitalMode()) {
+          if (this.hospitalDemoRunning) {
+            this.endHospitalDemo();
+          } else {
+            this.startHospitalDemo();
+          }
+          return;
+        }
         if (this.demoRunning) this.endDemo();
         else if (this.demo) this.cancelDemo();
         else this.startDemo();
@@ -6442,8 +8855,8 @@
           <div class="demo-call-name">${c.callerName}</div>
           <div class="demo-call-timer">Đang đổ chuông <strong id="demo-call-timer">00:00</strong></div>
           <dl class="demo-call-meta">
-            <div><dt>Định vị Cell-ID</dt><dd>Trạm BTS Hưng Lợi 03 · bán kính ~350 m</dd></div>
-            <div><dt>Khu vực ước tính</dt><dd>P. Hưng Lợi, Q. Ninh Kiều, TP. Cần Thơ</dd></div>
+            <div><dt>Định vị</dt><dd>Trạm BTS Hưng Lợi 03 · bán kính ~350 m</dd></div>
+            <div><dt>Khu vực ước tính</dt><dd>P. Hưng Lợi, TP. Cần Thơ</dd></div>
           </dl>
           <div class="demo-call-actions">
             <button type="button" class="demo-call-btn is-decline" id="btn-demo-decline">
@@ -6548,7 +8961,9 @@
           vehiclePlate: plate,
           vehicleId: 'VEH-07',
           crewId: 'CREW-03',
-          crewName: 'Kíp 3 - Cái Răng'
+          crewName: 'Kíp 3 - Cái Răng',
+          hospitalId: form.hospital?.id || caseObj.dispatch?.hospitalId || 'HOSP_BVTU',
+          hospitalName: form.hospital?.name || caseObj.dispatch?.hospitalName || 'BV Đa khoa Trung ương Cần Thơ'
         }
       };
 
@@ -6583,7 +8998,7 @@
 
       window.CCNV_UI.Toast.show(
         `ĐÃ PHÁT LỆNH ĐIỀU ĐỘNG · CA ${c.code}`,
-        `Xe ${plate} (Kíp 3 - Cái Răng) xuất phát tới ${c.location.address} → ${c.dispatch?.hospitalName || 'BV Đa khoa TP Cần Thơ'}`,
+        `Xe ${plate} (Kíp 3 - Cái Răng) xuất phát tới ${c.location.address} → ${c.dispatch?.hospitalName || 'BV Đa khoa Trung ương Cần Thơ'}`,
         true,
         6000
       );
@@ -6641,9 +9056,9 @@
       const state = window.StateManager?.getState();
       if (!state) return;
       const plate = mission?.plate || '65A-012.34';
-      const hosp = mission?.hosp || (state.hospitals || []).find(h => h.id === 'HOSP_BVDK');
-      const hospCoords = hosp?.coords || [10.0332, 105.7865];
-      const hospName = hosp?.name || 'BV Đa khoa TP Cần Thơ';
+      const hosp = mission?.hosp || (state.hospitals || []).find(h => h.id === 'HOSP_BVTU');
+      const hospCoords = hosp?.coords || [10.0270, 105.7530];
+      const hospName = hosp?.name || 'BV Đa khoa Trung ương Cần Thơ';
 
       // 1. Dọn dẹp danh sách ca (kết thúc ca)
       state.cases = [];
@@ -6709,9 +9124,9 @@
     // Nhấn Kết thúc → tất cả các xe và kíp trực trở về trạng thái Sẵn sàng, xe 65A-012.34 ở vị trí bệnh viện
     endDemo() {
       const state = window.StateManager?.getState();
-      const hosp = (state?.hospitals || []).find(h => h.id === 'HOSP_BVDK');
-      const hospCoords = hosp?.coords || [10.0332, 105.7865];
-      const hospName = hosp?.name || 'BV Đa khoa TP Cần Thơ';
+      const hosp = (state?.hospitals || []).find(h => h.id === 'HOSP_BVTU');
+      const hospCoords = hosp?.coords || [10.0270, 105.7530];
+      const hospName = hosp?.name || 'BV Đa khoa Trung ương Cần Thơ';
       const plate = '65A-012.34';
 
       if (state) state.cases = [];

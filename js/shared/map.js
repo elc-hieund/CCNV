@@ -155,7 +155,6 @@
                 <div>
                   <div class="legend-code-name">Code ${c.key.charAt(0)}${c.key.slice(1).toLowerCase()}</div>
                   <div class="legend-code-desc">${c.desc}</div>
-                  ${c.note ? `<div class="legend-code-note">${c.note}</div>` : ''}
                 </div>
               </div>
             `).join('')}
@@ -228,6 +227,7 @@
       hospitals.forEach(h => {
         const coords = h.coords || CITY_CENTER;
         const isRestricted = h.status === 'RESTRICTED';
+        const statusLabel = h.statusText || (isRestricted ? 'Hạn chế' : 'Đang nhận');
         const icon = window.L.divIcon({
           className: 'map-leaflet-marker',
           html: `
@@ -240,12 +240,12 @@
                   </svg>
                 </div>
                 <span class="map-hosp-title-text" title="${h.name}">${h.name.replace('Bệnh viện', 'BV')}</span>
-                <span class="map-hosp-bed-chip" title="Số giường cấp cứu trống">${h.availableBeds}G</span>
+                <span class="map-hosp-bed-chip" title="Trạng thái tiếp nhận cấp cứu">${statusLabel}</span>
               </div>
             </div>
           `,
-          iconSize: [200, 36],
-          iconAnchor: [100, 18]
+          iconSize: [220, 36],
+          iconAnchor: [110, 18]
         });
         const marker = window.L.marker(coords, { icon, zIndexOffset: 100 }).addTo(this.map);
         marker.bindPopup(this.createHospitalPopupHtml(h), { autoPan: false });
@@ -526,7 +526,7 @@
 
       Object.entries(this.vehicleMarkers).forEach(([plate, item]) => setVisible(item.marker, !focus || plate === focus));
       Object.entries(this.hospitalMarkers).forEach(([id, item]) => setVisible(item.marker, !focus || (m && m.hospId === id)));
-      
+
       // Marker điểm tai nạn (sự cố): Ẩn đi khi xe đã đón bệnh nhân xong (sau 3s, chuyển sang TO_HOSP hoặc ARRIVED)
       Object.entries(this.incidentMarkers).forEach(([cid, item]) => {
         const mission = item.mission || Object.values(this.missions).find(mis => mis.caseId === cid);
@@ -661,15 +661,13 @@
 
     createHospitalPopupHtml(h) {
       return `
-        <div style="min-width:260px;color:#cbd5e1;">
+        <div style="min-width:240px;color:#cbd5e1;">
           <div style="border-bottom:1px solid #1e3a56;padding-bottom:6px;margin-bottom:8px;">
             <strong style="color:#ffffff;font-size:14px;display:block;">${h.name}</strong>
             <span style="font-size:11px;color:#94a3b8;">${h.address}</span>
           </div>
           <div style="font-size:12px;display:flex;flex-direction:column;gap:5px;">
             <div>Khả năng tiếp nhận: <strong style="color:${h.status === 'AVAILABLE' ? '#10b981' : '#f59e0b'};">${h.statusText || 'Đang nhận cấp cứu'}</strong></div>
-            <div>Giường Cấp cứu trống: <strong style="color:#38bdf8;font-size:13px;">${h.availableBeds} / ${h.emergencyBeds} giường</strong></div>
-            <div>Máy thở sẵn sàng: <strong style="color:#ffffff;">${h.ventilatorsAvailable} máy</strong></div>
             <div>Hotline Cấp cứu: <span style="font-family:var(--font-mono);color:#93c5fd;font-weight:700;">${h.hotline || '—'}</span></div>
           </div>
         </div>
