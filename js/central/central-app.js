@@ -7437,80 +7437,74 @@
             </div>
           </div>
 
-          <!-- 2. PHẦN TỔNG QUAN: BẢN ĐỒ RADAR RỘNG + KHUNG 7 THÔNG TIN TỔNG QUAN 4 CỘT -->
-          <!-- 2. PHẦN TỔNG QUAN: KHUNG 7 THÔNG TIN TỔNG QUAN ĐIỀU HÀNH (TRẢI ĐỀU 100% CHIỀU NGANG) -->
-          <div style="flex-shrink:0;background:var(--bg-panel);border-bottom:1px solid var(--border-main);padding:14px 24px;">
-            <div style="background:var(--bg-elevated);border-radius:8px;border:1px solid var(--border-main);padding:12px 20px;">
-              <div style="border-bottom:1px solid var(--border-main);padding-bottom:8px;margin-bottom:10px;">
-                <div style="font-size:13px;font-weight:700;color:var(--text-white);text-transform:uppercase;letter-spacing:0.6px;display:flex;align-items:center;gap:8px;">
-                  <span style="color:var(--accent-cyan);font-size:14px;">✦</span> THÔNG TIN TỔNG QUAN ĐIỀU HÀNH CA CẤP CỨU
+          <!-- 2. PHẦN TỔNG QUAN: KHUNG THÔNG TIN TỔNG QUAN ĐIỀU HÀNH (GỌN GÀNG, LABEL & VALUE CÙNG 1 DÒNG) -->
+          <div style="flex-shrink:0;background:var(--bg-panel);border-bottom:1px solid var(--border-main);padding:10px 24px;">
+            <div style="background:var(--bg-elevated);border-radius:8px;border:1px solid var(--border-main);padding:10px 18px;">
+              <!-- Header của Khung: Tiêu đề bên trái + 3 Chỉ số KPI bên phải trên cùng 1 dòng -->
+              <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-main);padding-bottom:8px;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+                <div style="font-size:12.5px;font-weight:700;color:var(--text-white);text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:6px;">
+                  <span style="color:var(--accent-cyan);font-size:13px;">✦</span>
+                  <span>THÔNG TIN TỔNG QUAN ĐIỀU HÀNH CA CẤP CỨU</span>
                 </div>
-              </div>
-
-              <!-- Lưới 4 cột rộng rãi cho 7 thông tin tổng quan -->
-              <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:10px 24px;font-size:12px;">
-                <!-- Cột 1: Cuộc gọi & Người tiếp nhận -->
-                <div style="display:flex;flex-direction:column;gap:8px;">
-                  <div>
-                    <span style="color:var(--text-slate);font-size:11px;display:block;">1. Thời điểm phát hiện cuộc gọi:</span>
-                    <strong style="color:var(--text-white);font-family:var(--font-mono);font-size:13px;">${callTime}</strong>
-                  </div>
-                  <div>
-                    <span style="color:var(--text-slate);font-size:11px;display:block;">2. Người tiếp nhận:</span>
-                    <strong style="color:var(--text-white);font-size:12.5px;">${c.dispatch?.dispatcherName || 'Nguyễn Văn An'}</strong>
-                    <div style="color:var(--text-muted);font-size:10.5px;font-family:var(--font-mono);">(${c.dispatch?.dispatcherId || 'dpv01'} · Tổng đài 115)</div>
-                  </div>
-                </div>
-
-                <!-- Cột 2: Thời gian gọi xe & Xe được điều động -->
-                <div style="display:flex;flex-direction:column;gap:8px;">
-                  <div>
-                    <span style="color:var(--text-slate);font-size:11px;display:block;">3. Thời gian gọi xe:</span>
-                    <strong style="color:var(--text-white);font-family:var(--font-mono);font-size:13px;">${dispatchTime}</strong>
-                  </div>
-                  <div>
-                    <span style="color:var(--text-slate);font-size:11px;display:block;">4. Xe được điều động:</span>
-                    <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
-                      <span class="badge badge-accent" style="font-family:var(--font-mono);font-weight:700;font-size:12px;">${c.dispatch?.vehiclePlate || '65A-012.34'}</span>
-                      <span style="color:var(--text-light);font-size:11.5px;">(${c.dispatch?.crewName || crewObj.name})</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Cột 3: Bệnh viện tiếp nhận & Người nhận -->
-                <div style="display:flex;flex-direction:column;gap:8px;">
-                  <div>
-                    <span style="color:var(--text-slate);font-size:11px;display:block;">Bệnh viện tiếp nhận:</span>
-                    <strong style="color:var(--text-white);font-size:12.5px;">${c.dispatch?.hospitalName || 'BV Đa khoa TP Cần Thơ'}</strong>
-                  </div>
-                  <div>
-                    <span style="color:var(--text-slate);font-size:11px;display:block;">6. Người nhận tại viện:</span>
-                    <strong style="color:var(--text-white);font-size:12px;">${receiverName}</strong>
-                  </div>
-                </div>
-
-                <!-- Cột 4: Thời gian kết thúc & Kết quả xử lý -->
-                <div style="display:flex;flex-direction:column;gap:8px;">
-                  <div>
-                    <span style="color:var(--text-slate);font-size:11px;display:block;">5. Thời gian kết thúc:</span>
-                    <div style="font-family:var(--font-mono);font-size:12.5px;">${endTime}</div>
-                  </div>
-                  <div>
-                    <span style="color:var(--text-slate);font-size:11px;display:block;">7. Kết quả xử lý:</span>
-                    <div style="font-size:12px;margin-top:1px;">${processingResult}</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Thanh chỉ số tiến độ thời gian thực của ca -->
-              <div style="margin-top:10px;padding-top:8px;border-top:1px dashed var(--border-main);display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--text-slate);">
-                <div style="display:flex;gap:20px;">
+                <div style="display:flex;align-items:center;gap:14px;font-size:11.5px;color:var(--text-slate);">
                   <span>Thời gian phản ứng: <strong style="color:var(--emerald-light);font-family:var(--font-mono);">01p 15s</strong></span>
+                  <span style="color:var(--border-main);">•</span>
                   <span>Tiếp cận hiện trường: <strong style="color:var(--text-white);font-family:var(--font-mono);">06p 50s</strong></span>
-                  <span>Thời gian tại hiện trường: <strong style="color:var(--text-white);font-family:var(--font-mono);">05p 50s</strong></span>
+                  <span style="color:var(--border-main);">•</span>
+                  <span>Tại hiện trường: <strong style="color:var(--text-white);font-family:var(--font-mono);">05p 50s</strong></span>
                 </div>
-                <div style="color:var(--accent-cyan);font-weight:600;">
-                  ✓ Đã thiết lập kênh thoại vô tuyến & truyền số liệu sinh tồn ePCR trực tiếp với Bệnh viện
+              </div>
+
+              <!-- Lưới 4 cột - Mỗi thông tin hiển thị gọn trên cùng 1 dòng (Label: Value) -->
+              <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:6px 20px;font-size:12px;">
+                <!-- Cột 1 -->
+                <div style="display:flex;flex-direction:column;gap:5px;">
+                  <div style="display:flex;align-items:center;gap:6px;min-height:22px;white-space:nowrap;">
+                    <span style="color:var(--text-slate);font-size:11.5px;">1. Cuộc gọi:</span>
+                    <strong style="color:var(--text-white);font-family:var(--font-mono);font-size:12px;">${callTime}</strong>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:6px;min-height:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    <span style="color:var(--text-slate);font-size:11.5px;flex-shrink:0;">2. Tiếp nhận:</span>
+                    <strong style="color:var(--text-white);font-size:12px;">${c.dispatch?.dispatcherName || 'Nguyễn Văn An'}</strong>
+                    <span style="color:var(--text-muted);font-size:11px;font-family:var(--font-mono);">(${c.dispatch?.dispatcherId || 'dpv01'} · 115)</span>
+                  </div>
+                </div>
+
+                <!-- Cột 2 -->
+                <div style="display:flex;flex-direction:column;gap:5px;">
+                  <div style="display:flex;align-items:center;gap:6px;min-height:22px;white-space:nowrap;">
+                    <span style="color:var(--text-slate);font-size:11.5px;">3. Gọi xe:</span>
+                    <strong style="color:var(--text-white);font-family:var(--font-mono);font-size:12px;">${dispatchTime}</strong>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:6px;min-height:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    <span style="color:var(--text-slate);font-size:11.5px;flex-shrink:0;">4. Điều xe:</span>
+                    <span class="badge badge-accent" style="font-family:var(--font-mono);font-weight:700;font-size:11.5px;padding:1px 6px;">${c.dispatch?.vehiclePlate || '65A-012.34'}</span>
+                    <span style="color:var(--text-light);font-size:11px;">(${c.dispatch?.crewName || crewObj.name})</span>
+                  </div>
+                </div>
+
+                <!-- Cột 3 -->
+                <div style="display:flex;flex-direction:column;gap:5px;">
+                  <div style="display:flex;align-items:center;gap:6px;min-height:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    <span style="color:var(--text-slate);font-size:11.5px;flex-shrink:0;">5. BV đích:</span>
+                    <strong style="color:var(--text-white);font-size:12px;" title="${c.dispatch?.hospitalName || 'BV Đa khoa TP Cần Thơ'}">${c.dispatch?.hospitalName || 'BV Đa khoa TP Cần Thơ'}</strong>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:6px;min-height:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    <span style="color:var(--text-slate);font-size:11.5px;flex-shrink:0;">6. Người nhận:</span>
+                    <strong style="color:var(--text-white);font-size:12px;" title="${receiverName}">${receiverName}</strong>
+                  </div>
+                </div>
+
+                <!-- Cột 4 -->
+                <div style="display:flex;flex-direction:column;gap:5px;">
+                  <div style="display:flex;align-items:center;gap:6px;min-height:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    <span style="color:var(--text-slate);font-size:11.5px;flex-shrink:0;">7. Kết thúc:</span>
+                    <div style="font-family:var(--font-mono);font-size:12px;color:var(--text-white);">${endTime}</div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:6px;min-height:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    <span style="color:var(--text-slate);font-size:11.5px;flex-shrink:0;">8. Kết quả:</span>
+                    <div style="font-size:12px;">${processingResult}</div>
+                  </div>
                 </div>
               </div>
             </div>
