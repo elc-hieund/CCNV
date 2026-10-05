@@ -1437,3 +1437,66 @@
 .hospital-card:hover {
   border-color: rgba(56, 189, 248, 0.5);
 }
+
+/* Home Facilities & First Aid Collapsible Panels */
+.home-toggle-pill-btn {
+  flex: 1;
+  min-width: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #081927;
+  border: 1px solid #1E3A56;
+  border-radius: 8px;
+  color: #CBD5E1;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.home-toggle-pill-btn:hover {
+  background: #0D2438;
+  border-color: #38BDF8;
+  color: #FFFFFF;
+}
+
+.home-toggle-pill-btn.active {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: #38BDF8;
+  color: #38BDF8;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.2);
+}
+
+.home-toggle-pill-arrow {
+  font-size: 10px;
+  color: #64748B;
+  transition: color 0.2s ease;
+  margin-left: 6px;
+}
+
+.home-toggle-pill-btn.active .home-toggle-pill-arrow {
+  color: #38BDF8;
+}
+
+.home-pill-badge {
+  display: inline-block;
+  padding: 1px 7px;
+  font-size: 10.5px;
+  font-weight: 700;
+  border-radius: 999px;
+  background: rgba(56, 189, 248, 0.16);
+  color: #38BDF8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  margin-left: 6px;
+}
+
+.home-collapsible-panel {
+  transition: all 0.25s ease;
+}
+
+.home-collapsible-header:hover {
+  background: #112A42 !important;
+}

@@ -391,11 +391,70 @@
       // SOS Touch & Hold Handlers (ND-04)
       this.bindSosTrigger();
 
+      // Home Facilities Map Re-center button
+      const btnRecenterHomeMap = document.getElementById('btn-recenter-home-map');
+      if (btnRecenterHomeMap) {
+        btnRecenterHomeMap.addEventListener('click', () => {
+          if (this.mapHomeFacilities) {
+            this.mapHomeFacilities.setView([10.0298, 105.7702], 14, { animate: true });
+            if (this.homeCitizenMarker) this.homeCitizenMarker.openPopup();
+          }
+        });
+      }
+
+      // Collapsible Panels Toggle Handlers (Cơ sở y tế & Hướng dẫn sơ cứu)
+      const btnToggleHosp = document.getElementById('btn-toggle-hospitals');
+      const headerToggleHosp = document.getElementById('header-toggle-hospitals');
+      const sectionHosp = document.getElementById('section-nearest-hospitals');
+      const arrowHosp = document.getElementById('arrow-toggle-hospitals');
+
+      const toggleHospPanel = () => {
+        if (!sectionHosp) return;
+        const isHidden = sectionHosp.style.display === 'none' || !sectionHosp.style.display;
+        sectionHosp.style.display = isHidden ? 'block' : 'none';
+        if (btnToggleHosp) btnToggleHosp.classList.toggle('active', isHidden);
+        if (arrowHosp) arrowHosp.textContent = isHidden ? '▲' : '▼';
+        if (this.mapHomeFacilities) {
+          setTimeout(() => this.mapHomeFacilities.invalidateSize(), 60);
+        }
+        if (isHidden) {
+          sectionHosp.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      };
+
+      if (btnToggleHosp) btnToggleHosp.addEventListener('click', toggleHospPanel);
+      if (headerToggleHosp) headerToggleHosp.addEventListener('click', toggleHospPanel);
+
+      const btnToggleAid = document.getElementById('btn-toggle-firstaid');
+      const headerToggleAid = document.getElementById('header-toggle-firstaid');
+      const sectionAid = document.getElementById('section-first-aid');
+      const arrowAid = document.getElementById('arrow-toggle-firstaid');
+
+      const toggleAidPanel = () => {
+        if (!sectionAid) return;
+        const isHidden = sectionAid.style.display === 'none' || !sectionAid.style.display;
+        sectionAid.style.display = isHidden ? 'block' : 'none';
+        if (btnToggleAid) btnToggleAid.classList.toggle('active', isHidden);
+        if (arrowAid) arrowAid.textContent = isHidden ? '▲' : '▼';
+        if (this.mapHomeFacilities) {
+          setTimeout(() => this.mapHomeFacilities.invalidateSize(), 60);
+        }
+        if (isHidden) {
+          sectionAid.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      };
+
+      if (btnToggleAid) btnToggleAid.addEventListener('click', toggleAidPanel);
+      if (headerToggleAid) headerToggleAid.addEventListener('click', toggleAidPanel);
+
       // Search & Sort for Healthcare Facilities Map & List
       const inputHospSearch = document.getElementById('input-hosp-search');
       if (inputHospSearch) {
         inputHospSearch.addEventListener('input', (e) => {
           this.hospSearchQuery = e.target.value.trim().toLowerCase();
+          if (this.hospSearchQuery && sectionHosp && sectionHosp.style.display === 'none') {
+            toggleHospPanel();
+          }
           this.renderHomeNearestHospitals();
           this.filterHomeFacilitiesMap();
         });
@@ -1680,6 +1739,10 @@
 
       if (countEl) {
         countEl.textContent = `${processedList.length} cơ sở tiếp nhận`;
+      }
+      const pillCount = document.getElementById('pill-hosp-count');
+      if (pillCount) {
+        pillCount.textContent = processedList.length;
       }
 
       if (processedList.length === 0) {

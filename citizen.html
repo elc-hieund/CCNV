@@ -546,7 +546,7 @@
           <!-- Interactive GIS Map of Nearest Healthcare Facilities -->
           <div class="home-map-card">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-              <span style="font-size:12px;font-weight:700;color:#38BDF8;display:flex;align-items:center;gap:6px;">
+              <span style="font-size:12.5px;font-weight:700;color:#38BDF8;display:flex;align-items:center;gap:6px;">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                   <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
                   <line x1="8" y1="2" x2="8" y2="18"></line>
@@ -554,6 +554,15 @@
                 </svg>
                 BẢN ĐỒ CƠ SỞ Y TẾ TIẾP NHẬN GẦN NHẤT
               </span>
+              <button type="button" id="btn-recenter-home-map"
+                style="background:#061420;border:1px solid #1E3A56;color:#38BDF8;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:5px;cursor:pointer;"
+                title="Định vị lại vị trí của bạn">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path>
+                </svg>
+                <span>Vị trí của tôi</span>
+              </button>
             </div>
 
             <!-- Search & Sort Controls Bar for Healthcare Map -->
@@ -580,15 +589,42 @@
             </div>
 
             <div id="home-facilities-map"
-              style="width:100%;height:270px;border-radius:10px;border:1px solid #1E3A56;overflow:hidden;position:relative;background:#071522;">
+              style="width:100%;height:520px;min-height:480px;border-radius:10px;border:1px solid #1E3A56;overflow:hidden;position:relative;background:#071522;">
             </div>
           </div>
 
-          <!-- Top Nearest Hospitals List -->
-          <div style="margin-top:14px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-              <strong
-                style="color:#FFFFFF;font-size:12.5px;text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:6px;">
+          <!-- Quick Toggle Buttons Bar below Map -->
+          <div class="home-map-toggle-toolbar" style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
+            <button type="button" id="btn-toggle-hospitals" class="home-toggle-pill-btn" title="Ẩn / Hiện danh sách cơ sở y tế lân cận">
+              <span style="display:flex;align-items:center;gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.2">
+                  <path d="M18 20V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14"></path>
+                  <path d="M2 20h20"></path>
+                  <path d="M10 9h4"></path>
+                  <path d="M12 7v4"></path>
+                </svg>
+                <span>Cơ sở y tế lân cận</span>
+                <span class="home-pill-badge" id="pill-hosp-count">4</span>
+              </span>
+              <span class="home-toggle-pill-arrow" id="arrow-toggle-hospitals">▼</span>
+            </button>
+
+            <button type="button" id="btn-toggle-firstaid" class="home-toggle-pill-btn" title="Ẩn / Hiện hướng dẫn sơ cứu khẩn cấp">
+              <span style="display:flex;align-items:center;gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F43F5E" stroke-width="2.2">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                </svg>
+                <span>Hướng dẫn sơ cứu</span>
+                <span class="home-pill-badge" style="background:rgba(244,63,94,0.18);color:#FDA4AF;border-color:rgba(244,63,94,0.3);">3</span>
+              </span>
+              <span class="home-toggle-pill-arrow" id="arrow-toggle-firstaid">▼</span>
+            </button>
+          </div>
+
+          <!-- Section 1: Top Nearest Hospitals List (Collapsible, Hidden by default) -->
+          <div id="section-nearest-hospitals" class="home-collapsible-panel" style="display:none;margin-top:12px;">
+            <div id="header-toggle-hospitals" class="home-collapsible-header" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#0A1B2A;border:1px solid #1E3A56;border-radius:8px 8px 0 0;cursor:pointer;">
+              <strong style="color:#FFFFFF;font-size:12.5px;text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:6px;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.2">
                   <path d="M18 20V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14"></path>
                   <path d="M2 20h20"></path>
@@ -597,41 +633,46 @@
                 </svg>
                 DANH SÁCH CƠ SỞ Y TẾ LÂN CẬN
               </strong>
-              <span style="font-size:11px;color:#94A3B8;" id="home-facilities-count">Cơ sở tiếp nhận</span>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:11px;color:#94A3B8;" id="home-facilities-count">Cơ sở tiếp nhận</span>
+                <span style="font-size:11px;color:#38BDF8;font-weight:600;">Thu gọn ▲</span>
+              </div>
             </div>
-            <div id="home-nearest-hospitals-list">
+            <div id="home-nearest-hospitals-list" style="border:1px solid #1E3A56;border-top:none;border-radius:0 0 8px 8px;padding:10px;background:rgba(10,27,42,0.4);">
               <!-- Dynamically populated via citizen-app.js -->
             </div>
           </div>
 
-
-          <!-- First Aid Quick Guide Strip -->
-          <div class="first-aid-container" style="margin-top:14px;">
-            <div
-              style="font-size:12px;font-weight:700;color:#38BDF8;display:flex;align-items:center;gap:6px;margin-bottom:8px;">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <path
-                  d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-              </svg>
-              <span>HƯỚNG DẪN SƠ CỨU BAN ĐẦU:</span>
+          <!-- Section 2: First Aid Quick Guide Strip (Collapsible, Hidden by default) -->
+          <div id="section-first-aid" class="first-aid-container home-collapsible-panel" style="display:none;margin-top:12px;padding:0;background:transparent;border:none;">
+            <div id="header-toggle-firstaid" class="home-collapsible-header" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#0A1B2A;border:1px solid #1E3A56;border-radius:8px 8px 0 0;cursor:pointer;">
+              <div style="font-size:12px;font-weight:700;color:#38BDF8;display:flex;align-items:center;gap:6px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                </svg>
+                <span>HƯỚNG DẪN SƠ CỨU BAN ĐẦU:</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:11px;color:#94A3B8;">3 phác đồ</span>
+                <span style="font-size:11px;color:#38BDF8;font-weight:600;">Thu gọn ▲</span>
+              </div>
             </div>
 
-            <div class="first-aid-card" data-aid-type="cpr">
-              <strong style="color:#FFFFFF;font-size:13px;display:block;">1. Ép tim ngoài lồng ngực (CPR)</strong>
-              <span style="font-size:11.5px;color:#94A3B8;">Đặt 2 tay giữa ngực, ép sâu 5cm với nhịp độ 100-120
-                lần/phút. Bấm xem chi tiết.</span>
-            </div>
+            <div style="border:1px solid #1E3A56;border-top:none;border-radius:0 0 8px 8px;padding:12px;background:rgba(10,27,42,0.4);">
+              <div class="first-aid-card" data-aid-type="cpr">
+                <strong style="color:#FFFFFF;font-size:13px;display:block;">1. Ép tim ngoài lồng ngực (CPR)</strong>
+                <span style="font-size:11.5px;color:#94A3B8;">Đặt 2 tay giữa ngực, ép sâu 5cm với nhịp độ 100-120 lần/phút. Bấm xem chi tiết.</span>
+              </div>
 
-            <div class="first-aid-card" data-aid-type="stroke">
-              <strong style="color:#FFFFFF;font-size:13px;display:block;">2. Xử trí nghi ngờ Đột quỵ (FAST)</strong>
-              <span style="font-size:11.5px;color:#94A3B8;">Nằm nghiêng an toàn, đầu cao 30 độ, không cho ăn uống bất cứ
-                thứ gì.</span>
-            </div>
+              <div class="first-aid-card" data-aid-type="stroke">
+                <strong style="color:#FFFFFF;font-size:13px;display:block;">2. Xử trí nghi ngờ Đột quỵ (FAST)</strong>
+                <span style="font-size:11.5px;color:#94A3B8;">Nằm nghiêng an toàn, đầu cao 30 độ, không cho ăn uống bất cứ thứ gì.</span>
+              </div>
 
-            <div class="first-aid-card" data-aid-type="bleeding">
-              <strong style="color:#FFFFFF;font-size:13px;display:block;">3. Cầm máu vết thương ngoài</strong>
-              <span style="font-size:11.5px;color:#94A3B8;">Băng ép trực tiếp bằng gạc vô trùng, không tháo gạc ra nếu
-                máu thấm qua.</span>
+              <div class="first-aid-card" data-aid-type="bleeding">
+                <strong style="color:#FFFFFF;font-size:13px;display:block;">3. Cầm máu vết thương ngoài</strong>
+                <span style="font-size:11.5px;color:#94A3B8;">Băng ép trực tiếp bằng gạc vô trùng, không tháo gạc ra nếu máu thấm qua.</span>
+              </div>
             </div>
           </div>
         </div>
@@ -1222,7 +1263,7 @@
   <script src="js/shared/map.js?v=20261005_12"></script>
 
   <!-- Citizen Mobile App Controller -->
-  <script src="js/citizen/citizen-app.js?v=20261005_18"></script>
+  <script src="js/citizen/citizen-app.js?v=20261005_19"></script>
 </body>
 
 </html>
