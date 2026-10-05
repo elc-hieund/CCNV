@@ -40,6 +40,51 @@
     .leaflet-popup-tip {
       background: #0A1B2A !important;
     }
+
+    /* Quick Action Call Buttons: Centered, Equal Width & High Contrast */
+    .quick-action-trio {
+      display: grid !important;
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 10px !important;
+      width: 100% !important;
+      margin-top: 10px !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+
+    .quick-call-btn {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      padding: 9px 12px !important;
+      background: rgba(8, 22, 38, 0.95) !important;
+      border: 1px solid rgba(56, 189, 248, 0.28) !important;
+      border-radius: 10px !important;
+      color: #F1F5F9 !important;
+      text-decoration: none !important;
+      font-size: 12.5px !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.2px !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important;
+      transition: all 0.2s ease !important;
+    }
+
+    .quick-call-btn:hover, .quick-call-btn:active {
+      transform: translateY(-1px) scale(0.99) !important;
+      background: rgba(16, 38, 64, 0.98) !important;
+      border-color: #38BDF8 !important;
+    }
+
+    #btn-call-dispatch:hover {
+      border-color: #F59E0B !important;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.3) !important;
+    }
+
+    #btn-call-hospital:hover {
+      border-color: #10B981 !important;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.3) !important;
+    }
   </style>
 </head>
 
@@ -67,7 +112,12 @@
 
     <!-- 2. DRIVER MOBILE HEADER -->
     <header class="driver-mobile-header">
-      <div class="driver-header-main-row" style="justify-content:flex-end;">
+      <div class="driver-header-main-row">
+        <!-- Vehicle Plate / Switcher Chip -->
+        <button class="driver-vehicle-selector-btn" id="btn-open-vehicle-picker" title="Đổi xe cứu thương demo">
+          <span class="driver-plate-code" id="header-plate-text">65A-012.34</span>
+        </button>
+
         <!-- Driver Safety SOS Button (TX-02) -->
         <button class="btn btn-emergency" id="driver-btn-sos"
           style="min-height:36px;padding:0 12px;font-size:12px;font-weight:800;letter-spacing:0.5px;box-shadow:0 0 12px rgba(229,37,33,0.4);margin-left:auto;"
@@ -107,508 +157,175 @@
         style="border:1px solid #78350F;color:#FDE68A;padding:2px 8px;font-size:11px;">Đóng</button>
     </div>
 
-    <!-- 4. MAIN SCROLLABLE CONTENT (TAB PANELS) -->
-    <main class="driver-main-scroll" id="driver-main-container">
+    <!-- 4. FULL-SCREEN VIETMAP-STYLE TACTICAL NAVIGATION INTERFACE -->
+    <main class="driver-full-screen-map" id="driver-main-container">
+      <div class="driver-full-map-wrap">
+        <!-- Full-bleed Leaflet Map Container -->
+        <div id="driver-map-container"></div>
 
-      <!-- ================= TAB 1: NHIỆM VỤ HIỆN TẠI (TX-03, TX-04, TX-01) ================= -->
-      <section class="driver-tab-panel active" id="tab-mission">
-
-        <!-- Case Summary Card (TX-03) -->
-        <div class="driver-case-card">
-          <div class="driver-case-header" style="flex-direction:column;gap:8px;">
-            <div style="display:flex;align-items:center;gap:6px;">
-              <span class="badge badge-emergency" id="driver-case-severity" style="font-size:10px;padding:2px 6px;">TỐI
-                KHẨN</span>
-              <span style="font-family:var(--font-mono);font-size:12px;color:#94A3B8;font-weight:600;"
-                id="driver-case-code">CC-261002-001</span>
-            </div>
-            <h2 class="driver-case-code-title" id="driver-case-title" style="margin:0;font-size:15px;line-height:1.35;">
-              TNGT CẦU HƯNG LỢI — CHẤN THƯƠNG SỌ NÃO</h2>
+        <!-- 1. Top Turn-by-Turn Guidance HUD (VietMap Style) -->
+        <div class="nav-floating-hud">
+          <div class="nav-direction-icon-box">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="10 9 15 4 20 9"></polyline>
+              <path d="M4 20v-7a4 4 0 0 1 4-4h12"></path>
+            </svg>
           </div>
-
-          <!-- Patient & Destination Specs -->
-          <div style="font-size:12.5px;display:flex;flex-direction:column;gap:6px;color:#CBD5E1;">
-            <div>
-              <span style="color:#94A3B8;">Nạn nhân:</span>
-              <strong style="color:#FFFFFF;" id="driver-patient-name">Phan Văn Đức</strong>
-              <span id="driver-patient-demographics" style="color:#CBD5E1;">(58 tuổi, Nam)</span>
-              <div id="driver-patient-symptoms" style="font-size:11.5px;color:#94A3B8;margin-top:2px;">Chấn thương sọ
-                não, đa chấn thương phần mềm</div>
-            </div>
-            <div>
-              <span style="color:#94A3B8;">Hiện trường:</span>
-              <strong style="color:#FFFFFF;" id="driver-scene-address">Chân Cầu Hưng Lợi (hướng Cái Răng sang Ninh
-                Kiều)</strong>
-            </div>
-
-            <!-- Dẫn đường đích đến (Ghép cùng phần thông tin cơ bản) -->
-            <div style="background:#081827;border:1px solid #1E3A5F;border-radius:8px;padding:9px 11px;margin-top:2px;">
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-                <div>
-                  <span style="font-size:10.5px;color:#94A3B8;text-transform:uppercase;font-weight:700;">DẪN ĐƯỜNG ĐÍCH
-                    ĐẾN:</span>
-                  <div style="font-size:13px;color:#FFFFFF;font-weight:700;margin-top:2px;">Qua đường 30/4 & Châu Văn
-                    Liêm</div>
-                </div>
-                <button class="btn btn-default btn-sm" id="btn-switch-to-nav"
-                  style="border:1px solid #234664;color:#38BDF8;padding:6px 10px;font-size:11.5px;font-weight:700;white-space:nowrap;background:rgba(56,189,248,0.08);">
-                  Bản đồ dẫn đường ➔
-                </button>
-              </div>
-              <div
-                style="display:flex;align-items:center;gap:12px;margin-top:8px;font-size:11.5px;color:#CBD5E1;border-top:1px solid #162C45;padding-top:6px;">
-                <span>Khoảng cách: <strong style="color:#FFFFFF;">1.4 km</strong></span>
-                <span>Vận tốc xe: <strong style="color:#10B981;">52 km/h</strong></span>
-                <span>Ước tính: <strong style="color:#38BDF8;">~4 phút</strong></span>
-              </div>
+          <div class="nav-hud-info">
+            <div class="nav-next-dist">Còn 350 m</div>
+            <div class="nav-next-street">Rẽ phải vào đường Châu Văn Liêm</div>
+            <div class="nav-telemetry-row">
+              <span style="color:#10B981;font-weight:700;">● 52 km/h</span>
+              <span style="color:#64748B;">·</span>
+              <span style="color:#CBD5E1;">Còn 1.4 km</span>
+              <span style="color:#64748B;">·</span>
+              <span style="color:#38BDF8;font-weight:700;">ETA ~4 phút</span>
             </div>
           </div>
-
-          <!-- Quick Action Trio: Call buttons for Driver -->
-          <div class="quick-action-trio">
-            <a href="tel:0918234111" class="quick-call-btn" id="btn-call-citizen">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.5">
-                <path
-                  d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
-                </path>
-              </svg>
-              <span>Gọi người báo</span>
-            </a>
-            <a href="tel:115" class="quick-call-btn" id="btn-call-dispatch">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.5">
-                <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
-                <path
-                  d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z">
-                </path>
-              </svg>
-              <span>Gọi ĐPV 115</span>
-            </a>
-            <a href="tel:02923821236" class="quick-call-btn" id="btn-call-hospital">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2z"></path>
-                <line x1="12" y1="7" x2="12" y2="17"></line>
-                <line x1="7" y1="12" x2="17" y2="12"></line>
-              </svg>
-              <span>Gọi BV tiếp nhận</span>
-            </a>
+          <!-- Quick Status Indicator -->
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;">
+            <span class="badge badge-emergency" id="driver-case-severity" style="font-size:10px;padding:3px 7px;">TỐI
+              KHẨN</span>
           </div>
         </div>
 
-        <!-- Stepper Mốc Nhiệm Vụ (TX-04) -->
-        <div class="driver-case-card" style="padding:12px 14px;">
-          <div style="margin-bottom:8px;">
-            <span style="font-size:11px;font-weight:700;color:#94A3B8;text-transform:uppercase;">TIẾN TRÌNH NHIỆM
-              VỤ</span>
+        <!-- 2. Floating Quick Tool Buttons (Right Stack) -->
+        <div class="nav-floating-tools">
+          <!-- Center on Vehicle -->
+          <button class="nav-tool-btn" id="btn-map-center-veh" title="Định vị tâm xe">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polygon points="12 2 15 9 12 7 9 9 12 2"></polygon>
+            </svg>
+          </button>
+          <!-- Toggle Nearby Hospitals Layer -->
+          <button class="nav-tool-btn" id="btn-toggle-hosp-layer" title="Bệnh viện lân cận">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2z"></path>
+              <line x1="12" y1="7" x2="12" y2="17"></line>
+              <line x1="7" y1="12" x2="17" y2="12"></line>
+            </svg>
+          </button>
+          <!-- Toggle Mission Details Panel Expand/Collapse -->
+          <button class="nav-tool-btn" id="btn-toggle-mission-sheet" title="Chi tiết ca & Thông tin">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+          </button>
+        </div>
+
+        <!-- 3. Bottom VietMap Tactical Mission Control Card (Interactive Drawer) -->
+        <div class="nav-floating-mission-dock" id="driver-mission-dock">
+          <!-- Drag Handle & Collapse Toggle Header -->
+          <div class="dock-handle-bar" id="dock-handle-bar">
+            <div class="dock-handle-pill"></div>
           </div>
 
-          <div class="driver-mobile-stepper" id="driver-milestone-stepper">
+          <!-- Dock Header: Target Destination & Quick ETA Status -->
+          <div class="dock-main-header">
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span class="dock-dot-live"></span>
+                <span class="dock-target-label">ĐÍCH ĐẾN:</span>
+                <strong style="color:#FFFFFF;font-size:13.5px;" id="nav-hospital-name">BV Đa khoa TP Cần Thơ</strong>
+              </div>
+            </div>
+            <button type="button" class="btn btn-default btn-xs dock-expand-btn" id="btn-dock-toggle-expand"
+              title="Mở rộng / Thu gọn chi tiết">
+              <span id="dock-expand-icon">▲</span>
+            </button>
+          </div>
+
+          <!-- Expandable Case & Patient Details -->
+          <div class="dock-details-body" id="dock-details-body" style="display:none;">
+            <!-- Patient Specs & Scene Location -->
+            <div class="dock-info-grid">
+              <div class="dock-info-box">
+                <span class="dock-box-label">Nạn nhân:</span>
+                <strong style="color:#FFFFFF;font-size:12.5px;" id="driver-patient-name">Phan Văn Đức</strong>
+                <span id="driver-patient-demographics" style="color:#CBD5E1;font-size:11.5px;">(58 tuổi, Nam · Máu
+                  O+)</span>
+                <div id="driver-patient-symptoms" style="font-size:11px;color:#94A3B8;margin-top:2px;">Chấn thương sọ
+                  não, đa chấn thương phần mềm</div>
+              </div>
+              <div class="dock-info-box">
+                <span class="dock-box-label">Hiện trường tai nạn:</span>
+                <strong style="color:#FFFFFF;font-size:12.5px;" id="driver-scene-address">Chân Cầu Hưng Lợi (hướng Cái
+                  Răng sang Ninh Kiều)</strong>
+              </div>
+            </div>
+
+            <!-- Quick Action Trio: Call buttons for Driver (Centered & Phone Icons) -->
+            <div class="quick-action-trio" style="margin-top:8px;">
+              <a href="tel:115" class="quick-call-btn" id="btn-call-dispatch">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                </svg>
+                <span>ĐPV 115</span>
+              </a>
+              <a href="tel:02923821236" class="quick-call-btn" id="btn-call-hospital">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                </svg>
+                <span>BV tiếp nhận</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Stepper 4 Mốc Nhiệm Vụ (TX-04) -->
+          <div class="driver-mobile-stepper" id="driver-milestone-stepper" style="margin-top:6px;">
             <div class="driver-step-col active" data-step="1" style="cursor:pointer;" title="Nhấn để chọn mốc">
               <div class="driver-step-dot">1</div>
-              <span class="driver-step-text">Xuất phát<br /><small style="color:#FF4D47;">Hiện tại</small></span>
+              <span class="driver-step-text">Xuất phát<br /></span>
             </div>
             <div class="driver-step-col" data-step="2" style="cursor:pointer;" title="Nhấn để chọn mốc">
               <div class="driver-step-dot">2</div>
-              <span class="driver-step-text">Đến HT<br /><small style="color:#64748B;">Dự kiến</small></span>
+              <span class="driver-step-text">Đến Hiện trường<br /></span>
             </div>
             <div class="driver-step-col" data-step="3" style="cursor:pointer;" title="Nhấn để chọn mốc">
               <div class="driver-step-dot">3</div>
-              <span class="driver-step-text">Rời HT ➔ BV<br /><small style="color:#64748B;">Dự kiến</small></span>
+              <span class="driver-step-text">Rời Hiện trường<br /></span>
             </div>
             <div class="driver-step-col" data-step="4" style="cursor:pointer;" title="Nhấn để chọn mốc">
               <div class="driver-step-dot">4</div>
-              <span class="driver-step-text">Đến BV<br /><small style="color:#64748B;">Dự kiến</small></span>
+              <span class="driver-step-text">Đến Bệnh viện<br /></span>
             </div>
           </div>
 
-          <!-- P0: Ergonomic Slide-To-Confirm (Chống nhảy mốc khi dằn xóc) -->
-          <div class="slide-confirm-container" id="slide-confirm-box" style="margin-top:12px;">
-            <div class="slide-track" id="slider-track" style="height:56px;">
+          <!-- P0: Slide-To-Confirm Bar (VietMap Style) -->
+          <div class="slide-confirm-container" id="slide-confirm-box" style="margin-top:8px;">
+            <div class="slide-track" id="slider-track" style="height:50px;">
               <div class="slide-fill" id="slider-fill"></div>
-              <span class="slide-text" id="slider-label" style="font-size:12px;">VUỐT SANG PHẢI: XÁC NHẬN XUẤT PHÁT
+              <span class="slide-text" id="slider-label" style="font-size:11.5px;">VUỐT SANG PHẢI: XÁC NHẬN XUẤT PHÁT
                 ➔</span>
-              <div class="slide-knob" id="slider-knob" style="width:48px;height:48px;top:3px;left:3px;">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8">
+              <div class="slide-knob" id="slider-knob" style="width:44px;height:44px;top:3px;left:3px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8">
                   <polyline points="9 18 15 12 9 6"></polyline>
                 </svg>
               </div>
             </div>
           </div>
 
-          <!-- P0: Undo Banner (Hoàn tác trong 10 giây nếu vô tình trượt nhầm) -->
-          <div class="undo-banner" id="undo-step-banner" style="display:none;margin-top:10px;">
-            <div style="font-size:12px;color:#FFFFFF;">
+          <!-- P0: Undo Banner (Hoàn tác trong 10 giây nếu trượt nhầm) -->
+          <div class="undo-banner" id="undo-step-banner" style="display:none;margin-top:8px;">
+            <div style="font-size:11.5px;color:#FFFFFF;">
               Đã ghi nhận: <strong id="undo-milestone-name">Đã đến BV</strong>
             </div>
             <button class="btn btn-default btn-xs" id="btn-undo-step"
-              style="border:1px solid #475569;color:#CBD5E1;padding:4px 10px;">
+              style="border:1px solid #475569;color:#CBD5E1;padding:3px 8px;font-size:11px;">
               Hoàn tác (10s)
             </button>
             <div class="undo-progress-line" id="undo-progress-bar"></div>
           </div>
         </div>
-
-
-
-      </section>
-
-      <!-- ================= TAB 2: BẢN ĐỒ DẪN ĐƯỜNG GPS (TX-05) ================= -->
-      <section class="driver-tab-panel" id="tab-navigation">
-        <div class="driver-full-map-wrap">
-          <!-- Full-bleed Leaflet Map Container -->
-          <div id="driver-map-container"></div>
-
-          <!-- 1. Floating Turn-by-Turn Guidance HUD -->
-          <div class="nav-floating-hud">
-            <div class="nav-direction-icon-box">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-                stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="10 9 15 4 20 9"></polyline>
-                <path d="M4 20v-7a4 4 0 0 1 4-4h12"></path>
-              </svg>
-            </div>
-            <div class="nav-hud-info">
-              <div class="nav-next-dist">Còn 350 m</div>
-              <div class="nav-next-street">Rẽ phải vào đường Châu Văn Liêm</div>
-              <div class="nav-telemetry-row">
-                <span style="color:#10B981;font-weight:700;">● 52 km/h</span>
-                <span style="color:#64748B;">·</span>
-                <span style="color:#CBD5E1;">Còn 1.4 km</span>
-                <span style="color:#64748B;">·</span>
-                <span style="color:#38BDF8;font-weight:700;">ETA ~4 phút (10:35)</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 2. Floating Quick Tool Buttons (Right Stack) -->
-          <div class="nav-floating-tools">
-            <!-- Center on Vehicle -->
-            <button class="nav-tool-btn" id="btn-map-center-veh" title="Định vị tâm xe">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polygon points="12 2 15 9 12 7 9 9 12 2"></polygon>
-              </svg>
-            </button>
-            <!-- Toggle Nearby Hospitals Layer -->
-            <button class="nav-tool-btn" id="btn-toggle-hosp-layer" title="Bệnh viện lân cận">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2z"></path>
-                <line x1="12" y1="7" x2="12" y2="17"></line>
-                <line x1="7" y1="12" x2="17" y2="12"></line>
-              </svg>
-            </button>
-          </div>
-
-          <!-- 3. Floating Bottom Destination & Case Drawer -->
-          <div class="nav-floating-destination-card">
-            <div style="display:flex;align-items:center;justify-content:space-between;font-size:11.5px;color:#CBD5E1;">
-              <div>
-                <span>Trống: <strong style="color:#10B981;">15 giường</strong> · <strong style="color:#38BDF8;">6 máy
-                    thở</strong></span>
-                <div style="font-size:10.5px;color:#94A3B8;margin-top:1px;" id="nav-patient-info">BN: Phan Văn Đức (58T,
-                  Nam)</div>
-              </div>
-              <div style="display:flex;gap:6px;">
-                <a href="tel:02923821236" class="btn btn-default btn-xs" id="btn-nav-call-hospital"
-                  style="border:1px solid #10B981;color:#34D399;padding:4px 8px;font-weight:700;display:flex;align-items:center;gap:4px;">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <path
-                      d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
-                    </path>
-                  </svg>
-                  Gọi viện
-                </a>
-                <button class="btn btn-default btn-xs" id="btn-nav-goto-epcr"
-                  style="border:1px solid #38BDF8;color:#38BDF8;padding:4px 8px;font-weight:700;">
-                  ePCR ➔
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ================= TAB 3: ePCR TRÊN ĐIỆN THOẠI (TX-06) ================= -->
-      <section class="driver-tab-panel" id="tab-epcr">
-        <div
-          style="background:var(--bg-panel);border:1px solid var(--border-main);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:14px;">
-
-          <div style="border-bottom:1px solid rgba(24, 52, 73, 0.6);padding-bottom:8px;">
-            <span style="font-size:11px;color:#94A3B8;text-transform:uppercase;font-weight:700;">HỒ SƠ CẤP CỨU NGOẠI
-              VIỆN (ePCR)</span>
-            <h3 style="color:#FFFFFF;font-size:14.5px;margin:2px 0 0 0;" id="epcr-patient-title">Phan Văn Đức · 58T ·
-              Nam</h3>
-          </div>
-
-          <!-- Section 1: Basic Patient Information (Synchronized with Central) -->
-          <div class="epcr-patient-card">
-            <div style="border-bottom:1px solid rgba(24,52,73,0.6);padding-bottom:6px;">
-              <span style="font-size:11px;font-weight:700;color:#38BDF8;text-transform:uppercase;">1. THÔNG TIN CƠ BẢN
-                (ĐỒNG BỘ TRUNG TÂM 115)</span>
-            </div>
-
-            <!-- Name & Age -->
-            <div class="epcr-2col-grid">
-              <div class="epcr-field-row" style="grid-column:span 2;">
-                <label class="epcr-field-label">Họ và tên bệnh nhân</label>
-                <input type="text" id="epcr-input-name" class="epcr-patient-input"
-                  style="font-weight:700;font-size:14px;color:#FFFFFF;" value="Phan Văn Đức"
-                  placeholder="Nhập tên bệnh nhân" />
-              </div>
-              <div class="epcr-field-row">
-                <label class="epcr-field-label">Tuổi</label>
-                <input type="number" id="epcr-input-age" class="epcr-patient-input" value="58" min="0" max="120"
-                  placeholder="Tuổi" />
-              </div>
-              <div class="epcr-field-row">
-                <label class="epcr-field-label">Giới tính</label>
-                <select id="epcr-input-gender" class="epcr-patient-input">
-                  <option value="Nam" selected>Nam</option>
-                  <option value="Nữ">Nữ</option>
-                  <option value="Khác">Khác</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Phone -->
-            <div class="epcr-field-row">
-              <label class="epcr-field-label">Số điện thoại liên hệ</label>
-              <input type="tel" id="epcr-input-phone" class="epcr-patient-input" value="0918.234.111"
-                placeholder="SĐT liên hệ" />
-            </div>
-          </div>
-
-          <!-- Section 2: AVPU Tri giác -->
-          <div>
-            <label style="font-size:11.5px;font-weight:700;color:#CBD5E1;display:block;margin-bottom:6px;">2. ĐÁNH GIÁ
-              TRI GIÁC (AVPU):</label>
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">
-              <button class="btn btn-default btn-xs epcr-avpu-btn active" data-avpu="A"
-                style="background:rgba(16,185,129,0.2);border-color:#10B981;color:#FFFFFF;font-weight:700;padding:6px 0;">A
-                - Tỉnh</button>
-              <button class="btn btn-default btn-xs epcr-avpu-btn" data-avpu="V" style="padding:6px 0;">V - Lời
-                nói</button>
-              <button class="btn btn-default btn-xs epcr-avpu-btn" data-avpu="P" style="padding:6px 0;">P - Đau</button>
-              <button class="btn btn-default btn-xs epcr-avpu-btn" data-avpu="U" style="padding:6px 0;">U - Mê</button>
-            </div>
-          </div>
-
-          <!-- Section 3: Vitals (Dấu sinh tồn) - Big finger touch grid -->
-          <div>
-            <label style="font-size:11.5px;font-weight:700;color:#CBD5E1;display:block;margin-bottom:6px;">3. SINH HIỆU
-              TẠI HIỆN TRƯỜNG:</label>
-            <div class="driver-vitals-grid">
-              <div class="vital-card">
-                <span class="vital-label">Mạch</span>
-                <input type="number" class="vital-value-input" id="v-pulse" value="88" />
-                <span class="vital-unit">lần/phút</span>
-              </div>
-              <div class="vital-card">
-                <span class="vital-label">Huyết áp</span>
-                <input type="text" class="vital-value-input" id="v-bp" value="120/80" />
-                <span class="vital-unit">mmHg</span>
-              </div>
-              <div class="vital-card">
-                <span class="vital-label">SpO2</span>
-                <input type="number" class="vital-value-input" id="v-spo2" value="98" />
-                <span class="vital-unit">% (Bình thường)</span>
-              </div>
-              <div class="vital-card">
-                <span class="vital-label">Nhiệt độ</span>
-                <input type="number" step="0.1" class="vital-value-input" id="v-temp" value="36.8" />
-                <span class="vital-unit">°C</span>
-              </div>
-              <div class="vital-card">
-                <span class="vital-label">Nhịp thở</span>
-                <input type="number" class="vital-value-input" id="v-rr" value="18" />
-                <span class="vital-unit">lần/phút</span>
-              </div>
-              <div class="vital-card">
-                <span class="vital-label">Glasgow</span>
-                <input type="number" class="vital-value-input" id="v-glasgow" value="14" />
-                <span class="vital-unit">Điểm GCS</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Section 3: 1-Tap Quick Intervention Chips -->
-          <div>
-            <label style="font-size:11.5px;font-weight:700;color:#CBD5E1;display:block;margin-bottom:6px;">3. XỬ TRÍ &
-              CAN THIỆP CẤP CỨU:</label>
-            <div class="quick-chips-wrap" id="epcr-quick-chips">
-              <div class="quick-chip active">✓ Thở oxy mask 8L/p</div>
-              <div class="quick-chip active">✓ Nẹp cố định cổ cứng</div>
-              <div class="quick-chip active">✓ Băng ép vô khuẩn</div>
-              <div class="quick-chip active">✓ Lập đường truyền NaCl 0.9%</div>
-              <div class="quick-chip">Hút đờm thông đường thở</div>
-              <div class="quick-chip">Đặt nội khí quản</div>
-              <div class="quick-chip">Sốc điện AED</div>
-              <div class="quick-chip">Paracetamol 1g IV</div>
-            </div>
-          </div>
-
-          <!-- Section 4: Live Progression Update -->
-          <div>
-            <label style="font-size:11.5px;font-weight:700;color:#CBD5E1;display:block;margin-bottom:6px;">4. DIỄN BIẾN
-              TRÊN ĐƯỜNG VẬN CHUYỂN:</label>
-            <textarea id="epcr-progression-text" rows="2"
-              style="width:100%;background:var(--bg-elevated);border:1px solid var(--border-accent);border-radius:8px;padding:8px 10px;color:#FFFFFF;font-size:12.5px;outline:none;resize:none;">Bệnh nhân tỉnh táo, tiếp xúc được, sinh hiệu ổn định, đồng tử 2 bên 2.5mm đều có phản xạ ánh sáng.</textarea>
-
-            <div style="display:flex;gap:6px;margin-top:6px;overflow-x:auto;">
-              <button class="btn btn-default btn-xs quick-prog-template"
-                data-text="Sinh hiệu duy trì ổn định, đã giảm đau tốt." style="font-size:10.5px;white-space:nowrap;">+
-                Sinh hiệu ổn định</button>
-              <button class="btn btn-default btn-xs quick-prog-template"
-                data-text="Bệnh nhân kích động, tri giác lơ mơ hơn, SpO2 giảm còn 92%."
-                style="font-size:10.5px;white-space:nowrap;">+ Tri giác giảm</button>
-              <button class="btn btn-default btn-xs quick-prog-template"
-                data-text="Đã cầm máu vết thương phần mềm, tiếp tục bù dịch."
-                style="font-size:10.5px;white-space:nowrap;">+ Cầm máu tốt</button>
-            </div>
-          </div>
-
-          <!-- Section 5: Scene Photos Attachment -->
-          <div>
-            <label style="font-size:11.5px;font-weight:700;color:#CBD5E1;display:block;margin-bottom:6px;">5. ẢNH HIỆN
-              TRƯỜNG & VẾT THƯƠNG (2 TỆP):</label>
-            <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;">
-              <div
-                style="height:60px;background:#1E293B;border-radius:8px;border:1px solid #475569;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                  <polyline points="21 15 16 10 5 21"></polyline>
-                </svg>
-                <span style="font-size:10.5px;color:#38BDF8;font-weight:700;">H.Trường</span>
-              </div>
-              <div
-                style="height:60px;background:#1E293B;border-radius:8px;border:1px solid #475569;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                  <polyline points="21 15 16 10 5 21"></polyline>
-                </svg>
-                <span style="font-size:10.5px;color:#38BDF8;font-weight:700;">Thương tích</span>
-              </div>
-              <button class="btn btn-default" id="btn-camera-mock"
-                style="height:60px;background:rgba(56,189,248,0.06);border:1px dashed #38BDF8;border-radius:8px;color:#38BDF8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:0;cursor:pointer;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                  <circle cx="12" cy="13" r="4"></circle>
-                </svg>
-                <span style="font-size:10.5px;font-weight:700;">Chụp thêm</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Save & Sync Action Button -->
-          <button class="btn btn-emergency-touch" id="btn-save-epcr-mobile" style="margin-top:4px;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-              <polyline points="17 21 17 13 7 13 7 21"></polyline>
-              <polyline points="7 3 7 8 15 8"></polyline>
-            </svg>
-            LƯU & ĐỒNG BỘ VỀ KHOA CẤP CỨU
-          </button>
-        </div>
-      </section>
-
-      <!-- ================= TAB 4: THÔNG TIN XE & CA TRỰC (TX-00, B1) ================= -->
-      <section class="driver-tab-panel" id="tab-vehicle">
-        <!-- Vehicle Status -->
-        <div class="driver-case-card">
-          <div style="display:flex;align-items:center;justify-content:space-between;">
-            <div>
-              <span style="font-size:11px;color:#94A3B8;text-transform:uppercase;font-weight:700;">THÔNG TIN PHƯƠNG
-                TIỆN</span>
-              <h3 style="color:#FFFFFF;font-size:16px;margin:2px 0 0 0;font-family:var(--font-mono);">65A-012.34 (Type A
-                ICU)</h3>
-            </div>
-            <span class="badge badge-emergency" style="font-size:11px;padding:4px 8px;">ĐANG VẬN CHUYỂN</span>
-          </div>
-        </div>
-
-        <!-- Crew Members Roster -->
-        <div class="driver-case-card">
-          <span style="font-size:11px;color:#94A3B8;text-transform:uppercase;font-weight:700;">THÀNH VIÊN KÍP CẤP CỨU
-            TRÊN XE:</span>
-
-          <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px;">
-            <div
-              style="display:flex;align-items:center;justify-content:space-between;background:#081827;padding:8px 10px;border-radius:6px;">
-              <div>
-                <strong style="color:#FFFFFF;font-size:13px;display:block;">BS. Trần Thanh Tùng</strong>
-                <span style="font-size:11px;color:#94A3B8;">Bác sĩ phụ trách chuyên môn · Cấp cứu Hồi sức</span>
-              </div>
-              <span class="badge badge-info" style="font-size:10px;">TRƯỞNG KÍP</span>
-            </div>
-
-            <div
-              style="display:flex;align-items:center;justify-content:space-between;background:#081827;padding:8px 10px;border-radius:6px;">
-              <div>
-                <strong style="color:#FFFFFF;font-size:13px;display:block;">ĐDV. Lê Hồng Hoa</strong>
-                <span style="font-size:11px;color:#94A3B8;">Điều dưỡng cấp cứu ngoại viện</span>
-              </div>
-              <span class="badge badge-default" style="font-size:10px;">ĐIỀU DƯỠNG</span>
-            </div>
-
-            <div
-              style="display:flex;align-items:center;justify-content:space-between;background:#081827;padding:8px 10px;border-radius:6px;">
-              <div>
-                <strong style="color:#FFFFFF;font-size:13px;display:block;">TX. Nguyễn Văn Nam</strong>
-                <span style="font-size:11px;color:#94A3B8;">Lái xe cấp cứu chuyên trách 115</span>
-              </div>
-              <span class="badge badge-warning" style="font-size:10px;">LÁI XE</span>
-            </div>
-          </div>
-        </div>
-
-      </section>
-
+      </div>
     </main>
 
-    <!-- 5. FIXED SMARTPHONE BOTTOM NAVIGATION (4 TABS) -->
-    <nav class="driver-bottom-nav" id="driver-bottom-navigation">
-      <div class="driver-nav-tab active" data-target="tab-mission">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-          <polyline points="14 2 14 8 20 8"></polyline>
-          <line x1="16" y1="13" x2="8" y2="13"></line>
-          <line x1="16" y1="17" x2="8" y2="17"></line>
-          <polyline points="10 9 9 9 8 9"></polyline>
-        </svg>
-        <span class="driver-nav-tab-label">Nhiệm vụ</span>
-        <span class="driver-nav-badge"></span>
-      </div>
 
-      <div class="driver-nav-tab" data-target="tab-navigation">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-          <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
-        </svg>
-        <span class="driver-nav-tab-label">Bản đồ<br />dẫn đường</span>
-      </div>
-
-      <div class="driver-nav-tab" data-target="tab-epcr">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-          <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-          <path d="M9 14h6"></path>
-          <path d="M12 11v6"></path>
-        </svg>
-        <span class="driver-nav-tab-label">ePCR</span>
-      </div>
-
-      <div class="driver-nav-tab" data-target="tab-vehicle">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-          <path
-            d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1 .4-1 1v9h2">
-          </path>
-          <circle cx="7" cy="17" r="2"></circle>
-          <path d="M9 17h6"></path>
-          <circle cx="17" cy="17" r="2"></circle>
-        </svg>
-        <span class="driver-nav-tab-label">Xe & Ca</span>
-      </div>
-    </nav>
 
     <!-- ================= 6. POPUP LỆNH ĐIỀU ĐỘNG MỚI (TX-01) ================= -->
     <div class="dispatch-alert-overlay" id="modal-dispatch-alert">
@@ -995,39 +712,46 @@
       setInterval(updateClock, 1000);
       updateClock();
 
-      // 3. Tab Switching Logic (4 Smartphone Tabs)
-      const tabs = document.querySelectorAll('.driver-nav-tab');
-      const panels = document.querySelectorAll('.driver-tab-panel');
+      // 3. VietMap Single-Screen Map & Dock Interactive Setup
       let mapInitialized = false;
       let driverMapInstance = null;
 
-      tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-          const targetId = tab.getAttribute('data-target');
-          tabs.forEach(t => t.classList.remove('active'));
-          panels.forEach(p => p.classList.remove('active'));
+      // Always initialize map directly since map is the primary full-screen view
+      setTimeout(() => {
+        initDriverMap();
+      }, 50);
 
-          tab.classList.add('active');
-          const activePanel = document.getElementById(targetId);
-          if (activePanel) activePanel.classList.add('active');
+      // Interactive expandable dock toggles (handle bar, expand button, and right tool button)
+      const missionDock = document.getElementById('driver-mission-dock');
+      const dockDetails = document.getElementById('dock-details-body');
+      const dockExpandIcon = document.getElementById('dock-expand-icon');
+      const btnDockExpand = document.getElementById('btn-dock-toggle-expand');
+      const dockHandle = document.getElementById('dock-handle-bar');
+      const btnToggleSheet = document.getElementById('btn-toggle-mission-sheet');
 
-          // Initialize or resize Map when user visits tab-navigation (Bản đồ dẫn đường)
-          if (targetId === 'tab-navigation') {
-            if (!mapInitialized) {
-              initDriverMap();
-            } else if (driverMapInstance) {
-              setTimeout(() => {
-                driverMapInstance.invalidateSize();
-              }, 120);
-            }
-          }
-        });
+      function toggleMissionDock(forceOpen) {
+        if (!dockDetails) return;
+        const isCurrentlyOpen = dockDetails.style.display !== 'none';
+        const willOpen = forceOpen !== undefined ? forceOpen : !isCurrentlyOpen;
+
+        dockDetails.style.display = willOpen ? 'block' : 'none';
+        if (missionDock) missionDock.classList.toggle('expanded', willOpen);
+        if (dockExpandIcon) dockExpandIcon.textContent = willOpen ? '▼' : '▲';
+        if (btnToggleSheet) btnToggleSheet.classList.toggle('active', willOpen);
+        if (navigator.vibrate) navigator.vibrate(25);
+      }
+
+      btnDockExpand?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleMissionDock();
       });
 
-      // Quick switch to map from mini preview
-      document.getElementById('btn-switch-to-nav')?.addEventListener('click', () => {
-        const navTab = document.querySelector('.driver-nav-tab[data-target="tab-navigation"]');
-        if (navTab) navTab.click();
+      dockHandle?.addEventListener('click', () => {
+        toggleMissionDock();
+      });
+
+      btnToggleSheet?.addEventListener('click', () => {
+        toggleMissionDock();
       });
 
       // 4. Milestone Stepper & Slide-To-Confirm (TX-04)
@@ -1288,84 +1012,22 @@
         }
       });
 
-      // 6. Interactive GIS Map in Tab 2 (TX-05)
+      // 6. Interactive GIS Map Engine (Reuse CanThoMap from Central)
       function initDriverMap() {
         mapInitialized = true;
         const container = document.getElementById('driver-map-container');
         if (!container) return;
 
-        if (window.L) {
-          const map = window.L.map('driver-map-container', {
-            center: [10.0290, 105.7760],
-            zoom: 14,
-            zoomControl: false,
-            attributionControl: false
-          });
+        if (window.CanThoMap) {
+          driverMapInstance = new window.CanThoMap('driver-map-container');
+          driverMapInstance.render();
 
-          window.L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-            attribution: '&copy; Esri, DeLorme, NAVTEQ',
-            maxNativeZoom: 16,
-            maxZoom: 18
-          }).addTo(map);
-
-          window.L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
-            attribution: '',
-            maxNativeZoom: 16,
-            maxZoom: 18
-          }).addTo(map);
-
-          // Route coordinates
-          const routeCoords = [
-            [10.0210, 105.7725], // Cầu Hưng Lợi
-            [10.0265, 105.7738], // Vị trí xe hiện tại
-            [10.0315, 105.7765], // Chợ Xuân Khánh
-            [10.0360, 105.7805], // Đại lộ Hòa Bình
-            [10.0375, 105.7820]  // Cổng BVĐK
-          ];
-
-          // Polyline glow
-          window.L.polyline(routeCoords, {
-            color: '#38BDF8',
-            weight: 5,
-            opacity: 0.85
-          }).addTo(map);
-
-          // Vehicle icon
-          const carIcon = window.L.divIcon({
-            className: 'driver-car-marker',
-            html: `
-              <div style="width:36px;height:36px;border-radius:50%;background:#E52521;border:2px solid #FFFFFF;display:flex;align-items:center;justify-content:center;box-shadow:0 0 15px #FF3B35;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1 .4-1 1v9h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></svg>
-              </div>
-            `,
-            iconSize: [36, 36],
-            iconAnchor: [18, 18]
-          });
-          window.L.marker([10.0265, 105.7738], { icon: carIcon }).addTo(map).bindPopup('<b>Xe 65A-012.34</b><br/>Đang chạy: 52 km/h');
-
-          // Hospital Destination Icon
-          const hospIcon = window.L.divIcon({
-            className: 'driver-hosp-marker',
-            html: `
-              <div style="background:#081827;border:1.5px solid #10B981;color:#10B981;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:4px;box-shadow:0 0 10px rgba(16,185,129,0.5);">
-                + BV Đa khoa TP Cần Thơ
-              </div>
-            `,
-            iconSize: [140, 26],
-            iconAnchor: [70, 13]
-          });
-          window.L.marker([10.0375, 105.7820], { icon: hospIcon }).addTo(map);
-
-          driverMapInstance = map;
-        } else {
-          // Fallback SVG representation
-          container.innerHTML = `
-            <div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#071522;color:#94A3B8;font-size:12px;">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
-              <div style="margin-top:8px;color:#FFFFFF;font-weight:600;">Lộ trình Cầu Hưng Lợi ➔ BV Đa khoa TP Cần Thơ</div>
-              <div style="color:#38BDF8;font-size:11px;">Đang bám sát tuyến đường xanh 30 Tháng 4</div>
-            </div>
-          `;
+          // Tự động focus vào xe cứu thương của tài xế và bám sát lộ trình OSRM thật
+          setTimeout(() => {
+            if (driverMapInstance.vehicleMarkers && driverMapInstance.vehicleMarkers[currentPlate]) {
+              driverMapInstance.focusVehicle(currentPlate, { animate: true });
+            }
+          }, 350);
         }
       }
 
@@ -1373,10 +1035,14 @@
       // Center map on vehicle
       document.getElementById('btn-map-center-veh')?.addEventListener('click', () => {
         if (driverMapInstance) {
-          driverMapInstance.setView([10.0265, 105.7738], 15);
+          if (driverMapInstance.focusPlate !== currentPlate) {
+            driverMapInstance.focusVehicle(currentPlate, { animate: true });
+          } else {
+            driverMapInstance.fitFocus(true);
+          }
           if (navigator.vibrate) navigator.vibrate(40);
           if (window.CCNV_UI?.Toast) {
-            window.CCNV_UI.Toast.show('Định vị xe cứu thương', 'Đã chuyển góc nhìn về vị trí GPS xe 65A-012.34.');
+            window.CCNV_UI.Toast.show('Định vị xe cứu thương', `Đã chuyển góc nhìn về vị trí GPS xe ${currentPlate}.`);
           }
         }
       });
@@ -1389,89 +1055,27 @@
         const btn = document.getElementById('btn-toggle-hosp-layer');
         if (btn) btn.classList.toggle('active', hospLayerActive);
 
-        if (!driverMapInstance || !window.L) return;
+        if (!driverMapInstance || !driverMapInstance.map || !window.L) return;
 
         if (hospLayerActive) {
-          const extraHosps = [
-            { name: 'BV ĐK Trung ương', coords: [10.0267, 105.7540], beds: '8G' },
-            { name: 'TTYT Cái Răng', coords: [10.0020, 105.7580], beds: '2G' },
-            { name: 'BV Nhi đồng Cần Thơ', coords: [10.0195, 105.7480], beds: '15G' }
-          ];
-          extraHosps.forEach(h => {
-            const m = window.L.marker(h.coords, {
-              icon: window.L.divIcon({
-                className: 'driver-extra-hosp',
-                html: `<div style="background:#081827;border:1px solid #38BDF8;color:#38BDF8;padding:2px 6px;border-radius:10px;font-size:10px;font-weight:700;white-space:nowrap;box-shadow:0 0 8px rgba(56,189,248,0.4);">🏥 ${h.name} (${h.beds})</div>`,
-                iconSize: [130, 22],
-                iconAnchor: [65, 11]
-              })
-            }).addTo(driverMapInstance);
-            hospMarkersLayer.push(m);
+          // Hiển thị tất cả các bệnh viện trên bản đồ kể cả khi đang ở focus mode
+          Object.values(driverMapInstance.hospitalMarkers || {}).forEach(item => {
+            if (!driverMapInstance.map.hasLayer(item.marker)) {
+              driverMapInstance.map.addLayer(item.marker);
+              hospMarkersLayer.push(item.marker);
+            }
           });
           if (window.CCNV_UI?.Toast) {
-            window.CCNV_UI.Toast.show('Lớp bản đồ', 'Đã bật hiển thị các Bệnh viện tiếp nhận lân cận trên địa bàn Cần Thơ.');
+            window.CCNV_UI.Toast.show('Lớp bản đồ', 'Đã bật hiển thị toàn bộ Bệnh viện tiếp nhận trên địa bàn Cần Thơ.');
           }
         } else {
-          hospMarkersLayer.forEach(m => driverMapInstance.removeLayer(m));
+          // Khôi phục bộ lọc hiển thị theo focusPlate
+          driverMapInstance.applyVisibility();
           hospMarkersLayer = [];
           if (window.CCNV_UI?.Toast) {
-            window.CCNV_UI.Toast.show('Lớp bản đồ', 'Đã ẩn các Bệnh viện lân cận.');
+            window.CCNV_UI.Toast.show('Lớp bản đồ', 'Đã ẩn các Bệnh viện ngoài lộ trình.');
           }
         }
-      });
-
-      // Jump to ePCR from map bottom drawer
-      document.getElementById('btn-nav-goto-epcr')?.addEventListener('click', () => {
-        const epcrTab = document.querySelector('.driver-nav-tab[data-target="tab-epcr"]');
-        if (epcrTab) epcrTab.click();
-      });
-
-      // 8. Mobile ePCR Interactions (TX-06)
-      // Quick chips toggle
-      document.querySelectorAll('#epcr-quick-chips .quick-chip').forEach(chip => {
-        chip.addEventListener('click', () => {
-          chip.classList.toggle('active');
-          if (navigator.vibrate) navigator.vibrate(30);
-        });
-      });
-
-      // AVPU Buttons
-      document.querySelectorAll('.epcr-avpu-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.epcr-avpu-btn').forEach(b => {
-            b.classList.remove('active');
-            b.style.background = '';
-            b.style.borderColor = '';
-            b.style.color = '';
-          });
-          btn.classList.add('active');
-          btn.style.background = 'rgba(16,185,129,0.2)';
-          btn.style.borderColor = '#10B981';
-          btn.style.color = '#FFFFFF';
-        });
-      });
-
-      // Quick Progression Template insertion
-      document.querySelectorAll('.quick-prog-template').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const area = document.getElementById('epcr-progression-text');
-          if (area) {
-            const extra = btn.getAttribute('data-text');
-            area.value += ' ' + extra;
-          }
-        });
-      });
-
-      // Mock Camera Photo
-      document.getElementById('btn-camera-mock')?.addEventListener('click', () => {
-        if (window.CCNV_UI?.Toast) {
-          window.CCNV_UI.Toast.show('Đã chụp ảnh hiện trường', 'Ảnh thương tích số 03 đã được lưu và đính kèm hồ sơ ePCR.');
-        }
-      });
-
-      // Save ePCR Button
-      document.getElementById('btn-save-epcr-mobile')?.addEventListener('click', () => {
-        savePatientData(true);
       });
 
       // 10. Vehicle Switcher Modal (TX-00)
@@ -1483,7 +1087,7 @@
       function renderVehiclePicker() {
         const vehicles = state.vehicles || [];
         vehListEl.innerHTML = vehicles.map(v => `
-          <div class="bottom-sheet-reason-btn ${v.plate === '65A-012.34' ? 'selected' : ''}" data-plate="${v.plate}" style="display:flex;align-items:center;justify-content:space-between;">
+          <div class="bottom-sheet-reason-btn ${v.plate === currentPlate ? 'selected' : ''}" data-plate="${v.plate}" style="display:flex;align-items:center;justify-content:space-between;">
             <div>
               <strong style="color:#FFFFFF;font-family:var(--font-mono);font-size:13.5px;">${v.plate}</strong>
               <div style="font-size:11.5px;color:#94A3B8;">${v.type} · ${v.station || 'Trạm Cần Thơ'}</div>
@@ -1501,6 +1105,14 @@
             document.getElementById('header-plate-text').textContent = plate;
             vehModal.classList.remove('active');
             renderCaseAndPatient(getActiveCase());
+
+            // Chuyển focus của CanThoMap sang xe mới
+            if (driverMapInstance) {
+              if (driverMapInstance.vehicleMarkers && driverMapInstance.vehicleMarkers[plate]) {
+                driverMapInstance.focusVehicle(plate, { animate: true });
+              }
+            }
+
             if (window.CCNV_UI?.Toast) {
               window.CCNV_UI.Toast.show('Đã đổi phương tiện', `Giao diện đang gắn với xe cứu thương ${plate}.`);
             }

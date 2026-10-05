@@ -437,11 +437,11 @@ window.SEED_DATA = {
     }
   ],
   "callHistory": [
-    { "id": "CALL-20261002-001", "time": "08:10:15", "caller": "Trần Văn Nam", "phone": "0918.234.111", "type": "115", "status": "COMPLETED", "caseId": "CC-261002-001", "operator": "dpv01", "duration": "124s" },
-    { "id": "CALL-20261002-002", "time": "08:02:40", "caller": "Lê Thị Bích", "phone": "0909.112.334", "type": "APP", "status": "COMPLETED", "caseId": "CC-261001-018", "operator": "dpv02", "duration": "95s" },
-    { "id": "CALL-20261002-003", "time": "07:45:10", "caller": "Phạm Văn Sơn", "phone": "0939.778.899", "type": "115", "status": "CONSULT_CLOSED", "caseId": null, "operator": "dpv01", "duration": "180s" },
+    { "id": "CALL-20261002-001", "time": "08:10:15", "caller": "Trần Văn Nam", "phone": "0918.234.111", "type": "115", "status": "COMPLETED", "caseId": "CC-261002-001", "operator": "Nguyễn Văn An", "duration": "124s" },
+    { "id": "CALL-20261002-002", "time": "08:02:40", "caller": "Lê Thị Bích", "phone": "0909.112.334", "type": "APP", "status": "COMPLETED", "caseId": "CC-261001-018", "operator": "Trần Minh Đức", "duration": "95s" },
+    { "id": "CALL-20261002-003", "time": "07:45:10", "caller": "Phạm Văn Sơn", "phone": "0939.778.899", "type": "115", "status": "CONSULT_CLOSED", "caseId": null, "operator": "Nguyễn Văn An", "duration": "180s" },
     { "id": "CALL-20261002-004", "time": "07:30:22", "caller": "Nguyễn Thị Mai", "phone": "0912.445.667", "type": "115", "status": "MISSED", "caseId": null, "operator": null, "duration": "0s" },
-    { "id": "CALL-20261002-005", "time": "07:15:00", "caller": "Hoàng Minh Tâm", "phone": "0988.334.556", "type": "115", "status": "COMPLETED", "caseId": "CC-261001-017", "operator": "dpv01", "duration": "110s" }
+    { "id": "CALL-20261002-005", "time": "07:15:00", "caller": "Hoàng Minh Tâm", "phone": "0988.334.556", "type": "115", "status": "COMPLETED", "caseId": "CC-261001-017", "operator": "Lê Hoàng Nam", "duration": "110s" }
   ],
   "cases": [],
   "demoCase": {
@@ -617,10 +617,10 @@ window.SEED_DATA = {
   },
   "auditLogs": [
     { "id": "LOG-101", "time": "07:00:00", "user": "Hệ thống", "action": "Khởi tạo ca trực buổi sáng 02/10/2026, kích hoạt 5 kíp trực" },
-    { "id": "LOG-102", "time": "07:05:12", "user": "dpv01", "action": "Đăng nhập ca trực Điều phối viên Trung tâm 115" },
-    { "id": "LOG-103", "time": "08:10:15", "user": "dpv01", "action": "Nhận cuộc gọi 115 số 0918.234.111 (Khu vực Cầu Hưng Lợi)" },
-    { "id": "LOG-104", "time": "08:11:30", "user": "dpv01", "action": "Tạo ca CC-261002-001, điều động xe 65A-012.34 (Kíp 3)" },
-    { "id": "LOG-105", "time": "08:12:10", "user": "bvdk.tn", "action": "BV Đa khoa TP Cần Thơ xác nhận tiếp nhận ca CC-261002-001" },
+    { "id": "LOG-102", "time": "07:05:12", "user": "Nguyễn Văn An", "action": "Đăng nhập ca trực Điều phối viên Trung tâm 115" },
+    { "id": "LOG-103", "time": "08:10:15", "user": "Nguyễn Văn An", "action": "Nhận cuộc gọi 115 số 0918.234.111 (Khu vực Cầu Hưng Lợi)" },
+    { "id": "LOG-104", "time": "08:11:30", "user": "Nguyễn Văn An", "action": "Tạo ca CC-261002-001, điều động xe 65A-012.34 (Kíp 3)" },
+    { "id": "LOG-105", "time": "08:12:10", "user": "BS. CKI. Nguyễn Văn Thông", "action": "BV Đa khoa TP Cần Thơ xác nhận tiếp nhận ca CC-261002-001" },
     { "id": "LOG-106", "time": "08:18:20", "user": "CREW-03", "action": "Xe 65A-012.34 đến hiện trường Cầu Hưng Lợi" }
   ]
 }

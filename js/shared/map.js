@@ -137,9 +137,45 @@
     }
 
     renderLegendHtml() {
+      const infoIcon = (window.CCNV_UI && window.CCNV_UI.ICONS && window.CCNV_UI.ICONS.info)
+        ? window.CCNV_UI.ICONS.info
+        : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`;
+
       return `
-        <div class="map-tactical-legend">
-          <div class="legend-title">CHÚ THÍCH</div>
+        <div class="map-top-right-controls">
+          <button type="button" class="map-legend-info-btn" id="btn-map-legend-info" title="Xem chú thích bản đồ" aria-expanded="false" aria-label="Chú thích bản đồ">
+            ${infoIcon}
+          </button>
+
+          <div class="map-zoom-cluster">
+            <button type="button" class="map-zoom-btn" id="btn-map-zoom-in" title="Phóng to (+)" aria-label="Phóng to">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
+            <button type="button" class="map-zoom-btn" id="btn-map-zoom-out" title="Thu nhỏ (-)" aria-label="Thu nhỏ">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
+            <button type="button" class="map-zoom-btn map-zoom-extent-btn" id="btn-map-zoom-extent" title="Zoom toàn cảnh (Cần Thơ)" aria-label="Zoom toàn cảnh">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="22" y1="12" x2="18" y2="12"></line>
+                <line x1="6" y1="12" x2="2" y2="12"></line>
+                <line x1="12" y1="6" x2="12" y2="2"></line>
+                <line x1="12" y1="22" x2="12" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="map-tactical-legend is-collapsed" id="map-tactical-legend" hidden>
+          <div class="legend-header">
+            <div class="legend-title">CHÚ THÍCH</div>
+            <button type="button" class="legend-close-btn" id="btn-map-legend-close" title="Đóng chú thích">✕</button>
+          </div>
           <div class="legend-item"><span class="legend-dot" style="--c:#10b981;"></span><span>Xe cứu thương</span></div>
           <div class="legend-item"><span class="legend-dot" style="--c:#38bdf8;"></span><span>Bệnh viện tiếp nhận</span></div>
           <div class="legend-item"><span class="legend-dot legend-dot-pulse" style="--c:#ef4444;"></span><span>Hiện trường sự cố</span></div>
@@ -176,10 +212,10 @@
         zoom: CITY_ZOOM,
         minZoom: 11,
         maxZoom: 18,
-        zoomControl: true,
+        zoomControl: false,
         attributionControl: true
       });
-      this.map.zoomControl.setPosition('bottomleft');
+      this.initTopRightControls(container);
 
       window.L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
         attribution: '&copy; Esri, DeLorme, NAVTEQ · Routing © OSRM',
@@ -323,20 +359,103 @@
     }
 
     bindLegend(container) {
+      const infoBtn = container.querySelector('#btn-map-legend-info');
+      const legend = container.querySelector('#map-tactical-legend');
+      const closeBtn = container.querySelector('#btn-map-legend-close');
+
+      if (infoBtn && legend) {
+        const toggleLegend = (forceOpen) => {
+          const isCurrentlyHidden = legend.hasAttribute('hidden');
+          const shouldOpen = forceOpen !== undefined ? forceOpen : isCurrentlyHidden;
+          legend.toggleAttribute('hidden', !shouldOpen);
+          legend.classList.toggle('is-collapsed', !shouldOpen);
+          infoBtn.setAttribute('aria-expanded', String(shouldOpen));
+          infoBtn.classList.toggle('is-active', shouldOpen);
+        };
+
+        infoBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggleLegend();
+        });
+
+        if (closeBtn) {
+          closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleLegend(false);
+          });
+        }
+
+        // Close on click outside inside the map container
+        document.addEventListener('click', (e) => {
+          if (!legend.hasAttribute('hidden') && !legend.contains(e.target) && !infoBtn.contains(e.target)) {
+            toggleLegend(false);
+          }
+        });
+
+        if (window.L) {
+          window.L.DomEvent.disableClickPropagation(infoBtn);
+        }
+      }
+
       const btn = container.querySelector('#btn-map-legend-codes');
       const panel = container.querySelector('#map-legend-codes');
-      if (!btn || !panel) return;
-      btn.addEventListener('click', () => {
-        const open = panel.hasAttribute('hidden');
-        panel.toggleAttribute('hidden', !open);
-        btn.setAttribute('aria-expanded', String(open));
-        btn.classList.toggle('is-open', open);
-      });
+      if (btn && panel) {
+        btn.addEventListener('click', () => {
+          const open = panel.hasAttribute('hidden');
+          panel.toggleAttribute('hidden', !open);
+          btn.setAttribute('aria-expanded', String(open));
+          btn.classList.toggle('is-open', open);
+        });
+      }
       // Không cho thao tác trên chú thích kéo/zoom bản đồ
-      const legend = container.querySelector('.map-tactical-legend');
       if (legend && window.L) {
         window.L.DomEvent.disableClickPropagation(legend);
         window.L.DomEvent.disableScrollPropagation(legend);
+      }
+    }
+
+    initTopRightControls(container) {
+      const zoomInBtn = container.querySelector('#btn-map-zoom-in');
+      const zoomOutBtn = container.querySelector('#btn-map-zoom-out');
+      const zoomExtentBtn = container.querySelector('#btn-map-zoom-extent');
+
+      if (zoomInBtn) {
+        zoomInBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (this.map) this.map.zoomIn();
+        });
+      }
+
+      if (zoomOutBtn) {
+        zoomOutBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (this.map) this.map.zoomOut();
+        });
+      }
+
+      if (zoomExtentBtn) {
+        zoomExtentBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (!this.map) return;
+          // Hủy trạng thái focus xe cụ thể nếu có để về toàn cảnh thành phố
+          if (this.focusPlate) {
+            this.clearFocus();
+          } else {
+            this.map.flyTo(CITY_CENTER, CITY_ZOOM, { duration: 0.8 });
+          }
+          window.CCNV_UI?.Toast?.show(
+            'BẢN ĐỒ TOÀN CẢNH',
+            'Đã chuyển góc nhìn về toàn cảnh TP. Cần Thơ',
+            true,
+            2000
+          );
+        });
+      }
+
+      const ctrlContainer = container.querySelector('.map-top-right-controls');
+      if (ctrlContainer && window.L) {
+        window.L.DomEvent.disableClickPropagation(ctrlContainer);
+        window.L.DomEvent.disableScrollPropagation(ctrlContainer);
       }
     }
 
@@ -463,13 +582,30 @@
         }
       }
 
-      // 2. Cập nhật nhãn trạng thái và ETA trong thanh Strip bên dưới
+      // 2. Cập nhật nhãn trạng thái và ETA trong thanh Strip bên dưới (Central)
       const bottomStrip = document.getElementById('realtime-bottom-strip');
       if (bottomStrip && this.focusPlate === m.plate) {
         const etaValueEl = bottomStrip.querySelector('.eta-value-live');
         if (etaValueEl) {
           etaValueEl.textContent = etaStr;
         }
+      }
+
+      // 3. Cập nhật HUD dẫn đường trên giao diện Tài xế (Driver HUD)
+      const driverHudDist = document.querySelector('.nav-telemetry-row');
+      if (driverHudDist && this.focusPlate === m.plate) {
+        const remM = p.phase === 'TO_SCENE'
+          ? Math.max(0, (m.leg1?.total || 1800) - p.dist)
+          : Math.max(0, (m.leg2?.total || 2200) - p.dist);
+        const kmStr = remM >= 1000 ? `${(remM / 1000).toFixed(1)} km` : `${Math.round(remM)} m`;
+        const speedVal = this.vehicleMarkers[m.plate]?.data?.speed || 52;
+        driverHudDist.innerHTML = `
+          <span style="color:#10B981;font-weight:700;">● ${speedVal} km/h</span>
+          <span style="color:#64748B;">·</span>
+          <span style="color:#CBD5E1;">Còn ${kmStr}</span>
+          <span style="color:#64748B;">·</span>
+          <span style="color:#38BDF8;font-weight:700;">ETA ${etaStr}</span>
+        `;
       }
     }
 
