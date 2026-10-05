@@ -165,12 +165,13 @@
     }
 
     renderLeafletMap(container, state) {
+      const rootId = `leaflet-root-${this.containerId}`;
       container.innerHTML = `
-        <div id="leaflet-map-root" style="width:100%;height:100%;background:#050d17;"></div>
+        <div id="${rootId}" style="width:100%;height:100%;background:#050d17;"></div>
         ${this.renderLegendHtml()}
       `;
 
-      this.map = window.L.map('leaflet-map-root', {
+      this.map = window.L.map(rootId, {
         center: CITY_CENTER,
         zoom: CITY_ZOOM,
         minZoom: 11,

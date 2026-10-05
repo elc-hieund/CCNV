@@ -7384,11 +7384,11 @@
       if (c.status === 'COMPLETED') {
         processingResult = `<span style="color:var(--emerald-light);font-weight:600;">✓ Tiếp nhận an toàn tại Khoa Cấp cứu</span>`;
       } else if (c.status === 'CANCELLED') {
-        processingResult = `<span style="color:var(--red-light);font-weight:600;">✗ Đã hủy: ${c.cancelReason || 'Hủy theo yêu cầu'}</span>`;
+        processingResult = `<span style="color:var(--red-light);font-weight:600;">Đã hủy: ${c.cancelReason || 'Hủy theo yêu cầu'}</span>`;
       } else if (c.status === 'TRANSPORTING') {
-        processingResult = `<span style="color:var(--amber-light);font-weight:600;">⟳ Đang vận chuyển khẩn cấp đến BV (ETA: ${c.eta || '6 phút'})</span>`;
+        processingResult = `<span style="color:var(--amber-light);font-weight:600;">Đang vận chuyển khẩn cấp đến BV (ETA: ${c.eta || '6 phút'})</span>`;
       } else {
-        processingResult = `<span style="color:var(--blue-light);font-weight:600;">⟳ Đang tiếp cận & sơ cứu ban đầu</span>`;
+        processingResult = `<span style="color:var(--blue-light);font-weight:600;">Đang tiếp cận & sơ cứu ban đầu</span>`;
       }
 
       // Crews info
@@ -7531,7 +7531,12 @@
         const body = modalOverlay.querySelector('#case-modal-body-content');
         if (!body) return;
 
-        // --- TAB 1: TỔNG QUAN (Layout 50/50: Nửa Trái là Lâm sàng BN - Nửa Phải là Bản đồ Radar GIS) ---
+        if (this.modalMapInstance) {
+          this.modalMapInstance.destroy();
+          this.modalMapInstance = null;
+        }
+
+        // --- TAB 1: TỔNG QUAN (Layout 50/50: Nửa Trái là Lâm sàng BN - Nửa Phải là Bản đồ GIS Thật) ---
         if (tabName === 'tab-overview') {
           const isPendingAccept = this.isHospitalMode() && (!state.cases.some(item => item.id === c.id || item.code === c.code) || c.hospitalResponse !== 'ACCEPTED');
           body.innerHTML = `
@@ -7759,89 +7764,24 @@
 
               </div>
 
-              <!-- NỬA PHẢI (50% LAYOUT): BẢN ĐỒ GIS RADAR GIÁM SÁT THỜI GIAN THỰC LỚN -->
+              <!-- NỬA PHẢI (50% LAYOUT): BẢN ĐỒ GIS GIÁM SÁT THỜI GIAN THỰC LỚN (REUSE CANTHOMAP) -->
               <div class="form-section" style="display:flex;flex-direction:column;padding:0;overflow:hidden;background:#06101c;border:1px solid var(--border-accent);min-height:550px;">
                 <!-- Header mini map -->
                 <div style="height:36px;background:rgba(7,19,32,0.92);backdrop-filter:blur(8px);z-index:10;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid rgba(255,255,255,0.08);font-size:11.5px;color:var(--text-slate);flex-shrink:0;">
                   <div style="display:flex;align-items:center;gap:8px;">
                     <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;box-shadow:0 0 10px #10b981;"></span>
-                    <strong style="color:var(--text-white);letter-spacing:0.8px;">GIÁM SÁT GIS RADAR 115</strong>
+                    <strong style="color:var(--text-white);letter-spacing:0.8px;">GIÁM SÁT GIS TRỰC TUYẾN 115</strong>
                   </div>
-                  <span style="font-family:var(--font-mono);color:var(--accent-cyan);font-weight:600;">GPS LIVE ±3m · TẦNG SỐ VÔ TUYẾN 154.200 MHz</span>
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-family:var(--font-mono);color:var(--accent-cyan);font-weight:600;">GPS LIVE · TẦN SỐ 154.200 MHz</span>
+                    <button type="button" class="btn btn-default btn-xs" id="btn-modal-map-recenter" style="padding:2px 8px;font-size:11px;color:#38bdf8;">
+                      Tâm ca
+                    </button>
+                  </div>
                 </div>
 
-                <!-- SVG Radar Canvas 50/50 Large Size -->
-                <div style="flex:1;position:relative;width:100%;min-height:480px;">
-                  <svg viewBox="0 0 650 500" style="position:absolute;inset:0;width:100%;height:100%;background:radial-gradient(circle at 50% 50%, #0d2640 0%, #050d18 100%);">
-                    <defs>
-                      <pattern id="radarGridHalf" width="30" height="30" patternUnits="userSpaceOnUse">
-                        <path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(56, 189, 248, 0.08)" stroke-width="1"/>
-                      </pattern>
-                      <radialGradient id="redGlowHalf" cx="50%" cy="50%" r="50%">
-                        <stop offset="0%" stop-color="#ef4444" stop-opacity="0.9"/>
-                        <stop offset="100%" stop-color="#ef4444" stop-opacity="0"/>
-                      </radialGradient>
-                      <radialGradient id="amberGlowHalf" cx="50%" cy="50%" r="50%">
-                        <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.9"/>
-                        <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
-                      </radialGradient>
-                    </defs>
-
-                    <rect width="650" height="500" fill="url(#radarGridHalf)" />
-
-                    <!-- Vòng quét Radar -->
-                    <circle cx="325" cy="270" r="160" fill="none" stroke="rgba(56, 189, 248, 0.12)" stroke-width="1" />
-                    <circle cx="325" cy="270" r="240" fill="none" stroke="rgba(56, 189, 248, 0.08)" stroke-width="1" />
-
-                    <!-- Dải Sông Cần Thơ mềm mại -->
-                    <path d="M 0 140 Q 180 230 320 120 T 650 200 L 650 310 Q 460 210 310 240 T 0 260 Z" fill="#0b2c47" opacity="0.65" />
-                    
-                    <!-- Trục đường lộ TP Cần Thơ -->
-                    <path d="M 40 450 L 320 280 L 580 130" stroke="rgba(148, 163, 184, 0.3)" stroke-width="6" stroke-linecap="round" />
-                    <path d="M 100 40 L 320 280 L 420 460" stroke="rgba(148, 163, 184, 0.22)" stroke-width="4.5" stroke-linecap="round" />
-                    <path d="M 210 460 L 530 60" stroke="rgba(148, 163, 184, 0.22)" stroke-width="3.5" stroke-linecap="round" />
-
-                    <!-- Tuyến lộ trình: Xe cứu thương -> Hiện trường -> Bệnh viện -->
-                    <polyline points="150,370 320,280 520,150" fill="none" stroke="#38bdf8" stroke-width="4" stroke-dasharray="9,5" stroke-linecap="round">
-                      <animate attributeName="stroke-dashoffset" values="28;0" dur="1.2s" repeatCount="indefinite" />
-                    </polyline>
-
-                    <!-- 1. VỊ TRÍ CA CẤP CỨU (HIỆN TRƯỜNG) -->
-                    <g transform="translate(320, 280)">
-                      <circle r="30" fill="url(#redGlowHalf)">
-                        <animate attributeName="r" values="14;38;14" dur="2s" repeatCount="indefinite" />
-                        <animate attributeName="opacity" values="0.9;0.2;0.9" dur="2s" repeatCount="indefinite" />
-                      </circle>
-                      <circle r="9" fill="#ef4444" stroke="#ffffff" stroke-width="2.5" />
-                      <!-- Label Hiện trường -->
-                      <rect x="-60" y="14" width="120" height="22" rx="4" fill="rgba(239, 68, 68, 0.95)" stroke="rgba(255,255,255,0.4)" stroke-width="1" />
-                      <text x="0" y="30" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">HIỆN TRƯỜNG CA</text>
-                    </g>
-
-                    <!-- 2. VỊ TRÍ XE CỨU THƯƠNG -->
-                    <g transform="translate(150, 370)">
-                      <circle r="22" fill="url(#amberGlowHalf)">
-                        <animate attributeName="r" values="10;26;10" dur="2.5s" repeatCount="indefinite" />
-                      </circle>
-                      <rect x="-14" y="-12" width="28" height="24" rx="5" fill="#f59e0b" stroke="#ffffff" stroke-width="2" />
-                      <path d="M -7 -3 L 7 -3 M -7 3 L 7 3" stroke="#000" stroke-width="2" stroke-linecap="round" />
-                      <!-- Label Biển số -->
-                      <rect x="-65" y="-36" width="130" height="20" rx="4" fill="rgba(15, 23, 42, 0.95)" stroke="#f59e0b" stroke-width="1.2" />
-                      <text x="0" y="-22" fill="#f59e0b" font-size="11" font-weight="bold" font-family="monospace" text-anchor="middle">${c.dispatch?.vehiclePlate || '65A-012.34'} · ${c.speed || 52}km/h</text>
-                    </g>
-
-                    <!-- 3. VỊ TRÍ BỆNH VIỆN TIẾP NHẬN -->
-                    <g transform="translate(520, 150)">
-                      <circle r="20" fill="rgba(16, 185, 129, 0.35)" />
-                      <rect x="-16" y="-16" width="32" height="32" rx="6" fill="#047857" stroke="#ffffff" stroke-width="2.5" />
-                      <!-- Chữ thập y tế -->
-                      <path d="M -3 -10 L 3 -10 L 3 -3 L 10 -3 L 10 3 L 3 3 L 3 10 L -3 10 L -3 3 L -10 3 L -10 -3 L -3 -3 Z" fill="#ffffff" />
-                      <!-- Label Bệnh viện -->
-                      <rect x="-75" y="-40" width="150" height="21" rx="4" fill="rgba(15, 23, 42, 0.95)" stroke="#10b981" stroke-width="1.2" />
-                      <text x="0" y="-25" fill="#10b981" font-size="11" font-weight="bold" text-anchor="middle">${c.dispatch?.hospitalName?.includes('TW') ? 'BVĐK TRUNG ƯƠNG' : 'BVĐK TP CẦN THƠ'}</text>
-                    </g>
-                  </svg>
-                </div>
+                <!-- GIS Map Viewport (Mounted with CanThoMap Leaflet Engine) -->
+                <div id="modal-overview-map-viewport" class="map-svg-wrapper" style="flex:1;position:relative;width:100%;min-height:480px;height:100%;"></div>
 
                 <!-- Footer mini map -->
                 <div style="height:34px;background:rgba(7,19,32,0.92);backdrop-filter:blur(8px);z-index:10;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-top:1px solid rgba(255,255,255,0.08);font-size:11.5px;flex-shrink:0;">
@@ -7854,6 +7794,48 @@
 
             </div>
           `;
+
+          // Mount CanThoMap GIS thật vào Modal
+          setTimeout(() => {
+            const mapMount = body.querySelector('#modal-overview-map-viewport');
+            if (!mapMount) return;
+            if (this.modalMapInstance) {
+              this.modalMapInstance.destroy();
+              this.modalMapInstance = null;
+            }
+            this.modalMapInstance = new window.CanThoMap('modal-overview-map-viewport');
+            this.modalMapInstance.render();
+
+            const plate = c.dispatch?.vehiclePlate;
+            const caseCoords = c.location?.coords;
+            const hosp = (state.hospitals || []).find(h => h.id === c.dispatch?.hospitalId || h.name === c.dispatch?.hospitalName);
+            const hospCoords = hosp?.coords;
+
+            const focusOnCase = () => {
+              if (!this.modalMapInstance?.map) return;
+              this.modalMapInstance.map.invalidateSize();
+              const points = [];
+              if (caseCoords) points.push(caseCoords);
+              if (hospCoords) points.push(hospCoords);
+              const stateVeh = (state.vehicles || []).find(v => v.plate === plate);
+              if (stateVeh?.coords) points.push(stateVeh.coords);
+
+              if (points.length >= 2) {
+                try {
+                  this.modalMapInstance.map.fitBounds(points, { padding: [50, 50], maxZoom: 15 });
+                } catch (err) {
+                  if (plate) this.modalMapInstance.focusVehicle(plate, { animate: false });
+                }
+              } else if (plate) {
+                this.modalMapInstance.focusVehicle(plate, { animate: false });
+              }
+            };
+
+            setTimeout(focusOnCase, 200);
+
+            // Nút định vị tâm ca
+            body.querySelector('#btn-modal-map-recenter')?.addEventListener('click', focusOnCase);
+          }, 60);
 
           // Gắn sự kiện sửa & đồng bộ thông tin BN về kíp xe
           body.querySelector('#btn-toggle-edit-patient-central')?.addEventListener('click', () => {
@@ -8572,7 +8554,13 @@
       // Render tab mặc định: Tab Tổng quan
       renderTab('tab-overview');
 
-      const closeModal = () => modalOverlay.classList.remove('active');
+      const closeModal = () => {
+        if (this.modalMapInstance) {
+          this.modalMapInstance.destroy();
+          this.modalMapInstance = null;
+        }
+        modalOverlay.classList.remove('active');
+      };
       modalOverlay.querySelector('#btn-close-case-modal')?.addEventListener('click', closeModal);
       modalOverlay.querySelector('#btn-close-case-modal-footer')?.addEventListener('click', closeModal);
 
