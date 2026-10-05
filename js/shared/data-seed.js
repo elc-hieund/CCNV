@@ -1,7 +1,7 @@
 window.SEED_DATA = {
   "system": {
     "name": "HỆ THỐNG ĐIỀU HÀNH CẤP CỨU NGOẠI VIỆN (CCNV) TP. CẦN THƠ",
-    "version": "2.1.2",
+    "version": "3.1.0",
     "deploymentDate": "2026-10-01",
     "demoDate": "2026-10-09",
     "center": "Bệnh viện Đa khoa thành phố Cần Thơ",
@@ -111,29 +111,6 @@ window.SEED_DATA = {
   ],
   "vehicles": [
     {
-      "id": "VEH-01",
-      "plate": "65A-015.67",
-      "type": "Type A",
-      "typeName": "Hồi sức cấp cứu cao cấp (ICU di động)",
-      "station": "Chốt Bến Ninh Kiều / Tượng đài Bác Hồ",
-      "stationId": "ST_NK",
-      "coords": [10.0348, 105.7876],
-      "mapPos": { "x": 625, "y": 375 },
-      "speed": 0,
-      "heading": 180,
-      "status": "READY",
-      "statusText": "Sẵn sàng",
-      "gpsStatus": "ONLINE",
-      "gpsSignal": "EXCELLENT",
-      "lastUpdate": "Vừa xong",
-      "battery": 100,
-      "fuel": "90%",
-      "oxygen": "100%",
-      "currentCaseId": null,
-      "equipment": ["Máy thở cao cấp Hamilton T1", "Máy sốc tim tạo nhịp ngoài Zoll X-Series", "Bơm tiêm điện đôi", "Máy khí dung", "Hệ thống hút đờm liên tục", "Túi cấp cứu hồi sinh tim phổi nâng cao (ACLS)"],
-      "camera": { "status": "LIVE", "fps": 30, "resolution": "1080p" }
-    },
-    {
       "id": "VEH-02",
       "plate": "65A-016.88",
       "type": "Type A",
@@ -226,48 +203,25 @@ window.SEED_DATA = {
       "camera": { "status": "STANDBY", "fps": 15, "resolution": "720p" }
     },
     {
-      "id": "VEH-06",
-      "plate": "65A-017.22",
-      "type": "Type C",
-      "typeName": "Vận chuyển chuyên dụng",
-      "station": "Trạm Cấp cứu Cái Răng (Phạm Hùng)",
-      "stationId": "ST_CR",
-      "coords": [10.0060, 105.7630],
-      "mapPos": { "x": 530, "y": 590 },
-      "speed": 0,
-      "heading": 45,
-      "status": "READY",
-      "statusText": "Sẵn sàng",
-      "gpsStatus": "ONLINE",
-      "gpsSignal": "GOOD",
-      "lastUpdate": "10 giây trước",
-      "battery": 94,
-      "fuel": "75%",
-      "oxygen": "88%",
-      "currentCaseId": null,
-      "equipment": ["Cáng đẩy tự nâng thủy lực", "Bình oxy thở cá nhân", "Bộ nẹp cố định chấn thương"],
-      "camera": { "status": "STANDBY", "fps": 15, "resolution": "720p" }
-    },
-    {
       "id": "VEH-07",
       "plate": "65A-012.34",
       "type": "Type A",
       "typeName": "Hồi sức cấp cứu cao cấp (ICU di động)",
-      "station": "Kíp 3 - Cái Răng (Đang chuyển viện)",
+      "station": "Trạm Cấp cứu Cái Răng (Kíp 3)",
       "stationId": "ST_CR",
-      "coords": [10.0265, 105.7738],
-      "mapPos": { "x": 560, "y": 430 },
-      "speed": 52,
+      "coords": [10.0105, 105.7700],
+      "mapPos": { "x": 530, "y": 590 },
+      "speed": 0,
       "heading": 330,
-      "status": "EMERGENCY",
-      "statusText": "Đang vận chuyển",
+      "status": "READY",
+      "statusText": "Sẵn sàng",
       "gpsStatus": "ONLINE",
       "gpsSignal": "EXCELLENT",
       "lastUpdate": "Vừa xong",
       "battery": 96,
       "fuel": "85%",
       "oxygen": "92%",
-      "currentCaseId": "CC-261002-001",
+      "currentCaseId": null,
       "equipment": ["Monitor 5 thông số Nihon Kohden", "Máy thở cao cấp", "Máy sốc tim AED", "Bộ nẹp cố định chấn thương"],
       "camera": { "status": "LIVE", "fps": 30, "resolution": "1080p" }
     },
@@ -330,7 +284,7 @@ window.SEED_DATA = {
       "name": "Kíp 2 - Ninh Kiều (Đội Phản ứng nhanh)",
       "shift": "Ca sáng (07:00 - 15:00)",
       "stationId": "ST_NK",
-      "defaultVehicle": "65A-015.67",
+      "defaultVehicle": "65A-016.88",
       "doctor": "BS. Hoàng Quốc Việt",
       "nurse": "ĐD. Phạm Minh Tuấn",
       "driver": "Đỗ Hữu Tài",
@@ -346,8 +300,8 @@ window.SEED_DATA = {
       "doctor": "BS. Võ Văn Kiệt",
       "nurse": "ĐD. Nguyễn Thị Thúy",
       "driver": "Trần Văn Bình",
-      "status": "ON_MISSION",
-      "statusText": "Đang làm nhiệm vụ"
+      "status": "READY",
+      "statusText": "Sẵn sàng"
     },
     {
       "id": "CREW-04",
@@ -425,7 +379,7 @@ window.SEED_DATA = {
       "patientAge": 34,
       "patientGender": "Nam",
       "description": "Va chạm mạnh giữa xe máy và xe tải nhỏ. Nạn nhân ngã đập đầu xuống đường, bất tỉnh, đang chảy máu nhiều ở vùng trán và tai, chân trái biến dạng.",
-      "suggestedVehicle": "65A-015.67",
+      "suggestedVehicle": "65A-016.88",
       "suggestedCrew": "CREW-02",
       "suggestedHospital": "HOSP_BVDK",
       "vehicleReason": "Gần nhất · ETA ~4 phút · Type A Hồi sức cao cấp phù hợp chấn thương sọ não",
@@ -489,82 +443,81 @@ window.SEED_DATA = {
     { "id": "CALL-20261002-004", "time": "07:30:22", "caller": "Nguyễn Thị Mai", "phone": "0912.445.667", "type": "115", "status": "MISSED", "caseId": null, "operator": null, "duration": "0s" },
     { "id": "CALL-20261002-005", "time": "07:15:00", "caller": "Hoàng Minh Tâm", "phone": "0988.334.556", "type": "115", "status": "COMPLETED", "caseId": "CC-261001-017", "operator": "dpv01", "duration": "110s" }
   ],
-  "cases": [
-    {
-      "id": "CC-261002-001",
-      "code": "CC-261002-001",
-      "callId": "CALL-20261002-001",
-      "createdAt": "2026-10-02T08:10:15",
-      "callerName": "Trần Văn Nam",
-      "callerPhone": "0918.234.111",
-      "source": "115",
-      "patient": {
-        "name": "Phan Văn Đức",
-        "age": 58,
-        "gender": "Nam",
-        "phone": "0918.234.111",
-        "bloodType": "O+",
-        "allergies": "Dị ứng Penicillin",
-        "history": "Tăng huyết áp, Đái tháo đường Type 2"
-      },
-      "location": {
-        "address": "Khu vực Cầu Hưng Lợi, Đường 30/4, P. Hưng Lợi, Q. Ninh Kiều",
-        "coords": [10.0235, 105.7730],
-        "mapPos": { "x": 585, "y": 475 },
-        "district": "Ninh Kiều"
-      },
-      "incident": {
-        "code": "INC_TNGT",
-        "name": "Tai nạn giao thông",
-        "severity": "EMERGENCY",
-        "severityText": "Khẩn cấp",
-        "description": "Va quẹt xe máy tốc độ cao, đa chấn thương phần mềm và xây xát cẳng tay, tỉnh táo, đau tức ngực nhẹ."
-      },
-      "dispatch": {
-        "vehicleId": "VEH-02",
-        "vehiclePlate": "65A-012.34",
-        "crewId": "CREW-03",
-        "crewName": "Kíp 3 - Cái Răng",
-        "hospitalId": "HOSP_BVDK",
-        "hospitalName": "BV Đa khoa TP Cần Thơ",
-        "dispatcherId": "dpv01",
-        "dispatcherName": "Nguyễn Văn An"
-      },
-      "status": "EN_ROUTE",
-      "statusText": "Đang đến hiện trường",
-      "stageLabel": "Xe đang đến hiện trường",
-      "orderStatus": "MOVING",
-      "orderStatusText": "Đang di chuyển",
-      "hospitalResponse": "ACCEPTED",
-      "hospitalResponseText": "Đã xác nhận",
-      "eta": "4 phút",
-      "speed": 52,
-      "milestones": [
-        { "step": "CALL_RECEIVED", "name": "Tiếp nhận cuộc gọi", "time": "08:10:15", "done": true },
-        { "step": "DISPATCHED", "name": "Phát lệnh điều xe", "time": "08:11:30", "done": true },
-        { "step": "CREW_CONFIRMED", "name": "Kíp xuất phát", "time": "08:12:45", "done": true },
-        { "step": "SCENE_ARRIVED", "name": "Đến hiện trường", "time": "08:18:20", "done": true },
-        { "step": "LEAVING_SCENE", "name": "Rời hiện trường", "time": "08:24:10", "done": true },
-        { "step": "HOSPITAL_ARRIVED", "name": "Đến bệnh viện", "time": null, "done": false },
-        { "step": "HANDOVER_DONE", "name": "Hoàn tất bàn giao", "time": null, "done": false }
-      ],
-      "logs": [
-        { "time": "08:10:15", "user": "dpv01", "action": "Tiếp nhận cuộc gọi 115 từ số 0918.234.111" },
-        { "time": "08:11:30", "user": "dpv01", "action": "Tạo ca CC-261002-001, phát lệnh tới xe 65A-012.34 và cảnh báo BV Đa khoa TP Cần Thơ" },
-        { "time": "08:12:10", "user": "bvdk.tn", "action": "BV Đa khoa TP Cần Thơ xác nhận sẵn sàng tiếp nhận người bệnh" },
-        { "time": "08:12:45", "user": "CREW-03", "action": "Kíp 3 xác nhận lên xe xuất phát" },
-        { "time": "08:18:20", "user": "CREW-03", "action": "Xe đã tiếp cận hiện trường tai nạn Cầu Hưng Lợi" },
-        { "time": "08:24:10", "user": "CREW-03", "action": "Sơ cứu ổn định, bắt đầu vận chuyển bệnh nhân về BVĐK TP Cần Thơ" }
-      ],
-      "epcr": {
-        "patientStatus": "Tỉnh, tiếp xúc tốt, Glasgow 15 điểm",
-        "vitals": { "pulse": 88, "bp": "130/80 mmHg", "spO2": 97, "temp": 36.8, "rr": 18 },
-        "interventions": ["Băng ép vô trùng vết rách cẳng tay phải", "Thở oxy qua cannula 3L/phút", "Nẹp cố định mềm chi trên"],
-        "medications": ["Natriclorid 0.9% 500ml truyền tĩnh mạch", "Paracetamol 1g truyền giảm đau"],
-        "progression": "Bệnh nhân đỡ đau tức ngực, huyết động ổn định trên đường vận chuyển."
-      }
+  "cases": [],
+  "demoCase": {
+    "id": "CC-261002-001",
+    "code": "CC-261002-001",
+    "callId": "CALL-20261002-001",
+    "createdAt": "2026-10-02T08:10:15",
+    "callerName": "Trần Văn Nam",
+    "callerPhone": "0918.234.111",
+    "source": "115",
+    "patient": {
+      "name": "Phan Văn Đức",
+      "age": 58,
+      "gender": "Nam",
+      "phone": "0918.234.111",
+      "bloodType": "O+",
+      "allergies": "Dị ứng Penicillin",
+      "history": "Tăng huyết áp, Đái tháo đường Type 2"
+    },
+    "location": {
+      "address": "Khu vực Cầu Hưng Lợi, Đường 30/4, P. Hưng Lợi, Q. Ninh Kiều",
+      "coords": [10.0235, 105.7730],
+      "mapPos": { "x": 585, "y": 475 },
+      "district": "Ninh Kiều"
+    },
+    "incident": {
+      "code": "INC_TNGT",
+      "name": "Tai nạn giao thông",
+      "severity": "EMERGENCY",
+      "severityText": "Khẩn cấp",
+      "description": "Va quẹt xe máy tốc độ cao, đa chấn thương phần mềm và xây xát cẳng tay, tỉnh táo, đau tức ngực nhẹ."
+    },
+    "dispatch": {
+      "vehicleId": "VEH-07",
+      "vehiclePlate": "65A-012.34",
+      "crewId": "CREW-03",
+      "crewName": "Kíp 3 - Cái Răng",
+      "hospitalId": "HOSP_BVDK",
+      "hospitalName": "BV Đa khoa TP Cần Thơ",
+      "dispatcherId": "dpv01",
+      "dispatcherName": "Nguyễn Văn An"
+    },
+    "status": "EN_ROUTE",
+    "statusText": "Đang đến hiện trường",
+    "stageLabel": "Xe đang đến hiện trường",
+    "orderStatus": "MOVING",
+    "orderStatusText": "Đang di chuyển",
+    "hospitalResponse": "ACCEPTED",
+    "hospitalResponseText": "Đã xác nhận",
+    "eta": "4 phút",
+    "speed": 52,
+    "milestones": [
+      { "step": "CALL_RECEIVED", "name": "Tiếp nhận cuộc gọi", "time": "08:10:15", "done": true },
+      { "step": "DISPATCHED", "name": "Phát lệnh điều xe", "time": "08:11:30", "done": true },
+      { "step": "CREW_CONFIRMED", "name": "Kíp xuất phát", "time": "08:12:45", "done": true },
+      { "step": "SCENE_ARRIVED", "name": "Đến hiện trường", "time": "08:18:20", "done": true },
+      { "step": "LEAVING_SCENE", "name": "Rời hiện trường", "time": "08:24:10", "done": true },
+      { "step": "HOSPITAL_ARRIVED", "name": "Đến bệnh viện", "time": null, "done": false },
+      { "step": "HANDOVER_DONE", "name": "Hoàn tất bàn giao", "time": null, "done": false }
+    ],
+    "logs": [
+      { "time": "08:10:15", "user": "dpv01", "action": "Tiếp nhận cuộc gọi 115 từ số 0918.234.111" },
+      { "time": "08:11:30", "user": "dpv01", "action": "Tạo ca CC-261002-001, phát lệnh tới xe 65A-012.34 và cảnh báo BV Đa khoa TP Cần Thơ" },
+      { "time": "08:12:10", "user": "bvdk.tn", "action": "BV Đa khoa TP Cần Thơ xác nhận sẵn sàng tiếp nhận người bệnh" },
+      { "time": "08:12:45", "user": "CREW-03", "action": "Kíp 3 xác nhận lên xe xuất phát" },
+      { "time": "08:18:20", "user": "CREW-03", "action": "Xe đã tiếp cận hiện trường tai nạn Cầu Hưng Lợi" },
+      { "time": "08:24:10", "user": "CREW-03", "action": "Sơ cứu ổn định, bắt đầu vận chuyển bệnh nhân về BVĐK TP Cần Thơ" }
+    ],
+    "epcr": {
+      "patientStatus": "Tỉnh, tiếp xúc tốt, Glasgow 15 điểm",
+      "vitals": { "pulse": 88, "bp": "130/80 mmHg", "spO2": 97, "temp": 36.8, "rr": 18 },
+      "interventions": ["Băng ép vô trùng vết rách cẳng tay phải", "Thở oxy qua cannula 3L/phút", "Nẹp cố định mềm chi trên"],
+      "medications": ["Natriclorid 0.9% 500ml truyền tĩnh mạch", "Paracetamol 1g truyền giảm đau"],
+      "progression": "Bệnh nhân đỡ đau tức ngực, huyết động ổn định trên đường vận chuyển."
     }
-  ],
+  },
   "historyCases": [
     {
       "id": "CC-261001-018",

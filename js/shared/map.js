@@ -18,12 +18,10 @@
   // Vị trí trực / xuất phát của xe (đã tinh chỉnh tránh chồng lấn). Fallback: vehicle.coords
   const VEH_COORDS = {
     '65A-012.34': [10.0105, 105.7700],      // Kíp 3 - Trạm Cái Răng (xuất phát ca Cầu Hưng Lợi)
-    '65A-015.67': [10.0348, 105.7876],      // Chốt Bến Ninh Kiều
     '65A-011.15': [10.0395, 105.7800],      // Trạm Cấp cứu Trung tâm
     '65A-016.88': [10.0298, 105.7685],      // Chốt ĐH Cần Thơ
     '65A-010.02': [10.0215, 105.7850],      // KDC Hưng Phú
     '65A-018.89': [10.0580, 105.7460],      // Trục Võ Văn Kiệt
-    '65A-017.22': [10.0060, 105.7630],      // Trạm Cái Răng
     '65A-019.99': [10.0880, 105.7050]       // Trạm Ô Môn
   };
 
@@ -289,7 +287,7 @@
         const mission = this.missionByPlate(v.plate);
         const startCoords = mission
           ? (mission.progress.phase === 'TO_SCENE' ? mission.origin : mission.scene)
-          : (VEH_COORDS[v.plate] || v.coords || CITY_CENTER);
+          : (v.coords || VEH_COORDS[v.plate] || CITY_CENTER);
         const icon = window.L.divIcon({
           className: 'map-leaflet-marker',
           html: `
@@ -390,11 +388,16 @@
           p.dist = 0;
           this.applyVisibility(); // Ẩn điểm tai nạn sau 3s dừng đón
         } else if (p.phase === 'ARRIVED') {
-          p.phase = 'TO_SCENE';
-          p.dist = 0;
-          this.applyVisibility(); // Hiện lại điểm tai nạn khi lặp lại chu kỳ mới
+          p.phase = 'COMPLETED';
+          if (!p.completedTriggered) {
+            p.completedTriggered = true;
+            this.onMissionCompleted?.(m);
+          }
+          return;
         }
       }
+
+      if (p.phase === 'COMPLETED') return;
 
       const leg = p.phase === 'TO_SCENE' ? m.leg1 : m.leg2;
       p.dist += SIM_SPEED_MPS * dt;
@@ -403,9 +406,9 @@
         if (p.phase === 'TO_SCENE') {
           p.phase = 'PICKUP';
           p.pauseUntil = now + PICKUP_PAUSE_MS;
-        } else {
+        } else if (p.phase === 'TO_HOSP' || p.phase !== 'ARRIVED') {
           p.phase = 'ARRIVED';
-          p.pauseUntil = now + ARRIVED_PAUSE_MS;
+          p.pauseUntil = now + 1200; // Dừng lại 1.2 giây tại bệnh viện cho quan sát viên thấy xe đã cập bến
         }
       }
 
@@ -476,7 +479,7 @@
         if (!pill) return;
         const phase = m.progress.phase;
         if (phase === 'PICKUP') pill.textContent = 'Đón BN (3s)';
-        else if (phase === 'ARRIVED') pill.textContent = 'Đã đến BV';
+        else if (phase === 'ARRIVED' || phase === 'COMPLETED') pill.textContent = 'Đã đến BV';
         else {
           item.data.speed = Math.floor(45 + Math.random() * 12);
           pill.textContent = item.data.speed + ' km/h';
@@ -682,6 +685,15 @@
       }
     }
   }
+
+  // Cho xe của ca chạy lại từ trạm (dùng khi demo phát lệnh hoặc kết thúc demo)
+  CanThoMap.resetMission = (caseId) => {
+    if (caseId) {
+      delete missionProgress[caseId];
+    } else {
+      Object.keys(missionProgress).forEach(k => delete missionProgress[k]);
+    }
+  };
 
   window.CanThoMap = CanThoMap;
 })(window);

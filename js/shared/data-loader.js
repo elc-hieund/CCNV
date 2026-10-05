@@ -62,6 +62,10 @@
           if (seedVersion && this.state?.system?.version !== seedVersion) {
             // Dữ liệu mẫu đã đổi phiên bản → bỏ cache cũ, nạp lại từ seed
             this.state = null;
+            try {
+              localStorage.removeItem(STORAGE_KEY_STATE);
+              sessionStorage.removeItem(STORAGE_KEY_STATE);
+            } catch (err) {}
           } else if (window.SEED_DATA) {
             if (window.SEED_DATA.accounts) this.state.accounts = window.SEED_DATA.accounts;
             if (window.SEED_DATA.hospitals) this.state.hospitals = window.SEED_DATA.hospitals;
