@@ -1,5 +1,5 @@
 /**
- * CCNV REAL-WORLD GIS COMMAND CENTER MAP VIEW — TP. CẦN THƠ
+ * CCNV REAL-WORLD GIS COMMAND CENTER MAP VIEW — THÀNH PHỐ CẦN THƠ
  * - Overview: toàn bộ xe (xanh lá), bệnh viện tiếp nhận (xanh nước biển), hiện trường (đỏ + rung)
  * - Focus: chọn 1 xe → ẩn đối tượng khác, hiện lộ trình xe → hiện trường → bệnh viện đích
  * - Xe di chuyển mượt bằng requestAnimationFrame, bám đường thật qua OSRM (fallback đường thẳng)
@@ -131,7 +131,7 @@
       } else {
         container.innerHTML = `
           <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#071522;color:#64748B;">
-            <span>Đang kết nối bản đồ số TP. Cần Thơ...</span>
+            <span>Đang kết nối bản đồ số thành phố Cần Thơ...</span>
           </div>`;
       }
     }
@@ -255,7 +255,7 @@
       hospitals.forEach(h => {
         const coords = h.coords || CITY_CENTER;
         const isRestricted = h.status === 'RESTRICTED';
-        const isCenter = h.isCenter || h.id === 'HOSP_BVDK' || h.name?.includes('Đa khoa thành phố Cần Thơ') || h.name?.includes('Đa khoa TP Cần Thơ');
+        const isCenter = h.isCenter || h.id === 'HOSP_BVDK' || h.name?.includes('Đa khoa thành phố Cần Thơ') || h.name?.includes('Đa khoa thành phố Cần Thơ');
         const statusLabel = h.statusText || (isRestricted ? 'Hạn chế' : 'Đang nhận');
         const displayName = h.name.startsWith('BV ') ? h.name.replace(/^BV\s+/, 'Bệnh viện ') : h.name;
         const icon = window.L.divIcon({
@@ -438,7 +438,7 @@
           }
           window.CCNV_UI?.Toast?.show(
             'BẢN ĐỒ TOÀN CẢNH',
-            'Đã chuyển góc nhìn về toàn cảnh TP. Cần Thơ',
+            'Đã chuyển góc nhìn về toàn cảnh thành phố Cần Thơ',
             true,
             2000
           );
@@ -553,7 +553,7 @@
         const remainingDist = Math.max(0, (m.leg2?.total || 2200) - p.dist);
         const remSec = Math.round(remainingDist / SIM_SPEED_MPS);
         if (remSec <= 5) {
-          etaStr = 'Sắp đến BV';
+          etaStr = 'Sắp đến Bệnh viện';
         } else if (remSec < 60) {
           etaStr = `${remSec} giây`;
         } else {
@@ -561,7 +561,7 @@
           etaStr = `${mRemain} phút`;
         }
       } else if (p.phase === 'ARRIVED') {
-        etaStr = 'Đã đến BV';
+        etaStr = 'Đã đến Bệnh viện';
       }
 
       m.currentEta = etaStr;
@@ -609,7 +609,7 @@
         if (!pill) return;
         const phase = m.progress.phase;
         if (phase === 'PICKUP') pill.textContent = 'Đón BN (3s)';
-        else if (phase === 'ARRIVED' || phase === 'COMPLETED') pill.textContent = 'Đã đến BV';
+        else if (phase === 'ARRIVED' || phase === 'COMPLETED') pill.textContent = 'Đã đến Bệnh viện';
         else {
           item.data.speed = Math.floor(45 + Math.random() * 12);
           pill.textContent = item.data.speed + ' km/h';

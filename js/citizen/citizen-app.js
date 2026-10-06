@@ -56,7 +56,7 @@
         dob: '1985-06-12',
         gender: 'Nam',
         idCard: '092095001234',
-        address: 'Số 3/2, P. Xuân Khánh, TP. Cần Thơ',
+        address: 'Số 3/2, P. Xuân Khánh, thành phố Cần Thơ',
         bloodType: 'O+',
         allergies: 'Dị ứng thuốc nhóm Penicillin, dị ứng hải sản',
         chronicDiseases: 'Tăng huyết áp độ 2 (đang điều trị), Tiền sử hen phế quản nhẹ',
@@ -101,7 +101,7 @@
         distanceKm: 1.6,
         speedKmH: 48,
         patientLocation: {
-          name: 'Đại học Cần Thơ - Cổng A đường 3/2, P. Xuân Khánh, TP. Cần Thơ',
+          name: 'Đại học Cần Thơ - Cổng A đường 3/2, P. Xuân Khánh, thành phố Cần Thơ',
           coords: [10.0298, 105.7702]
         },
         vehicle: {
@@ -118,8 +118,8 @@
         },
         hospital: {
           id: 'HOSP_BVTU',
-          name: 'BV Đa khoa Trung ương Cần Thơ',
-          address: '315 Nguyễn Văn Linh, P. An Khánh, Q. Ninh Kiều, TP. Cần Thơ',
+          name: 'Bệnh viện Đa khoa Trung ương Cần Thơ',
+          address: '315 Nguyễn Văn Linh, P. An Khánh, Q. Ninh Kiều, thành phố Cần Thơ',
           coords: [10.0265, 105.7588]
         },
         incident: {
@@ -153,10 +153,10 @@
           date: '01/10/2026 21:40',
           incident: 'Đột quỵ não / Nghi ngờ tai biến',
           vehicle: '65A-016.88',
-          hospital: 'BV Đa khoa TP Cần Thơ',
+          hospital: 'Bệnh viện Đa khoa thành phố Cần Thơ',
           status: 'Hoàn tất',
           statusClass: 'ready',
-          address: 'Đường 30/4, P. Hưng Lợi, TP. Cần Thơ',
+          address: 'Đường 30/4, P. Hưng Lợi, thành phố Cần Thơ',
           summary: 'Tiếp cận sau 6 phút, chẩn đoán đột quỵ thiếu máu cục bộ cấp giờ thứ 2, chuyển thẳng phòng Can thiệp mạch BVĐK.'
         },
         {
@@ -164,10 +164,10 @@
           date: '01/10/2026 19:15',
           incident: 'Tai nạn giao thông ngã xe',
           vehicle: '65A-011.15',
-          hospital: 'BV Đa khoa TW Cần Thơ',
+          hospital: 'Bệnh viện Đa khoa Trung ương Cần Thơ',
           status: 'Hoàn tất',
           statusClass: 'ready',
-          address: 'Cầu Quang Trung, P. Hưng Phú, TP. Cần Thơ',
+          address: 'Cầu Quang Trung, P. Hưng Phú, thành phố Cần Thơ',
           summary: 'Nẹp cố định cẳng tay trái gãy kín, băng ép cầm máu, chuyển khoa Cấp cứu an toàn.'
         },
         {
@@ -178,7 +178,7 @@
           hospital: 'TTYT Khu vực Ninh Kiều',
           status: 'Tự di chuyển / Đã hủy xe',
           statusClass: 'maintenance',
-          address: 'Đường Nguyễn Văn Cừ, P. An Khánh, TP. Cần Thơ',
+          address: 'Đường Nguyễn Văn Cừ, P. An Khánh, thành phố Cần Thơ',
           summary: 'Người dân chọn tự đưa người bệnh bằng taxi sau khi được ĐPV 115 tư vấn hướng dẫn sơ cứu.'
         }
       ];
@@ -1125,7 +1125,7 @@
         if (countEl) countEl.textContent = `${Math.max(0, totalDurationSec - callElapsedSec)}s`;
         window.CCNV_UI.SoundFx.playBeep?.();
 
-        // Sau đúng 10 giây: Đàm thoại hoàn tất, ĐPV phân công xe và BV tiếp nhận đồng ý
+        // Sau đúng 10 giây: Đàm thoại hoàn tất, ĐPV phân công xe và Bệnh viện tiếp nhận đồng ý
         if (callElapsedSec >= totalDurationSec) {
           this.completeEmergencyDispatch(incidentCode, incidentName, false);
         }
@@ -1156,15 +1156,15 @@
       this.activeCase.vehicle.coords = [10.0150, 105.7760];
       this.activeCase.hospital = {
         id: 'HOSP_BVTU',
-        name: 'BV Đa khoa Trung ương Cần Thơ',
-        address: '315 Nguyễn Văn Linh, P. An Khánh, Q. Ninh Kiều, TP. Cần Thơ',
+        name: 'Bệnh viện Đa khoa Trung ương Cần Thơ',
+        address: '315 Nguyễn Văn Linh, P. An Khánh, Q. Ninh Kiều, thành phố Cần Thơ',
         coords: [10.0265, 105.7588]
       };
 
       this.activeCase.messages.push({
         sender: 'dispatcher',
         time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-        text: `ĐPV 115 tiếp nhận: "${incidentName || 'Cấp cứu 115'}". Đã điều động xe 65A-012.34 (Kíp 3 - Cái Răng) và BV Đa khoa Trung ương Cần Thơ đã đồng ý tiếp nhận ca!`
+        text: `ĐPV 115 tiếp nhận: "${incidentName || 'Cấp cứu 115'}". Đã điều động xe 65A-012.34 (Kíp 3 - Cái Răng) và Bệnh viện Đa khoa Trung ương Cần Thơ đã đồng ý tiếp nhận ca!`
       });
 
       sessionStorage.setItem('ccnv_citizen_demo_dispatched', '1');
@@ -1176,7 +1176,7 @@
 
       window.CCNV_UI.Toast.show(
         isEarlyEnd ? 'KẾT THÚC ĐÀM THOẠI 115' : 'ĐIỀU ĐỘNG THÀNH CÔNG',
-        'ĐPV 115 đã phân công xe 65A-012.34 (ETA ~4P). BV Đa khoa Trung ương Cần Thơ đã sẵn sàng tiếp nhận!',
+        'ĐPV 115 đã phân công xe 65A-012.34 (ETA ~4P). Bệnh viện Đa khoa Trung ương Cần Thơ đã sẵn sàng tiếp nhận!',
         true
       );
 
@@ -1242,7 +1242,7 @@
 
       const origin = [10.0105, 105.7700]; // Kíp 3 - Trạm Cái Răng (xe 65A-012.34 chuẩn CCNV)
       const scene = this.activeCase.patientLocation.coords || [10.0298, 105.7702];
-      const hosp = [10.0265, 105.7588]; // BV Đa khoa Trung ương Cần Thơ
+      const hosp = [10.0265, 105.7588]; // Bệnh viện Đa khoa Trung ương Cần Thơ
 
       this.simMission = {
         origin,
@@ -1277,8 +1277,8 @@
         [10.0290, 105.7682], // Đường 3/2
         [10.0282, 105.7655], // Nút giao 3/2 - Nguyễn Văn Linh
         [10.0275, 105.7625], // Trục đường Nguyễn Văn Linh
-        [10.0268, 105.7602], // Đoạn Nguyễn Văn Linh tiếp cận BV
-        [10.0265, 105.7588]  // BV Đa khoa Trung ương Cần Thơ
+        [10.0268, 105.7602], // Đoạn Nguyễn Văn Linh tiếp cận Bệnh viện
+        [10.0265, 105.7588]  // Bệnh viện Đa khoa Trung ương Cần Thơ
       ];
 
       Promise.all([
@@ -1407,7 +1407,7 @@
           this.updateTrackingStatsUI(null, null, 'Đang chuyển viện');
           window.CCNV_UI.Toast.show(
             'BỆNH NHÂN ĐÃ LÊN XE',
-            'Xe 65A-012.34 đang di chuyển khẩn cấp về BV Đa khoa Trung ương Cần Thơ.',
+            'Xe 65A-012.34 đang di chuyển khẩn cấp về Bệnh viện Đa khoa Trung ương Cần Thơ.',
             true
           );
         }
@@ -1443,10 +1443,10 @@
           this.activeCase.stageLabel = 'Đã đến BVĐK Trung ương';
           this.activeCase.distanceKm = '0.0';
           this.activeCase.etaMinutes = 0;
-          this.updateTrackingStatsUI(0, 'Đã đến BV', 'Đã đến bệnh viện');
+          this.updateTrackingStatsUI(0, 'Đã đến Bệnh viện', 'Đã đến bệnh viện');
           window.CCNV_UI.Toast.show(
             'ĐÃ ĐẾN BỆNH VIỆN TIẾP NHẬN',
-            'Bệnh nhân đã được bàn giao an toàn cho Khoa Cấp cứu BV Đa khoa Trung ương Cần Thơ.',
+            'Bệnh nhân đã được bàn giao an toàn cho Khoa Cấp cứu Bệnh viện Đa khoa Trung ương Cần Thơ.',
             true
           );
           this.stopAmbulanceSimulation();
@@ -1494,7 +1494,7 @@
           if (m.phase === 'PICKUP') {
             speedPill.textContent = 'Đón BN (3s)';
           } else if (m.phase === 'ARRIVED' || m.phase === 'COMPLETED') {
-            speedPill.textContent = 'Đã đến BV';
+            speedPill.textContent = 'Đã đến Bệnh viện';
           } else {
             this.activeCase.speedKmH = Math.floor(46 + Math.random() * 8);
             speedPill.textContent = `${this.activeCase.speedKmH} km/h`;
@@ -1532,7 +1532,7 @@
 
       let etaDisplay = `~${this.activeCase.etaMinutes} PHÚT`;
       if (this.activeCase.status === 'COMPLETED') {
-        etaDisplay = 'ĐÃ ĐẾN BV';
+        etaDisplay = 'ĐÃ ĐẾN BỆNH VIỆN';
       } else if (customEtaText) {
         etaDisplay = customEtaText;
       } else if (remSec !== null) {
@@ -1587,7 +1587,7 @@
       const vehCoords = (this.simMission?.pos?.latlng)
         ? [this.simMission.pos.latlng.lat, this.simMission.pos.latlng.lng]
         : originCoords;
-      const hospCoords = [10.0265, 105.7588]; // BV Đa khoa Trung ương Cần Thơ
+      const hospCoords = [10.0265, 105.7588]; // Bệnh viện Đa khoa Trung ương Cần Thơ
 
       if (!this.mapTracking) {
         this.mapTracking = L.map('citizen-tracking-map', {
@@ -1652,7 +1652,7 @@
 
         this.vehicleMarker = L.marker(vehCoords, { icon: ambulanceIcon, zIndexOffset: 1000 })
           .addTo(this.mapTracking)
-          .bindPopup('<b>XE CẤP CỨU ĐANG ĐẾN</b><br>Biển số: 65A-012.34 (BV Đa khoa Trung ương)');
+          .bindPopup('<b>XE CẤP CỨU ĐANG ĐẾN</b><br>Biển số: 65A-012.34 (Bệnh viện Đa khoa Trung ương)');
 
         // 3. Marker Bệnh viện đích (Shield xanh y tế clone Central App)
         const hospitalIcon = L.divIcon({
@@ -1672,7 +1672,7 @@
 
         this.hospitalMarker = L.marker(hospCoords, { icon: hospitalIcon, zIndexOffset: 300 })
           .addTo(this.mapTracking)
-          .bindPopup('<b>BỆNH VIỆN TIẾP NHẬN</b><br>BV Đa khoa Trung ương Cần Thơ');
+          .bindPopup('<b>BỆNH VIỆN TIẾP NHẬN</b><br>Bệnh viện Đa khoa Trung ương Cần Thơ');
 
         // Tự động bao quát cả 3 điểm: Xe, Hiện trường, Bệnh viện đích
         try {
@@ -2458,7 +2458,7 @@
         <div style="font-size:12.5px;color:#CBD5E1;display:flex;flex-direction:column;gap:8px;">
           <div><strong style="color:#94A3B8;">Hiện trường:</strong> ${caseItem.address}</div>
           <div><strong style="color:#94A3B8;">Phương tiện:</strong> Xe cấp cứu ${caseItem.vehicle}</div>
-          <div><strong style="color:#94A3B8;">BV tiếp nhận:</strong> ${caseItem.hospital}</div>
+          <div><strong style="color:#94A3B8;">Bệnh viện tiếp nhận:</strong> ${caseItem.hospital}</div>
           <div style="background:#081827;border:1px solid #183449;border-radius:6px;padding:10px;margin-top:4px;">
             <strong style="color:#38BDF8;display:block;margin-bottom:4px;">Biên bản xử trí y tế:</strong>
             ${caseItem.summary}

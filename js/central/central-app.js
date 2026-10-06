@@ -258,7 +258,7 @@
 
       if (avatarEl) avatarEl.textContent = user.avatar || user.fullName.split(' ').pop().slice(0, 2).toUpperCase();
       if (logoutBtn) {
-        logoutBtn.title = `${user.fullName} (${isHospital ? 'Tiếp nhận BV' : 'Điều phối viên 115'}) - Click để Đăng xuất`;
+        logoutBtn.title = `${user.fullName} (${isHospital ? 'Tiếp nhận Bệnh viện' : 'Điều phối viên 115'}) - Click để Đăng xuất`;
       }
 
       // Demo: Khả dụng cho cả Trung tâm và Bệnh viện tiếp nhận
@@ -347,7 +347,7 @@
           status: c.status,
           severity: c.incident?.severity || 'EMERGENCY',
           patientName: c.patient?.name || c.callerName || 'Bệnh nhân',
-          location: c.location?.address || c.address || 'TP. Cần Thơ',
+          location: c.location?.address || c.address || 'thành phố Cần Thơ',
           raw: c
         });
       });
@@ -363,7 +363,7 @@
             status: 'COMPLETED',
             severity: matchedHist?.severity || 'ROUTINE',
             patientName: matchedHist?.patientName || call.caller || 'Bệnh nhân',
-            location: matchedHist?.locationAddress || 'TP. Cần Thơ',
+            location: matchedHist?.locationAddress || 'thành phố Cần Thơ',
             raw: matchedHist || {
               id: caseId,
               code: caseId,
@@ -374,9 +374,9 @@
               callerName: call.caller,
               callerPhone: call.phone,
               patient: { name: call.caller, age: 45, gender: 'Nam', history: 'Không có tiền sử bệnh lý đặc biệt' },
-              location: { address: 'TP. Cần Thơ' },
+              location: { address: 'thành phố Cần Thơ' },
               incident: { name: 'Cấp cứu ngoại viện', severity: 'ROUTINE', description: 'Yêu cầu hỗ trợ y tế' },
-              dispatch: { vehiclePlate: '65A-016.88', crewName: 'Kíp trực 115', hospitalName: 'BV Đa khoa TP Cần Thơ' },
+              dispatch: { vehiclePlate: '65A-016.88', crewName: 'Kíp trực 115', hospitalName: 'BV Đa khoa thành phố Cần Thơ' },
               epcr: { chiefComplaint: 'Cấp cứu ngoại viện', diagnosis: 'Theo dõi cấp cứu', treatment: 'Sơ cứu và vận chuyển' },
               milestones: [
                 { name: 'Tiếp nhận cuộc gọi', time: '02/10/2026 - ' + (call.time || '08:00:00'), done: true },
@@ -1264,11 +1264,11 @@
       let leftStripHtml = '';
 
       if (isEmergency) {
-        const destHospital = activeCase?.dispatch?.hospitalName || 'BV Đa khoa TP Cần Thơ';
+        const destHospital = activeCase?.dispatch?.hospitalName || 'BV Đa khoa thành phố Cần Thơ';
         const patientDesc = activeCase?.patient?.name
           ? `BN ${activeCase.patient.name} (${activeCase.patient.symptom || 'chấn thương'})`
           : 'bệnh nhân cấp cứu';
-        const locationText = activeCase?.location?.address || 'Cầu Hưng Lợi, P. Hưng Lợi, TP. Cần Thơ';
+        const locationText = activeCase?.location?.address || 'Cầu Hưng Lợi, P. Hưng Lợi, thành phố Cần Thơ';
         const etaText = activeCase?.eta || '~6 phút';
 
         leftStripHtml = `
@@ -1419,7 +1419,7 @@
         <div class="live-camera-strip">
           <div style="display:flex;align-items:center;gap:10px;">
             <div class="camera-preview-box">
-              <span style="font-size:10px;color:var(--text-muted);text-align:center;line-height:1.1;padding:2px;">CAM BV</span>
+              <span style="font-size:10px;color:var(--text-muted);text-align:center;line-height:1.1;padding:2px;">CAM BỆNH VIỆN</span>
               <div style="position:absolute;top:4px;right:4px;" class="live-dot"></div>
             </div>
             <div style="font-size:12px;">
@@ -1548,7 +1548,7 @@
         patientName: 'Nguyễn Văn Hưng',
         patientAge: 34,
         patientGender: 'Nam',
-        address: 'Chân cầu Hưng Lợi, P. Hưng Lợi, TP. Cần Thơ',
+        address: 'Chân cầu Hưng Lợi, P. Hưng Lợi, thành phố Cần Thơ',
         incidentCode: 'INC_TNGT',
         incidentName: 'Tai nạn giao thông có người bất tỉnh',
         severity: 'CRITICAL',
@@ -1643,10 +1643,10 @@
 
         // Hospitals list from Danh mục & Cấu hình (state.hospitals)
         let availableHospitals = state.hospitals && state.hospitals.length > 0 ? state.hospitals : [
-          { id: 'HOSP_BVDK', name: 'Bệnh viện Đa khoa thành phố Cần Thơ', hotline: '0967.891.115', address: 'Số 04 Châu Văn Liêm, P. Tân An, TP. Cần Thơ', availableBeds: 12, statusText: 'Đang nhận', isCenter: true },
-          { id: 'HOSP_BVTU', name: 'Bệnh viện Đa khoa Trung ương Cần Thơ', hotline: '0901.234.567', address: '315 Nguyễn Văn Linh, P. An Khánh, TP. Cần Thơ', availableBeds: 8, statusText: 'Đang nhận' },
-          { id: 'HOSP_BVND', name: 'Bệnh viện Nhi đồng Cần Thơ', hotline: '0918.456.789', address: '345 Nguyễn Văn Cừ nối dài, P. An Bình, TP. Cần Thơ', availableBeds: 15, statusText: 'Đang nhận' },
-          { id: 'HOSP_BVUB', name: 'Bệnh viện Ung bướu Cần Thơ', hotline: '0292.3817.901', address: 'Số 20 Châu Văn Liêm, P. An Lạc, TP. Cần Thơ', availableBeds: 6, statusText: 'Đang nhận' }
+          { id: 'HOSP_BVDK', name: 'Bệnh viện Đa khoa thành phố Cần Thơ', hotline: '0967.891.115', address: 'Số 04 Châu Văn Liêm, P. Tân An, thành phố Cần Thơ', availableBeds: 12, statusText: 'Đang nhận', isCenter: true },
+          { id: 'HOSP_BVTU', name: 'Bệnh viện Đa khoa Trung ương Cần Thơ', hotline: '0901.234.567', address: '315 Nguyễn Văn Linh, P. An Khánh, thành phố Cần Thơ', availableBeds: 8, statusText: 'Đang nhận' },
+          { id: 'HOSP_BVND', name: 'Bệnh viện Nhi đồng Cần Thơ', hotline: '0918.456.789', address: '345 Nguyễn Văn Cừ nối dài, P. An Bình, thành phố Cần Thơ', availableBeds: 15, statusText: 'Đang nhận' },
+          { id: 'HOSP_BVUB', name: 'Bệnh viện Ung bướu Cần Thơ', hotline: '0292.3817.901', address: 'Số 20 Châu Văn Liêm, P. An Lạc, thành phố Cần Thơ', availableBeds: 6, statusText: 'Đang nhận' }
         ];
         let currentHospitalId = null; // Nothing selected initially
 
@@ -1755,7 +1755,7 @@
                 </div>
 
                 <div class="form-field" style="margin-bottom:0;">
-                  <input type="text" id="rapid-address" value="${activeCall.address || 'Đường 30/4, Phường Hưng Lợi, TP. Cần Thơ'}" placeholder="Số nhà, tên đường, phường/xã, điểm mốc nhận diện..." />
+                  <input type="text" id="rapid-address" value="${activeCall.address || 'Đường 30/4, Phường Hưng Lợi, thành phố Cần Thơ'}" placeholder="Số nhà, tên đường, phường/xã, điểm mốc nhận diện..." />
                 </div>
               </div>
 
@@ -2380,7 +2380,7 @@
         // --- STEP 2 DISPATCH RECOMMENDATION ENGINE ---
         const getBestRecommendation = () => {
           syncPatientsFromDom();
-          const address = paneContainer.querySelector('#rapid-address')?.value || activeCall.address || 'Đường 30/4, Phường Hưng Lợi, TP. Cần Thơ';
+          const address = paneContainer.querySelector('#rapid-address')?.value || activeCall.address || 'Đường 30/4, Phường Hưng Lợi, thành phố Cần Thơ';
           const hasChild = patients.some(p => p.ageGroup === 'INFANT' || p.ageGroup === 'CHILD' || (typeof p.age === 'number' && p.age < 16));
           const isMultiPatient = patients.length >= 2;
           const incObj = state.incidentTypes?.find(i => i.code === currentIncident);
@@ -2423,17 +2423,17 @@
 
           // 3. Bệnh viện tiếp nhận đề xuất
           let bestHospitalId = 'HOSP_BVDK';
-          let hospitalReason = 'BV Đa khoa TP Cần Thơ (Cấp cứu đa khoa)';
+          let hospitalReason = 'BV Đa khoa thành phố Cần Thơ (Cấp cứu đa khoa)';
           if (hasChild || currentIncident === 'INC_PEDIATRIC') {
             bestHospitalId = 'HOSP_BVND';
             hospitalReason = 'BV Nhi đồng Cần Thơ (Cơ sở chuyên khoa Nhi)';
           } else if (currentIncident === 'INC_STROKE' || currentIncident === 'INC_CARDIAC' || currentSeverity === 'CRITICAL') {
             bestHospitalId = 'HOSP_BVTU';
-            hospitalReason = 'BV Đa khoa Trung ương Cần Thơ (Can thiệp Tim mạch & Đột quỵ)';
+            hospitalReason = 'Bệnh viện Đa khoa Trung ương Cần Thơ (Can thiệp Tim mạch & Đột quỵ)';
           } else {
             const defaultHosp = availableHospitals.find(h => h.id === 'HOSP_BVDK') || availableHospitals[0];
             bestHospitalId = defaultHosp?.id || 'HOSP_BVDK';
-            hospitalReason = `${defaultHosp?.name || 'BV Đa khoa TP Cần Thơ'} (Tiếp nhận tiêu chuẩn)`;
+            hospitalReason = `${defaultHosp?.name || 'BV Đa khoa thành phố Cần Thơ'} (Tiếp nhận tiêu chuẩn)`;
           }
 
           return {
@@ -2453,7 +2453,7 @@
 
           syncPatientsFromDom();
           const rec = getBestRecommendation();
-          const address = paneContainer.querySelector('#rapid-address')?.value || activeCall.address || 'Đường 30/4, Phường Hưng Lợi, TP. Cần Thơ';
+          const address = paneContainer.querySelector('#rapid-address')?.value || activeCall.address || 'Đường 30/4, Phường Hưng Lợi, thành phố Cần Thơ';
           const incObj = state.incidentTypes?.find(i => i.code === currentIncident);
           const incName = incObj ? incObj.name : 'Cấp cứu 115';
 
@@ -2745,7 +2745,7 @@
         const injectCellId = () => {
           const addrInput = paneContainer.querySelector('#rapid-address');
           if (addrInput) {
-            addrInput.value = 'BTS VTT-NK04 · P. Hưng Lợi, TP. Cần Thơ';
+            addrInput.value = 'BTS VTT-NK04 · P. Hưng Lợi, thành phố Cần Thơ';
             addrInput.focus();
             addrInput.classList.add('pulse-red-border');
             setTimeout(() => addrInput.classList.remove('pulse-red-border'), 1000);
@@ -2791,10 +2791,10 @@
           const primaryPatient = patients[0] || { name: 'Chưa rõ', age: 34, gender: 'Nam', notes: '' };
           const patientName = primaryPatient.name || 'Chưa rõ danh tính';
           const patientAge = Number(primaryPatient.age) || 34;
-          const address = paneContainer.querySelector('#rapid-address')?.value || 'Đường 30/4, Phường Hưng Lợi, TP. Cần Thơ';
+          const address = paneContainer.querySelector('#rapid-address')?.value || 'Đường 30/4, Phường Hưng Lợi, thành phố Cần Thơ';
           const notes = paneContainer.querySelector('#rapid-symptoms-notes')?.value || activeCall.notes;
           const veh = getRecommendedVehicle();
-          const targetHosp = availableHospitals.find(h => h.id === currentHospitalId) || availableHospitals[0] || state.hospitals?.[0] || { id: 'HOSP_BVDK', name: 'BV Đa khoa TP Cần Thơ' };
+          const targetHosp = availableHospitals.find(h => h.id === currentHospitalId) || availableHospitals[0] || state.hospitals?.[0] || { id: 'HOSP_BVDK', name: 'BV Đa khoa thành phố Cần Thơ' };
           const incObj = state.incidentTypes?.find(i => i.code === currentIncident);
 
           if (demo) {
@@ -3290,7 +3290,7 @@
           containerId: 'call-directory-table-mount',
           data: hospitals,
           pageSize: 10,
-          exportTitle: 'Danh bạ Bệnh viện TP Cần Thơ',
+          exportTitle: 'Danh bạ Bệnh viện thành phố Cần Thơ',
           enableExport: false,
           searchPlaceholder: 'Tìm tên bệnh viện, số điện thoại hotline, địa chỉ...',
           defaultSortKey: 'name',
@@ -3335,7 +3335,7 @@
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
                   <strong style="color:var(--text-white);font-size:15px;display:flex;align-items:center;gap:8px;">
                     ${window.CCNV_UI.ICONS.shield}
-                    <span>113 - Cảnh sát Phản ứng nhanh TP. Cần Thơ</span>
+                    <span>113 - Cảnh sát Phản ứng nhanh thành phố Cần Thơ</span>
                   </strong>
                   <span class="status-pill status-pill-completed">Trực chiến 24/7</span>
                 </div>
@@ -3353,7 +3353,7 @@
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
                   <strong style="color:var(--text-white);font-size:15px;display:flex;align-items:center;gap:8px;">
                     ${window.CCNV_UI.ICONS.alertTriangle}
-                    <span>114 - Cảnh sát PCCC & Cứu nạn Cứu hộ TP. Cần Thơ</span>
+                    <span>114 - Cảnh sát PCCC & Cứu nạn Cứu hộ thành phố Cần Thơ</span>
                   </strong>
                   <span class="status-pill status-pill-completed">Trực chiến 24/7</span>
                 </div>
@@ -3410,7 +3410,7 @@
 
               <div class="form-field" style="margin-bottom:14px;">
                 <label class="form-label">Nội dung yêu cầu phối hợp cụ thể</label>
-                <textarea id="transfer-notes-input" rows="3">Đề nghị CSGT 113 phân luồng giao thông tại chân Cầu Hưng Lợi hướng về BVĐK TP Cần Thơ để xe cấp cứu 65A-012.34 chở ca chấn thương nặng di chuyển thuận lợi.</textarea>
+                <textarea id="transfer-notes-input" rows="3">Đề nghị CSGT 113 phân luồng giao thông tại chân Cầu Hưng Lợi hướng về BVĐK thành phố Cần Thơ để xe cấp cứu 65A-012.34 chở ca chấn thương nặng di chuyển thuận lợi.</textarea>
               </div>
 
               <div style="display:flex;justify-content:flex-end;">
@@ -3477,7 +3477,7 @@
         patientGender: h.patientGender || 'Nam',
         incidentName: h.incidentName || 'Cấp cứu',
         severity: h.severity || 'ROUTINE',
-        locationAddress: h.locationAddress || 'TP Cần Thơ',
+        locationAddress: h.locationAddress || 'thành phố Cần Thơ',
         vehiclePlate: h.vehiclePlate || '-',
         crewName: h.crewName || 'Kíp trực 115',
         hospitalName: h.hospitalName || '-',
@@ -3826,7 +3826,7 @@
           { key: 'doctor', title: 'Bác sĩ trưởng kíp', sortable: true, render: c => c.doctor || 'BS. Võ Văn Kiệt' },
           { key: 'nurse', title: 'Điều dưỡng', sortable: true, render: c => c.nurse || 'ĐD. Lê Thị Mai' },
           { key: 'driver', title: 'Lái xe', sortable: true, render: c => c.driver || 'LX. Nguyễn Hoàng Nam' },
-          { key: 'station', title: 'Trạm đóng quân', sortable: true, render: c => c.station || 'BVĐK TP Cần Thơ' },
+          { key: 'station', title: 'Trạm đóng quân', sortable: true, render: c => c.station || 'BVĐK thành phố Cần Thơ' },
           { key: 'shift', title: 'Ca trực', sortable: true, render: c => `<span class="badge badge-normal">${c.shift || 'Ca 1 (07h-15h)'}</span>` },
           {
             key: 'status',
@@ -3886,7 +3886,7 @@
                 </thead>
                 <tbody style="color:var(--text-slate);">
                   <tr style="border-bottom:1px solid var(--border-main);">
-                    <td style="padding:10px;text-align:left;font-weight:600;color:var(--text-white);">1. BVĐK TP Cần Thơ (TT115)</td>
+                    <td style="padding:10px;text-align:left;font-weight:600;color:var(--text-white);">1. BVĐK thành phố Cần Thơ (TT115)</td>
                     <td style="padding:8px;">Kíp 01, 02</td>
                     <td style="padding:8px;">Kíp 02, 03</td>
                     <td style="padding:8px;">Kíp 01, 03</td>
@@ -3974,8 +3974,8 @@
           severity: c.incident?.severity || c.severity || 'EMERGENCY',
           severityText: c.incident?.severityText || (c.severity === 'CRITICAL' ? 'Tối khẩn' : 'Khẩn cấp'),
           vehiclePlate: c.dispatch?.vehiclePlate || c.vehiclePlate || '65A-012.34',
-          hospitalName: c.dispatch?.hospitalName || c.hospitalName || 'BV Đa khoa TP Cần Thơ',
-          address: c.location?.address || c.address || 'Đoạn ngã tư 30/4 - Nguyễn Văn Linh, P. Hưng Lợi, TP. Cần Thơ',
+          hospitalName: c.dispatch?.hospitalName || c.hospitalName || 'BV Đa khoa thành phố Cần Thơ',
+          address: c.location?.address || c.address || 'Đoạn ngã tư 30/4 - Nguyễn Văn Linh, P. Hưng Lợi, thành phố Cần Thơ',
           district: c.location?.district || 'P. Hưng Lợi',
           status: 'IN_PROGRESS',
           statusText: 'Đang xử lý',
@@ -3994,7 +3994,7 @@
           severityText: h.severity === 'CRITICAL' ? 'Tối khẩn' : (h.severity === 'EMERGENCY' ? 'Khẩn cấp' : 'Tiêu chuẩn'),
           vehiclePlate: h.vehiclePlate,
           hospitalName: h.hospitalName,
-          address: h.address || 'Đường 30/4, P. Xuân Khánh, TP. Cần Thơ',
+          address: h.address || 'Đường 30/4, P. Xuân Khánh, thành phố Cần Thơ',
           district: h.district || 'P. Xuân Khánh',
           status: h.status || 'COMPLETED',
           statusText: h.status === 'COMPLETED' ? 'Hoàn tất bàn giao' : 'Đã hủy ca',
@@ -4013,8 +4013,8 @@
           severity: 'CRITICAL',
           severityText: 'Tối khẩn',
           vehiclePlate: '65A-016.88',
-          hospitalName: 'BV Đa khoa TP Cần Thơ',
-          address: '128 Đường 3/2, P. Xuân Khánh, TP. Cần Thơ',
+          hospitalName: 'BV Đa khoa thành phố Cần Thơ',
+          address: '128 Đường 3/2, P. Xuân Khánh, thành phố Cần Thơ',
           district: 'P. Xuân Khánh',
           status: 'COMPLETED',
           statusText: 'Hoàn tất bàn giao',
@@ -4033,7 +4033,7 @@
           severityText: 'Khẩn cấp',
           vehiclePlate: '65A-012.34',
           hospitalName: 'BV Đa khoa TW Cần Thơ',
-          address: 'Cầu Hưng Lợi, P. Hưng Phú, TP. Cần Thơ',
+          address: 'Cầu Hưng Lợi, P. Hưng Phú, thành phố Cần Thơ',
           district: 'P. Hưng Phú',
           status: 'COMPLETED',
           statusText: 'Hoàn tất bàn giao',
@@ -4051,8 +4051,8 @@
           severity: 'CRITICAL',
           severityText: 'Tối khẩn',
           vehiclePlate: '65A-011.15',
-          hospitalName: 'BV Tim mạch TP Cần Thơ',
-          address: 'Chợ An Khánh, P. An Khánh, TP. Cần Thơ',
+          hospitalName: 'BV Tim mạch thành phố Cần Thơ',
+          address: 'Chợ An Khánh, P. An Khánh, thành phố Cần Thơ',
           district: 'P. An Khánh',
           status: 'COMPLETED',
           statusText: 'Hoàn tất bàn giao',
@@ -4071,7 +4071,7 @@
           severityText: 'Khẩn cấp',
           vehiclePlate: '65A-018.89',
           hospitalName: 'Bệnh viện Nhi đồng Cần Thơ',
-          address: 'Đường CMT8, P. An Thới, TP. Cần Thơ',
+          address: 'Đường CMT8, P. An Thới, thành phố Cần Thơ',
           district: 'P. An Thới',
           status: 'COMPLETED',
           statusText: 'Hoàn tất bàn giao',
@@ -4089,8 +4089,8 @@
           severity: 'CRITICAL',
           severityText: 'Tối khẩn',
           vehiclePlate: '65A-011.15',
-          hospitalName: 'BV Đa khoa TP Cần Thơ',
-          address: 'KCN Trà Nóc 1, P. Trà Nóc, TP. Cần Thơ',
+          hospitalName: 'BV Đa khoa thành phố Cần Thơ',
+          address: 'KCN Trà Nóc 1, P. Trà Nóc, thành phố Cần Thơ',
           district: 'P. Trà Nóc',
           status: 'COMPLETED',
           statusText: 'Hoàn tất bàn giao',
@@ -4109,7 +4109,7 @@
           severityText: 'Tiêu chuẩn',
           vehiclePlate: '65A-019.99',
           hospitalName: 'TTYT Khu vực Ô Môn',
-          address: 'Quốc lộ 91, P. Châu Văn Liêm, TP. Cần Thơ',
+          address: 'Quốc lộ 91, P. Châu Văn Liêm, thành phố Cần Thơ',
           district: 'P. Châu Văn Liêm',
           status: 'COMPLETED',
           statusText: 'Hoàn tất bàn giao',
@@ -4373,7 +4373,7 @@
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg-elevated);border-radius:6px;border:1px solid var(--border-main);">
                   <div style="display:flex;align-items:center;gap:10px;">
                     <span style="font-family:var(--font-mono);font-weight:700;color:var(--text-white);width:22px;height:22px;border-radius:4px;background:rgba(255,255,255,0.08);display:inline-flex;align-items:center;justify-content:center;font-size:11px;">01</span>
-                    <span style="color:var(--text-white);font-weight:500;">BV Đa khoa TP Cần Thơ</span>
+                    <span style="color:var(--text-white);font-weight:500;">BV Đa khoa thành phố Cần Thơ</span>
                   </div>
                   <div style="display:flex;align-items:center;gap:10px;">
                     <strong style="color:var(--text-white);font-family:var(--font-mono);">${(582).toLocaleString()} ca</strong>
@@ -4384,7 +4384,7 @@
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg-elevated);border-radius:6px;border:1px solid var(--border-main);">
                   <div style="display:flex;align-items:center;gap:10px;">
                     <span style="font-family:var(--font-mono);font-weight:700;color:var(--text-slate);width:22px;height:22px;border-radius:4px;background:rgba(255,255,255,0.05);display:inline-flex;align-items:center;justify-content:center;font-size:11px;">02</span>
-                    <span style="color:var(--text-white);font-weight:500;">BV Đa khoa Trung ương Cần Thơ</span>
+                    <span style="color:var(--text-white);font-weight:500;">Bệnh viện Đa khoa Trung ương Cần Thơ</span>
                   </div>
                   <div style="display:flex;align-items:center;gap:10px;">
                     <strong style="color:var(--text-white);font-family:var(--font-mono);">${(416).toLocaleString()} ca</strong>
@@ -4433,7 +4433,7 @@
           containerId: 'report-cases-detail-table-mount',
           data: detailRecords,
           pageSize: 10,
-          exportTitle: 'Báo cáo Chi tiết Số ca Tiếp nhận Cấp cứu Ngoại viện TP Cần Thơ',
+          exportTitle: 'Báo cáo Chi tiết Số ca Tiếp nhận Cấp cứu Ngoại viện thành phố Cần Thơ',
           enableExport: true,
           showSortSelect: true,
           searchPlaceholder: 'Tìm mã ca, họ tên bệnh nhân, tình huống, xe, bệnh viện...',
@@ -4534,7 +4534,7 @@
           severity: 'CRITICAL',
           severityText: 'Tối khẩn',
           vehiclePlate: '65A-012.34',
-          hospitalName: 'BV Đa khoa TP Cần Thơ',
+          hospitalName: 'BV Đa khoa thành phố Cần Thơ',
           district: 'P. Tân An',
           address: 'Số 45 Đường Hòa Bình, P. Tân An',
           callToDispatch: '42s',
@@ -4578,7 +4578,7 @@
           severity: 'CRITICAL',
           severityText: 'Tối khẩn',
           vehiclePlate: '65A-016.88',
-          hospitalName: 'BV Đa khoa TP Cần Thơ',
+          hospitalName: 'BV Đa khoa thành phố Cần Thơ',
           district: 'P. An Thới',
           address: 'Đường CMT8, P. An Thới',
           callToDispatch: '30s',
@@ -4600,7 +4600,7 @@
           severity: 'EMERGENCY',
           severityText: 'Khẩn cấp',
           vehiclePlate: '65A-011.15',
-          hospitalName: 'BV Đa khoa TP Cần Thơ',
+          hospitalName: 'BV Đa khoa thành phố Cần Thơ',
           district: 'P. Trà Nóc',
           address: 'KCN Trà Nóc 1, P. Trà Nóc',
           callToDispatch: '45s',
@@ -4666,7 +4666,7 @@
           severity: 'CRITICAL',
           severityText: 'Tối khẩn',
           vehiclePlate: '65A-011.15',
-          hospitalName: 'BV Tim mạch TP Cần Thơ',
+          hospitalName: 'BV Tim mạch thành phố Cần Thơ',
           district: 'P. An Khánh',
           address: 'Chợ An Khánh, P. An Khánh',
           callToDispatch: '35s',
@@ -4710,7 +4710,7 @@
           severity: 'CRITICAL',
           severityText: 'Tối khẩn',
           vehiclePlate: '65A-012.34',
-          hospitalName: 'BV Đa khoa TP Cần Thơ',
+          hospitalName: 'BV Đa khoa thành phố Cần Thơ',
           district: 'P. Xuân Khánh',
           address: 'Hẻm 51 Đường 3/2, P. Xuân Khánh',
           callToDispatch: '58s',
@@ -4732,7 +4732,7 @@
           severity: 'EMERGENCY',
           severityText: 'Khẩn cấp',
           vehiclePlate: '65A-001.15',
-          hospitalName: 'BV Phụ sản TP Cần Thơ',
+          hospitalName: 'BV Phụ sản thành phố Cần Thơ',
           district: 'P. Ba Láng',
           address: 'Đường Trần Hưng Đạo, P. Ba Láng',
           callToDispatch: '42s',
@@ -4776,7 +4776,7 @@
           severity: 'CRITICAL',
           severityText: 'Tối khẩn',
           vehiclePlate: '65A-019.99',
-          hospitalName: 'BV Đa khoa TP Cần Thơ',
+          hospitalName: 'BV Đa khoa thành phố Cần Thơ',
           district: 'P. Thốt Nốt',
           address: 'Km 38 Quốc lộ 91, P. Thốt Nốt',
           callToDispatch: '68s',
@@ -4798,7 +4798,7 @@
           severity: 'EMERGENCY',
           severityText: 'Khẩn cấp',
           vehiclePlate: '65A-012.34',
-          hospitalName: 'BV Đa khoa TP Cần Thơ',
+          hospitalName: 'BV Đa khoa thành phố Cần Thơ',
           district: 'P. An Hòa',
           address: 'Đường Nguyễn Văn Cừ, P. An Hòa',
           callToDispatch: '32s',
@@ -4820,7 +4820,7 @@
           severity: 'ROUTINE',
           severityText: 'Tiêu chuẩn',
           vehiclePlate: '65A-001.15',
-          hospitalName: 'BV Đa khoa TP Cần Thơ',
+          hospitalName: 'BV Đa khoa thành phố Cần Thơ',
           district: 'P. An Cư',
           address: 'Đường Ngô Quyền, P. An Cư',
           callToDispatch: '40s',
@@ -4842,7 +4842,7 @@
           severity: 'CRITICAL',
           severityText: 'Tối khẩn',
           vehiclePlate: '65A-011.15',
-          hospitalName: 'BV Đa khoa TP Cần Thơ',
+          hospitalName: 'BV Đa khoa thành phố Cần Thơ',
           district: 'P. Tân An',
           address: 'Đường Hai Bà Trưng, P. Tân An',
           callToDispatch: '33s',
@@ -4900,7 +4900,7 @@
       // Quick export handler
       container.querySelector('#btn-export-sla-quick')?.addEventListener('click', () => {
         if (window.CCNV_UI?.Toast) {
-          window.CCNV_UI.Toast.show('XUẤT BÁO CÁO', 'Đã tạo và tải xuống bản báo cáo Đo lường Thời gian Đáp ứng Cấp cứu TP Cần Thơ');
+          window.CCNV_UI.Toast.show('XUẤT BÁO CÁO', 'Đã tạo và tải xuống bản báo cáo Đo lường Thời gian Đáp ứng Cấp cứu thành phố Cần Thơ');
         }
       });
 
@@ -5291,7 +5291,7 @@
           containerId: 'report-sla-detail-table-mount',
           data: slaRecords,
           pageSize: 10,
-          exportTitle: 'Báo cáo Đo lường Thời gian Đáp ứng Chuẩn Cấp cứu Ngoại viện TP Cần Thơ',
+          exportTitle: 'Báo cáo Đo lường Thời gian Đáp ứng Chuẩn Cấp cứu Ngoại viện thành phố Cần Thơ',
           enableExport: true,
           showSortSelect: true,
           searchPlaceholder: 'Tìm mã ca, bệnh nhân, xe cấp cứu, địa bàn, ghi chú...',
@@ -5424,7 +5424,7 @@
         columns: [
           { key: 'plate', title: 'Biển số', sortable: true, render: v => `<strong style="font-family:var(--font-mono);color:#93C5FD;">${v.plate}</strong>` },
           { key: 'type', title: 'Phân loại', sortable: true, render: v => `<span class="badge ${v.type === 'Type A' ? 'badge-emergency' : 'badge-normal'}">${v.type || 'Type B'}</span>` },
-          { key: 'station', title: 'Trạm trực', sortable: true, render: v => v.station || 'BVĐK TP Cần Thơ' },
+          { key: 'station', title: 'Trạm trực', sortable: true, render: v => v.station || 'BVĐK thành phố Cần Thơ' },
           { key: 'model', title: 'Dòng xe', sortable: true, render: v => v.model || 'Ford Transit Emergency' },
           { key: 'status', title: 'Trạng thái hoạt động', sortable: true, render: v => `<span class="status-pill status-pill-completed">${v.statusText || 'Sẵn sàng'}</span>` },
           {
@@ -5879,7 +5879,7 @@
               <h3 style="color:var(--text-white);font-size:14px;margin-bottom:12px;">Cấu hình Sao lưu Tự động</h3>
               <div style="font-size:13px;display:flex;flex-direction:column;gap:8px;color:var(--text-slate);">
                 <div>Lịch sao lưu: <strong style="color:var(--text-white);">Hàng ngày vào 02:00:00 (Ban đêm)</strong></div>
-                <div>Lưu trữ đám mây: <strong style="color:#10B981;">Data Center Sở Y Tế TP Cần Thơ (Đã kết nối)</strong></div>
+                <div>Lưu trữ đám mây: <strong style="color:#10B981;">Data Center Sở Y Tế thành phố Cần Thơ (Đã kết nối)</strong></div>
                 <div>Thời gian lưu giữ: <strong style="color:var(--text-white);">10 năm (Theo quy định Bộ Y Tế cho hồ sơ cấp cứu)</strong></div>
                 <div>Mã hóa: <strong style="color:#93C5FD;">AES-256 GCM</strong></div>
               </div>
@@ -6049,7 +6049,7 @@
               </div>
 
               <div style="margin-top:10px;font-size:11.5px;color:var(--text-slate);display:flex;align-items:center;justify-content:space-between;">
-                <span>Hiện trường: <strong>${demoCase.location?.address || 'Cầu Hưng Lợi, TP Cần Thơ'}</strong></span>
+                <span>Hiện trường: <strong>${demoCase.location?.address || 'Cầu Hưng Lợi, thành phố Cần Thơ'}</strong></span>
                 <span style="color:#10b981;display:inline-flex;align-items:center;gap:4px;">${window.CCNV_UI?.ICONS?.check || ''}<span>Sơ cứu & truyền dịch tại xe</span></span>
               </div>
             </div>
@@ -6253,7 +6253,7 @@
         patientGender: h.patientGender || 'Nam',
         incidentName: h.incidentName || 'Cấp cứu',
         severity: h.severity || 'ROUTINE',
-        locationAddress: h.locationAddress || 'TP Cần Thơ',
+        locationAddress: h.locationAddress || 'thành phố Cần Thơ',
         vehiclePlate: h.vehiclePlate || '-',
         crewName: h.crewName || 'Kíp trực 115',
         hospitalName: h.hospitalName || currentUser?.organization || '-',
@@ -7520,7 +7520,7 @@
                 <input type="text" id="form-location-address" value="${address}" />
               </div>
               <div style="margin-top:8px;">
-                <label class="form-label" style="display:block;margin-bottom:4px;">Gợi ý điểm đến TP. Cần Thơ:</label>
+                <label class="form-label" style="display:block;margin-bottom:4px;">Gợi ý điểm đến thành phố Cần Thơ:</label>
                 <div style="display:flex;gap:6px;flex-wrap:wrap;">
                   ${presets.slice(0, 4).map(p => `
                     <button type="button" class="btn btn-default btn-sm btn-preset-loc" data-addr="${p.name}">
@@ -7597,7 +7597,7 @@
                 </div>
               </div>
               <div class="suggestion-banner">
-                <strong>GỢI Ý TỰ ĐỘNG:</strong> Xe 65A-016.88 (Type A - ICU) cách 1.4km · ETA ~4 phút · BVĐK TP Cần Thơ sẵn sàng phòng mổ sọ não
+                <strong>GỢI Ý TỰ ĐỘNG:</strong> Xe 65A-016.88 (Type A - ICU) cách 1.4km · ETA ~4 phút · BVĐK thành phố Cần Thơ sẵn sàng phòng mổ sọ não
               </div>
             </div>
           </div>
@@ -7725,7 +7725,7 @@
             crewId: crewId,
             crewName: targetCrew ? targetCrew.name : 'Kíp trực',
             hospitalId: hospId,
-            hospitalName: targetHosp ? targetHosp.name : 'Bệnh viện ĐK TP Cần Thơ'
+            hospitalName: targetHosp ? targetHosp.name : 'Bệnh viện ĐK thành phố Cần Thơ'
           }
         });
 
@@ -7798,7 +7798,7 @@
             status: h.status,
             statusText: h.statusText || 'Hoàn tất',
             patient: { name: h.patientName, age: h.patientAge || '-', gender: h.patientGender || 'Nam', history: 'Không có tiền sử dị ứng' },
-            location: { address: h.locationAddress || 'Khu vực TP Cần Thơ' },
+            location: { address: h.locationAddress || 'Khu vực thành phố Cần Thơ' },
             incident: { name: h.incidentName, severity: h.severity || 'ROUTINE', description: 'Đã hoàn tất vận chuyển và bàn giao người bệnh' },
             dispatch: { vehiclePlate: h.vehiclePlate || '-', crewName: h.crewName || 'Kíp trực 115', hospitalName: h.hospitalName || '-' },
             epcr: h.epcr || { chiefComplaint: h.incidentName, diagnosis: h.incidentName, treatment: 'Sơ cứu tại hiện trường và hỗ trợ hô hấp, huyết động trên đường vận chuyển.' },
@@ -7871,7 +7871,7 @@
         ? formatDT(c.completedAt || c.milestones?.find(m => m.step === 'HANDOVER_DONE')?.time, '08:45:00')
         : (c.status === 'CANCELLED' ? `Đã hủy ca (${c.cancelReason || 'Theo yêu cầu'})` : '<span class="badge badge-warning" style="animation:pulse 2s infinite;padding:2px 8px;font-size:11px;">Đang xử lý cấp cứu</span>');
 
-      const receiverName = c.hospitalReceiver || `BS. Trực Cấp cứu (${c.dispatch?.hospitalName || 'BV Đa khoa TP Cần Thơ'})`;
+      const receiverName = c.hospitalReceiver || `BS. Trực Cấp cứu (${c.dispatch?.hospitalName || 'BV Đa khoa thành phố Cần Thơ'})`;
 
       let processingResult = '';
       if (c.status === 'COMPLETED') {
@@ -8249,7 +8249,7 @@
                 <!-- Footer mini map -->
                 <div style="height:34px;background:rgba(7,19,32,0.92);backdrop-filter:blur(8px);z-index:10;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-top:1px solid rgba(255,255,255,0.08);font-size:11.5px;flex-shrink:0;">
                   <span style="color:var(--text-slate);display:flex;align-items:center;gap:6px;">
-                    <strong style="color:var(--text-white);">${c.location?.address ? c.location.address : 'Khu vực TP Cần Thơ'}</strong>
+                    <strong style="color:var(--text-white);">${c.location?.address ? c.location.address : 'Khu vực thành phố Cần Thơ'}</strong>
                   </span>
                   <span style="color:var(--accent-amber);font-weight:700;font-size:12px;">ETA đến BV: ~${c.eta || '6 phút'}</span>
                 </div>
@@ -8380,7 +8380,7 @@
                     </div>
                     <div style="display:flex;align-items:flex-start;">
                       <span style="width:120px;flex-shrink:0;color:var(--text-slate);padding-top:2px;">Địa chỉ:</span>
-                      <div style="color:var(--text-light);line-height:1.4;">Số 04 Châu Văn Liêm, P. Tân An, TP. Cần Thơ</div>
+                      <div style="color:var(--text-light);line-height:1.4;">Số 04 Châu Văn Liêm, P. Tân An, thành phố Cần Thơ</div>
                     </div>
                     <div style="display:flex;align-items:center;">
                       <span style="width:120px;flex-shrink:0;color:var(--text-slate);">Người nhận:</span>
@@ -8879,13 +8879,13 @@
         else if (tabName === 'tab-logs') {
           const logsList = (c.logs && c.logs.length >= 3) ? c.logs : [
             { time: '08:10:15 - 02/10/2026', type: 'CALL', badge: 'NHẬN CUỘC GỌI', color: '#38bdf8', user: 'dpv01 (Nguyễn Văn An)', action: 'Tiếp nhận cuộc gọi khẩn cấp 115 từ số 0918.234.111. Báo tin va chạm giao thông tại Cầu Hưng Lợi.' },
-            { time: '08:11:30 - 02/10/2026', type: 'DISPATCH', badge: 'ĐIỀU XE', color: '#fbbf24', user: 'dpv01 (Nguyễn Văn An)', action: `Tạo ca cấp cứu ${c.code}, phát lệnh điều động xe cứu thương ${c.dispatch?.vehiclePlate || '65A-012.34'} và gửi cảnh báo trước đến ${c.dispatch?.hospitalName || 'BV Đa khoa TP Cần Thơ'}.` },
-            { time: '08:12:10 - 02/10/2026', type: 'HOSPITAL', badge: 'BV PHẢN HỒI', color: '#34d399', user: 'bvdk.tiepnhan', action: `${c.dispatch?.hospitalName || 'BV Đa khoa TP Cần Thơ'} xác nhận sẵn sàng tiếp nhận người bệnh tại Khoa Cấp cứu (A9).` },
+            { time: '08:11:30 - 02/10/2026', type: 'DISPATCH', badge: 'ĐIỀU XE', color: '#fbbf24', user: 'dpv01 (Nguyễn Văn An)', action: `Tạo ca cấp cứu ${c.code}, phát lệnh điều động xe cứu thương ${c.dispatch?.vehiclePlate || '65A-012.34'} và gửi cảnh báo trước đến ${c.dispatch?.hospitalName || 'BV Đa khoa thành phố Cần Thơ'}.` },
+            { time: '08:12:10 - 02/10/2026', type: 'HOSPITAL', badge: 'BV PHẢN HỒI', color: '#34d399', user: 'bvdk.tiepnhan', action: `${c.dispatch?.hospitalName || 'BV Đa khoa thành phố Cần Thơ'} xác nhận sẵn sàng tiếp nhận người bệnh tại Khoa Cấp cứu (A9).` },
             { time: '08:12:45 - 02/10/2026', type: 'STATUS', badge: 'XUẤT PHÁT ĐẾN HIỆN TRƯỜNG', color: '#38bdf8', user: crewObj.driver || 'Lê Văn Hùng', action: 'Kíp cấp cứu xác nhận lên xe xuất phát từ trạm, bật còi ưu tiên di chuyển về phía hiện trường.' },
             { time: '08:18:20 - 02/10/2026', type: 'STATUS', badge: 'TIẾP CẬN HIỆN TRƯỜNG', color: '#06b6d4', user: crewObj.doctor || 'BS. Nguyễn Văn Thành', action: 'Xe tiếp cận hiện trường tai nạn tại Khu vực Cầu Hưng Lợi, bắt đầu tiếp cận và thăm khám nạn nhân.' },
             { time: '08:19:15 - 02/10/2026', type: 'STATUS', badge: 'ĐÓN BỆNH NHÂN THÀNH CÔNG', color: '#10b981', user: crewObj.driver || 'Lê Văn Hùng', action: 'Đã tiếp cận và đón người bệnh an toàn lên khoang cấp cứu của xe cứu thương.' },
             { time: '08:20:00 - 02/10/2026', type: 'MEDICAL', badge: 'CAN THIỆP Y TẾ', color: '#f472b6', user: crewObj.doctor || 'BS. Nguyễn Văn Thành', action: 'Đo sinh hiệu (HA 130/80, SpO2 97%), băng ép vô trùng cẳng tay phải, đặt nẹp cố định mềm chi trên.' },
-            { time: '08:24:10 - 02/10/2026', type: 'STATUS', badge: 'TIẾP CẬN BỆNH VIỆN', color: '#a855f7', user: crewObj.driver || 'Lê Văn Hùng', action: `Bắt đầu vận chuyển khẩn cấp, tiếp cận sảnh cấp cứu ${c.dispatch?.hospitalName || 'BV Đa khoa TP Cần Thơ'}.` },
+            { time: '08:24:10 - 02/10/2026', type: 'STATUS', badge: 'TIẾP CẬN BỆNH VIỆN', color: '#a855f7', user: crewObj.driver || 'Lê Văn Hùng', action: `Bắt đầu vận chuyển khẩn cấp, tiếp cận sảnh cấp cứu ${c.dispatch?.hospitalName || 'BV Đa khoa thành phố Cần Thơ'}.` },
             { time: '08:42:00 - 02/10/2026', type: 'HANDOVER', badge: 'BÀN GIAO TẠI VIỆN', color: '#c084fc', user: receiverName, action: 'Xe đến sảnh cấp cứu viện, kíp trực tiến hành bàn giao hồ sơ bệnh án ePCR và người bệnh cho Bác sĩ trực khoa Cấp cứu.' }
           ];
 
@@ -9130,7 +9130,7 @@
               Xe <strong style="color:var(--red-vivid);font-family:var(--font-mono);">65A-012.34</strong> vừa kích hoạt nút SOS Khẩn cấp!
             </p>
             <div style="font-size:13px;color:var(--text-slate);display:flex;flex-direction:column;gap:6px;">
-              <div>Vị trí: Cầu Hưng Lợi, P. Hưng Phú, TP. Cần Thơ</div>
+              <div>Vị trí: Cầu Hưng Lợi, P. Hưng Phú, thành phố Cần Thơ</div>
               <div>Lý do: Va chạm giao thông thứ cấp / Sự cố kíp xe cần hỗ trợ ngay lập tức</div>
               <div>Thời điểm: ${new Date().toTimeString().split(' ')[0]}</div>
             </div>
@@ -9428,7 +9428,7 @@
           crewId: 'CREW-03',
           crewName: 'Kíp 3 - Cái Răng',
           hospitalId: form.hospital?.id || caseObj.dispatch?.hospitalId || 'HOSP_BVTU',
-          hospitalName: form.hospital?.name || caseObj.dispatch?.hospitalName || 'BV Đa khoa Trung ương Cần Thơ'
+          hospitalName: form.hospital?.name || caseObj.dispatch?.hospitalName || 'Bệnh viện Đa khoa Trung ương Cần Thơ'
         }
       };
 
@@ -9463,7 +9463,7 @@
 
       window.CCNV_UI.Toast.show(
         `ĐÃ PHÁT LỆNH ĐIỀU ĐỘNG · CA ${c.code}`,
-        `Xe ${plate} (Kíp 3 - Cái Răng) xuất phát tới ${c.location.address} → ${c.dispatch?.hospitalName || 'BV Đa khoa Trung ương Cần Thơ'}`,
+        `Xe ${plate} (Kíp 3 - Cái Răng) xuất phát tới ${c.location.address} → ${c.dispatch?.hospitalName || 'Bệnh viện Đa khoa Trung ương Cần Thơ'}`,
         true,
         6000
       );
@@ -9523,7 +9523,7 @@
       const plate = mission?.plate || '65A-012.34';
       const hosp = mission?.hosp || (state.hospitals || []).find(h => h.id === 'HOSP_BVTU');
       const hospCoords = hosp?.coords || [10.0270, 105.7530];
-      const hospName = hosp?.name || 'BV Đa khoa Trung ương Cần Thơ';
+      const hospName = hosp?.name || 'Bệnh viện Đa khoa Trung ương Cần Thơ';
 
       // 1. Dọn dẹp danh sách ca (kết thúc ca)
       state.cases = [];
@@ -9591,7 +9591,7 @@
       const state = window.StateManager?.getState();
       const hosp = (state?.hospitals || []).find(h => h.id === 'HOSP_BVTU');
       const hospCoords = hosp?.coords || [10.0270, 105.7530];
-      const hospName = hosp?.name || 'BV Đa khoa Trung ương Cần Thơ';
+      const hospName = hosp?.name || 'Bệnh viện Đa khoa Trung ương Cần Thơ';
       const plate = '65A-012.34';
 
       if (state) state.cases = [];

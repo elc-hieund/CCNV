@@ -1,6 +1,6 @@
 window.SEED_DATA = {
   "system": {
-    "name": "HỆ THỐNG ĐIỀU HÀNH CẤP CỨU NGOẠI VIỆN (CCNV) TP. CẦN THƠ",
+    "name": "HỆ THỐNG ĐIỀU HÀNH CẤP CỨU NGOẠI VIỆN (CCNV) THÀNH PHỐ CẦN THƠ",
     "version": "3.4.0",
     "deploymentDate": "2026-10-01",
     "demoDate": "2026-10-09",
@@ -14,7 +14,7 @@ window.SEED_DATA = {
       "fullName": "Nguyễn Văn An",
       "role": "DISPATCHER",
       "roleName": "Điều phối viên chính",
-      "organization": "Trung tâm Cấp cứu 115 - BVĐK TP Cần Thơ",
+      "organization": "Trung tâm Cấp cứu 115 - Bệnh viện Đa khoa thành phố Cần Thơ",
       "hospitalId": "HOSP_BVDK",
       "avatar": "NV",
       "badge": "Trực ban 01"
@@ -24,11 +24,11 @@ window.SEED_DATA = {
       "username": "bvtu.tn",
       "fullName": "BS. CKI. Nguyễn Văn Thông",
       "role": "HOSPITAL_RECEIVER",
-      "roleName": "Khoa Cấp cứu - BVĐK Trung ương Cần Thơ",
+      "roleName": "Khoa Cấp cứu - Bệnh viện Đa khoa Trung ương Cần Thơ",
       "organization": "Bệnh viện Đa khoa Trung ương Cần Thơ",
       "hospitalId": "HOSP_BVTU",
       "avatar": "TU",
-      "badge": "BV Tiếp nhận Hạng Đặc biệt"
+      "badge": "Bệnh viện Tiếp nhận Hạng Đặc biệt"
     }
   ],
   "hospitals": [
@@ -36,7 +36,7 @@ window.SEED_DATA = {
       "id": "HOSP_BVDK",
       "name": "Bệnh viện Đa khoa thành phố Cần Thơ",
       "code": "BV-CT-01",
-      "address": "Số 04 Châu Văn Liêm, P. Tân An, TP. Cần Thơ",
+      "address": "Số 04 Châu Văn Liêm, P. Tân An, thành phố Cần Thơ",
       "phone": "0292.3821.236",
       "hotline": "0967.891.115",
       "coords": [10.0332, 105.7865],
@@ -55,7 +55,7 @@ window.SEED_DATA = {
       "id": "HOSP_BVTU",
       "name": "Bệnh viện Đa khoa Trung ương Cần Thơ",
       "code": "BV-TU-02",
-      "address": "315 Nguyễn Văn Linh, P. An Khánh, TP. Cần Thơ",
+      "address": "315 Nguyễn Văn Linh, P. An Khánh, thành phố Cần Thơ",
       "phone": "0292.3820.071",
       "hotline": "0901.234.567",
       "coords": [10.0270, 105.7530],
@@ -74,7 +74,7 @@ window.SEED_DATA = {
       "id": "HOSP_BVND",
       "name": "Bệnh viện Nhi đồng Cần Thơ",
       "code": "BV-ND-03",
-      "address": "345 Nguyễn Văn Cừ nối dài, P. An Bình, TP. Cần Thơ",
+      "address": "345 Nguyễn Văn Cừ nối dài, P. An Bình, thành phố Cần Thơ",
       "phone": "0292.3748.358",
       "hotline": "0918.456.789",
       "coords": [10.0195, 105.7480],
@@ -93,7 +93,7 @@ window.SEED_DATA = {
       "id": "HOSP_BVUB",
       "name": "Bệnh viện Ung bướu Cần Thơ",
       "code": "BV-UB-04",
-      "address": "Số 04 Châu Văn Liêm, P. Tân An / CS2 P. An Bình, TP. Cần Thơ",
+      "address": "Số 04 Châu Văn Liêm, P. Tân An / CS2 P. An Bình, thành phố Cần Thơ",
       "phone": "0292.3817.901",
       "hotline": "0939.888.999",
       "coords": [10.0520, 105.7590],
@@ -329,16 +329,16 @@ window.SEED_DATA = {
     }
   ],
   "locationPresets": [
-    { "name": "Ngã tư 30/4 - Nguyễn Văn Linh, P. Hưng Lợi, TP. Cần Thơ", "coords": [10.0248, 105.7695], "mapPos": { "x": 540, "y": 440 }, "district": "P. Hưng Lợi", "landmark": "Cây xăng Hưng Lợi" },
-    { "name": "Đại học Cần Thơ - Cổng A đường 3/2, P. Xuân Khánh, TP. Cần Thơ", "coords": [10.0298, 105.7702], "mapPos": { "x": 550, "y": 410 }, "district": "P. Xuân Khánh", "landmark": "Khu II ĐHCT" },
-    { "name": "Bến Ninh Kiều, Đường Hai Bà Trưng, P. Tân An, TP. Cần Thơ", "coords": [10.0348, 105.7876], "mapPos": { "x": 625, "y": 375 }, "district": "P. Tân An", "landmark": "Tượng đài Bác Hồ" },
-    { "name": "Cầu Quang Trung, P. Hưng Phú, TP. Cần Thơ", "coords": [10.0210, 105.7790], "mapPos": { "x": 585, "y": 475 }, "district": "P. Hưng Phú", "landmark": "Chân cầu phía Nam" },
-    { "name": "Chợ nổi Cái Răng, P. Lê Bình, TP. Cần Thơ", "coords": [10.0020, 105.7510], "mapPos": { "x": 490, "y": 610 }, "district": "P. Lê Bình", "landmark": "Bến tàu du lịch" },
-    { "name": "Sân bay Quốc tế Cần Thơ, Đường Võ Văn Kiệt, P. Trà An, TP. Cần Thơ", "coords": [10.0820, 105.7210], "mapPos": { "x": 370, "y": 160 }, "district": "P. Trà An", "landmark": "Nhà ga T1" },
-    { "name": "KCN Trà Nóc 1, P. Trà Nóc, TP. Cần Thơ", "coords": [10.0980, 105.7050], "mapPos": { "x": 320, "y": 120 }, "district": "P. Trà Nóc", "landmark": "Cổng chào KCN" },
-    { "name": "Chợ Xuân Khánh, Đường 30/4, P. Xuân Khánh, TP. Cần Thơ", "coords": [10.0280, 105.7750], "mapPos": { "x": 570, "y": 420 }, "district": "P. Xuân Khánh", "landmark": "Gần Vincom Xuân Khánh" },
-    { "name": "Khu Dân cư Hưng Phú 1, P. Hưng Phú, TP. Cần Thơ", "coords": [10.0180, 105.7850], "mapPos": { "x": 610, "y": 490 }, "district": "P. Hưng Phú", "landmark": "Trục chính đường A1" },
-    { "name": "Bệnh viện Đa khoa TW Cần Thơ, P. An Khánh, TP. Cần Thơ", "coords": [10.0270, 105.7530], "mapPos": { "x": 480, "y": 420 }, "district": "P. An Khánh", "landmark": "Cổng Cấp cứu 315 Nguyễn Văn Linh" }
+    { "name": "Ngã tư 30/4 - Nguyễn Văn Linh, P. Hưng Lợi, thành phố Cần Thơ", "coords": [10.0248, 105.7695], "mapPos": { "x": 540, "y": 440 }, "district": "P. Hưng Lợi", "landmark": "Cây xăng Hưng Lợi" },
+    { "name": "Đại học Cần Thơ - Cổng A đường 3/2, P. Xuân Khánh, thành phố Cần Thơ", "coords": [10.0298, 105.7702], "mapPos": { "x": 550, "y": 410 }, "district": "P. Xuân Khánh", "landmark": "Khu II ĐHCT" },
+    { "name": "Bến Ninh Kiều, Đường Hai Bà Trưng, P. Tân An, thành phố Cần Thơ", "coords": [10.0348, 105.7876], "mapPos": { "x": 625, "y": 375 }, "district": "P. Tân An", "landmark": "Tượng đài Bác Hồ" },
+    { "name": "Cầu Quang Trung, P. Hưng Phú, thành phố Cần Thơ", "coords": [10.0210, 105.7790], "mapPos": { "x": 585, "y": 475 }, "district": "P. Hưng Phú", "landmark": "Chân cầu phía Nam" },
+    { "name": "Chợ nổi Cái Răng, P. Lê Bình, thành phố Cần Thơ", "coords": [10.0020, 105.7510], "mapPos": { "x": 490, "y": 610 }, "district": "P. Lê Bình", "landmark": "Bến tàu du lịch" },
+    { "name": "Sân bay Quốc tế Cần Thơ, Đường Võ Văn Kiệt, P. Trà An, thành phố Cần Thơ", "coords": [10.0820, 105.7210], "mapPos": { "x": 370, "y": 160 }, "district": "P. Trà An", "landmark": "Nhà ga T1" },
+    { "name": "KCN Trà Nóc 1, P. Trà Nóc, thành phố Cần Thơ", "coords": [10.0980, 105.7050], "mapPos": { "x": 320, "y": 120 }, "district": "P. Trà Nóc", "landmark": "Cổng chào KCN" },
+    { "name": "Chợ Xuân Khánh, Đường 30/4, P. Xuân Khánh, thành phố Cần Thơ", "coords": [10.0280, 105.7750], "mapPos": { "x": 570, "y": 420 }, "district": "P. Xuân Khánh", "landmark": "Gần Vincom Xuân Khánh" },
+    { "name": "Khu Dân cư Hưng Phú 1, P. Hưng Phú, thành phố Cần Thơ", "coords": [10.0180, 105.7850], "mapPos": { "x": 610, "y": 490 }, "district": "P. Hưng Phú", "landmark": "Trục chính đường A1" },
+    { "name": "Bệnh viện Đa khoa TW Cần Thơ, P. An Khánh, thành phố Cần Thơ", "coords": [10.0270, 105.7530], "mapPos": { "x": 480, "y": 420 }, "district": "P. An Khánh", "landmark": "Cổng Cấp cứu 315 Nguyễn Văn Linh" }
   ],
   "incidentTypes": [
     { "code": "INC_TNGT", "name": "Tai nạn giao thông", "severity": "EMERGENCY", "severityText": "Khẩn cấp", "suggestedType": "Type B", "guide": "Kiểm tra hô hấp, nẹp cố định cột sống cổ, cầm máu vết thương ngoài, không di chuyển người bệnh nếu nghi chấn thương cột sống." },
@@ -370,7 +370,7 @@ window.SEED_DATA = {
       "cellId": "Trạm BTS Hưng Lợi 03 - Bán kính ~350m",
       "coords": [10.0248, 105.7695],
       "mapPos": { "x": 540, "y": 440 },
-      "address": "Ngã tư 30/4 - Nguyễn Văn Linh, P. Hưng Lợi, TP. Cần Thơ",
+      "address": "Ngã tư 30/4 - Nguyễn Văn Linh, P. Hưng Lợi, thành phố Cần Thơ",
       "incidentCode": "INC_TNGT",
       "incidentName": "Tai nạn giao thông",
       "severity": "EMERGENCY",
@@ -383,7 +383,7 @@ window.SEED_DATA = {
       "suggestedCrew": "CREW-02",
       "suggestedHospital": "HOSP_BVDK",
       "vehicleReason": "Gần nhất · ETA ~4 phút · Type A Hồi sức cao cấp phù hợp chấn thương sọ não",
-      "hospitalReason": "BV Đa khoa TP Cần Thơ có sẵn chuyên khoa Chấn thương Sọ não và 12 giường trống"
+      "hospitalReason": "Bệnh viện Đa khoa thành phố Cần Thơ có sẵn chuyên khoa Chấn thương Sọ não và 12 giường trống"
     },
     {
       "id": "CALL_SCENARIO_2",
@@ -395,7 +395,7 @@ window.SEED_DATA = {
       "cellId": "GPS thiết bị (Sai số ±3.5m)",
       "coords": [10.0298, 105.7702],
       "mapPos": { "x": 550, "y": 410 },
-      "address": "Đại học Cần Thơ - Cổng A đường 3/2, P. Xuân Khánh, TP. Cần Thơ",
+      "address": "Đại học Cần Thơ - Cổng A đường 3/2, P. Xuân Khánh, thành phố Cần Thơ",
       "incidentCode": "INC_RESPIRATORY",
       "incidentName": "Suy hô hấp cấp / Co giật",
       "severity": "CRITICAL",
@@ -408,7 +408,7 @@ window.SEED_DATA = {
       "suggestedCrew": "CREW-01",
       "suggestedHospital": "HOSP_BVTU",
       "vehicleReason": "Trạm Ninh Kiều · ETA ~3 phút · Đầy đủ máy thở và thuốc dãn phế quản",
-      "hospitalReason": "BVĐK Trung ương Cần Thơ chỉ cách 1.2 km, sẵn sàng phòng ICU"
+      "hospitalReason": "Bệnh viện Đa khoa Trung ương Cần Thơ chỉ cách 1.2 km, sẵn sàng phòng ICU"
     },
     {
       "id": "CALL_SCENARIO_3",
@@ -420,7 +420,7 @@ window.SEED_DATA = {
       "cellId": "Trạm BTS An Hòa",
       "coords": [10.0450, 105.7710],
       "mapPos": { "x": 560, "y": 320 },
-      "address": "Đường Cách Mạng Tháng Tám, P. An Hòa, TP. Cần Thơ",
+      "address": "Đường Cách Mạng Tháng Tám, P. An Hòa, thành phố Cần Thơ",
       "incidentCode": "INC_OTHER",
       "incidentName": "Hỏi thông tin tiêm chủng & sơ cứu vết cắt nhẹ",
       "severity": "ROUTINE",
@@ -462,7 +462,7 @@ window.SEED_DATA = {
       "history": "Tăng huyết áp, Đái tháo đường Type 2"
     },
     "location": {
-      "address": "Đường 30/4, Phường Hưng Lợi, TP. Cần Thơ",
+      "address": "Đường 30/4, Phường Hưng Lợi, thành phố Cần Thơ",
       "coords": [10.0235, 105.7730],
       "mapPos": { "x": 585, "y": 475 },
       "district": "Phường Hưng Lợi"
@@ -480,7 +480,7 @@ window.SEED_DATA = {
       "crewId": "CREW-03",
       "crewName": "Kíp 3 - Cái Răng",
       "hospitalId": "HOSP_BVTU",
-      "hospitalName": "BV Đa khoa Trung ương Cần Thơ",
+      "hospitalName": "Bệnh viện Đa khoa Trung ương Cần Thơ",
       "dispatcherId": "dpv01",
       "dispatcherName": "Nguyễn Văn An"
     },
@@ -504,12 +504,12 @@ window.SEED_DATA = {
     ],
     "logs": [
       { "time": "08:10:15", "user": "dpv01", "action": "Tiếp nhận cuộc gọi 115 từ số 0918.234.111" },
-      { "time": "08:11:30", "user": "dpv01", "action": "Tạo ca CC-261002-001, phát lệnh tới xe 65A-012.34 và cảnh báo BV Đa khoa Trung ương Cần Thơ" },
-      { "time": "08:12:10", "user": "bvtu.tn", "action": "BV Đa khoa Trung ương Cần Thơ xác nhận sẵn sàng tiếp nhận người bệnh" },
+      { "time": "08:11:30", "user": "dpv01", "action": "Tạo ca CC-261002-001, phát lệnh tới xe 65A-012.34 và cảnh báo Bệnh viện Đa khoa Trung ương Cần Thơ" },
+      { "time": "08:12:10", "user": "bvtu.tn", "action": "Bệnh viện Đa khoa Trung ương Cần Thơ xác nhận sẵn sàng tiếp nhận người bệnh" },
       { "time": "08:12:45", "user": "CREW-03", "action": "Kíp 3 xác nhận lên xe xuất phát" },
       { "time": "08:18:20", "user": "CREW-03", "action": "Xe đã tiếp cận hiện trường tai nạn Cầu Hưng Lợi" },
       { "time": "08:19:15", "user": "CREW-03", "action": "Đã tiếp cận và đón người bệnh an toàn lên xe cấp cứu" },
-      { "time": "08:24:10", "user": "CREW-03", "action": "Sơ cứu ổn định, bắt đầu vận chuyển bệnh nhân về BVĐK Trung ương Cần Thơ" }
+      { "time": "08:24:10", "user": "CREW-03", "action": "Sơ cứu ổn định, bắt đầu vận chuyển bệnh nhân về Bệnh viện Đa khoa Trung ương Cần Thơ" }
     ],
     "epcr": {
       "patientStatus": "Tỉnh, tiếp xúc tốt, Glasgow 15 điểm",
@@ -531,7 +531,7 @@ window.SEED_DATA = {
       "severity": "CRITICAL",
       "vehiclePlate": "65A-016.88",
       "hospitalId": "HOSP_BVTU",
-      "hospitalName": "BV Đa khoa Trung ương Cần Thơ",
+      "hospitalName": "Bệnh viện Đa khoa Trung ương Cần Thơ",
       "status": "COMPLETED",
       "statusText": "Hoàn tất",
       "durations": {
@@ -553,7 +553,7 @@ window.SEED_DATA = {
       "severity": "EMERGENCY",
       "vehiclePlate": "65A-011.15",
       "hospitalId": "HOSP_BVTU",
-      "hospitalName": "BV Đa khoa Trung ương Cần Thơ",
+      "hospitalName": "Bệnh viện Đa khoa Trung ương Cần Thơ",
       "status": "COMPLETED",
       "statusText": "Hoàn tất",
       "durations": {
@@ -621,7 +621,7 @@ window.SEED_DATA = {
     { "id": "LOG-102", "time": "07:05:12", "user": "Nguyễn Văn An", "action": "Đăng nhập ca trực Điều phối viên Trung tâm 115" },
     { "id": "LOG-103", "time": "08:10:15", "user": "Nguyễn Văn An", "action": "Nhận cuộc gọi 115 số 0918.234.111 (Khu vực Cầu Hưng Lợi)" },
     { "id": "LOG-104", "time": "08:11:30", "user": "Nguyễn Văn An", "action": "Tạo ca CC-261002-001, điều động xe 65A-012.34 (Kíp 3)" },
-    { "id": "LOG-105", "time": "08:12:10", "user": "BS. CKI. Nguyễn Văn Thông", "action": "BV Đa khoa TP Cần Thơ xác nhận tiếp nhận ca CC-261002-001" },
+    { "id": "LOG-105", "time": "08:12:10", "user": "BS. CKI. Nguyễn Văn Thông", "action": "Bệnh viện Đa khoa thành phố Cần Thơ xác nhận tiếp nhận ca CC-261002-001" },
     { "id": "LOG-106", "time": "08:18:20", "user": "CREW-03", "action": "Xe 65A-012.34 đến hiện trường Cầu Hưng Lợi" }
   ]
 }

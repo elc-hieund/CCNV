@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>CCNV — App Tài Xế & Kíp Cấp Cứu 115</title>
+  <title>EAMS - App Tài Xế & Kíp Cấp Cứu</title>
 
   <link rel="stylesheet" href="css/tokens.css?v=20261002_03" />
   <link rel="stylesheet" href="css/global.css?v=20261002_03" />
@@ -86,45 +86,207 @@
       border-color: #10B981 !important;
       box-shadow: 0 0 12px rgba(16, 185, 129, 0.3) !important;
     }
+
+    /* Floating Map Zoom & Recenter Controls */
+    .driver-map-controls {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 500;
+      display: flex;
+      flex-direction: column;
+      background: rgba(8, 20, 34, 0.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+      overflow: hidden;
+      transition: top 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .driver-map-controls.in-mission {
+      top: 86px;
+    }
+
+    .driver-map-btn {
+      width: 40px;
+      height: 40px;
+      background: transparent;
+      border: none;
+      color: #CBD5E1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .driver-map-btn:not(:last-child) {
+      border-bottom: 1px solid rgba(56, 189, 248, 0.18);
+    }
+
+    .driver-map-btn:hover,
+    .driver-map-btn:active {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38BDF8;
+    }
+
+    #btn-driver-recenter {
+      color: #38BDF8;
+    }
+
+    /* Map Marker Capsules */
+    .map-leaflet-marker {
+      background: transparent;
+      border: none;
+    }
+
+    .map-veh-capsule {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px 4px 6px;
+      background: rgba(8, 20, 34, 0.95);
+      border: 1.5px solid #10b981;
+      border-radius: 20px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 10px rgba(16, 185, 129, 0.3);
+      white-space: nowrap;
+      pointer-events: auto;
+    }
+
+    .map-veh-capsule.is-mission {
+      border-color: #f59e0b;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 14px rgba(245, 158, 11, 0.45);
+    }
+
+    .map-veh-icon-bubble {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #10b981;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: transform 0.2s ease-out;
+    }
+
+    .map-veh-capsule.is-mission .map-veh-icon-bubble {
+      background: #f59e0b;
+    }
+
+    .map-veh-plate {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #FFFFFF;
+      font-family: var(--font-mono);
+      letter-spacing: 0.3px;
+    }
+
+    .map-veh-status-pill {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 10px;
+      background: rgba(16, 185, 129, 0.2);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .map-veh-status-pill.mission {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fbbf24;
+      border-color: rgba(245, 158, 11, 0.4);
+    }
+
+    .map-incident-capsule {
+      width: 140px;
+      height: 30px;
+      box-sizing: border-box;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 0 10px;
+      background: rgba(20, 8, 8, 0.94);
+      border: 1.5px solid #ef4444;
+      border-radius: 15px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7), 0 0 14px rgba(239, 68, 68, 0.5);
+      white-space: nowrap;
+    }
+
+    .map-hosp-hub-badge {
+      width: 320px;
+      height: 32px;
+      box-sizing: border-box;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 10px;
+      background: rgba(6, 18, 32, 0.95);
+      border: 1.5px solid #38bdf8;
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7), 0 0 14px rgba(56, 189, 248, 0.4);
+      white-space: nowrap;
+    }
+
+    .map-hosp-cross-icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 5px;
+      background: #0284c7;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .map-hosp-title-text {
+      font-size: 11px;
+      font-weight: 700;
+      color: #FFFFFF;
+      flex-shrink: 0;
+    }
+
+    .map-hosp-bed-chip {
+      font-size: 9.5px;
+      font-weight: 700;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.18);
+      padding: 1px 5px;
+      border-radius: 8px;
+      flex-shrink: 0;
+    }
+
+    .legend-dot-pulse {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ef4444;
+      display: inline-block;
+      box-shadow: 0 0 8px #ef4444;
+      animation: pulse-dot 1.2s infinite;
+    }
+
+    @keyframes pulse-dot {
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+
+      50% {
+        transform: scale(1.4);
+        opacity: 0.6;
+      }
   </style>
 </head>
 
 <body class="driver-phone-body">
   <div class="mobile-app-wrapper driver-mobile-app" id="driver-app-root">
-
-    <!-- 1. SIMULATED SMARTPHONE STATUS BAR -->
-    <div class="driver-status-bar">
-      <span id="mobile-clock">08:42</span>
-      <div class="driver-status-bar-icons">
-        <span style="font-size:10px;font-family:var(--font-mono);color:#38BDF8;">5G</span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
-          <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
-          <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
-          <line x1="12" y1="20" x2="12.01" y2="20"></line>
-        </svg>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="2" y="7" width="16" height="10" rx="2" ry="2"></rect>
-          <line x1="22" y1="11" x2="22" y2="13"></line>
-          <line x1="6" y1="11" x2="14" y2="11" stroke="#10B981" stroke-width="3"></line>
-        </svg>
-      </div>
-    </div>
-
-    <!-- 3. CENTRAL DISPATCH NOTICE BANNER (Required Gap) -->
-    <div class="driver-notice-banner" id="driver-dispatch-notice">
-      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#FEF3C7;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.5"
-          style="flex-shrink:0;">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="12" y1="8" x2="12" y2="12"></line>
-          <line x1="12" y1="16" x2="12.01" y2="16"></line>
-        </svg>
-        <span id="notice-text">ĐPV 115: BVĐK TP Cần Thơ đã xác nhận tiếp nhận. Phòng sốc 02 sẵn sàng.</span>
-      </div>
-      <button class="btn btn-default btn-xs" id="btn-dismiss-notice"
-        style="border:1px solid #78350F;color:#FDE68A;padding:2px 8px;font-size:11px;">Đóng</button>
-    </div>
 
     <!-- 4. FULL-SCREEN VIETMAP-STYLE TACTICAL NAVIGATION INTERFACE -->
     <main class="driver-full-screen-map" id="driver-main-container">
@@ -132,54 +294,54 @@
         <!-- Full-bleed Leaflet Map Container -->
         <div id="driver-map-container"></div>
 
-        <!-- 1. Top Turn-by-Turn Guidance HUD (VietMap Style) -->
-        <div class="nav-floating-hud">
-          <div class="nav-direction-icon-box">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-              stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="10 9 15 4 20 9"></polyline>
-              <path d="M4 20v-7a4 4 0 0 1 4-4h12"></path>
+        <!-- Floating Map Zoom & Recenter Controls -->
+        <div class="driver-map-controls" id="driver-map-controls">
+          <button type="button" class="driver-map-btn" id="btn-driver-zoom-in" title="Phóng to (+)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
+          </button>
+          <button type="button" class="driver-map-btn" id="btn-driver-zoom-out" title="Thu nhỏ (-)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+          <button type="button" class="driver-map-btn" id="btn-driver-recenter" title="Định vị xe">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+            </svg>
+          </button>
+        </div>
+
+        <!-- 1. Top Turn-by-Turn Guidance HUD (VietMap Style) - Hidden in default mode -->
+        <div class="nav-floating-hud" id="nav-floating-hud" style="display:none;">
+          <div class="nav-direction-icon-box" id="nav-direction-icon-box"
+            style="padding:2px;overflow:hidden;background:transparent;border:none;box-shadow:none;">
+            <img id="nav-direction-icon-img" src="assets/arrow-direction-svgrepo-com.svg" alt="Đi thẳng"
+              style="width:100%;height:100%;display:block;object-fit:contain;transition:transform 0.3s ease;" />
           </div>
           <div class="nav-hud-info">
             <div
               style="display:flex;align-items:center;gap:6px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
               <span style="font-size:10.5px;font-weight:700;color:#38BDF8;letter-spacing:0.5px;">ĐÍCH ĐẾN:</span>
               <strong style="color:#FFFFFF;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
-                id="nav-hospital-name">BV Đa khoa TP Cần Thơ</strong>
+                id="nav-hospital-name">Hiện trường: Cầu Hưng Lợi</strong>
             </div>
-            <div class="nav-next-dist">Còn 350 m</div>
-            <div class="nav-next-street">Rẽ phải vào đường Châu Văn Liêm</div>
-            <div class="nav-telemetry-row">
-              <span style="color:#10B981;font-weight:700;">● 52 km/h</span>
+            <div class="nav-next-dist" id="nav-next-dist">Còn 350 m</div>
+            <div class="nav-next-street" id="nav-next-street">Đi thẳng qua Cầu Hưng Lợi</div>
+            <div class="nav-telemetry-row" id="nav-telemetry-row">
+              <span style="color:#10B981;font-weight:700;" id="nav-telemetry-speed">● 52 km/h</span>
               <span style="color:#64748B;">·</span>
-              <span style="color:#CBD5E1;">Còn 1.4 km</span>
+              <span style="color:#CBD5E1;" id="nav-telemetry-dist">Còn 2.1 km</span>
               <span style="color:#64748B;">·</span>
-              <span style="color:#38BDF8;font-weight:700;">ETA ~4 phút</span>
+              <span style="color:#38BDF8;font-weight:700;" id="nav-telemetry-eta">ETA ~4 phút</span>
             </div>
-          </div>
-          <!-- Quick Status Indicator -->
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;">
-            <span class="badge badge-emergency" id="driver-case-severity" style="font-size:10px;padding:3px 7px;">TỐI
-              KHẨN</span>
           </div>
         </div>
 
-        <!-- Floating SOS XE Circular Button (Positioned just above the bottom dock) -->
-        <button class="btn btn-emergency" id="driver-btn-sos"
-          style="position:absolute;bottom:calc(10px + 120px);right:14px;z-index:510;width:46px;height:46px;min-height:46px;padding:0;border-radius:50%;box-shadow:0 6px 20px rgba(229,37,33,0.7),0 0 0 2px rgba(255,255,255,0.25);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1);"
-          title="Bấm SOS: Phát tín hiệu khẩn cấp tức thời về Trung tâm 115">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-            <line x1="12" y1="9" x2="12" y2="13"></line>
-            <line x1="12" y1="17" x2="12.01" y2="17"></line>
-          </svg>
-        </button>
-
-
-
-        <!-- 3. Bottom VietMap Tactical Mission Control Card (Interactive Drawer) -->
-        <div class="nav-floating-mission-dock" id="driver-mission-dock">
+        <!-- 3. Bottom VietMap Tactical Mission Control Card (Interactive Drawer) - Hidden in default mode -->
+        <div class="nav-floating-mission-dock" id="driver-mission-dock" style="display:none;">
           <!-- Drag Handle & Collapse Toggle Header -->
           <div class="dock-handle-bar" id="dock-handle-bar">
             <div class="dock-handle-pill"></div>
@@ -204,8 +366,7 @@
               <div class="dock-info-box">
                 <span class="dock-box-label">Nạn nhân:</span>
                 <strong style="color:#FFFFFF;font-size:12.5px;" id="driver-patient-name">Phan Văn Đức</strong>
-                <span id="driver-patient-demographics" style="color:#CBD5E1;font-size:11.5px;">(58 tuổi, Nam · Máu
-                  O+)</span>
+                <span id="driver-patient-demographics" style="color:#CBD5E1;font-size:11.5px;">| 58 tuổi | Nam</span>
                 <div id="driver-patient-symptoms" style="font-size:11px;color:#94A3B8;margin-top:2px;">Chấn thương sọ
                   não, đa chấn thương phần mềm</div>
               </div>
@@ -225,7 +386,7 @@
                     d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
                   </path>
                 </svg>
-                <span>ĐPV 115</span>
+                <span>Trung tâm</span>
               </a>
               <a href="tel:02923821236" class="quick-call-btn" id="btn-call-hospital">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"
@@ -234,7 +395,7 @@
                     d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
                   </path>
                 </svg>
-                <span>BV tiếp nhận</span>
+                <span>Bệnh viện tiếp nhận</span>
               </a>
             </div>
           </div>
@@ -247,15 +408,15 @@
             </div>
             <div class="driver-step-col" data-step="2" style="cursor:pointer;" title="Nhấn để chọn mốc">
               <div class="driver-step-dot">2</div>
-              <span class="driver-step-text">Đến Hiện trường<br /></span>
+              <span class="driver-step-text">Đến hiện trường<br /></span>
             </div>
             <div class="driver-step-col" data-step="3" style="cursor:pointer;" title="Nhấn để chọn mốc">
               <div class="driver-step-dot">3</div>
-              <span class="driver-step-text">Rời Hiện trường<br /></span>
+              <span class="driver-step-text">Di chuyển tới viện<br /></span>
             </div>
             <div class="driver-step-col" data-step="4" style="cursor:pointer;" title="Nhấn để chọn mốc">
               <div class="driver-step-dot">4</div>
-              <span class="driver-step-text">Đến Bệnh viện<br /></span>
+              <span class="driver-step-text">Bàn giao bệnh nhân<br /></span>
             </div>
           </div>
 
@@ -276,7 +437,7 @@
           <!-- P0: Undo Banner (Hoàn tác trong 10 giây nếu trượt nhầm) -->
           <div class="undo-banner" id="undo-step-banner" style="display:none;margin-top:8px;">
             <div style="font-size:11.5px;color:#FFFFFF;">
-              Đã ghi nhận: <strong id="undo-milestone-name">Đã đến BV</strong>
+              Đã ghi nhận: <strong id="undo-milestone-name">Đã đến bệnh viện</strong>
             </div>
             <button class="btn btn-default btn-xs" id="btn-undo-step"
               style="border:1px solid #475569;color:#CBD5E1;padding:3px 8px;font-size:11px;">
@@ -291,132 +452,136 @@
 
 
     <!-- ================= 6. POPUP LỆNH ĐIỀU ĐỘNG MỚI (TX-01) ================= -->
-    <div class="dispatch-alert-overlay" id="modal-dispatch-alert">
+    <div class="dispatch-alert-overlay" id="modal-dispatch-alert"
+      style="z-index:1000;padding:24px 18px 24px;justify-content:center;align-items:center;overflow-y:auto;">
+      <button type="button" id="btn-close-dispatch-order"
+        style="position:absolute;top:18px;right:18px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);color:#FFFFFF;width:34px;height:34px;border-radius:50%;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;transition:all 0.2s ease;">✕</button>
+
+      <!-- Header Icon & Title -->
       <div
-        style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
-        <div class="medical-cross-icon"
-          style="width:68px;height:68px;border-radius:16px;box-shadow:0 0 35px rgba(229,37,33,0.8);animation:pulse-red 1s infinite;">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-            <path
-              d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h5v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z" />
-          </svg>
+        style="display:flex;flex-direction:column;align-items:center;text-align:center;width:100%;margin-bottom:14px;">
+        <div class="ambulance-siren-box"
+          style="width:72px;height:72px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;box-shadow:0 0 28px rgba(239,68,68,0.65);">
+          <img src="assets/images.png" alt="Cấp cứu" style="width:100%;height:100%;object-fit:cover;display:block;" />
         </div>
 
-        <span class="badge badge-emergency" style="font-size:13px;padding:6px 14px;margin-top:16px;letter-spacing:1px;">
+        <span class="badge badge-emergency"
+          style="font-size:12px;padding:5px 14px;margin-top:14px;letter-spacing:1px;font-weight:800;">
           LỆNH ĐIỀU ĐỘNG CẤP CỨU MỚI
         </span>
 
-        <h2 style="color:#FFFFFF;font-size:20px;font-weight:800;margin:12px 0 6px;">CA TAI NẠN GIAO THÔNG NGHIÊM TRỌNG
+        <h2 style="color:#FFFFFF;font-size:17.5px;font-weight:800;margin:10px 0 4px;line-height:1.35;">
+          CA TAI NẠN GIAO THÔNG NGHIÊM TRỌNG
         </h2>
-        <div style="font-family:var(--font-mono);color:#38BDF8;font-size:14px;font-weight:700;">MÃ CA: CC-261002-002
-        </div>
-
-        <div
-          style="background:#081827;border:1px solid #1E3A56;border-radius:10px;padding:14px;margin:16px 0;width:100%;text-align:left;font-size:13px;color:#CBD5E1;">
-          <div style="margin-bottom:6px;"><strong style="color:#FFFFFF;">Hiện trường:</strong> Số 126 Đường 30 Tháng 4,
-            P. An Phú, Ninh Kiều</div>
-          <div style="margin-bottom:6px;"><strong style="color:#FFFFFF;">Khoảng cách:</strong> 2.1 km (Ước tính di
-            chuyển ~3.5 phút)</div>
-          <div style="margin-bottom:6px;"><strong style="color:#FFFFFF;">Nạn nhân:</strong> 01 nam thanh niên hôn mê sau
-            va chạm xe máy</div>
-          <div><strong style="color:#FFFFFF;">BV Đích dự kiến:</strong> BV Đa khoa TP Cần Thơ</div>
-        </div>
-
-        <p style="font-size:12px;color:#94A3B8;margin-bottom:18px;">
-          Kíp trực cần xác nhận lên xe ngay để Trung tâm cập nhật trạng thái di chuyển và kích hoạt luồng xanh.
-        </p>
-
-        <!-- Big 1-Touch Confirm Button -->
-        <button class="btn btn-emergency-touch" id="btn-confirm-dispatch-order"
-          style="width:100%;min-height:58px;font-size:16px;letter-spacing:0.5px;">
-          XÁC NHẬN LÊN XE & XUẤT PHÁT
-        </button>
       </div>
-    </div>
 
-    <!-- ================= 7. MODAL DRIVER SOS & HỖ TRỢ KHẨN (TX-02) ================= -->
-    <div class="bottom-sheet-backdrop" id="modal-driver-sos">
-      <div class="bottom-sheet-modal">
-        <div class="bottom-sheet-handle"></div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-          <h3 style="color:#FFFFFF;margin:0;font-size:16px;font-weight:800;">TRỢ GIÚP & BÁO CÁO SỰ CỐ XE KHẨN CẤP</h3>
-          <button class="btn btn-default btn-xs" id="btn-close-sos-modal"
-            style="font-size:11px;padding:2px 8px;">Đóng</button>
-        </div>
-
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <div class="driver-sos-option-card" data-sos-type="ACCIDENT">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF4D47" stroke-width="2.5">
-              <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-            <div>
-              <strong style="color:#FFFFFF;font-size:13.5px;display:block;">Xe cứu thương gặp sự cố / va chạm</strong>
-              <span style="font-size:11.5px;color:#94A3B8;">Yêu cầu Trung tâm điều động xe khác thay thế lập tức</span>
-            </div>
-          </div>
-
-          <div class="driver-sos-option-card" data-sos-type="TRAFFIC">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.5">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-            </svg>
-            <div>
-              <strong style="color:#FFFFFF;font-size:13.5px;display:block;">Ùn tắc nghiêm trọng / Cần CSGT hỗ
-                trợ</strong>
-              <span style="font-size:11.5px;color:#94A3B8;">Trung tâm kết nối cảnh sát giao thông mở đường ưu
-                tiên</span>
-            </div>
-          </div>
-
-          <div class="driver-sos-option-card" data-sos-type="SECURITY">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.5">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-            </svg>
-            <div>
-              <strong style="color:#FFFFFF;font-size:13.5px;display:block;">Nguy cơ an ninh / Bạo lực tại hiện
-                trường</strong>
-              <span style="font-size:11.5px;color:#94A3B8;">Yêu cầu lực lượng công an phường hỗ trợ bảo vệ kíp cấp
-                cứu</span>
-            </div>
-          </div>
-
-          <div class="driver-sos-option-card" data-sos-type="CONSULT">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-            </svg>
-            <div>
-              <strong style="color:#FFFFFF;font-size:13.5px;display:block;">Yêu cầu Bác sĩ Trung tâm hội chẩn từ
-                xa</strong>
-              <span style="font-size:11.5px;color:#94A3B8;">Bệnh nhân diễn biến phức tạp cần chỉ đạo chuyên môn
-                gấp</span>
-            </div>
-          </div>
-        </div>
-
-        <button class="btn btn-emergency-touch" id="btn-submit-sos-alert" style="margin-top:14px;min-height:50px;">
-          PHÁT TÍN HIỆU ƯU TIÊN VỀ TRUNG TÂM
-        </button>
+      <!-- Case Info Card -->
+      <div
+        style="background:rgba(8, 24, 39, 0.95);border:1px solid #1E3A56;border-radius:12px;padding:12px 14px;margin-bottom:14px;width:100%;text-align:left;font-size:12.5px;color:#CBD5E1;box-shadow:0 4px 18px rgba(0,0,0,0.45);">
+        <div style="margin-bottom:6px;"><strong style="color:#FFFFFF;">Hiện trường:</strong> Chân Cầu Hưng Lợi (hướng
+          Cái Răng sang Ninh Kiều)</div>
+        <div style="margin-bottom:6px;"><strong style="color:#FFFFFF;">Khoảng cách:</strong> 2.1 km (Ước tính di chuyển
+          ~3.5 phút)</div>
+        <div style="margin-bottom:6px;"><strong style="color:#FFFFFF;">Nạn nhân:</strong> Phan Văn Đức (58 tuổi, Nam) |
+          Chấn thương sọ não, đa chấn thương</div>
+        <div><strong style="color:#FFFFFF;">Bệnh viện đích dự kiến:</strong> Bệnh viện Đa khoa thành phố Cần Thơ</div>
       </div>
-    </div>
 
-    <!-- ================= 8. MODAL CHỌN XE DEMO (TX-00) ================= -->
-    <div class="bottom-sheet-backdrop" id="modal-vehicle-picker">
-      <div class="bottom-sheet-modal">
-        <div class="bottom-sheet-handle"></div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-          <h3 style="color:#FFFFFF;margin:0;font-size:16px;font-weight:800;">CHỌN XE CẤP CỨU (DEMO)</h3>
-          <button class="btn btn-default btn-xs" id="btn-close-veh-modal"
-            style="font-size:11px;padding:2px 8px;">Đóng</button>
+      <p style="font-size:11.5px;color:#94A3B8;margin:0 0 16px;text-align:center;line-height:1.45;">
+        Kíp trực bấm xác nhận để Trung tâm kích hoạt luồng xanh giao thông và đồng bộ hành trình xe theo thời gian thực.
+      </p>
+
+      <!-- Big 1-Touch Confirm Button -->
+      <button class="btn btn-emergency-touch" id="btn-confirm-dispatch-order"
+        style="width:100%;min-height:54px;font-size:15px;letter-spacing:0.5px;font-weight:800;border-radius:12px;box-shadow:0 8px 24px rgba(229,37,33,0.65);">
+        XÁC NHẬN NHẬN LỆNH & XUẤT PHÁT
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= 7. MODAL DRIVER SOS & HỖ TRỢ KHẨN (TX-02) ================= -->
+  <div class="bottom-sheet-backdrop" id="modal-driver-sos">
+    <div class="bottom-sheet-modal">
+      <div class="bottom-sheet-handle"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <h3 style="color:#FFFFFF;margin:0;font-size:16px;font-weight:800;">TRỢ GIÚP & BÁO CÁO SỰ CỐ XE KHẨN CẤP</h3>
+        <button class="btn btn-default btn-xs" id="btn-close-sos-modal"
+          style="font-size:11px;padding:2px 8px;">Đóng</button>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div class="driver-sos-option-card" data-sos-type="ACCIDENT">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF4D47" stroke-width="2.5">
+            <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <div>
+            <strong style="color:#FFFFFF;font-size:13.5px;display:block;">Xe cứu thương gặp sự cố / va chạm</strong>
+            <span style="font-size:11.5px;color:#94A3B8;">Yêu cầu Trung tâm điều động xe khác thay thế lập tức</span>
+          </div>
         </div>
 
-        <div id="vehicle-picker-list"
-          style="display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;">
-          <!-- Dynamically populated from StateManager -->
+        <div class="driver-sos-option-card" data-sos-type="TRAFFIC">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.5">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <div>
+            <strong style="color:#FFFFFF;font-size:13.5px;display:block;">Ùn tắc nghiêm trọng / Cần CSGT hỗ
+              trợ</strong>
+            <span style="font-size:11.5px;color:#94A3B8;">Trung tâm kết nối cảnh sát giao thông mở đường ưu
+              tiên</span>
+          </div>
+        </div>
+
+        <div class="driver-sos-option-card" data-sos-type="SECURITY">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.5">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          <div>
+            <strong style="color:#FFFFFF;font-size:13.5px;display:block;">Nguy cơ an ninh / Bạo lực tại hiện
+              trường</strong>
+            <span style="font-size:11.5px;color:#94A3B8;">Yêu cầu lực lượng công an phường hỗ trợ bảo vệ kíp cấp
+              cứu</span>
+          </div>
+        </div>
+
+        <div class="driver-sos-option-card" data-sos-type="CONSULT">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <div>
+            <strong style="color:#FFFFFF;font-size:13.5px;display:block;">Yêu cầu Bác sĩ Trung tâm hội chẩn từ
+              xa</strong>
+            <span style="font-size:11.5px;color:#94A3B8;">Bệnh nhân diễn biến phức tạp cần chỉ đạo chuyên môn
+              gấp</span>
+          </div>
         </div>
       </div>
+
+      <button class="btn btn-emergency-touch" id="btn-submit-sos-alert" style="margin-top:14px;min-height:50px;">
+        PHÁT TÍN HIỆU ƯU TIÊN VỀ TRUNG TÂM
+      </button>
     </div>
+  </div>
+
+  <!-- ================= 8. MODAL CHỌN XE DEMO (TX-00) ================= -->
+  <div class="bottom-sheet-backdrop" id="modal-vehicle-picker">
+    <div class="bottom-sheet-modal">
+      <div class="bottom-sheet-handle"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <h3 style="color:#FFFFFF;margin:0;font-size:16px;font-weight:800;">CHỌN XE CẤP CỨU (DEMO)</h3>
+        <button class="btn btn-default btn-xs" id="btn-close-veh-modal"
+          style="font-size:11px;padding:2px 8px;">Đóng</button>
+      </div>
+
+      <div id="vehicle-picker-list"
+        style="display:flex;flex-direction:column;gap:8px;max-height:280px;overflow-y:auto;">
+        <!-- Dynamically populated from StateManager -->
+      </div>
+    </div>
+  </div>
 
   </div>
 
@@ -430,726 +595,8 @@
   <script src="js/shared/map.js?v=20261005_07"></script>
 
   <!-- Driver App Phone Logic -->
-  <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      // 1. Initialize State Manager
-      await window.StateManager.init();
-      const state = window.StateManager.getState();
-
-      // =========================================================================
-      // REALTIME PATIENT SYNCHRONIZATION ENGINE WITH CENTRAL COMMAND (TT-115)
-      // =========================================================================
-      let currentPlate = '65A-012.34';
-
-      function getActiveCase() {
-        const s = window.StateManager.getState();
-        const cases = s.cases || [];
-        // Ưu tiên ca cấp cứu đang gán cho xe hiện tại
-        const byVeh = cases.find(c => c.dispatch?.vehiclePlate === currentPlate && c.status !== 'COMPLETED' && c.status !== 'CANCELLED');
-        if (byVeh) return byVeh;
-        // Hoặc ca đang xử lý bất kỳ
-        const anyActive = cases.find(c => c.status !== 'COMPLETED' && c.status !== 'CANCELLED');
-        return anyActive || cases[0] || null;
-      }
-
-      function flashSyncHighlight(elementIds) {
-        elementIds.forEach(id => {
-          const el = document.getElementById(id);
-          if (el) {
-            el.classList.add('sync-highlight');
-            setTimeout(() => el.classList.remove('sync-highlight'), 1800);
-          }
-        });
-      }
-
-      function renderCaseAndPatient(c, isRemoteUpdate = false) {
-        if (!c) return;
-
-        const p = c.patient || {};
-        const inc = c.incident || {};
-        const loc = c.location || {};
-        const disp = c.dispatch || {};
-
-        // 1. Tab 1: Nhiệm vụ
-        const caseCodeEl = document.getElementById('driver-case-code');
-        const caseTitleEl = document.getElementById('driver-case-title');
-        const caseEtaEl = document.getElementById('driver-case-eta');
-        const pNameEl = document.getElementById('driver-patient-name');
-        const pDemoEl = document.getElementById('driver-patient-demographics');
-        const pSymptomsEl = document.getElementById('driver-patient-symptoms');
-        const sceneAddrEl = document.getElementById('driver-scene-address');
-        const hospNameEl = document.getElementById('driver-hospital-name');
-        const btnCallCitizen = document.getElementById('btn-call-citizen');
-
-        if (caseCodeEl) caseCodeEl.textContent = c.code || 'CC-261002-001';
-        if (caseTitleEl) caseTitleEl.textContent = `${(inc.name || 'CẤP CỨU').toUpperCase()} — ${loc.district ? loc.district.toUpperCase() : 'CẦN THƠ'}`;
-        if (caseSeverityEl) caseSeverityEl.textContent = inc.severityText || 'TỐI KHẨN';
-        if (caseEtaEl) caseEtaEl.textContent = c.eta || '~4 PHÚT';
-        if (pNameEl) pNameEl.textContent = p.name || 'Không rõ danh tính';
-        if (pDemoEl) {
-          const ageStr = p.age ? `${p.age} tuổi` : '—';
-          const genderStr = p.gender || '—';
-          const bloodStr = p.bloodType ? ` · Máu ${p.bloodType}` : '';
-          pDemoEl.textContent = `(${ageStr}, ${genderStr}${bloodStr})`;
-        }
-        if (pSymptomsEl) {
-          pSymptomsEl.textContent = p.symptom || inc.description || 'Chấn thương sọ não, đa chấn thương';
-        }
-        if (sceneAddrEl) sceneAddrEl.textContent = loc.address || 'Hiện trường Cần Thơ';
-        if (hospNameEl) hospNameEl.textContent = disp.hospitalName || 'BV Đa khoa TP Cần Thơ';
-        if (btnCallCitizen) {
-          btnCallCitizen.href = `tel:${p.phone || c.callerPhone || '115'}`;
-        }
-
-        // 2. Tab 2: Bản đồ dẫn đường
-        const navHospName = document.getElementById('nav-hospital-name');
-        const navPatientInfo = document.getElementById('nav-patient-info');
-        if (navHospName) navHospName.textContent = disp.hospitalName || 'BV Đa khoa TP Cần Thơ';
-        if (navPatientInfo) {
-          const ageText = p.age ? `${p.age}T` : '—';
-          navPatientInfo.textContent = `BN: ${p.name || 'Chưa rõ'} (${ageText}, ${p.gender || '—'}) · ${p.bloodType || 'O+'}`;
-        }
-
-        // 3. Tab 3: ePCR Fields
-        const epcrTitle = document.getElementById('epcr-patient-title');
-        const inputName = document.getElementById('epcr-input-name');
-        const inputAge = document.getElementById('epcr-input-age');
-        const inputGender = document.getElementById('epcr-input-gender');
-        const inputPhone = document.getElementById('epcr-input-phone');
-        const inputBlood = document.getElementById('epcr-input-blood');
-        const inputHistory = document.getElementById('epcr-input-history');
-        const inputAllergies = document.getElementById('epcr-input-allergies');
-        const inputSymptom = document.getElementById('epcr-input-symptom');
-
-        if (epcrTitle) {
-          epcrTitle.textContent = `${p.name || 'Bệnh nhân'} · ${p.age ? p.age + 'T' : '—'} · ${p.gender || '—'}`;
-        }
-        if (inputName) inputName.value = p.name || '';
-        if (inputAge) inputAge.value = p.age || '';
-        if (inputGender && p.gender) inputGender.value = p.gender;
-        if (inputPhone) inputPhone.value = p.phone || c.callerPhone || '';
-        if (inputBlood && p.bloodType) inputBlood.value = p.bloodType;
-        if (inputHistory) inputHistory.value = p.history || '';
-        if (inputAllergies) inputAllergies.value = p.allergies || '';
-        if (inputSymptom) inputSymptom.value = p.symptom || inc.description || '';
-
-        // Vitals
-        if (c.epcr?.vitals) {
-          const v = c.epcr.vitals;
-          if (v.pulse && document.getElementById('v-pulse')) document.getElementById('v-pulse').value = v.pulse;
-          if (v.bp && document.getElementById('v-bp')) document.getElementById('v-bp').value = v.bp;
-          if (v.spO2 && document.getElementById('v-spo2')) document.getElementById('v-spo2').value = v.spO2;
-          if (v.temp && document.getElementById('v-temp')) document.getElementById('v-temp').value = v.temp;
-          if (v.rr && document.getElementById('v-rr')) document.getElementById('v-rr').value = v.rr;
-          if (v.glasgow && document.getElementById('v-glasgow')) document.getElementById('v-glasgow').value = v.glasgow;
-        }
-
-        // Progression
-        if (c.epcr?.progression && document.getElementById('epcr-progression-text')) {
-          document.getElementById('epcr-progression-text').value = c.epcr.progression;
-        }
-
-        if (isRemoteUpdate) {
-          flashSyncHighlight([
-            'driver-patient-name',
-            'driver-patient-demographics',
-            'driver-patient-symptoms',
-            'nav-patient-info',
-            'epcr-input-name',
-            'epcr-input-age',
-            'epcr-input-gender',
-            'epcr-input-blood',
-            'epcr-input-history',
-            'epcr-input-allergies',
-            'epcr-input-symptom'
-          ]);
-        }
-      }
-
-      function savePatientData(showToast = true) {
-        const c = getActiveCase();
-        if (!c) return;
-
-        const inputName = document.getElementById('epcr-input-name');
-        const inputAge = document.getElementById('epcr-input-age');
-        const inputGender = document.getElementById('epcr-input-gender');
-        const inputPhone = document.getElementById('epcr-input-phone');
-        const inputBlood = document.getElementById('epcr-input-blood');
-        const inputHistory = document.getElementById('epcr-input-history');
-        const inputAllergies = document.getElementById('epcr-input-allergies');
-        const inputSymptom = document.getElementById('epcr-input-symptom');
-
-        const patch = {
-          name: inputName ? inputName.value.trim() : c.patient?.name,
-          age: inputAge && inputAge.value ? Number(inputAge.value) : c.patient?.age,
-          gender: inputGender ? inputGender.value : c.patient?.gender,
-          phone: inputPhone ? inputPhone.value.trim() : c.patient?.phone,
-          bloodType: inputBlood ? inputBlood.value : c.patient?.bloodType,
-          history: inputHistory ? inputHistory.value.trim() : c.patient?.history,
-          allergies: inputAllergies ? inputAllergies.value.trim() : c.patient?.allergies,
-          symptom: inputSymptom ? inputSymptom.value.trim() : c.patient?.symptom
-        };
-
-        // Đồng thời lưu sinh hiệu & diễn biến
-        const pulse = document.getElementById('v-pulse')?.value;
-        const bp = document.getElementById('v-bp')?.value;
-        const spO2 = document.getElementById('v-spo2')?.value;
-        const temp = document.getElementById('v-temp')?.value;
-        const rr = document.getElementById('v-rr')?.value;
-        const glasgow = document.getElementById('v-glasgow')?.value;
-        const prog = document.getElementById('epcr-progression-text')?.value;
-
-        c.epcr = c.epcr || {};
-        c.epcr.vitals = {
-          pulse: pulse ? Number(pulse) : null,
-          bp: bp || '',
-          spO2: spO2 ? Number(spO2) : null,
-          temp: temp ? Number(temp) : null,
-          rr: rr ? Number(rr) : null,
-          glasgow: glasgow ? Number(glasgow) : null
-        };
-        if (prog) c.epcr.progression = prog;
-
-        // Cập nhật StateManager (Lưu localStorage + broadcast sang central.html)
-        window.StateManager.updateCasePatient(c.id, patch);
-
-        // Cập nhật giao diện nội bộ app lái xe ngay
-        renderCaseAndPatient(c, false);
-
-        if (showToast && window.CCNV_UI?.Toast) {
-          window.CCNV_UI.Toast.show(
-            'ĐÃ ĐỒNG BỘ VỚI TRUNG TÂM 115',
-            `Thông tin BN "${patch.name}" (${patch.age}T, ${patch.gender}, máu ${patch.bloodType}) đã lưu & phát tức thời về Trung tâm điều hành 115 và Bệnh viện tiếp nhận.`,
-            true
-          );
-        }
-      }
-
-      // Khởi tạo thông tin bệnh nhân từ StateManager
-      const initialCase = getActiveCase();
-      if (initialCase) {
-        renderCaseAndPatient(initialCase, false);
-      }
-
-
-
-      // Tự động đồng bộ khi thay đổi các trường thông tin bệnh nhân (Auto-sync with Central)
-      let syncDebounceTimer = null;
-      document.querySelectorAll('.epcr-patient-input').forEach(input => {
-        input.addEventListener('change', () => {
-          clearTimeout(syncDebounceTimer);
-          syncDebounceTimer = setTimeout(() => savePatientData(false), 300);
-        });
-      });
-
-
-      // Lắng nghe tín hiệu đồng bộ từ Trung tâm 115 & các tab khác
-      window.StateManager.subscribe((event, payload, state) => {
-        if (event === 'PATIENT_UPDATED' || event === 'CASE_UPDATED' || event === 'STORAGE_SYNC') {
-          const c = getActiveCase();
-          if (c) {
-            renderCaseAndPatient(c, true);
-            if (event === 'PATIENT_UPDATED' && payload?.patient) {
-              const p = payload.patient;
-              if (window.CCNV_UI?.Toast) {
-                window.CCNV_UI.Toast.show(
-                  'ĐỒNG BỘ TỪ TRUNG TÂM 115',
-                  `Trung tâm đã cập nhật: ${p.name || 'Bệnh nhân'} (${p.age || '—'}T, ${p.gender || '—'}) · Nhóm máu ${p.bloodType || '—'} · Tiền sử: ${p.history || 'Không'}`,
-                  true
-                );
-              }
-            }
-          }
-        }
-      });
-
-      // 2. Realtime Mobile Clock
-      function updateClock() {
-        const now = new Date();
-        const hrs = String(now.getHours()).padStart(2, '0');
-        const mins = String(now.getMinutes()).padStart(2, '0');
-        const el = document.getElementById('mobile-clock');
-        if (el) el.textContent = `${hrs}:${mins}`;
-      }
-      setInterval(updateClock, 1000);
-      updateClock();
-
-      // 3. VietMap Single-Screen Map & Dock Interactive Setup
-      let mapInitialized = false;
-      let driverMapInstance = null;
-
-      // Always initialize map directly since map is the primary full-screen view
-      setTimeout(() => {
-        initDriverMap();
-      }, 50);
-
-      // Interactive expandable dock toggles (handle bar, expand button, and right tool button)
-      const missionDock = document.getElementById('driver-mission-dock');
-      const dockDetails = document.getElementById('dock-details-body');
-      const dockExpandIcon = document.getElementById('dock-expand-icon');
-      const btnDockExpand = document.getElementById('btn-dock-toggle-expand');
-      const dockHandle = document.getElementById('dock-handle-bar');
-      const btnToggleSheet = document.getElementById('btn-toggle-mission-sheet');
-
-      function toggleMissionDock(forceOpen) {
-        if (!dockDetails) return;
-        const isCurrentlyOpen = dockDetails.style.display !== 'none';
-        const willOpen = forceOpen !== undefined ? forceOpen : !isCurrentlyOpen;
-
-        dockDetails.style.display = willOpen ? 'block' : 'none';
-        if (missionDock) missionDock.classList.toggle('expanded', willOpen);
-        if (dockExpandIcon) dockExpandIcon.textContent = willOpen ? '▼' : '▲';
-        if (btnToggleSheet) btnToggleSheet.classList.toggle('active', willOpen);
-        if (navigator.vibrate) navigator.vibrate(25);
-      }
-
-      btnDockExpand?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleMissionDock();
-      });
-
-      dockHandle?.addEventListener('click', () => {
-        toggleMissionDock();
-      });
-
-      btnToggleSheet?.addEventListener('click', () => {
-        toggleMissionDock();
-      });
-
-      // 4. Milestone Stepper & Slide-To-Confirm (TX-04)
-      const track = document.getElementById('slider-track');
-      const knob = document.getElementById('slider-knob');
-      const fill = document.getElementById('slider-fill');
-      const label = document.getElementById('slider-label');
-      const undoBanner = document.getElementById('undo-step-banner');
-      const undoProgressBar = document.getElementById('undo-progress-bar');
-      const undoMilestoneName = document.getElementById('undo-milestone-name');
-      const btnUndo = document.getElementById('btn-undo-step');
-      const badgeHeaderPhase = document.getElementById('badge-header-phase');
-
-      // Cấu hình các mốc xác nhận
-      const MILESTONES = [
-        {
-          step: 1,
-          name: 'Xuất phát',
-          sliderLabel: 'VUỐT SANG PHẢI: XÁC NHẬN XUẤT PHÁT',
-          toastTitle: 'ĐÃ XÁC NHẬN XUẤT PHÁT',
-          toastMsg: 'Đã thông báo về Trung tâm 115 xe đang xuất phát di chuyển đến hiện trường.'
-        },
-        {
-          step: 2,
-          name: 'Đến HT',
-          sliderLabel: 'VUỐT SANG PHẢI: ĐÃ ĐẾN HIỆN TRƯỜNG',
-          toastTitle: 'ĐÃ ĐẾN HIỆN TRƯỜNG',
-          toastMsg: 'Ghi nhận xe cấp cứu đã tiếp cận hiện trường tai nạn.'
-        },
-        {
-          step: 3,
-          name: 'Rời HT đến BV',
-          sliderLabel: 'VUỐT SANG PHẢI: RỜI HIỆN TRƯỜNG ĐI BV',
-          toastTitle: 'ĐÃ RỜI HIỆN TRƯỜNG ĐI BỆNH VIỆN',
-          toastMsg: 'Bắt đầu chuyển bệnh nhân đến bệnh viện tiếp nhận.'
-        },
-        {
-          step: 4,
-          name: 'Đến BV',
-          sliderLabel: 'VUỐT SANG PHẢI: ĐÃ ĐẾN BỆNH VIỆN',
-          toastTitle: 'ĐÃ ĐẾN BỆNH VIỆN TIẾP NHẬN',
-          toastMsg: 'Đã hoàn tất vận chuyển và bàn giao bệnh nhân cho Khoa Cấp cứu.'
-        }
-      ];
-
-      let isDragging = false;
-      let startX = 0;
-      let currentX = 0;
-      let maxDrag = 0;
-      let undoTimer = null;
-      let currentStep = 1; // Bắt đầu từ mốc 1 để xác nhận tuần tự từng bước
-      const stepTimes = {};
-
-      function formatTimeNow() {
-        const d = new Date();
-        return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-      }
-
-      function updateMaxDrag() {
-        if (!track || !knob) return;
-        maxDrag = track.clientWidth - knob.clientWidth - 6;
-      }
-      window.addEventListener('resize', updateMaxDrag);
-      updateMaxDrag();
-
-      function resetSliderUI() {
-        knob.style.transition = 'transform 200ms ease';
-        fill.style.transition = 'width 200ms ease';
-        label.style.transition = 'opacity 200ms ease';
-        knob.style.transform = 'translateX(0px)';
-        fill.style.width = '0px';
-        currentX = 0;
-        setTimeout(() => {
-          knob.style.transition = '';
-          fill.style.transition = '';
-          label.style.transition = '';
-        }, 200);
-      }
-
-      function updateStepperUI() {
-        const nodes = document.querySelectorAll('.driver-step-col');
-        nodes.forEach(n => {
-          const s = Number(n.getAttribute('data-step'));
-          const dot = n.querySelector('.driver-step-dot');
-          const timeSmall = n.querySelector('small');
-
-          if (s < currentStep) {
-            n.className = 'driver-step-col completed';
-            if (dot) dot.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
-            if (timeSmall) {
-              timeSmall.textContent = stepTimes[s] || '08:30';
-              timeSmall.style.color = '#10B981';
-            }
-          } else if (s === currentStep) {
-            n.className = 'driver-step-col active';
-            if (dot) dot.textContent = String(s);
-            if (timeSmall) {
-              timeSmall.textContent = 'Hiện tại';
-              timeSmall.style.color = '#FF4D47';
-            }
-          } else {
-            n.className = 'driver-step-col';
-            if (dot) dot.textContent = String(s);
-            if (timeSmall) {
-              timeSmall.textContent = 'Dự kiến';
-              timeSmall.style.color = '#64748B';
-            }
-          }
-        });
-
-        resetSliderUI();
-
-        if (currentStep <= 4) {
-          const cfg = MILESTONES[currentStep - 1];
-          label.textContent = cfg.sliderLabel;
-          label.style.opacity = '1';
-          track.style.pointerEvents = 'auto';
-          fill.style.background = 'linear-gradient(90deg, rgba(229, 37, 33, 0.3) 0%, rgba(229, 37, 33, 0.7) 100%)';
-        } else {
-          label.textContent = 'ĐÃ HOÀN TẤT TOÀN BỘ NHIỆM VỤ CẤP CỨU';
-          label.style.opacity = '1';
-          track.style.pointerEvents = 'none';
-          fill.style.width = '100%';
-          fill.style.background = 'rgba(16, 185, 129, 0.4)';
-        }
-      }
-
-      function onStart(clientX) {
-        if (currentStep > 4) return;
-        isDragging = true;
-        startX = clientX - currentX;
-        track.style.cursor = 'grabbing';
-      }
-
-      function onMove(clientX) {
-        if (!isDragging) return;
-        updateMaxDrag();
-        currentX = Math.max(0, Math.min(clientX - startX, maxDrag));
-        knob.style.transform = `translateX(${currentX}px)`;
-        fill.style.width = `${currentX + knob.clientWidth / 2}px`;
-        label.style.opacity = `${1 - (currentX / maxDrag) * 1.5}`;
-
-        // Khi kéo tới >= 85% -> kích hoạt xác nhận mốc hiện tại
-        if (currentX >= maxDrag * 0.85) {
-          triggerSlideSuccess();
-        }
-      }
-
-      function onEnd() {
-        if (!isDragging) return;
-        isDragging = false;
-        track.style.cursor = 'default';
-        if (currentX < maxDrag * 0.85) {
-          resetSliderUI();
-          label.style.opacity = '1';
-        }
-      }
-
-      knob.addEventListener('pointerdown', (e) => onStart(e.clientX));
-      window.addEventListener('pointermove', (e) => onMove(e.clientX));
-      window.addEventListener('pointerup', onEnd);
-      window.addEventListener('pointercancel', onEnd);
-
-      function triggerSlideSuccess() {
-        isDragging = false;
-        if (navigator.vibrate) navigator.vibrate(120);
-
-        if (currentStep > 4) return;
-        const currentCfg = MILESTONES[currentStep - 1];
-
-        // Ghi lại thời gian hoàn tất mốc
-        stepTimes[currentStep] = formatTimeNow();
-
-        // Chuyển sang mốc tiếp theo
-        currentStep++;
-        updateStepperUI();
-
-        // Hiển thị Undo Banner trong 10 giây
-        undoMilestoneName.textContent = currentCfg.name;
-        undoBanner.style.display = 'flex';
-        undoProgressBar.style.transform = 'scaleX(1)';
-
-        if (window.CCNV_UI?.Toast) {
-          window.CCNV_UI.Toast.show(currentCfg.toastTitle, currentCfg.toastMsg, true);
-        }
-
-        setTimeout(() => {
-          undoProgressBar.style.transform = 'scaleX(0)';
-        }, 50);
-
-        if (undoTimer) clearTimeout(undoTimer);
-        undoTimer = setTimeout(() => {
-          undoBanner.style.display = 'none';
-        }, 10000);
-      }
-
-      // Nút Hoàn tác
-      btnUndo.addEventListener('click', () => {
-        if (undoTimer) clearTimeout(undoTimer);
-        undoBanner.style.display = 'none';
-
-        if (currentStep > 1) {
-          currentStep--;
-          delete stepTimes[currentStep];
-          updateStepperUI();
-
-          if (window.CCNV_UI?.Toast) {
-            window.CCNV_UI.Toast.show('Đã hoàn tác', `Đã quay trở lại mốc: ${MILESTONES[currentStep - 1].name}`);
-          }
-        }
-      });
-
-      // Cho phép bấm trực tiếp vào từng mốc để chuyển đổi linh hoạt
-      document.querySelectorAll('.driver-step-col').forEach(col => {
-        col.addEventListener('click', () => {
-          const s = Number(col.getAttribute('data-step'));
-          if (s >= 1 && s <= 4) {
-            currentStep = s;
-            updateStepperUI();
-          }
-        });
-      });
-
-      // 5. Driver Safety SOS 1-Touch (TX-02: Instant Broadcast to Central without extra steps)
-      const btnSosDriver = document.getElementById('driver-btn-sos');
-      btnSosDriver?.addEventListener('click', () => {
-        if (navigator.vibrate) navigator.vibrate([300, 100, 300]);
-        playEmergencyAlarm();
-
-        // Broadcast directly to Central via StateManager & BroadcastChannel
-        const c = getActiveCase();
-        const payload = {
-          plate: currentPlate,
-          vehiclePlate: currentPlate,
-          caseId: c?.id || 'CC-261002-002',
-          coords: [10.0275, 105.7725],
-          reason: 'Xe cứu thương phát tín hiệu khẩn cấp trên lộ trình',
-          timestamp: new Date().toLocaleTimeString('vi-VN')
-        };
-
-        if (window.StateManager) {
-          // Log into case
-          if (c?.id) {
-            window.StateManager.addCaseLog(c.id, `XE ${currentPlate} PHÁT TÍN HIỆU SOS KHẨN CẤP!`);
-          }
-          // Update vehicle status
-          window.StateManager.updateVehicle(currentPlate, {
-            status: 'SOS',
-            statusText: 'Cần cứu trợ'
-          });
-          // Broadcast dedicated event
-          window.StateManager.notify('VEHICLE_SOS', payload);
-        }
-
-        if (window.CCNV_UI?.Toast) {
-          window.CCNV_UI.Toast.show(
-            'ĐÃ PHÁT TÍN HIỆU SOS XE',
-            'Trung tâm Điều hành 115 Cần Thơ đã nhận thông tin và định vị khẩn cấp.',
-            true
-          );
-        }
-      });
-
-      // 6. Interactive GIS Map Engine (Reuse CanThoMap from Central)
-      function initDriverMap() {
-        mapInitialized = true;
-        const container = document.getElementById('driver-map-container');
-        if (!container) return;
-
-        if (window.CanThoMap) {
-          driverMapInstance = new window.CanThoMap('driver-map-container');
-          driverMapInstance.render();
-
-          // Tự động focus vào xe cứu thương của tài xế và bám sát lộ trình OSRM thật
-          setTimeout(() => {
-            if (driverMapInstance.vehicleMarkers && driverMapInstance.vehicleMarkers[currentPlate]) {
-              driverMapInstance.focusVehicle(currentPlate, { animate: true });
-            }
-          }, 350);
-        }
-      }
-
-      // 7. Navigation Assist Actions (Bản đồ dẫn đường)
-      // Center map on vehicle
-      document.getElementById('btn-map-center-veh')?.addEventListener('click', () => {
-        if (driverMapInstance) {
-          if (driverMapInstance.focusPlate !== currentPlate) {
-            driverMapInstance.focusVehicle(currentPlate, { animate: true });
-          } else {
-            driverMapInstance.fitFocus(true);
-          }
-          if (navigator.vibrate) navigator.vibrate(40);
-          if (window.CCNV_UI?.Toast) {
-            window.CCNV_UI.Toast.show('Định vị xe cứu thương', `Đã chuyển góc nhìn về vị trí GPS xe ${currentPlate}.`);
-          }
-        }
-      });
-
-      // Toggle Nearby Hospitals Layer
-      let hospMarkersLayer = [];
-      let hospLayerActive = false;
-      document.getElementById('btn-toggle-hosp-layer')?.addEventListener('click', () => {
-        hospLayerActive = !hospLayerActive;
-        const btn = document.getElementById('btn-toggle-hosp-layer');
-        if (btn) btn.classList.toggle('active', hospLayerActive);
-
-        if (!driverMapInstance || !driverMapInstance.map || !window.L) return;
-
-        if (hospLayerActive) {
-          // Hiển thị tất cả các bệnh viện trên bản đồ kể cả khi đang ở focus mode
-          Object.values(driverMapInstance.hospitalMarkers || {}).forEach(item => {
-            if (!driverMapInstance.map.hasLayer(item.marker)) {
-              driverMapInstance.map.addLayer(item.marker);
-              hospMarkersLayer.push(item.marker);
-            }
-          });
-          if (window.CCNV_UI?.Toast) {
-            window.CCNV_UI.Toast.show('Lớp bản đồ', 'Đã bật hiển thị toàn bộ Bệnh viện tiếp nhận trên địa bàn Cần Thơ.');
-          }
-        } else {
-          // Khôi phục bộ lọc hiển thị theo focusPlate
-          driverMapInstance.applyVisibility();
-          hospMarkersLayer = [];
-          if (window.CCNV_UI?.Toast) {
-            window.CCNV_UI.Toast.show('Lớp bản đồ', 'Đã ẩn các Bệnh viện ngoài lộ trình.');
-          }
-        }
-      });
-
-      // 10. Vehicle Switcher Modal (TX-00)
-      const vehModal = document.getElementById('modal-vehicle-picker');
-      const btnOpenVeh = document.getElementById('btn-open-vehicle-picker');
-      const btnCloseVeh = document.getElementById('btn-close-veh-modal');
-      const vehListEl = document.getElementById('vehicle-picker-list');
-
-      function renderVehiclePicker() {
-        const vehicles = state.vehicles || [];
-        vehListEl.innerHTML = vehicles.map(v => `
-          <div class="bottom-sheet-reason-btn ${v.plate === currentPlate ? 'selected' : ''}" data-plate="${v.plate}" style="display:flex;align-items:center;justify-content:space-between;">
-            <div>
-              <strong style="color:#FFFFFF;font-family:var(--font-mono);font-size:13.5px;">${v.plate}</strong>
-              <div style="font-size:11.5px;color:#94A3B8;">${v.type} · ${v.station || 'Trạm Cần Thơ'}</div>
-            </div>
-            <span class="badge ${v.status === 'EMERGENCY' ? 'badge-emergency' : 'badge-success'}" style="font-size:10px;">
-              ${v.statusText || 'Sẵn sàng'}
-            </span>
-          </div>
-        `).join('');
-
-        vehListEl.querySelectorAll('.bottom-sheet-reason-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const plate = btn.getAttribute('data-plate');
-            currentPlate = plate;
-            document.getElementById('header-plate-text').textContent = plate;
-            vehModal.classList.remove('active');
-            renderCaseAndPatient(getActiveCase());
-
-            // Chuyển focus của CanThoMap sang xe mới
-            if (driverMapInstance) {
-              if (driverMapInstance.vehicleMarkers && driverMapInstance.vehicleMarkers[plate]) {
-                driverMapInstance.focusVehicle(plate, { animate: true });
-              }
-            }
-
-            if (window.CCNV_UI?.Toast) {
-              window.CCNV_UI.Toast.show('Đã đổi phương tiện', `Giao diện đang gắn với xe cứu thương ${plate}.`);
-            }
-          });
-        });
-      }
-
-      btnOpenVeh?.addEventListener('click', () => {
-        renderVehiclePicker();
-        vehModal.classList.add('active');
-      });
-
-      btnCloseVeh?.addEventListener('click', () => {
-        vehModal.classList.remove('active');
-      });
-
-      // 11. Fullscreen Dispatch Order Alert Modal (TX-01)
-      const dispatchModal = document.getElementById('modal-dispatch-alert');
-      const btnConfirmDispatch = document.getElementById('btn-confirm-dispatch-order');
-
-      function openDispatchOrderModal() {
-        dispatchModal.classList.add('active');
-        playEmergencyAlarm();
-        if (navigator.vibrate) navigator.vibrate([300, 150, 300, 150, 400]);
-      }
-
-      btnConfirmDispatch?.addEventListener('click', () => {
-        dispatchModal.classList.remove('active');
-        if (navigator.vibrate) navigator.vibrate(100);
-        if (badgeHeaderPhase) {
-          badgeHeaderPhase.textContent = 'ĐANG ĐẾN HT';
-          badgeHeaderPhase.style.background = 'var(--red-primary)';
-        }
-        if (window.CCNV_UI?.Toast) {
-          window.CCNV_UI.Toast.show(
-            'ĐÃ XÁC NHẬN LÊN XE & XUẤT PHÁT',
-            'Đã thông báo tức thời tới Trung tâm 115. Bắt đầu kích hoạt dẫn đường khẩn cấp.',
-            true
-          );
-        }
-      });
-
-      // 12. Central Dispatch Change Notification Banner
-      const noticeBanner = document.getElementById('driver-dispatch-notice');
-      const btnDismissNotice = document.getElementById('btn-dismiss-notice');
-
-      btnDismissNotice?.addEventListener('click', () => {
-        noticeBanner.style.display = 'none';
-      });
-
-      // Web Audio API Synthesizer for Emergency Alarm
-      function playEmergencyAlarm() {
-        try {
-          const ctx = new (window.AudioContext || window.webkitAudioContext)();
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(750, ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(1250, ctx.currentTime + 0.3);
-          osc.frequency.exponentialRampToValueAtTime(750, ctx.currentTime + 0.6);
-          gain.gain.setValueAtTime(0.25, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.85);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start();
-          osc.stop(ctx.currentTime + 0.85);
-        } catch (e) {
-          console.warn('AudioContext not allowed without user gesture yet:', e);
-        }
-      }
-    });
-  </script>
+  <!-- Driver App Logic (Separated JS) -->
+  <script src="js/driver/driver-app.js?v=20261006_01"></script>
 </body>
 
 </html>
