@@ -363,10 +363,37 @@
   background-color: var(--bg-panel);
   border: 1px solid var(--border-main);
   color: var(--text-white);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
 }
 
 .bell-btn:hover {
   background-color: var(--bg-elevated);
+  border-color: #ef4444;
+  color: #ef4444;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.35);
+}
+
+.bell-btn.is-demo-running {
+  background-color: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  color: #ef4444;
+  animation: bell-demo-pulse 1.8s infinite;
+}
+
+@keyframes bell-demo-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
 }
 
 .bell-badge {
@@ -384,6 +411,7 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 0 8px var(--red-glow);
+  pointer-events: none;
 }
 
 /* --- 1. TOP-LEVEL APPLICATION SHELL (Sidebar Left 100vh + Main Wrapper Right) --- */
@@ -1188,7 +1216,7 @@ body.hospital-mode .kpi-header-grid {
   font-weight: 700;
   color: #f1f5f9;
   letter-spacing: 0.2px;
-  max-width: 140px;
+  max-width: 200px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1204,6 +1232,53 @@ body.hospital-mode .kpi-header-grid {
   border: 1px solid rgba(16, 185, 129, 0.35);
   font-family: inherit;
   white-space: nowrap;
+}
+
+/* Nổi bật Trung tâm: Bệnh viện Đa khoa thành phố Cần Thơ */
+.map-hosp-shield.is-center {
+  background: linear-gradient(90deg, rgba(8, 28, 48, 0.96) 0%, rgba(13, 38, 64, 0.96) 100%);
+  border: 1.8px solid #38bdf8;
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.55), 0 4px 16px rgba(0, 0, 0, 0.75);
+  padding: 4px 10px 4px 5px;
+  animation: centerHospitalGlow 3s infinite ease-in-out;
+}
+
+.map-hosp-shield.is-center::after {
+  border-top-color: rgba(13, 38, 64, 0.96);
+}
+
+.map-hosp-shield.is-center .map-hosp-cross-icon {
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, #0284c7, #38bdf8);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.9);
+}
+
+.map-hosp-shield.is-center .map-hosp-title-text {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #FFFFFF;
+  max-width: 220px;
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
+}
+
+.map-hosp-shield.is-center .map-hosp-bed-chip {
+  background: rgba(56, 189, 248, 0.22);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.5);
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
+@keyframes centerHospitalGlow {
+  0%, 100% {
+    box-shadow: 0 0 16px rgba(56, 189, 248, 0.45), 0 4px 16px rgba(0, 0, 0, 0.7);
+    border-color: #38bdf8;
+  }
+  50% {
+    box-shadow: 0 0 26px rgba(56, 189, 248, 0.8), 0 6px 20px rgba(0, 0, 0, 0.8);
+    border-color: #7dd3fc;
+  }
 }
 
 .map-hosp-shield.restricted {
@@ -1425,40 +1500,8 @@ body.hospital-mode .kpi-header-grid {
   pointer-events: auto;
 }
 
-.map-legend-info-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  background: rgba(8, 20, 34, 0.92);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(56, 189, 248, 0.35);
-  color: #38bdf8;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
-  transition: all 0.2s ease;
-  pointer-events: auto;
-}
-
-.map-legend-info-btn:hover {
-  background: rgba(15, 30, 48, 0.98);
-  border-color: #38bdf8;
-  color: #7dd3fc;
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
-  transform: translateY(-1px);
-}
-
-.map-legend-info-btn.is-active {
-  background: rgba(56, 189, 248, 0.2);
-  border-color: #38bdf8;
-  color: #ffffff;
-  box-shadow: 0 0 16px rgba(56, 189, 248, 0.5);
-}
-
-/* Custom Zoom Cluster positioned directly under the info icon */
-.map-zoom-cluster {
+/* Unified Top-Right Map Controls Cluster (Info + Zoom In + Zoom Out) */
+.map-unified-cluster {
   display: flex;
   flex-direction: column;
   background: rgba(8, 20, 34, 0.92);
@@ -1469,7 +1512,7 @@ body.hospital-mode .kpi-header-grid {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
 }
 
-.map-zoom-btn {
+.map-unified-btn {
   width: 34px;
   height: 32px;
   display: flex;
@@ -1485,26 +1528,27 @@ body.hospital-mode .kpi-header-grid {
   padding: 0;
 }
 
-.map-zoom-btn:last-child {
+.map-unified-btn:last-child {
   border-bottom: none;
 }
 
-.map-zoom-btn:hover {
+.map-unified-btn:hover {
   background: rgba(56, 189, 248, 0.22);
   color: #38bdf8;
 }
 
-.map-zoom-btn:active {
+.map-unified-btn:active {
   background: rgba(56, 189, 248, 0.35);
   color: #ffffff;
 }
 
-.map-zoom-extent-btn {
+.map-unified-btn.map-legend-info-btn {
   color: #38bdf8;
+  height: 34px;
 }
 
-.map-zoom-extent-btn:hover {
-  background: rgba(56, 189, 248, 0.25);
+.map-unified-btn.map-legend-info-btn.is-active {
+  background: rgba(56, 189, 248, 0.2);
   color: #ffffff;
 }
 
@@ -1695,48 +1739,6 @@ body.hospital-mode .kpi-header-grid {
   color: #64748b;
   font-style: italic;
   line-height: 1.35;
-}
-
-/* Chip chế độ theo dõi xe (góc trên trái) */
-.map-focus-chip {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  background: rgba(6, 40, 30, 0.92);
-  border: 1px solid rgba(52, 211, 153, 0.45);
-  border-radius: 20px;
-  font-size: 11px;
-  color: #d1fae5;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-  pointer-events: none;
-}
-
-.map-focus-chip[hidden] {
-  display: none;
-}
-
-.map-focus-chip strong {
-  font-family: var(--font-mono);
-  color: #ffffff;
-}
-
-.map-focus-chip-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #10b981;
-  box-shadow: 0 0 8px #10b981;
-}
-
-.map-focus-chip-hint {
-  color: #6ee7b7;
-  opacity: 0.75;
-  font-size: 10px;
 }
 
 /* Leaflet Overrides */
@@ -3247,8 +3249,8 @@ body.critical-focus-active .kpi-header-grid {
   background: var(--bg-card);
   border: 1px solid var(--border-main);
   border-radius: 8px;
-  padding: 14px 16px;
-  margin-bottom: 12px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
   transition: all 0.18s ease;
   position: relative;
 }
@@ -3417,44 +3419,115 @@ body.critical-focus-active .kpi-header-grid {
   color: #E2E8F0;
 }
 
-/* Recommended option badge (Đánh dấu sao ⭐) */
-.chip-star-badge {
+/* Step 2 Summary & Recommended Dispatch Card */
+.dispatch-summary-rec-card {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.98) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.dispatch-summary-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 12px;
+}
+
+.summary-meta-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--text-slate);
+}
+
+.summary-meta-item strong {
+  color: var(--text-white);
+  font-weight: 600;
+}
+
+.dispatch-rec-proposal-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: rgba(37, 99, 235, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  border-radius: 6px;
+  padding: 9px 12px;
+}
+
+.dispatch-rec-details {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+}
+
+.dispatch-rec-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #93C5FD;
+  letter-spacing: 0.3px;
+}
+
+.dispatch-rec-items {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-slate);
+}
+
+.rec-item-badge {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 1px 6px;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.7);
+  padding: 4px 9px;
   border-radius: 4px;
-  background: rgba(245, 158, 11, 0.2);
-  border: 1px solid rgba(245, 158, 11, 0.45);
-  color: #FCD34D;
-  letter-spacing: 0.2px;
-  animation: starPulseGlow 2.5s infinite ease-in-out;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.chip-star-badge .star-icon {
-  color: #F59E0B;
-  font-size: 11px;
-  line-height: 1;
+.btn-apply-rec {
+  background: linear-gradient(180deg, #2563EB 0%, #1D4ED8 100%);
+  border: 1px solid #3B82F6;
+  color: #FFF;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
 }
 
-@keyframes starPulseGlow {
-  0%, 100% { box-shadow: 0 0 0 rgba(245, 158, 11, 0); }
-  50% { box-shadow: 0 0 8px rgba(245, 158, 11, 0.35); }
+.btn-apply-rec:hover {
+  background: linear-gradient(180deg, #3B82F6 0%, #2563EB 100%);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.6);
+  transform: translateY(-1px);
 }
 
-.rapid-chip-btn.is-recommended {
-  border-color: rgba(245, 158, 11, 0.45);
-  position: relative;
-}
-
-.rapid-chip-btn.is-recommended:hover {
-  border-color: #F59E0B;
-}
-
-.rapid-chip-btn.is-recommended.active {
-  box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+.btn-apply-rec.applied {
+  background: linear-gradient(180deg, #059669 0%, #047857 100%);
+  border-color: #10B981;
+  color: #ECFDF5;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.35);
 }
 
 /* 5. Live Vehicle Match HUD Box */
@@ -3909,8 +3982,8 @@ body.critical-focus-active .kpi-header-grid {
 
 /* --- B2: Form tiếp nhận (tái sử dụng form Tổng đài · Cuộc gọi hiện tại) --- */
 .demo-intake-panel {
-  width: min(1180px, 100%);
-  height: min(920px, 100%);
+  width: min(1320px, 98vw);
+  height: min(97vh, 1020px);
   display: flex;
   flex-direction: column;
   background: var(--bg-main);
@@ -3926,7 +3999,7 @@ body.critical-focus-active .kpi-header-grid {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px 20px;
+  padding: 10px 20px;
   background: var(--bg-panel);
   border-bottom: 1px solid var(--border-main);
 }
@@ -3957,7 +4030,7 @@ body.critical-focus-active .kpi-header-grid {
 .demo-intake-body {
   flex: 1;
   overflow-y: auto;
-  padding: 16px 20px 20px;
+  padding: 12px 18px 16px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3982,4 +4055,185 @@ body.critical-focus-active .kpi-header-grid {
   z-index: 70;
   border-radius: 0;
 }
+
+/* --- 2 TABS TÁCH BIỆT: THU THẬP THÔNG TIN <-> ĐIỀU PHỐI --- */
+.intake-tabs-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.intake-tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-main);
+  border-radius: 8px;
+  color: var(--text-slate);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+  font-family: inherit;
+}
+
+.intake-tab-btn:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-light);
+  color: var(--text-white);
+}
+
+.intake-tab-btn.active {
+  background: rgba(37, 99, 235, 0.15);
+  border-color: #3B82F6;
+  color: #FFFFFF;
+  font-weight: 700;
+  box-shadow: 0 0 14px rgba(59, 130, 246, 0.25);
+}
+
+.intake-tab-btn .tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #1E293B;
+  border: 1px solid #334155;
+  color: #94A3B8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.intake-tab-btn.active .tab-badge {
+  background: #2563EB;
+  border-color: #60A5FA;
+  color: #FFFFFF;
+}
+
+/* Patient Count Quick Chips */
+.patient-count-btn {
+  background: #081827;
+  border: 1px solid #1E3A5F;
+  border-radius: 5px;
+  padding: 5px 12px;
+  color: #93C5FD;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  font-family: inherit;
+}
+
+.patient-count-btn:hover {
+  background: #0E2435;
+  border-color: #3B82F6;
+  color: #FFFFFF;
+}
+
+.patient-count-btn.active {
+  background: #2563EB;
+  border-color: #60A5FA;
+  color: #FFFFFF;
+  box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
+}
+
+/* Patient List Items */
+.patient-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.patient-item-card {
+  background: rgba(11, 24, 40, 0.7);
+  border: 1px solid #1E3A5F;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.15s ease;
+}
+
+.patient-item-card.is-primary {
+  border-color: rgba(59, 130, 246, 0.45);
+  background: rgba(11, 24, 40, 0.9);
+}
+
+.patient-item-card:hover {
+  border-color: #3B82F6;
+}
+
+.patient-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.btn-remove-patient {
+  background: transparent;
+  border: none;
+  color: #94A3B8;
+  font-size: 11.5px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.btn-remove-patient:hover {
+  color: #F87171;
+  background: rgba(239, 68, 68, 0.15);
+}
+
+/* Segmented Age Group / Gender buttons */
+.segmented-group {
+  display: inline-flex;
+  background: #071320;
+  border: 1px solid #1E3A5F;
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.segmented-btn {
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #94A3B8;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  font-family: inherit;
+}
+
+.segmented-btn:hover {
+  color: #F1F5F9;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.segmented-btn.active {
+  background: #2563EB;
+  color: #FFFFFF;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.step-view-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 

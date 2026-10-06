@@ -34,7 +34,7 @@ window.SEED_DATA = {
   "hospitals": [
     {
       "id": "HOSP_BVDK",
-      "name": "BV Đa khoa TP Cần Thơ",
+      "name": "Bệnh viện Đa khoa thành phố Cần Thơ",
       "code": "BV-CT-01",
       "address": "Số 04 Châu Văn Liêm, P. Tân An, TP. Cần Thơ",
       "phone": "0292.3821.236",
@@ -53,7 +53,7 @@ window.SEED_DATA = {
     },
     {
       "id": "HOSP_BVTU",
-      "name": "BV Đa khoa Trung ương Cần Thơ",
+      "name": "Bệnh viện Đa khoa Trung ương Cần Thơ",
       "code": "BV-TU-02",
       "address": "315 Nguyễn Văn Linh, P. An Khánh, TP. Cần Thơ",
       "phone": "0292.3820.071",
@@ -462,10 +462,10 @@ window.SEED_DATA = {
       "history": "Tăng huyết áp, Đái tháo đường Type 2"
     },
     "location": {
-      "address": "Khu vực Cầu Hưng Lợi, Đường 30/4, P. Hưng Lợi, TP. Cần Thơ",
+      "address": "Đường 30/4, Phường Hưng Lợi, TP. Cần Thơ",
       "coords": [10.0235, 105.7730],
       "mapPos": { "x": 585, "y": 475 },
-      "district": "P. Hưng Lợi"
+      "district": "Phường Hưng Lợi"
     },
     "incident": {
       "code": "INC_TNGT",
@@ -508,6 +508,7 @@ window.SEED_DATA = {
       { "time": "08:12:10", "user": "bvtu.tn", "action": "BV Đa khoa Trung ương Cần Thơ xác nhận sẵn sàng tiếp nhận người bệnh" },
       { "time": "08:12:45", "user": "CREW-03", "action": "Kíp 3 xác nhận lên xe xuất phát" },
       { "time": "08:18:20", "user": "CREW-03", "action": "Xe đã tiếp cận hiện trường tai nạn Cầu Hưng Lợi" },
+      { "time": "08:19:15", "user": "CREW-03", "action": "Đã tiếp cận và đón người bệnh an toàn lên xe cấp cứu" },
       { "time": "08:24:10", "user": "CREW-03", "action": "Sơ cứu ổn định, bắt đầu vận chuyển bệnh nhân về BVĐK Trung ương Cần Thơ" }
     ],
     "epcr": {

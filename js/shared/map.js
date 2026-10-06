@@ -143,29 +143,19 @@
 
       return `
         <div class="map-top-right-controls">
-          <button type="button" class="map-legend-info-btn" id="btn-map-legend-info" title="Xem chú thích bản đồ" aria-expanded="false" aria-label="Chú thích bản đồ">
-            ${infoIcon}
-          </button>
-
-          <div class="map-zoom-cluster">
-            <button type="button" class="map-zoom-btn" id="btn-map-zoom-in" title="Phóng to (+)" aria-label="Phóng to">
+          <div class="map-unified-cluster">
+            <button type="button" class="map-unified-btn map-legend-info-btn" id="btn-map-legend-info" title="Xem chú thích bản đồ" aria-expanded="false" aria-label="Chú thích bản đồ">
+              ${infoIcon}
+            </button>
+            <button type="button" class="map-unified-btn" id="btn-map-zoom-in" title="Phóng to (+)" aria-label="Phóng to">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
               </svg>
             </button>
-            <button type="button" class="map-zoom-btn" id="btn-map-zoom-out" title="Thu nhỏ (-)" aria-label="Thu nhỏ">
+            <button type="button" class="map-unified-btn" id="btn-map-zoom-out" title="Thu nhỏ (-)" aria-label="Thu nhỏ">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-            </button>
-            <button type="button" class="map-zoom-btn map-zoom-extent-btn" id="btn-map-zoom-extent" title="Zoom toàn cảnh (Cần Thơ)" aria-label="Zoom toàn cảnh">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="22" y1="12" x2="18" y2="12"></line>
-                <line x1="6" y1="12" x2="2" y2="12"></line>
-                <line x1="12" y1="6" x2="12" y2="2"></line>
-                <line x1="12" y1="22" x2="12" y2="18"></line>
               </svg>
             </button>
           </div>
@@ -174,7 +164,9 @@
         <div class="map-tactical-legend is-collapsed" id="map-tactical-legend" hidden>
           <div class="legend-header">
             <div class="legend-title">CHÚ THÍCH</div>
-            <button type="button" class="legend-close-btn" id="btn-map-legend-close" title="Đóng chú thích">✕</button>
+            <button type="button" class="legend-close-btn" id="btn-map-legend-close" title="Đóng chú thích" style="display:flex;align-items:center;justify-content:center;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
           </div>
           <div class="legend-item"><span class="legend-dot" style="--c:#10b981;"></span><span>Xe cứu thương</span></div>
           <div class="legend-item"><span class="legend-dot" style="--c:#38bdf8;"></span><span>Bệnh viện tiếp nhận</span></div>
@@ -196,7 +188,6 @@
             `).join('')}
           </div>
         </div>
-        <div class="map-focus-chip" id="map-focus-chip" hidden></div>
       `;
     }
 
@@ -260,31 +251,33 @@
         };
       });
 
-      // 2. Hospitals (xanh nước biển)
+      // 2. Hospitals (xanh nước biển, Bệnh viện Đa khoa thành phố Cần Thơ làm nổi bật vì là trung tâm)
       hospitals.forEach(h => {
         const coords = h.coords || CITY_CENTER;
         const isRestricted = h.status === 'RESTRICTED';
+        const isCenter = h.isCenter || h.id === 'HOSP_BVDK' || h.name?.includes('Đa khoa thành phố Cần Thơ') || h.name?.includes('Đa khoa TP Cần Thơ');
         const statusLabel = h.statusText || (isRestricted ? 'Hạn chế' : 'Đang nhận');
+        const displayName = h.name.startsWith('BV ') ? h.name.replace(/^BV\s+/, 'Bệnh viện ') : h.name;
         const icon = window.L.divIcon({
           className: 'map-leaflet-marker',
           html: `
-            <div class="map-hosp-hub-badge">
-              <div class="map-hosp-shield ${isRestricted ? 'restricted' : ''}">
+            <div class="map-hosp-hub-badge ${isCenter ? 'is-center-hospital' : ''}">
+              <div class="map-hosp-shield ${isCenter ? 'is-center' : ''} ${isRestricted ? 'restricted' : ''}">
                 <div class="map-hosp-cross-icon">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round">
                     <line x1="12" y1="4" x2="12" y2="20"></line>
                     <line x1="4" y1="12" x2="20" y2="12"></line>
                   </svg>
                 </div>
-                <span class="map-hosp-title-text" title="${h.name}">${h.name.replace('Bệnh viện', 'BV')}</span>
-                <span class="map-hosp-bed-chip" title="Trạng thái tiếp nhận cấp cứu">${statusLabel}</span>
+                <span class="map-hosp-title-text" title="${displayName}">${displayName}</span>
+                <span class="map-hosp-bed-chip" title="Trạng thái tiếp nhận cấp cứu">${isCenter ? 'TRUNG TÂM · ' + statusLabel : statusLabel}</span>
               </div>
             </div>
           `,
-          iconSize: [220, 36],
-          iconAnchor: [110, 18]
+          iconSize: [280, 40],
+          iconAnchor: [140, 20]
         });
-        const marker = window.L.marker(coords, { icon, zIndexOffset: 100 }).addTo(this.map);
+        const marker = window.L.marker(coords, { icon, zIndexOffset: isCenter ? 250 : 100 }).addTo(this.map);
         marker.bindPopup(this.createHospitalPopupHtml(h), { autoPan: false });
         marker.on('click', () => this.onHospitalSelect?.(h.id));
         this.hospitalMarkers[h.id] = { marker, data: h };
@@ -637,7 +630,6 @@
       this.applyVisibility();
       this.drawFocusRoute();
       this.fitFocus(animate);
-      this.updateFocusChip();
     }
 
     clearFocus() {
@@ -648,7 +640,6 @@
       this.focusLayer.clearLayers();
       this.focusLines = null;
       this.applyVisibility();
-      this.updateFocusChip();
       this.map.flyTo(CITY_CENTER, CITY_ZOOM, { duration: 0.8 });
     }
 
@@ -733,19 +724,6 @@
       animate ? this.map.flyToBounds(bounds, { ...opts, duration: 0.8 }) : this.map.fitBounds(bounds, opts);
     }
 
-    updateFocusChip() {
-      const chip = document.getElementById('map-focus-chip');
-      if (!chip) return;
-      if (!this.focusPlate) { chip.hidden = true; return; }
-      const m = this.missionByPlate(this.focusPlate);
-      chip.innerHTML = `
-        <span class="map-focus-chip-dot"></span>
-        <span>ĐANG THEO DÕI <strong>${this.focusPlate}</strong>${m ? ` → ${m.hosp.name.replace('Bệnh viện', 'BV')}` : ''}</span>
-        <span class="map-focus-chip-hint">Bấm lại thẻ xe để thoát</span>
-      `;
-      chip.hidden = false;
-    }
-
     // --- Popups ---
     createVehiclePopupHtml(v) {
       const m = this.missionByPlate(v.plate);
@@ -766,7 +744,10 @@
             <div>Tín hiệu thiết bị: <strong style="color:#10b981;">● GPS Online</strong></div>
             ${m ? `
               <div style="background:#0f273d;padding:8px;border-radius:6px;margin-top:6px;border:1px solid rgba(56,189,248,0.3);">
-                <div style="color:#f87171;font-weight:700;font-size:11px;margin-bottom:2px;">🚑 ${m.caseData.incident?.name || 'Ca cấp cứu'} · CODE ${m.code.key}</div>
+                <div style="color:#f87171;font-weight:700;font-size:11px;margin-bottom:2px;display:flex;align-items:center;gap:5px;">
+                  <span style="display:inline-flex;color:#f87171;">${window.CCNV_UI?.ICONS?.ambulance || ''}</span>
+                  <span>${m.caseData.incident?.name || 'Ca cấp cứu'} · CODE ${m.code.key}</span>
+                </div>
                 <div>Hiện trường: <strong style="color:#ffffff;">${m.caseData.location?.address || '—'}</strong></div>
                 <div>Điểm đến: <strong style="color:#38bdf8;">${m.hosp.name}</strong></div>
                 ${m.caseData.eta ? `<div>Dự kiến đến (ETA): <strong style="color:#f87171;font-family:var(--font-mono);">${m.caseData.eta}</strong></div>` : ''}
@@ -782,7 +763,10 @@
       return `
         <div style="min-width:240px;color:#cbd5e1;">
           <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #334155;padding-bottom:6px;margin-bottom:8px;">
-            <div style="color:#ef4444;font-weight:700;font-size:13px;">🚨 HIỆN TRƯỜNG ${c.code}</div>
+            <div style="color:#ef4444;font-weight:700;font-size:13px;display:flex;align-items:center;gap:6px;">
+              <span style="display:inline-flex;color:#ef4444;">${window.CCNV_UI?.ICONS?.alertTriangle || ''}</span>
+              <span>HIỆN TRƯỜNG ${c.code}</span>
+            </div>
             <span style="font-size:10px;font-weight:800;padding:2px 6px;border-radius:4px;border:1px solid ${m.code.color};color:#fff;">CODE ${m.code.key}</span>
           </div>
           <div style="font-size:12px;display:flex;flex-direction:column;gap:5px;">

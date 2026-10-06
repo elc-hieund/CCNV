@@ -300,8 +300,7 @@
           <div class="slide-confirm-container" id="slide-confirm-box" style="margin-top:8px;">
             <div class="slide-track" id="slider-track" style="height:50px;">
               <div class="slide-fill" id="slider-fill"></div>
-              <span class="slide-text" id="slider-label" style="font-size:11.5px;">VUỐT SANG PHẢI: XÁC NHẬN XUẤT PHÁT
-                ➔</span>
+              <span class="slide-text" id="slider-label" style="font-size:11.5px;">VUỐT SANG PHẢI: XÁC NHẬN XUẤT PHÁT</span>
               <div class="slide-knob" id="slider-knob" style="width:44px;height:44px;top:3px;left:3px;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8">
                   <polyline points="9 18 15 12 9 6"></polyline>
@@ -366,7 +365,7 @@
         <!-- Big 1-Touch Confirm Button -->
         <button class="btn btn-emergency-touch" id="btn-confirm-dispatch-order"
           style="width:100%;min-height:58px;font-size:16px;letter-spacing:0.5px;">
-          XÁC NHẬN LÊN XE & XUẤT PHÁT ➔
+          XÁC NHẬN LÊN XE & XUẤT PHÁT
         </button>
       </div>
     </div>
@@ -656,7 +655,7 @@
 
         if (showToast && window.CCNV_UI?.Toast) {
           window.CCNV_UI.Toast.show(
-            '✓ ĐÃ ĐỒNG BỘ VỚI TRUNG TÂM 115',
+            'ĐÃ ĐỒNG BỘ VỚI TRUNG TÂM 115',
             `Thông tin BN "${patch.name}" (${patch.age}T, ${patch.gender}, máu ${patch.bloodType}) đã lưu & phát tức thời về Trung tâm điều hành 115 và Bệnh viện tiếp nhận.`,
             true
           );
@@ -691,7 +690,7 @@
               const p = payload.patient;
               if (window.CCNV_UI?.Toast) {
                 window.CCNV_UI.Toast.show(
-                  '⚡ ĐỒNG BỘ TỪ TRUNG TÂM 115',
+                  'ĐỒNG BỘ TỪ TRUNG TÂM 115',
                   `Trung tâm đã cập nhật: ${p.name || 'Bệnh nhân'} (${p.age || '—'}T, ${p.gender || '—'}) · Nhóm máu ${p.bloodType || '—'} · Tiền sử: ${p.history || 'Không'}`,
                   true
                 );
@@ -770,28 +769,28 @@
         {
           step: 1,
           name: 'Xuất phát',
-          sliderLabel: 'VUỐT SANG PHẢI: XÁC NHẬN XUẤT PHÁT ➔',
+          sliderLabel: 'VUỐT SANG PHẢI: XÁC NHẬN XUẤT PHÁT',
           toastTitle: 'ĐÃ XÁC NHẬN XUẤT PHÁT',
           toastMsg: 'Đã thông báo về Trung tâm 115 xe đang xuất phát di chuyển đến hiện trường.'
         },
         {
           step: 2,
           name: 'Đến HT',
-          sliderLabel: 'VUỐT SANG PHẢI: ĐÃ ĐẾN HIỆN TRƯỜNG ➔',
+          sliderLabel: 'VUỐT SANG PHẢI: ĐÃ ĐẾN HIỆN TRƯỜNG',
           toastTitle: 'ĐÃ ĐẾN HIỆN TRƯỜNG',
           toastMsg: 'Ghi nhận xe cấp cứu đã tiếp cận hiện trường tai nạn.'
         },
         {
           step: 3,
-          name: 'Rời HT ➔ BV',
-          sliderLabel: 'VUỐT SANG PHẢI: RỜI HIỆN TRƯỜNG ĐI BV ➔',
+          name: 'Rời HT đến BV',
+          sliderLabel: 'VUỐT SANG PHẢI: RỜI HIỆN TRƯỜNG ĐI BV',
           toastTitle: 'ĐÃ RỜI HIỆN TRƯỜNG ĐI BỆNH VIỆN',
           toastMsg: 'Bắt đầu chuyển bệnh nhân đến bệnh viện tiếp nhận.'
         },
         {
           step: 4,
           name: 'Đến BV',
-          sliderLabel: 'VUỐT SANG PHẢI: ĐÃ ĐẾN BỆNH VIỆN ➔',
+          sliderLabel: 'VUỐT SANG PHẢI: ĐÃ ĐẾN BỆNH VIỆN',
           toastTitle: 'ĐÃ ĐẾN BỆNH VIỆN TIẾP NHẬN',
           toastMsg: 'Đã hoàn tất vận chuyển và bàn giao bệnh nhân cho Khoa Cấp cứu.'
         }
@@ -840,7 +839,7 @@
 
           if (s < currentStep) {
             n.className = 'driver-step-col completed';
-            if (dot) dot.textContent = '✓';
+            if (dot) dot.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
             if (timeSmall) {
               timeSmall.textContent = stepTimes[s] || '08:30';
               timeSmall.style.color = '#10B981';
@@ -871,7 +870,7 @@
           track.style.pointerEvents = 'auto';
           fill.style.background = 'linear-gradient(90deg, rgba(229, 37, 33, 0.3) 0%, rgba(229, 37, 33, 0.7) 100%)';
         } else {
-          label.textContent = '✓ ĐÃ HOÀN TẤT TOÀN BỘ NHIỆM VỤ CẤP CỨU';
+          label.textContent = 'ĐÃ HOÀN TẤT TOÀN BỘ NHIỆM VỤ CẤP CỨU';
           label.style.opacity = '1';
           track.style.pointerEvents = 'none';
           fill.style.width = '100%';
