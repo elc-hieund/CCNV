@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TRUNG TÂM ĐIỀU HÀNH CẤP CỨU NGOẠI VIỆN — THÀNH PHỐ CẦN THƠ</title>
-  
+
   <!-- CSS Design System adhering strictly to design_rule.md -->
   <link rel="stylesheet" href="css/tokens.css?v=20261005_01" />
   <link rel="stylesheet" href="css/global.css?v=20261005_01" />
   <link rel="stylesheet" href="css/desktop.css?v=20261005_03" />
+  <link rel="icon" type="image/svg+xml" href="assets/app_logo.svg" />
   <!-- Leaflet GIS Real World Map Engine -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
+
 <body>
   <div class="app-container">
     <!-- MAIN SHELL: SIDEBAR ON THE LEFT (FULL HEIGHT 100vh), MAIN AREA ON THE RIGHT -->
@@ -21,15 +24,14 @@
         <!-- Top Brand Header with Logo & Collapse Toggle Button -->
         <div class="sidebar-top-brand">
           <div class="brand-left">
-            <div class="medical-cross-icon" style="width:28px;height:28px;border-radius:6px;flex-shrink:0;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h5v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"/>
-              </svg>
+            <div class="sidebar-app-logo" style="width:30px;height:30px;border-radius:6px;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+              <img src="assets/app_logo.svg" alt="App Logo" style="width:100%;height:100%;object-fit:contain;display:block;" />
             </div>
             <span class="sidebar-brand-title">Cấp Cứu 115 Cần Thơ</span>
           </div>
           <button class="sidebar-toggle-btn" id="btn-toggle-sidebar" title="Thu gọn / Mở rộng Menu">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
               <polyline points="15 18 9 12 15 6"></polyline>
             </svg>
           </button>
@@ -45,8 +47,11 @@
           <span class="footer-copyright-text">
             2026 © Design by
           </span>
-          <a href="https://elcom.com.vn" target="_blank" rel="noopener noreferrer" class="footer-brand-logo" id="sidebar-footer-logo" title="Elcom Corporation">
-            <img src="assets/Logo Elcom-dark.svg" alt="Elcom Logo" style="height:14px;width:auto;display:block;opacity:0.9;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.9'" />
+          <a href="https://elcom.com.vn" target="_blank" rel="noopener noreferrer" class="footer-brand-logo"
+            id="sidebar-footer-logo" title="Elcom Corporation">
+            <img src="assets/Logo Elcom-dark.svg" alt="Elcom Logo"
+              style="height:14px;width:auto;display:block;opacity:0.9;transition:opacity 0.2s;"
+              onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.9'" />
           </a>
         </div>
       </aside>
@@ -79,29 +84,33 @@
 
           <div class="header-right">
             <!-- Nút chạy kịch bản demo (Ẩn nút riêng, hành động chuyển sang quả chuông thông báo) -->
-            <button type="button" class="btn-demo-start" id="btn-demo-start" style="display:none;" title="Chạy kịch bản demo">
+            <button type="button" class="btn-demo-start" id="btn-demo-start" style="display:none;"
+              title="Chạy kịch bản demo">
               <span class="btn-demo-dot" aria-hidden="true"></span>
               <span class="btn-demo-label">Bắt đầu</span>
             </button>
 
             <!-- Đồng hồ & Ngày tháng (Ngày tháng năm - Giờ phút giây trên cùng 1 dòng) -->
             <div class="header-clock-widget" title="Thời gian hệ thống">
-              <div class="clock-display" id="header-live-datetime" style="white-space:nowrap;font-size:12.5px;font-family:var(--font-mono);">
+              <div class="clock-display" id="header-live-datetime"
+                style="white-space:nowrap;font-size:12.5px;font-family:var(--font-mono);">
                 <span id="header-live-date">02/10/2026</span> - <span id="header-live-clock">10:31:24</span>
               </div>
             </div>
 
             <!-- Nút thông báo khẩn cấp -->
             <button class="bell-btn" id="btn-header-bell" title="Thông báo khẩn cấp">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
               </svg>
               <span class="bell-badge">1</span>
             </button>
 
             <!-- Nút Tài khoản / Đăng xuất dạng 1 Icon hình tròn duy nhất -->
-            <button class="header-avatar-icon-btn" id="btn-logout" title="Nguyễn Văn An (Điều phối viên) - Click để Đăng xuất">
+            <button class="header-avatar-icon-btn" id="btn-logout"
+              title="Nguyễn Văn An (Điều phối viên) - Click để Đăng xuất">
               <div class="user-avatar-circle" id="header-user-avatar">NV</div>
             </button>
           </div>
@@ -129,18 +138,15 @@
   <div class="login-screen-overlay" id="login-screen-overlay">
     <div class="login-modal-card">
       <div class="login-brand-header">
-        <div class="login-cross-icon pulse-red">
-          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h5v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"/>
-          </svg>
+        <div class="login-app-logo" style="width:58px;height:58px;border-radius:12px;margin:0 auto 14px auto;display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(71,66,216,0.35);overflow:hidden;background:#0d1829;">
+          <img src="assets/app_logo.svg" alt="App Logo" style="width:100%;height:100%;object-fit:contain;display:block;" />
         </div>
-        <h2>TRUNG TÂM ĐIỀU HÀNH CẤP CỨU</h2>
-        <p>HỆ THỐNG ĐIỀU HÀNH CẤP CỨU NGOẠI VIỆN · THÀNH PHỐ CẦN THƠ</p>
+        <h2>HỆ THỐNG GIÁM SÁT & ĐIỀU HÀNH PHƯƠNG TIỆN CẤP CỨU NGOẠI VIỆN</h2>
       </div>
 
       <form class="login-form-box" id="login-form">
         <div class="form-field">
-          <label class="form-label">Tài khoản / Mã định danh</label>
+          <label class="form-label">Tài khoản</label>
           <input type="text" id="login-username-input" placeholder="ví dụ: dpv01, bvtu.tn" value="dpv01" required />
         </div>
         <div class="form-field">
@@ -149,7 +155,7 @@
         </div>
 
         <button type="submit" class="btn btn-emergency btn-lg" style="width:100%;margin-top:8px;">
-          <span>ĐĂNG NHẬP VÀO HỆ THỐNG</span>
+          <span>ĐĂNG NHẬP</span>
         </button>
       </form>
 
@@ -174,4 +180,5 @@
     });
   </script>
 </body>
+
 </html>
