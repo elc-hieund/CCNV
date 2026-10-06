@@ -771,7 +771,7 @@
           </div>
           <div style="font-size:12px;display:flex;flex-direction:column;gap:5px;">
             <div>Vị trí: <strong style="color:#ffffff;">${c.location?.address || '—'}</strong></div>
-            <div>Bệnh nhân: <strong style="color:#ffffff;">${c.patient?.name || 'Chưa rõ'}${c.patient?.age ? ` (${c.patient.age}T)` : ''}</strong></div>
+            <div>Bệnh nhân: <strong style="color:#ffffff;">${c.patient?.name || 'Chưa rõ'}${c.patient?.age ? ` (${c.patient.age}T)` : (c.patient?.ageGroupText ? ` (${c.patient.ageGroupText})` : '')}</strong></div>
             <div>Tình trạng: <span style="color:#fbbf24;">${c.incident?.name || '—'} · ${c.incident?.severityText || ''}</span></div>
             <div>Xe phụ trách: <strong style="color:#34d399;font-family:var(--font-mono);">${m.plate}</strong></div>
             <div>Bệnh viện đích: <strong style="color:#38bdf8;">${m.hosp.name}</strong></div>

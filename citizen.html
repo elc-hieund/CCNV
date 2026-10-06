@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>CCNV - App Người Dân Gọi Cấp Cứu 115 TP. Cần Thơ</title>
+  <title>EAMS - App Người Dân Gọi Cấp Cứu 115 TP. Cần Thơ</title>
 
   <!-- Core CCNV Stylesheets -->
   <link rel="stylesheet" href="css/tokens.css?v=20261002_03" />
@@ -36,29 +36,16 @@
       background: #0A1B2A !important;
     }
 
-    /* Citizen In-Call Phone Card (UI Cuộc gọi thoại 115 thông thường) */
+    /* Citizen In-Call Phone Card (UI Cuộc gọi thoại 115 thông thường - Clean Medical Calm) */
     .citizen-incall-card {
-      background: linear-gradient(135deg, rgba(6, 78, 59, 0.4) 0%, rgba(10, 27, 42, 0.96) 55%, rgba(185, 28, 28, 0.3) 100%);
-      border: 1.5px solid rgba(16, 185, 129, 0.65);
-      border-radius: 12px;
-      padding: 12px 14px;
-      margin-bottom: 14px;
-      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2), 0 0 16px rgba(16, 185, 129, 0.15);
+      background: #0A1F18;
+      border: 1px solid rgba(16, 185, 129, 0.45);
+      border-radius: 10px;
+      padding: 11px 13px;
+      margin-bottom: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
       position: relative;
       overflow: hidden;
-      animation: incallGlowPulse 2.5s infinite alternate;
-    }
-
-    @keyframes incallGlowPulse {
-      0% {
-        border-color: rgba(16, 185, 129, 0.5);
-        box-shadow: 0 4px 16px rgba(16, 185, 129, 0.15);
-      }
-
-      100% {
-        border-color: rgba(52, 211, 153, 0.9);
-        box-shadow: 0 8px 26px rgba(16, 185, 129, 0.32), 0 0 20px rgba(52, 211, 153, 0.22);
-      }
     }
 
     .incall-card-top {
@@ -77,10 +64,10 @@
     }
 
     .incall-avatar-pulse {
-      width: 40px;
-      height: 40px;
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
-      background: rgba(16, 185, 129, 0.18);
+      background: rgba(16, 185, 129, 0.16);
       border: 1.5px solid #10B981;
       display: flex;
       align-items: center;
@@ -90,41 +77,17 @@
       position: relative;
     }
 
-    .incall-wave-ring {
-      position: absolute;
-      top: -4px;
-      left: -4px;
-      right: -4px;
-      bottom: -4px;
-      border-radius: 50%;
-      border: 1.5px solid rgba(16, 185, 129, 0.6);
-      animation: incallRipple 1.6s cubic-bezier(0, 0.2, 0.8, 1) infinite;
-      pointer-events: none;
-    }
-
-    @keyframes incallRipple {
-      0% {
-        transform: scale(0.9);
-        opacity: 0.9;
-      }
-
-      100% {
-        transform: scale(1.4);
-        opacity: 0;
-      }
-    }
-
     .incall-live-badge {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      background: rgba(16, 185, 129, 0.2);
-      border: 1px solid rgba(16, 185, 129, 0.4);
+      gap: 5px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.35);
       color: #34D399;
-      font-size: 9px;
+      font-size: 9.5px;
       font-weight: 700;
       letter-spacing: 0.5px;
-      padding: 1px 6px;
+      padding: 2px 7px;
       border-radius: 10px;
     }
 
@@ -133,13 +96,11 @@
       height: 6px;
       border-radius: 50%;
       background: #10B981;
-      box-shadow: 0 0 6px #10B981;
-      animation: pulse 1s infinite;
     }
 
     .incall-timer-box {
       text-align: right;
-      min-width: 72px;
+      min-width: 68px;
       display: flex;
       flex-direction: column;
       align-items: flex-end;
@@ -148,13 +109,12 @@
     }
 
     .incall-timer-text {
-      font-size: 22px;
+      font-size: 20px;
       font-weight: 800;
       color: #34D399;
       font-family: var(--font-mono, monospace);
       letter-spacing: 0.5px;
       line-height: 1.1;
-      text-shadow: 0 0 12px rgba(52, 211, 153, 0.45);
     }
 
     .incall-controls-bar {
@@ -218,10 +178,224 @@
 
     /* Cancel Emergency Request Button Alert Styling */
     #btn-citizen-request-cancel:hover {
-      background: linear-gradient(135deg, rgba(239, 68, 68, 0.35) 0%, rgba(185, 28, 28, 0.45) 100%) !important;
+      background: rgba(239, 68, 68, 0.28) !important;
       border-color: #F87171 !important;
       color: #FFFFFF !important;
-      box-shadow: 0 0 16px rgba(239, 68, 68, 0.45) !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+    }
+
+    #btn-add-contact:hover {
+      background: rgba(56, 189, 248, 0.28) !important;
+      border-color: #7DD3FC !important;
+      color: #FFFFFF !important;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    #btn-add-contact:active {
+      transform: scale(0.97);
+    }
+
+    /* Pure Fullscreen No-Scroll Map Layout for Idle Home Screen */
+    .citizen-main-scroll.home-idle-mode,
+    .citizen-main-scroll.home-active-mode {
+      overflow: hidden !important;
+      padding: 8px 10px 6px 10px !important;
+      display: flex !important;
+      flex-direction: column !important;
+    }
+
+    .citizen-main-scroll.home-idle-mode #tab-home,
+    .citizen-main-scroll.home-active-mode #tab-home {
+      height: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      flex: 1 !important;
+      min-height: 0 !important;
+      overflow: hidden !important;
+    }
+
+    /* Active emergency view stretches when visible */
+    .citizen-main-scroll.home-active-mode #home-active-case-view {
+      display: flex !important;
+      height: 100% !important;
+      flex-direction: column !important;
+      flex: 1 !important;
+      min-height: 0 !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+    }
+
+    .citizen-main-scroll.home-active-mode #home-idle-view {
+      display: none !important;
+    }
+
+    .citizen-main-scroll.home-idle-mode #home-active-case-view {
+      display: none !important;
+    }
+
+    .citizen-main-scroll.home-idle-mode #home-idle-view {
+      display: flex !important;
+      height: 100% !important;
+      flex-direction: column !important;
+      flex: 1 !important;
+      min-height: 0 !important;
+      overflow: hidden !important;
+    }
+
+    .citizen-main-scroll.home-idle-mode .home-map-card.expanded-full {
+      flex: 1 !important;
+      min-height: 0 !important;
+      height: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      margin-bottom: 0 !important;
+      padding: 0 !important;
+      background: transparent !important;
+      border: none !important;
+    }
+
+    .citizen-main-scroll.home-idle-mode .home-map-card.expanded-full #home-facilities-map {
+      height: 100% !important;
+      min-height: 0 !important;
+      flex: 1 !important;
+      width: 100% !important;
+      border-radius: 10px !important;
+      border: 1px solid #1E3A56 !important;
+      overflow: hidden !important;
+      position: relative !important;
+      touch-action: pan-x pan-y pinch-zoom !important;
+    }
+
+    .countdown-desc {
+      white-space: nowrap;
+    }
+
+    @media (max-width: 420px) {
+      .countdown-desc {
+        font-size: 11px !important;
+        white-space: normal !important;
+        text-wrap: balance !important;
+      }
+    }
+
+    /* Active Emergency Case Maximized Map Layout */
+
+    .emergency-tracking-card {
+      height: 100% !important;
+      display: flex !important;
+      flex-direction: column !important;
+      flex: 1 !important;
+      min-height: 0 !important;
+      padding: 6px 10px 6px 10px !important;
+      margin-bottom: 0 !important;
+      box-sizing: border-box !important;
+      background: transparent !important;
+      border: none !important;
+    }
+
+    #citizen-tracking-map {
+      flex: 1 1 auto;
+      min-height: 200px;
+      height: 100% !important;
+      margin: 6px 0;
+      border-radius: 10px;
+      border: 1px solid #1E3A56;
+      overflow: hidden;
+      position: relative;
+      touch-action: pan-x pan-y pinch-zoom;
+    }
+
+    .case-stepper {
+      margin: 4px 0 6px 0;
+    }
+
+    #btn-citizen-request-cancel {
+      margin-top: 6px !important;
+      padding: 8px 12px !important;
+      flex-shrink: 0;
+    }
+
+    #btn-toggle-tracking-firstaid:hover {
+      background: #0E2435 !important;
+      border-color: #38BDF8 !important;
+    }
+
+    /* Tracking Map On-Canvas Floating Action Controls */
+    .tracking-map-controls-group {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      z-index: 500;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .tracking-map-btn {
+      width: 32px;
+      height: 32px;
+      background: rgba(10, 27, 42, 0.88);
+      border: 1px solid #1E3A56;
+      border-radius: 6px;
+      color: #94A3B8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+      transition: all 0.15s ease;
+      backdrop-filter: blur(4px);
+      padding: 0;
+    }
+
+    .tracking-map-btn:hover {
+      background: #14324D;
+      border-color: #38BDF8;
+      color: #FFFFFF;
+      transform: scale(1.05);
+    }
+
+    .tracking-map-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Fullscreen Mode for Tracking Map */
+    #citizen-tracking-map.map-fullscreen {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 99999 !important;
+      border-radius: 0 !important;
+      margin: 0 !important;
+      border: none !important;
+    }
+
+    /* Fix leaflet container layers in citizen app */
+    #home-facilities-map .leaflet-pane,
+    #citizen-tracking-map .leaflet-pane {
+      z-index: 100;
+    }
+
+    #home-facilities-map .leaflet-tile-pane,
+    #citizen-tracking-map .leaflet-tile-pane {
+      z-index: 100;
+    }
+
+    #home-facilities-map .leaflet-overlay-pane,
+    #citizen-tracking-map .leaflet-overlay-pane {
+      z-index: 200;
+    }
+
+    #home-facilities-map .leaflet-marker-pane,
+    #citizen-tracking-map .leaflet-marker-pane {
+      z-index: 300;
+    }
+
+    #home-facilities-map .leaflet-popup-pane,
+    #citizen-tracking-map .leaflet-popup-pane {
+      z-index: 400;
     }
   </style>
 </head>
@@ -229,38 +403,19 @@
 <body>
   <div class="citizen-viewport" id="citizen-app-root">
 
-    <!-- 1. SMARTPHONE STATUS BAR -->
-    <div class="citizen-status-bar">
-      <span>08:15</span>
-      <div class="citizen-status-icons">
-        <span style="font-size:10px;font-family:var(--font-mono);color:#38BDF8;font-weight:700;">5G</span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
-          <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
-          <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
-          <line x1="12" y1="20" x2="12.01" y2="20"></line>
-        </svg>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="2" y="7" width="16" height="10" rx="2" ry="2"></rect>
-          <line x1="22" y1="11" x2="22" y2="13"></line>
-          <line x1="6" y1="11" x2="15" y2="11" stroke="#10B981" stroke-width="3"></line>
-        </svg>
-      </div>
-    </div>
+
 
     <!-- 2. APP HEADER -->
     <header class="citizen-header">
       <div class="citizen-brand">
-        <div class="citizen-brand-logo">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6">
-            <path
-              d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h5v5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z" />
-          </svg>
+        <div class="citizen-brand-logo" style="width:44px;height:44px;min-width:44px;min-height:44px;background:transparent;box-shadow:none;padding:0;overflow:hidden;border-radius:8px;">
+          <img src="assets/app_logo.svg" alt="App Logo" style="width:100%;height:100%;display:block;border-radius:8px;object-fit:contain;" />
         </div>
-        <div>
-          <strong style="color:#FFFFFF;font-size:13.5px;letter-spacing:0.5px;display:block;">CẤP CỨU 115 CẦN
-            THƠ</strong>
-          <span style="font-size:11px;color:#94A3B8;">Kênh Khẩn Cấp Người Dân</span>
+        <div style="display:flex;flex-direction:column;justify-content:center;">
+          <strong style="color:#FFFFFF;font-size:12px;letter-spacing:0.5px;line-height:1.25;display:block;">HỆ THỐNG GIÁM SÁT & ĐIỀU
+            HÀNH
+            <br>PHƯƠNG TIỆN CẤP CỨU NGOẠI VIỆN</strong>
+          <span style="font-size:11px;color:#94A3B8;line-height:1.2;margin-top:2px;">Ứng dụng hỗ trợ người dân tình huống khẩn cấp</span>
         </div>
       </div>
 
@@ -278,18 +433,11 @@
         </button>
 
         <!-- Account Badge Button -->
-        <div class="citizen-user-pill" id="citizen-header-user-btn" title="Xem hồ sơ cá nhân">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
-          <span id="header-user-phone" style="font-family:var(--font-mono);font-weight:600;">0907.654.321</span>
-        </div>
       </div>
     </header>
 
     <!-- 3. SCROLLABLE MAIN CONTENT AREA -->
-    <main class="citizen-main-scroll" id="citizen-main-container">
+    <main class="citizen-main-scroll home-idle-mode" id="citizen-main-container">
 
       <!-- ====================================================================
            TAB 1: TRANG CHỦ (Gộp Trang chủ & Yêu cầu cấp cứu)
@@ -299,23 +447,18 @@
         <!-- 1. ACTIVE EMERGENCY CASE VIEW (Hiển thị khi đang có yêu cầu xử lý) -->
         <div id="home-active-case-view" style="display:none;">
           <div class="emergency-tracking-card">
-            <!-- Case Status & ETA Header -->
+            <!-- Case Status & ETA Header (Compact Size with Dynamic Phase Title) -->
             <div
-              style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #183449;padding-bottom:10px;">
-              <div>
-                <div style="display:flex;align-items:center;gap:6px;">
-                  <span class="badge badge-emergency" style="font-size:9.5px;padding:2px 6px;">TỐI KHẨN</span>
-                  <span style="font-family:var(--font-mono);font-size:12px;color:#38BDF8;font-weight:700;"
-                    id="track-case-code">CC-261002-002</span>
-                </div>
-                <h2 style="color:#FFFFFF;font-size:15px;margin:4px 0 0 0;" id="track-case-status-title">XE ĐANG ĐẾN:
-                  65A-011.15</h2>
-              </div>
+              style="display:flex;flex-direction:column;align-items:center;justify-content:center;border-bottom:1px solid #183449;padding-bottom:6px;margin-bottom:4px;flex-shrink:0;">
+              <span id="track-case-code" style="display:none;"></span>
               <div
-                style="background:rgba(229,37,33,0.15);border:1px solid rgba(229,37,33,0.4);border-radius:8px;padding:6px 12px;text-align:center;">
-                <span style="font-size:10px;color:#FF5A55;display:block;font-weight:700;">DỰ KIẾN</span>
-                <strong style="color:#FFFFFF;font-size:16px;font-family:var(--font-mono);" id="track-eta-value">~4
-                  PHÚT</strong>
+                style="background:rgba(229,37,33,0.12);border:1.2px solid rgba(229,37,33,0.45);border-radius:10px;padding:6px 18px;text-align:center;min-width:140px;box-shadow:0 3px 12px rgba(0,0,0,0.3);">
+                <span id="track-case-status-title"
+                  style="font-size:10px;color:#FF5A55;display:block;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;margin-bottom:1px;">XE
+                  ĐANG ĐẾN</span>
+                <strong
+                  style="color:#FFFFFF;font-size:18px;font-family:var(--font-mono);font-weight:800;letter-spacing:0.5px;line-height:1.2;display:block;"
+                  id="track-eta-value">~4 PHÚT</strong>
               </div>
             </div>
 
@@ -327,7 +470,7 @@
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </div>
-                <span class="stepper-node-label">Tiếp nhận 115</span>
+                <span class="stepper-node-label">Tiếp nhận</span>
               </div>
               <div class="stepper-node done" id="step-node-2">
                 <div class="stepper-node-dot">
@@ -343,100 +486,99 @@
               </div>
               <div class="stepper-node" id="step-node-4">
                 <div class="stepper-node-dot">4</div>
-                <span class="stepper-node-label">Tiếp nhận bệnh nhận</span>
+                <span class="stepper-node-label">Tiếp nhận bệnh nhân</span>
               </div>
               <div class="stepper-node" id="step-node-5">
                 <div class="stepper-node-dot">5</div>
-                <span class="stepper-node-label">Đến BV</span>
+                <span class="stepper-node-label">Bàn giao bệnh nhân</span>
               </div>
             </div>
 
-            <!-- Realtime GIS Map View -->
+            <!-- Realtime GIS Map View with Map Controls -->
             <div class="citizen-map-container" id="citizen-tracking-map">
               <div class="map-floating-eta" id="map-eta-badge">
                 <span style="width:8px;height:8px;border-radius:50%;background:#FF3B35;"></span>
                 <span style="font-size:11.5px;color:#FFFFFF;font-weight:700;">ETA: ~4P</span>
               </div>
+
+              <!-- Map Floating Action Toolbar (Zoom In, Zoom Out, Fullscreen, Recenter) -->
+              <div class="tracking-map-controls-group">
+                <button type="button" class="tracking-map-btn" id="btn-tracking-zoom-in" title="Phóng to bản đồ">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                </button>
+                <button type="button" class="tracking-map-btn" id="btn-tracking-zoom-out" title="Thu nhỏ bản đồ">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                </button>
+                <button type="button" class="tracking-map-btn" id="btn-tracking-recenter"
+                  title="Định vị bao quát lộ trình">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M12 2v3m0 14v3M2 12h3m14 0h3"></path>
+                  </svg>
+                </button>
+                <button type="button" class="tracking-map-btn" id="btn-tracking-fullscreen"
+                  title="Toàn màn hình bản đồ">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                    id="icon-fullscreen-track">
+                    <path
+                      d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3">
+                    </path>
+                  </svg>
+                </button>
+              </div>
             </div>
 
-            <!-- Crew & Hospital Specs -->
-            <div
-              style="font-size:12px;color:#CBD5E1;display:flex;flex-direction:column;gap:5px;background:#081827;padding:10px 12px;border-radius:8px;border:1px solid #183449;">
-              <div style="display:flex;justify-content:space-between;">
-                <span>Khoảng cách: <strong style="color:#38BDF8;" id="track-dist-value">1.6 km (Tốc độ: 48
-                    km/h)</strong></span>
-                <span style="color:#34D399;font-weight:600;" id="live-share-status-tag">GPS Live</span>
-              </div>
-              <div>Bác sĩ phụ trách: <strong style="color:#FFFFFF;">BS. CKI. Nguyễn Văn Thành</strong> (0903.115.115)
-              </div>
-              <div>Bệnh viện tiếp nhận: <strong style="color:#FFFFFF;" id="track-hospital-name">BV Đa khoa Trung ương
-                  Cần Thơ</strong></div>
-            </div>
-
-            <!-- Action Button Strip: Call Center + Share Location + Self-Transport -->
-            <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;margin-top:12px;">
-              <button class="btn btn-default btn-xs" id="btn-call-center-direct"
-                style="padding:8px 4px;border:1px solid #29465A;color:#FFFFFF;" title="Gọi lại Tổng đài 115">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.2">
-                  <path
-                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                </svg>
-                <span>Gọi lại</span>
-              </button>
-              <button class="btn btn-default btn-xs" id="btn-share-live-location"
-                style="padding:8px 4px;border:1px solid #29465A;color:#FFFFFF;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.2">
-                  <circle cx="18" cy="5" r="3" />
-                  <circle cx="6" cy="12" r="3" />
-                  <circle cx="18" cy="19" r="3" />
-                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-                </svg>
-                <span>Chia sẻ vị trí</span>
-              </button>
-              <button class="btn btn-default btn-xs" id="btn-open-self-transport"
-                style="padding:8px 4px;border:1px solid #29465A;color:#F59E0B;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.2">
-                  <path d="M19 17h2a2 2 0 0 0 2-2v-4a2 2 0 0 0-.73-1.54L19 7h-5v10h5z" />
-                  <circle cx="8" cy="19" r="2" />
-                  <circle cx="17" cy="19" r="2" />
-                </svg>
-                <span>Tự di chuyển</span>
-              </button>
-            </div>
-
-            <!-- First Aid Medical Instructions Strip -->
-            <div class="first-aid-container">
-              <div style="font-size:12px;font-weight:700;color:#FF5A55;display:flex;align-items:center;gap:6px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <path
-                    d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                </svg>
-                HƯỚNG DẪN SƠ CỨU TRONG KHI CHỜ XE):
+            <!-- First Aid Medical Instructions Strip (Collapsible Show/Hide) -->
+            <div class="first-aid-container" id="tracking-first-aid-container"
+              style="margin-top:8px;padding:0;background:transparent;border:none;flex-shrink:0;">
+              <div id="btn-toggle-tracking-firstaid"
+                style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:#0A1B2A;border:1px solid #1E3A56;border-radius:8px;cursor:pointer;user-select:none;transition:all 0.2s ease;"
+                title="Bấm để ẩn / hiện hướng dẫn sơ cứu trong khi chờ xe cấp cứu">
+                <div style="font-size:11.5px;font-weight:700;color:#FF5A55;display:flex;align-items:center;gap:6px;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path
+                      d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                  </svg>
+                  <span>HƯỚNG DẪN SƠ CỨU KHI CHỜ XE</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <span id="lbl-tracking-firstaid-status" style="font-size:11px;color:#38BDF8;font-weight:600;">Xem
+                    hướng dẫn ▼</span>
+                </div>
               </div>
 
-              <div class="first-aid-card" data-aid-type="cpr">
-                <strong style="color:#FFFFFF;font-size:13px;display:block;">1. Ép tim ngoài lồng ngực (CPR)</strong>
-                <span style="font-size:11.5px;color:#94A3B8;">Đặt 2 tay giữa ngực, ép sâu 5cm với nhịp độ 100-120
-                  lần/phút. Bấm xem bộ đếm nhịp.</span>
-              </div>
+              <!-- Collapsible Content (Ẩn mặc định để tối đa hóa không gian bản đồ) -->
+              <div id="tracking-firstaid-body"
+                style="display:none;border:1px solid #1E3A56;border-top:none;border-radius:0 0 8px 8px;padding:10px 12px;background:#081827;">
+                <div class="first-aid-card" data-aid-type="cpr" style="margin-top:0;">
+                  <strong style="color:#FFFFFF;font-size:12.5px;display:block;">1. Ép tim ngoài lồng ngực (CPR)</strong>
+                  <span style="font-size:11px;color:#94A3B8;">Đặt 2 tay giữa ngực, ép sâu 5cm với nhịp độ 100-120
+                    lần/phút. Bấm xem bộ đếm nhịp.</span>
+                </div>
 
-              <div class="first-aid-card" data-aid-type="stroke">
-                <strong style="color:#FFFFFF;font-size:13px;display:block;">2. Xử trí nghi ngờ Đột quỵ (FAST)</strong>
-                <span style="font-size:11.5px;color:#94A3B8;">Nằm nghiêng an toàn, đầu cao 30 độ, không cho ăn uống bất
-                  cứ thứ gì.</span>
-              </div>
+                <div class="first-aid-card" data-aid-type="stroke" style="margin-top:8px;">
+                  <strong style="color:#FFFFFF;font-size:12.5px;display:block;">2. Xử trí nghi ngờ Đột quỵ
+                    (FAST)</strong>
+                  <span style="font-size:11px;color:#94A3B8;">Nằm nghiêng an toàn, đầu cao 30 độ, không cho ăn uống bất
+                    cứ thứ gì.</span>
+                </div>
 
-              <div class="first-aid-card" data-aid-type="bleeding">
-                <strong style="color:#FFFFFF;font-size:13px;display:block;">3. Cầm máu vết thương ngoài</strong>
-                <span style="font-size:11.5px;color:#94A3B8;">Băng ép trực tiếp bằng gạc vô trùng, không tháo gạc ra nếu
-                  máu thấm qua.</span>
+                <div class="first-aid-card" data-aid-type="bleeding" style="margin-top:8px;">
+                  <strong style="color:#FFFFFF;font-size:12.5px;display:block;">3. Cầm máu vết thương ngoài</strong>
+                  <span style="font-size:11px;color:#94A3B8;">Băng ép trực tiếp bằng gạc vô trùng, không tháo gạc ra nếu
+                    máu thấm qua.</span>
+                </div>
               </div>
             </div>
 
             <!-- Safe Cancellation Button (Hiển thị đỏ cảnh báo quan trọng) -->
             <button type="button" class="btn btn-sm" id="btn-citizen-request-cancel"
-              style="width:100%;margin-top:18px;padding:12px 14px;color:#FCA5A5;background:linear-gradient(135deg, rgba(239,68,68,0.18) 0%, rgba(185,28,28,0.28) 100%);border:1.5px solid #EF4444;border-radius:8px;font-weight:700;font-size:12.5px;letter-spacing:0.4px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 0 14px rgba(239,68,68,0.25);cursor:pointer;transition:all 0.2s ease;">
+              style="width:100%;margin-top:18px;padding:12px 14px;color:#FCA5A5;background:linear-gradient(135deg, rgba(239,68,68,0.18) 0%, rgba(185,28,28,0.28) 100%);border:1.5px solid #EF4444;border-radius:8px;font-weight:700;font-size:12.5px;letter-spacing:0.4px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,0.4);cursor:pointer;transition:all 0.2s ease;">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2.4"
                 stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
@@ -465,13 +607,6 @@
                   <div style="display:flex;align-items:center;gap:6px;">
                     <strong style="color:#ffffff;font-size:12.5px;letter-spacing:0.3px;text-transform:uppercase;">TỔNG
                       ĐÀI CẤP CỨU 115</strong>
-                    <span class="incall-live-badge">
-                      <span class="incall-dot"></span>
-                      ĐANG KẾT NỐI
-                    </span>
-                  </div>
-                  <div style="font-size:11px;color:#cbd5e1;margin-top:2px;">
-                    Đang đàm thoại y tế • Tọa độ GPS đã gửi về ĐPV 115
                   </div>
                 </div>
               </div>
@@ -520,21 +655,21 @@
           </div>
 
           <!-- Current GPS Location Bar -->
-          <div class="gps-status-card" style="margin-bottom:14px;">
+          <div class="gps-status-card" style="margin-bottom:8px;flex-shrink:0;">
             <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
               <div
-                style="width:32px;height:32px;border-radius:6px;background:rgba(239,68,68,0.15);display:flex;align-items:center;justify-content:center;color:#EF4444;flex-shrink:0;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                style="width:28px;height:28px;border-radius:6px;background:rgba(239,68,68,0.15);display:flex;align-items:center;justify-content:center;color:#EF4444;flex-shrink:0;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                   <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path>
                   <circle cx="12" cy="10" r="3"></circle>
                 </svg>
               </div>
               <div style="flex:1;min-width:0;">
                 <div
-                  style="font-size:10px;color:#94A3B8;text-transform:uppercase;font-weight:700;letter-spacing:0.5px;">
+                  style="font-size:9.5px;color:#94A3B8;text-transform:uppercase;font-weight:700;letter-spacing:0.5px;">
                   VỊ TRÍ CỦA BẠN</div>
                 <strong
-                  style="font-size:12.5px;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;"
+                  style="font-size:12px;color:#FFFFFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;"
                   title="Đại học Cần Thơ - Cổng A đường 3/2, P. Xuân Khánh, TP. Cần Thơ">
                   Đại học Cần Thơ - Cổng A đường 3/2, P. Xuân Khánh, TP. Cần Thơ
                 </strong>
@@ -542,32 +677,23 @@
             </div>
           </div>
 
-
-          <!-- Interactive GIS Map of Nearest Healthcare Facilities -->
-          <div class="home-map-card">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-              <span style="font-size:12.5px;font-weight:700;color:#38BDF8;display:flex;align-items:center;gap:6px;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <!-- Interactive GIS Map of Nearest Healthcare Facilities (Expanded to Full Available Screen) -->
+          <div class="home-map-card expanded-full"
+            style="display:flex;flex-direction:column;flex:1;min-height:0;margin-bottom:0;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-shrink:0;">
+              <span style="font-size:12px;font-weight:700;color:#38BDF8;display:flex;align-items:center;gap:6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                   <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
                   <line x1="8" y1="2" x2="8" y2="18"></line>
                   <line x1="16" y1="6" x2="16" y2="22"></line>
                 </svg>
-                BẢN ĐỒ CƠ SỞ Y TẾ TIẾP NHẬN GẦN NHẤT
+                BẢN ĐỒ CƠ SỞ Y TẾ
               </span>
-              <button type="button" id="btn-recenter-home-map"
-                style="background:#061420;border:1px solid #1E3A56;color:#38BDF8;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:5px;cursor:pointer;"
-                title="Định vị lại vị trí của bạn">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <circle cx="12" cy="12" r="3"></circle>
-                  <path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path>
-                </svg>
-                <span>Vị trí của tôi</span>
-              </button>
             </div>
 
-            <!-- Search & Sort Controls Bar for Healthcare Map -->
-            <div class="home-facilities-filter-bar" style="display:flex;gap:8px;margin-bottom:10px;">
-              <div style="position:relative;flex:1;">
+            <!-- Search Bar for Healthcare Map -->
+            <div class="home-facilities-filter-bar" style="margin-bottom:6px;flex-shrink:0;">
+              <div style="position:relative;width:100%;">
                 <span
                   style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#64748B;display:flex;align-items:center;pointer-events:none;">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
@@ -577,104 +703,18 @@
                 </span>
                 <input type="text" id="input-hosp-search" class="form-control-citizen"
                   placeholder="Tìm bệnh viện, địa chỉ, chuyên khoa..."
-                  style="width:100%;padding:7px 10px 7px 30px;font-size:11.5px;background:#061420;border:1px solid #1E3A56;border-radius:6px;color:#FFFFFF;box-sizing:border-box;" />
-              </div>
-              <div style="position:relative;width:115px;flex-shrink:0;">
-                <select id="select-hosp-sort" class="form-control-citizen"
-                  style="width:100%;padding:7px 8px;font-size:11px;background:#061420;border:1px solid #1E3A56;border-radius:6px;color:#38BDF8;font-weight:600;cursor:pointer;box-sizing:border-box;">
-                  <option value="dist_asc">Gần nhất</option>
-                  <option value="name_asc">Tên (A-Z)</option>
-                </select>
+                  style="width:100%;padding:6px 10px 6px 30px;font-size:11.5px;background:#061420;border:1px solid #1E3A56;border-radius:6px;color:#FFFFFF;box-sizing:border-box;" />
               </div>
             </div>
 
             <div id="home-facilities-map"
-              style="width:100%;height:520px;min-height:480px;border-radius:10px;border:1px solid #1E3A56;overflow:hidden;position:relative;background:#071522;">
+              style="width:100%;flex:1;min-height:0;height:100%;border-radius:10px;border:1px solid #1E3A56;overflow:hidden;position:relative;background:#071522;touch-action:pan-x pan-y pinch-zoom;">
             </div>
           </div>
 
-          <!-- Quick Toggle Buttons Bar below Map -->
-          <div class="home-map-toggle-toolbar" style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
-            <button type="button" id="btn-toggle-hospitals" class="home-toggle-pill-btn" title="Ẩn / Hiện danh sách cơ sở y tế lân cận">
-              <span style="display:flex;align-items:center;gap:6px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.2">
-                  <path d="M18 20V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14"></path>
-                  <path d="M2 20h20"></path>
-                  <path d="M10 9h4"></path>
-                  <path d="M12 7v4"></path>
-                </svg>
-                <span>Cơ sở y tế lân cận</span>
-                <span class="home-pill-badge" id="pill-hosp-count">4</span>
-              </span>
-              <span class="home-toggle-pill-arrow" id="arrow-toggle-hospitals">▼</span>
-            </button>
-
-            <button type="button" id="btn-toggle-firstaid" class="home-toggle-pill-btn" title="Ẩn / Hiện hướng dẫn sơ cứu khẩn cấp">
-              <span style="display:flex;align-items:center;gap:6px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F43F5E" stroke-width="2.2">
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                </svg>
-                <span>Hướng dẫn sơ cứu</span>
-                <span class="home-pill-badge" style="background:rgba(244,63,94,0.18);color:#FDA4AF;border-color:rgba(244,63,94,0.3);">3</span>
-              </span>
-              <span class="home-toggle-pill-arrow" id="arrow-toggle-firstaid">▼</span>
-            </button>
-          </div>
-
-          <!-- Section 1: Top Nearest Hospitals List (Collapsible, Hidden by default) -->
-          <div id="section-nearest-hospitals" class="home-collapsible-panel" style="display:none;margin-top:12px;">
-            <div id="header-toggle-hospitals" class="home-collapsible-header" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#0A1B2A;border:1px solid #1E3A56;border-radius:8px 8px 0 0;cursor:pointer;">
-              <strong style="color:#FFFFFF;font-size:12.5px;text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:6px;">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.2">
-                  <path d="M18 20V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14"></path>
-                  <path d="M2 20h20"></path>
-                  <path d="M10 9h4"></path>
-                  <path d="M12 7v4"></path>
-                </svg>
-                DANH SÁCH CƠ SỞ Y TẾ LÂN CẬN
-              </strong>
-              <div style="display:flex;align-items:center;gap:8px;">
-                <span style="font-size:11px;color:#94A3B8;" id="home-facilities-count">Cơ sở tiếp nhận</span>
-                <span style="font-size:11px;color:#38BDF8;font-weight:600;">Thu gọn ▲</span>
-              </div>
-            </div>
-            <div id="home-nearest-hospitals-list" style="border:1px solid #1E3A56;border-top:none;border-radius:0 0 8px 8px;padding:10px;background:rgba(10,27,42,0.4);">
-              <!-- Dynamically populated via citizen-app.js -->
-            </div>
-          </div>
-
-          <!-- Section 2: First Aid Quick Guide Strip (Collapsible, Hidden by default) -->
-          <div id="section-first-aid" class="first-aid-container home-collapsible-panel" style="display:none;margin-top:12px;padding:0;background:transparent;border:none;">
-            <div id="header-toggle-firstaid" class="home-collapsible-header" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#0A1B2A;border:1px solid #1E3A56;border-radius:8px 8px 0 0;cursor:pointer;">
-              <div style="font-size:12px;font-weight:700;color:#38BDF8;display:flex;align-items:center;gap:6px;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                </svg>
-                <span>HƯỚNG DẪN SƠ CỨU BAN ĐẦU:</span>
-              </div>
-              <div style="display:flex;align-items:center;gap:8px;">
-                <span style="font-size:11px;color:#94A3B8;">3 phác đồ</span>
-                <span style="font-size:11px;color:#38BDF8;font-weight:600;">Thu gọn ▲</span>
-              </div>
-            </div>
-
-            <div style="border:1px solid #1E3A56;border-top:none;border-radius:0 0 8px 8px;padding:12px;background:rgba(10,27,42,0.4);">
-              <div class="first-aid-card" data-aid-type="cpr">
-                <strong style="color:#FFFFFF;font-size:13px;display:block;">1. Ép tim ngoài lồng ngực (CPR)</strong>
-                <span style="font-size:11.5px;color:#94A3B8;">Đặt 2 tay giữa ngực, ép sâu 5cm với nhịp độ 100-120 lần/phút. Bấm xem chi tiết.</span>
-              </div>
-
-              <div class="first-aid-card" data-aid-type="stroke">
-                <strong style="color:#FFFFFF;font-size:13px;display:block;">2. Xử trí nghi ngờ Đột quỵ (FAST)</strong>
-                <span style="font-size:11.5px;color:#94A3B8;">Nằm nghiêng an toàn, đầu cao 30 độ, không cho ăn uống bất cứ thứ gì.</span>
-              </div>
-
-              <div class="first-aid-card" data-aid-type="bleeding">
-                <strong style="color:#FFFFFF;font-size:13px;display:block;">3. Cầm máu vết thương ngoài</strong>
-                <span style="font-size:11.5px;color:#94A3B8;">Băng ép trực tiếp bằng gạc vô trùng, không tháo gạc ra nếu máu thấm qua.</span>
-              </div>
-            </div>
-          </div>
+          <!-- Hidden container to keep JS data-binding safe -->
+          <div id="home-nearest-hospitals-list" style="display:none;"></div>
+          <span id="home-facilities-count" style="display:none;"></span>
         </div>
 
       </section>
@@ -697,17 +737,6 @@
           </div>
         </div>
 
-        <div style="display:flex;gap:8px;margin-bottom:14px;">
-          <button class="btn btn-default btn-xs" id="btn-retest-onboarding"
-            style="flex:1;border:1px solid #29465A;color:#CBD5E1;padding:8px;">
-            Luồng OTP / Quyền
-          </button>
-          <button class="btn btn-default btn-xs" id="btn-logout-citizen"
-            style="flex:1;border:1px solid #7F1D1D;color:#EF4444;padding:8px;font-weight:600;">
-            Đăng xuất
-          </button>
-        </div>
-
         <!-- 3 Sub-Tabs for Personal Profile -->
         <div class="profile-nav-tabs">
           <button class="profile-nav-tab-btn active" data-subtab="sub-emergency-contacts">Người liên hệ</button>
@@ -720,9 +749,14 @@
           <div style="background:#0A1B2A;border:1px solid #1E3A56;border-radius:10px;padding:14px;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
               <strong style="color:#FFFFFF;font-size:13px;">DANH SÁCH NGƯỜI THÂN LIÊN HỆ:</strong>
-              <button class="btn btn-primary btn-xs" id="btn-add-contact"
-                style="padding:4px 8px;background:#1E3A5F;border-color:#38BDF8;">
-                + Thêm
+              <button class="btn btn-xs" id="btn-add-contact"
+                style="padding:5px 12px;background:rgba(56,189,248,0.16);border:1.5px solid #38BDF8;color:#38BDF8;font-size:11.5px;font-weight:700;border-radius:6px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;transition:all 0.2s ease;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>Thêm</span>
               </button>
             </div>
 
@@ -816,6 +850,19 @@
               <!-- Populated dynamically via citizen-app.js -->
             </div>
           </div>
+        </div>
+
+        <!-- Bottom Centered Logout Button -->
+        <div style="display:flex;justify-content:center;margin-top:24px;margin-bottom:16px;">
+          <button type="button" class="btn btn-default" id="btn-logout-citizen"
+            style="min-width:200px;border:1.5px solid #7F1D1D;background:rgba(127,29,29,0.18);color:#EF4444;padding:10px 24px;font-size:13px;font-weight:700;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all 0.2s ease;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            <span>Đăng xuất tài khoản</span>
+          </button>
         </div>
 
       </section>
@@ -1086,7 +1133,7 @@
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
-          <span>HỦY GỌI</span>
+          <span>HỦY</span>
         </button>
       </div>
     </div>
@@ -1102,10 +1149,10 @@
 
         <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;">
           <button class="bottom-sheet-reason-btn selected">
-            Tôi chạm nhầm / Bấm thử nghiệm ứng dụng
+            Tôi chạm nhầm
           </button>
           <button class="bottom-sheet-reason-btn">
-            Đã có phương tiện khác / Người bệnh tự đi viện
+            Đã có phương tiện khác
           </button>
           <button class="bottom-sheet-reason-btn">
             Tình trạng bệnh nhân đã ổn định trở lại
@@ -1263,7 +1310,7 @@
   <script src="js/shared/map.js?v=20261005_12"></script>
 
   <!-- Citizen Mobile App Controller -->
-  <script src="js/citizen/citizen-app.js?v=20261005_19"></script>
+  <script src="js/citizen/citizen-app.js?v=20261006_02"></script>
 </body>
 
 </html>

@@ -220,8 +220,8 @@
 
         const savedCase = localStorage.getItem(STORAGE_KEY_ACTIVE_CASE);
         if (savedCase) this.activeCase = Object.assign(this.activeCase, JSON.parse(savedCase));
-        // Đảm bảo bắt đầu ở màn mặc định nếu chưa bấm gọi 115 trong phiên hiện tại
-        if (sessionStorage.getItem('ccnv_citizen_demo_dispatched') !== '1') {
+        // Đảm bảo bắt đầu ở màn mặc định nếu chưa bấm gọi 115 trong phiên hiện tại hoặc ca đã hoàn tất
+        if (sessionStorage.getItem('ccnv_citizen_demo_dispatched') !== '1' || this.activeCase.status === 'COMPLETED') {
           this.activeCase.isActive = false;
         }
 
@@ -279,16 +279,30 @@
       const idleView = document.getElementById('home-idle-view');
 
       // Special Tab-Switching Actions
+      const mainContainer = document.getElementById('citizen-main-container');
       if (tabId === 'tab-home') {
-        if (this.activeCase.isActive && this.activeCase.status !== 'CANCELLED') {
+        if (this.activeCase.isActive && this.activeCase.status !== 'CANCELLED' && this.activeCase.status !== 'COMPLETED') {
+          if (mainContainer) {
+            mainContainer.classList.remove('home-idle-mode');
+            mainContainer.classList.add('home-active-mode');
+          }
           if (activeCaseView) activeCaseView.style.display = 'block';
           if (idleView) idleView.style.display = 'none';
           setTimeout(() => this.initOrRefreshTrackingMap(), 150);
         } else {
+          if (mainContainer) {
+            mainContainer.classList.remove('home-active-mode');
+            mainContainer.classList.add('home-idle-mode');
+          }
           if (activeCaseView) activeCaseView.style.display = 'none';
           if (idleView) idleView.style.display = 'block';
           this.renderHomeNearestHospitals();
           setTimeout(() => this.initOrRefreshHomeFacilitiesMap(), 150);
+        }
+      } else {
+        if (mainContainer) {
+          mainContainer.classList.remove('home-idle-mode');
+          mainContainer.classList.remove('home-active-mode');
         }
       }
     }
@@ -444,6 +458,33 @@
         }
       };
 
+      // Collapsible First Aid in Active Emergency Tracking View
+      const btnToggleTrackingAid = document.getElementById('btn-toggle-tracking-firstaid');
+      const trackingAidBody = document.getElementById('tracking-firstaid-body');
+      const lblTrackingAid = document.getElementById('lbl-tracking-firstaid-status');
+      if (btnToggleTrackingAid && trackingAidBody) {
+        btnToggleTrackingAid.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const isCurrentlyHidden = window.getComputedStyle(trackingAidBody).display === 'none';
+          if (isCurrentlyHidden) {
+            trackingAidBody.style.display = 'block';
+            if (lblTrackingAid) lblTrackingAid.textContent = 'Thu gọn ▲';
+            btnToggleTrackingAid.style.borderRadius = '8px 8px 0 0';
+            setTimeout(() => {
+              trackingAidBody.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 60);
+          } else {
+            trackingAidBody.style.display = 'none';
+            if (lblTrackingAid) lblTrackingAid.textContent = 'Xem hướng dẫn ▼';
+            btnToggleTrackingAid.style.borderRadius = '8px';
+          }
+          if (this.mapTracking) {
+            setTimeout(() => this.mapTracking.invalidateSize(), 100);
+          }
+        };
+      }
+
       if (btnToggleAid) btnToggleAid.addEventListener('click', toggleAidPanel);
       if (headerToggleAid) headerToggleAid.addEventListener('click', toggleAidPanel);
 
@@ -569,6 +610,76 @@
         formVitals.addEventListener('submit', (e) => {
           e.preventDefault();
           this.submitVitalsUpdate();
+        });
+      }
+
+      // First Aid Tracking Collapse / Expand Toggle handled in lines 461-475
+
+      // Tracking Map Controls: Zoom In, Zoom Out, Recenter, Fullscreen
+      const btnTrackZoomIn = document.getElementById('btn-tracking-zoom-in');
+      const btnTrackZoomOut = document.getElementById('btn-tracking-zoom-out');
+      const btnTrackRecenter = document.getElementById('btn-tracking-recenter');
+      const btnTrackFullscreen = document.getElementById('btn-tracking-fullscreen');
+      const trackingMapContainer = document.getElementById('citizen-tracking-map');
+
+      if (btnTrackZoomIn) {
+        btnTrackZoomIn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (this.mapTracking) this.mapTracking.zoomIn();
+        });
+      }
+
+      if (btnTrackZoomOut) {
+        btnTrackZoomOut.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (this.mapTracking) this.mapTracking.zoomOut();
+        });
+      }
+
+      if (btnTrackRecenter) {
+        btnTrackRecenter.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (this.mapTracking) {
+            const sceneCoords = this.activeCase.patientLocation.coords || [10.0298, 105.7702];
+            const originCoords = [10.0105, 105.7700];
+            const hospCoords = [10.0265, 105.7588];
+            const vehCoords = (this.simMission?.pos?.latlng)
+              ? [this.simMission.pos.latlng.lat, this.simMission.pos.latlng.lng]
+              : originCoords;
+            try {
+              this.mapTracking.fitBounds([vehCoords, sceneCoords, hospCoords], {
+                padding: [30, 30],
+                maxZoom: 16
+              });
+            } catch (err) {
+              this.mapTracking.setView(vehCoords, 14);
+            }
+          }
+        });
+      }
+
+      if (btnTrackFullscreen && trackingMapContainer) {
+        btnTrackFullscreen.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isFs = trackingMapContainer.classList.toggle('map-fullscreen');
+          const icon = document.getElementById('icon-fullscreen-track');
+          if (icon) {
+            if (isFs) {
+              icon.innerHTML = `
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              `;
+              btnTrackFullscreen.title = 'Thu nhỏ bản đồ';
+            } else {
+              icon.innerHTML = `
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+              `;
+              btnTrackFullscreen.title = 'Toàn màn hình bản đồ';
+            }
+          }
+          if (this.mapTracking) {
+            setTimeout(() => this.mapTracking.invalidateSize(), 100);
+          }
         });
       }
 
@@ -1299,18 +1410,6 @@
             'Xe 65A-012.34 đang di chuyển khẩn cấp về BV Đa khoa Trung ương Cần Thơ.',
             true
           );
-        } else if (m.phase === 'ARRIVED') {
-          m.phase = 'COMPLETED';
-          this.activeCase.status = 'COMPLETED';
-          this.activeCase.stageLabel = 'Đã đến BVĐK Trung ương';
-          this.updateTrackingStatsUI(0, 'Đã đến BV', 'Đã đến BVĐK Trung ương');
-          window.CCNV_UI.Toast.show(
-            'ĐÃ ĐẾN BỆNH VIỆN TIẾP NHẬN',
-            'Bệnh nhân đã được bàn giao an toàn cho Khoa Cấp cứu BV Đa khoa Trung ương Cần Thơ.',
-            true
-          );
-          this.stopAmbulanceSimulation();
-          return;
         }
       }
 
@@ -1339,8 +1438,41 @@
             true
           );
         } else if (m.phase === 'TO_HOSP') {
-          m.phase = 'ARRIVED';
-          m.pauseUntil = now + 1500;
+          m.phase = 'COMPLETED';
+          this.activeCase.status = 'COMPLETED';
+          this.activeCase.stageLabel = 'Đã đến BVĐK Trung ương';
+          this.activeCase.distanceKm = '0.0';
+          this.activeCase.etaMinutes = 0;
+          this.updateTrackingStatsUI(0, 'Đã đến BV', 'Đã đến bệnh viện');
+          window.CCNV_UI.Toast.show(
+            'ĐÃ ĐẾN BỆNH VIỆN TIẾP NHẬN',
+            'Bệnh nhân đã được bàn giao an toàn cho Khoa Cấp cứu BV Đa khoa Trung ương Cần Thơ.',
+            true
+          );
+          this.stopAmbulanceSimulation();
+
+          // Tự động quay về màn mặc định sau 2.5 giây
+          setTimeout(() => {
+            this.activeCase.isActive = false;
+            this.activeCase.status = 'COMPLETED';
+            try {
+              sessionStorage.removeItem('ccnv_citizen_demo_dispatched');
+            } catch (e) { }
+            this.simMission = null;
+            if (this.mapTracking) {
+              this.mapTracking.remove();
+              this.mapTracking = null;
+            }
+            this.saveToStorage();
+            this.switchTab('tab-home');
+            this.renderAllViews();
+            window.CCNV_UI.Toast.show(
+              'HOÀN TẤT CA CẤP CỨU',
+              'Ca cấp cứu đã hoàn tất thành công. Hệ thống đã đưa bạn quay lại màn hình mặc định.'
+            );
+          }, 2500);
+
+          return;
         }
       }
 
@@ -1399,7 +1531,9 @@
       const statusTitle = document.getElementById('track-case-status-title');
 
       let etaDisplay = `~${this.activeCase.etaMinutes} PHÚT`;
-      if (customEtaText) {
+      if (this.activeCase.status === 'COMPLETED') {
+        etaDisplay = 'ĐÃ ĐẾN BV';
+      } else if (customEtaText) {
         etaDisplay = customEtaText;
       } else if (remSec !== null) {
         if (remSec <= 5) etaDisplay = 'Đang tiếp cận';
@@ -1407,10 +1541,20 @@
         else etaDisplay = `~${Math.ceil(remSec / 60)} PHÚT`;
       }
 
+      const stageMap = {
+        'DISPATCHED': 'ĐIỀU XE',
+        'MOVING': 'XE ĐANG ĐẾN',
+        'AT_SCENE': 'TIẾP NHẬN BỆNH NHÂN',
+        'TRANSPORTING': 'ĐANG CHUYỂN VIỆN',
+        'COMPLETED': 'ĐÃ ĐẾN BỆNH VIỆN'
+      };
+
+      const displayStage = (customStageText || stageMap[this.activeCase.status] || this.activeCase.stageLabel || 'XE ĐANG ĐẾN').toUpperCase();
+
       if (etaEl) etaEl.textContent = etaDisplay;
       if (distEl) distEl.textContent = `${this.activeCase.distanceKm} km (Tốc độ: ${this.activeCase.speedKmH || 48} km/h)`;
       if (mapEtaBadge) mapEtaBadge.textContent = `ETA: ${etaDisplay}`;
-      if (statusTitle) statusTitle.textContent = (customStageText || this.activeCase.stageLabel).toUpperCase();
+      if (statusTitle) statusTitle.textContent = displayStage;
 
       this.updateStepperUI();
     }
@@ -1448,20 +1592,24 @@
       if (!this.mapTracking) {
         this.mapTracking = L.map('citizen-tracking-map', {
           zoomControl: false,
-          attributionControl: false
+          attributionControl: false,
+          scrollWheelZoom: false,
+          tapHold: false
         }).setView(sceneCoords, 14);
 
         // ArcGIS Canvas Dark Base & Reference (Chuẩn GIS giao diện Trung tâm CCNV)
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
           attribution: '&copy; Esri, DeLorme, NAVTEQ',
           maxNativeZoom: 16,
-          maxZoom: 18
+          maxZoom: 18,
+          pane: 'tilePane'
         }).addTo(this.mapTracking);
 
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
           attribution: '',
           maxNativeZoom: 16,
-          maxZoom: 18
+          maxZoom: 18,
+          pane: 'tilePane'
         }).addTo(this.mapTracking);
 
         // 1. Marker Vị trí tai nạn (Beacon đỏ nhấp nháy clone Central App)
@@ -1470,7 +1618,7 @@
           html: `
             <div class="map-incident-capsule">
               <span class="legend-dot-pulse"></span>
-              <span style="font-weight:700;font-size:11px;color:#fca5a5;letter-spacing:0.3px;">VỊ TRÍ TAI NẠN (BẠN)</span>
+              <span style="font-weight:700;font-size:11px;color:#fca5a5;letter-spacing:0.3px;">VỊ TRÍ TAI NẠN</span>
             </div>
           `,
           iconSize: [180, 32],
@@ -1569,20 +1717,24 @@
       if (!this.mapHomeFacilities) {
         this.mapHomeFacilities = L.map('home-facilities-map', {
           zoomControl: false,
-          attributionControl: false
+          attributionControl: false,
+          scrollWheelZoom: false,
+          tapHold: false
         }).setView(citizenCoords, 13);
 
         // ArcGIS Canvas Dark Base & Reference (Đồng bộ chuẩn GIS giao diện Trung tâm)
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
           attribution: '&copy; Esri, DeLorme, NAVTEQ',
           maxNativeZoom: 16,
-          maxZoom: 18
+          maxZoom: 18,
+          pane: 'tilePane'
         }).addTo(this.mapHomeFacilities);
 
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
           attribution: '',
           maxNativeZoom: 16,
-          maxZoom: 18
+          maxZoom: 18,
+          pane: 'tilePane'
         }).addTo(this.mapHomeFacilities);
 
         // 1. Marker Vị trí của bạn (Đỏ pulse chuẩn CCNV)
@@ -1667,8 +1819,14 @@
         } catch (e) {
           console.warn('fitBounds facilities map error:', e);
         }
+        setTimeout(() => {
+          if (this.mapHomeFacilities) this.mapHomeFacilities.invalidateSize();
+        }, 150);
       } else {
         this.mapHomeFacilities.invalidateSize();
+        setTimeout(() => {
+          if (this.mapHomeFacilities) this.mapHomeFacilities.invalidateSize();
+        }, 150);
       }
     }
 
@@ -1688,8 +1846,8 @@
         const dLat = (lat2 - lat1) * Math.PI / 180;
         const dLon = (lon2 - lon1) * Math.PI / 180;
         const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
+          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+          Math.sin(dLon / 2) * Math.sin(dLon / 2);
         return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       };
 
@@ -2082,14 +2240,35 @@
       if (type === 'cpr') {
         title = 'ÉP TIM NGOÀI LỒNG NGỰC (CPR)';
         html = `
-          <div class="cpr-visual-pulse">
-            <svg class="cpr-heart-icon" viewBox="0 0 24 24" fill="currentColor">
+          <div class="cpr-visual-pulse" style="display:flex;align-items:center;gap:10px;background:rgba(225,29,72,0.15);border:1px solid #E11D48;border-radius:8px;padding:10px;margin-bottom:12px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#E11D48">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
             </svg>
             <div>
-              <strong styl          <div style="font-size:12px;color:#EF4444;font-weight:700;">LƯU Ý ĐẶC BIỆT NGUY HIỂM:</div>
+              <strong style="color:#FFFFFF;font-size:13px;display:block;">Nhịp độ chuẩn: 100 - 120 nhịp/phút</strong>
+              <span style="font-size:11px;color:#FDA4AF;">Ép sâu 5-6 cm giữa lồng ngực, để ngực nở hoàn toàn sau mỗi lần ép.</span>
+            </div>
+          </div>
+          <div style="font-size:12px;color:#EF4444;font-weight:700;">LƯU Ý ĐẶC BIỆT NGUY HIỂM:</div>
           <div style="font-size:12px;color:#CBD5E1;margin-top:4px;">
             Không chích máu đầu ngón tay/dái tai; Không cạo gió; Không cho uống thuốc hạ huyết áp hay ngậm An Cung Trúc Hoàn.
+          </div>
+        `;
+      } else if (type === 'stroke') {
+        title = 'XỬ TRÍ NGHI NGỜ ĐỘT QUỴ (FAST)';
+        html = `
+          <div style="background:#081827;border:1px solid #1E3A56;border-radius:8px;padding:12px;margin-bottom:10px;">
+            <strong style="color:#38BDF8;font-size:13px;display:block;margin-bottom:4px;">QUY TẮC FAST:</strong>
+            <ul style="font-size:12px;color:#CBD5E1;line-height:1.6;padding-left:16px;margin:0;">
+              <li><strong>F (Face - Mặt):</strong> Mặt bị méo, nụ cười lệch 1 bên.</li>
+              <li><strong>A (Arms - Tay):</strong> Yếu hoặc liệt 1 tay hoặc chân.</li>
+              <li><strong>S (Speech - Lời nói):</strong> Nói đớ, nói ngọng, không nói được.</li>
+              <li><strong>T (Time - Thời gian):</strong> Thời gian vàng là 3 - 4.5 giờ!</li>
+            </ul>
+          </div>
+          <div style="font-size:12px;color:#34D399;font-weight:700;">HƯỚNG DẪN XỬ TRÍ:</div>
+          <div style="font-size:12px;color:#CBD5E1;margin-top:4px;">
+            Đặt nạn nhân nằm nghiêng an toàn, đầu cao 30 độ. Nới lỏng cổ áo. Tuyệt đối KHÔNG cho ăn uống bất cứ thứ gì.
           </div>
         `;
       } else if (type === 'bleeding') {
@@ -2304,7 +2483,18 @@
       const banner = document.getElementById('citizen-active-banner');
       const navBadge = document.getElementById('nav-emergency-badge');
 
-      if (this.activeCase.isActive && this.activeCase.status !== 'CANCELLED') {
+      const mainContainer = document.getElementById('citizen-main-container');
+      const isOngoingEmergency = this.activeCase.isActive && this.activeCase.status !== 'CANCELLED' && this.activeCase.status !== 'COMPLETED';
+
+      if (isOngoingEmergency) {
+        if (mainContainer) {
+          mainContainer.classList.remove('home-idle-mode');
+          if (this.currentTab === 'tab-home') {
+            mainContainer.classList.add('home-active-mode');
+          } else {
+            mainContainer.classList.remove('home-active-mode');
+          }
+        }
         if (activeCaseView) activeCaseView.style.display = 'block';
         if (idleView) idleView.style.display = 'none';
         if (banner) banner.style.display = 'flex';
@@ -2313,6 +2503,10 @@
           setTimeout(() => this.initOrRefreshTrackingMap(), 120);
         }
       } else {
+        if (mainContainer) {
+          mainContainer.classList.remove('home-active-mode');
+          if (this.currentTab === 'tab-home') mainContainer.classList.add('home-idle-mode');
+        }
         if (activeCaseView) activeCaseView.style.display = 'none';
         if (idleView) idleView.style.display = 'block';
         if (banner) banner.style.display = 'none';

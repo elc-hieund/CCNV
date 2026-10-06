@@ -70,7 +70,8 @@
       transition: all 0.2s ease !important;
     }
 
-    .quick-call-btn:hover, .quick-call-btn:active {
+    .quick-call-btn:hover,
+    .quick-call-btn:active {
       transform: translateY(-1px) scale(0.99) !important;
       background: rgba(16, 38, 64, 0.98) !important;
       border-color: #38BDF8 !important;
@@ -110,38 +111,6 @@
       </div>
     </div>
 
-    <!-- 2. DRIVER MOBILE HEADER -->
-    <header class="driver-mobile-header">
-      <div class="driver-header-main-row">
-        <!-- Vehicle Plate / Switcher Chip -->
-        <button class="driver-vehicle-selector-btn" id="btn-open-vehicle-picker" title="Đổi xe cứu thương demo">
-          <span class="driver-plate-code" id="header-plate-text">65A-012.34</span>
-        </button>
-
-        <!-- Driver Safety SOS Button (TX-02) -->
-        <button class="btn btn-emergency" id="driver-btn-sos"
-          style="min-height:36px;padding:0 12px;font-size:12px;font-weight:800;letter-spacing:0.5px;box-shadow:0 0 12px rgba(229,37,33,0.4);margin-left:auto;"
-          title="Nhấn giữ để phát tín hiệu khẩn cấp hoặc mở hỗ trợ">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            style="margin-right:4px;">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-            <line x1="12" y1="9" x2="12" y2="13"></line>
-            <line x1="12" y1="17" x2="12.01" y2="17"></line>
-          </svg>
-          SOS XE
-        </button>
-      </div>
-
-      <!-- Crew subline -->
-      <div class="driver-sub-bar">
-        <span
-          style="display:flex;align-items:center;gap:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-          <span style="color:#CBD5E1;font-weight:600;">Kíp 3 Cái Răng:</span>
-          <span>BS. Tùng · ĐDV. Hoa · TX. Nam</span>
-        </span>
-      </div>
-    </header>
-
     <!-- 3. CENTRAL DISPATCH NOTICE BANNER (Required Gap) -->
     <div class="driver-notice-banner" id="driver-dispatch-notice">
       <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#FEF3C7;">
@@ -173,6 +142,12 @@
             </svg>
           </div>
           <div class="nav-hud-info">
+            <div
+              style="display:flex;align-items:center;gap:6px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              <span style="font-size:10.5px;font-weight:700;color:#38BDF8;letter-spacing:0.5px;">ĐÍCH ĐẾN:</span>
+              <strong style="color:#FFFFFF;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
+                id="nav-hospital-name">BV Đa khoa TP Cần Thơ</strong>
+            </div>
             <div class="nav-next-dist">Còn 350 m</div>
             <div class="nav-next-street">Rẽ phải vào đường Châu Văn Liêm</div>
             <div class="nav-telemetry-row">
@@ -190,33 +165,18 @@
           </div>
         </div>
 
-        <!-- 2. Floating Quick Tool Buttons (Right Stack) -->
-        <div class="nav-floating-tools">
-          <!-- Center on Vehicle -->
-          <button class="nav-tool-btn" id="btn-map-center-veh" title="Định vị tâm xe">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polygon points="12 2 15 9 12 7 9 9 12 2"></polygon>
-            </svg>
-          </button>
-          <!-- Toggle Nearby Hospitals Layer -->
-          <button class="nav-tool-btn" id="btn-toggle-hosp-layer" title="Bệnh viện lân cận">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5">
-              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2z"></path>
-              <line x1="12" y1="7" x2="12" y2="17"></line>
-              <line x1="7" y1="12" x2="17" y2="12"></line>
-            </svg>
-          </button>
-          <!-- Toggle Mission Details Panel Expand/Collapse -->
-          <button class="nav-tool-btn" id="btn-toggle-mission-sheet" title="Chi tiết ca & Thông tin">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.5">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-            </svg>
-          </button>
-        </div>
+        <!-- Floating SOS XE Circular Button (Positioned just above the bottom dock) -->
+        <button class="btn btn-emergency" id="driver-btn-sos"
+          style="position:absolute;bottom:calc(10px + 120px);right:14px;z-index:510;width:46px;height:46px;min-height:46px;padding:0;border-radius:50%;box-shadow:0 6px 20px rgba(229,37,33,0.7),0 0 0 2px rgba(255,255,255,0.25);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s cubic-bezier(0.16, 1, 0.3, 1);"
+          title="Bấm SOS: Phát tín hiệu khẩn cấp tức thời về Trung tâm 115">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </button>
+
+
 
         <!-- 3. Bottom VietMap Tactical Mission Control Card (Interactive Drawer) -->
         <div class="nav-floating-mission-dock" id="driver-mission-dock">
@@ -225,14 +185,11 @@
             <div class="dock-handle-pill"></div>
           </div>
 
-          <!-- Dock Header: Target Destination & Quick ETA Status -->
+          <!-- Dock Header: Quick ETA Status & Toggle Details -->
           <div class="dock-main-header">
-            <div style="flex:1;min-width:0;">
-              <div style="display:flex;align-items:center;gap:6px;">
-                <span class="dock-dot-live"></span>
-                <span class="dock-target-label">ĐÍCH ĐẾN:</span>
-                <strong style="color:#FFFFFF;font-size:13.5px;" id="nav-hospital-name">BV Đa khoa TP Cần Thơ</strong>
-              </div>
+            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:6px;">
+              <span style="font-size:12px;font-weight:700;color:#CBD5E1;letter-spacing:0.3px;">THÔNG TIN CA CẤP
+                CỨU</span>
             </div>
             <button type="button" class="btn btn-default btn-xs dock-expand-btn" id="btn-dock-toggle-expand"
               title="Mở rộng / Thu gọn chi tiết">
@@ -262,14 +219,20 @@
             <!-- Quick Action Trio: Call buttons for Driver (Centered & Phone Icons) -->
             <div class="quick-action-trio" style="margin-top:8px;">
               <a href="tel:115" class="quick-call-btn" id="btn-call-dispatch">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path
+                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                  </path>
                 </svg>
                 <span>ĐPV 115</span>
               </a>
               <a href="tel:02923821236" class="quick-call-btn" id="btn-call-hospital">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path
+                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                  </path>
                 </svg>
                 <span>BV tiếp nhận</span>
               </a>
@@ -300,7 +263,8 @@
           <div class="slide-confirm-container" id="slide-confirm-box" style="margin-top:8px;">
             <div class="slide-track" id="slider-track" style="height:50px;">
               <div class="slide-fill" id="slider-fill"></div>
-              <span class="slide-text" id="slider-label" style="font-size:11.5px;">VUỐT SANG PHẢI: XÁC NHẬN XUẤT PHÁT</span>
+              <span class="slide-text" id="slider-label" style="font-size:11.5px;">VUỐT SANG PHẢI: XÁC NHẬN XUẤT
+                PHÁT</span>
               <div class="slide-knob" id="slider-knob" style="width:44px;height:44px;top:3px;left:3px;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8">
                   <polyline points="9 18 15 12 9 6"></polyline>
@@ -509,7 +473,6 @@
         // 1. Tab 1: Nhiệm vụ
         const caseCodeEl = document.getElementById('driver-case-code');
         const caseTitleEl = document.getElementById('driver-case-title');
-        const caseSeverityEl = document.getElementById('driver-case-severity');
         const caseEtaEl = document.getElementById('driver-case-eta');
         const pNameEl = document.getElementById('driver-patient-name');
         const pDemoEl = document.getElementById('driver-patient-demographics');
@@ -974,38 +937,41 @@
         });
       });
 
-      // 5. Driver Safety SOS Modal (TX-02)
+      // 5. Driver Safety SOS 1-Touch (TX-02: Instant Broadcast to Central without extra steps)
       const btnSosDriver = document.getElementById('driver-btn-sos');
-      const modalSos = document.getElementById('modal-driver-sos');
-      const btnCloseSos = document.getElementById('btn-close-sos-modal');
-      const btnSubmitSos = document.getElementById('btn-submit-sos-alert');
-      let selectedSosType = 'ACCIDENT';
-
-      btnSosDriver.addEventListener('click', () => {
-        modalSos.classList.add('active');
-        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-      });
-
-      btnCloseSos.addEventListener('click', () => {
-        modalSos.classList.remove('active');
-      });
-
-      document.querySelectorAll('.driver-sos-option-card').forEach(card => {
-        card.addEventListener('click', () => {
-          document.querySelectorAll('.driver-sos-option-card').forEach(c => c.style.borderColor = '');
-          card.style.borderColor = 'var(--red-primary)';
-          selectedSosType = card.getAttribute('data-sos-type');
-        });
-      });
-
-      btnSubmitSos.addEventListener('click', () => {
-        modalSos.classList.remove('active');
+      btnSosDriver?.addEventListener('click', () => {
         if (navigator.vibrate) navigator.vibrate([300, 100, 300]);
         playEmergencyAlarm();
+
+        // Broadcast directly to Central via StateManager & BroadcastChannel
+        const c = getActiveCase();
+        const payload = {
+          plate: currentPlate,
+          vehiclePlate: currentPlate,
+          caseId: c?.id || 'CC-261002-002',
+          coords: [10.0275, 105.7725],
+          reason: 'Xe cứu thương phát tín hiệu khẩn cấp trên lộ trình',
+          timestamp: new Date().toLocaleTimeString('vi-VN')
+        };
+
+        if (window.StateManager) {
+          // Log into case
+          if (c?.id) {
+            window.StateManager.addCaseLog(c.id, `XE ${currentPlate} PHÁT TÍN HIỆU SOS KHẨN CẤP!`);
+          }
+          // Update vehicle status
+          window.StateManager.updateVehicle(currentPlate, {
+            status: 'SOS',
+            statusText: 'Cần cứu trợ'
+          });
+          // Broadcast dedicated event
+          window.StateManager.notify('VEHICLE_SOS', payload);
+        }
+
         if (window.CCNV_UI?.Toast) {
           window.CCNV_UI.Toast.show(
             'ĐÃ PHÁT TÍN HIỆU SOS XE',
-            'Đã gửi tọa độ và yêu cầu cứu trợ khẩn cấp tới Trung tâm Điều hành 115 Cần Thơ.',
+            'Trung tâm Điều hành 115 Cần Thơ đã nhận thông tin và định vị khẩn cấp.',
             true
           );
         }

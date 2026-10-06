@@ -92,6 +92,20 @@
               );
             }
           }
+        } else if (event === 'VEHICLE_SOS' || event === 'SOS_ALERT') {
+          // Instant SOS notification received at Central
+          if (window.CCNV_UI?.Toast) {
+            const plate = payload?.plate || payload?.vehiclePlate || '65A-012.34';
+            const reason = payload?.reason || 'Yêu cầu cứu trợ khẩn cấp';
+            window.CCNV_UI.Toast.show(
+              `CẢNH BÁO SOS TỪ XE ${plate}!`,
+              `Lái xe phát tín hiệu SOS khẩn cấp: ${reason}. Tọa độ GPS và tình trạng xe đã được ghim ưu tiên trên bản đồ giám sát.`,
+              true
+            );
+          }
+          if (['realtime-map', 'hospital-map', 'cases-list'].includes(this.currentMenu)) {
+            this.renderCurrentView();
+          }
         }
       });
     }
@@ -567,24 +581,7 @@
         const isAdminActive = ['admin-users', 'admin-roles', 'admin-audit', 'admin'].includes(this.currentMenu);
 
         html = `
-          <!-- 1. TỔNG ĐÀI [Nhóm menu] -->
-          <div class="nav-parent-item ${isCallCenterActive ? 'active expanded' : ''}" data-nav-group="call-center" title="Tổng đài">
-            <span class="nav-parent-icon">${window.CCNV_UI.ICONS.phoneCall}</span>
-            <span class="nav-parent-label">Tổng đài</span>
-            ${chevronSvg}
-          </div>
-          <div class="nav-submenu">
-            <div class="nav-subitem ${this.currentMenu === 'call-history' ? 'active' : ''}" data-menu="call-history">Lịch sử cuộc gọi</div>
-            <div class="nav-subitem ${this.currentMenu === 'call-directory' ? 'active' : ''}" data-menu="call-directory">Danh bạ</div>
-          </div>
-
-          <!-- 2. CẤP CỨU [Menu đơn duy nhất - Toàn bộ Vòng đời & Tiếp nhận] -->
-          <div class="nav-parent-item ${isEmergencyActive ? 'active' : ''}" data-menu="cases-list" title="Cấp cứu">
-            <span class="nav-parent-icon">${window.CCNV_UI.ICONS.ambulance}</span>
-            <span class="nav-parent-label">Cấp cứu</span>
-          </div>
-
-          <!-- 3. GIÁM SÁT [Nhóm menu] -->
+          <!-- 1. GIÁM SÁT [Nhóm menu] -->
           <div class="nav-parent-item ${isMonitoringActive ? 'active expanded' : ''}" data-nav-group="monitoring" title="Giám sát">
             <span class="nav-parent-icon">${window.CCNV_UI.ICONS.eye}</span>
             <span class="nav-parent-label">Giám sát</span>
@@ -594,6 +591,23 @@
             <div class="nav-subitem ${this.currentMenu === 'realtime-map' ? 'active' : ''}" data-menu="realtime-map">Bản đồ</div>
             <div class="nav-subitem ${this.currentMenu === 'vehicles-status' ? 'active' : ''}" data-menu="vehicles-status">Tình trạng xe</div>
             <div class="nav-subitem ${this.currentMenu === 'hospitals-status' ? 'active' : ''}" data-menu="hospitals-status">Tình trạng bệnh viện</div>
+          </div>
+
+          <!-- 2. CẤP CỨU [Menu đơn duy nhất - Toàn bộ Vòng đời & Tiếp nhận] -->
+          <div class="nav-parent-item ${isEmergencyActive ? 'active' : ''}" data-menu="cases-list" title="Cấp cứu">
+            <span class="nav-parent-icon">${window.CCNV_UI.ICONS.ambulance}</span>
+            <span class="nav-parent-label">Cấp cứu</span>
+          </div>
+
+          <!-- 3. TỔNG ĐÀI [Nhóm menu] -->
+          <div class="nav-parent-item ${isCallCenterActive ? 'active expanded' : ''}" data-nav-group="call-center" title="Tổng đài">
+            <span class="nav-parent-icon">${window.CCNV_UI.ICONS.phoneCall}</span>
+            <span class="nav-parent-label">Tổng đài</span>
+            ${chevronSvg}
+          </div>
+          <div class="nav-submenu">
+            <div class="nav-subitem ${this.currentMenu === 'call-history' ? 'active' : ''}" data-menu="call-history">Lịch sử cuộc gọi</div>
+            <div class="nav-subitem ${this.currentMenu === 'call-directory' ? 'active' : ''}" data-menu="call-directory">Danh bạ</div>
           </div>
 
           <!-- 4. CA TRỰC [Menu đơn duy nhất - Lịch trực] -->
@@ -1422,7 +1436,8 @@
 
     renderRealtimeIncidentBottomStrip(c = {}) {
       const plate = c.dispatch?.vehiclePlate || '-';
-      const patient = c.patient?.name ? `BN ${c.patient.name}${c.patient.age ? ` ${c.patient.age}T` : ''}` : 'Chưa rõ danh tính';
+      const ageLabel = c.patient?.age ? ` ${c.patient.age}T` : (c.patient?.ageGroupText ? ` · ${c.patient.ageGroupText}` : '');
+      const patient = c.patient?.name ? `BN ${c.patient.name}${ageLabel}` : 'Chưa rõ danh tính';
       const leftStripHtml = `
         <div class="emergency-alert-strip" style="background: linear-gradient(90deg, rgba(229, 37, 33, 0.22) 0%, transparent 100%);">
           <div>
@@ -2181,13 +2196,8 @@
           if (!wrapper) return;
           patients.forEach((p, idx) => {
             const nameInp = wrapper.querySelector(`.inp-patient-name[data-index="${idx}"]`);
-            const ageInp = wrapper.querySelector(`.inp-patient-age[data-index="${idx}"]`);
             const notesInp = wrapper.querySelector(`.inp-patient-notes[data-index="${idx}"]`);
             if (nameInp) p.name = nameInp.value;
-            if (ageInp) {
-              const val = parseInt(ageInp.value, 10);
-              p.age = isNaN(val) ? '' : val;
-            }
             if (notesInp) p.notes = notesInp.value;
           });
         };
@@ -2210,22 +2220,20 @@
                 ` : ''}
               </div>
 
-              <!-- Dòng 1: Họ tên + Tuổi/Nhóm + Giới tính -->
-              <div style="display:grid;grid-template-columns: 1.3fr 1.15fr 1fr; gap:8px; align-items:center;">
+              <!-- Dòng 1: Họ tên + Nhóm độ tuổi + Giới tính -->
+              <div style="display:grid;grid-template-columns: 1.2fr 1.6fr 1fr; gap:8px; align-items:center;">
                 <div class="form-field" style="margin-bottom:0;">
                   <label class="form-label" style="font-size:11px;margin-bottom:3px;color:var(--text-muted);">Họ tên / Bí danh</label>
                   <input type="text" class="inp-patient-name" data-index="${idx}" value="${p.name || ''}" placeholder="Họ tên hoặc bí danh (VD: Nam áo đen)..." style="height:32px;font-size:12px;" />
                 </div>
 
                 <div class="form-field" style="margin-bottom:0;">
-                  <label class="form-label" style="font-size:11px;margin-bottom:3px;color:var(--text-muted);">Độ tuổi / Nhóm</label>
-                  <div style="display:flex;gap:4px;align-items:center;">
-                    <input type="number" class="inp-patient-age" data-index="${idx}" value="${p.age !== undefined && p.age !== null ? p.age : ''}" placeholder="Tuổi" min="0" max="120" style="width:58px;height:32px;font-size:12px;padding:4px 6px;" />
-                    <div class="segmented-group">
-                      <button type="button" class="segmented-btn btn-age-group ${p.ageGroup === 'CHILD' ? 'active' : ''}" data-index="${idx}" data-group="CHILD" title="Trẻ em (<16 tuổi)">Trẻ</button>
-                      <button type="button" class="segmented-btn btn-age-group ${p.ageGroup === 'ADULT' ? 'active' : ''}" data-index="${idx}" data-group="ADULT" title="Trưởng thành (16-59 tuổi)">Lớn</button>
-                      <button type="button" class="segmented-btn btn-age-group ${p.ageGroup === 'ELDERLY' ? 'active' : ''}" data-index="${idx}" data-group="ELDERLY" title="Cao tuổi (>=60 tuổi)">Già</button>
-                    </div>
+                  <label class="form-label" style="font-size:11px;margin-bottom:3px;color:var(--text-muted);">Nhóm độ tuổi</label>
+                  <div class="segmented-group" style="width:100%;display:flex;">
+                    <button type="button" class="segmented-btn btn-age-group ${p.ageGroup === 'INFANT' ? 'active' : ''}" data-index="${idx}" data-group="INFANT" title="Trẻ sơ sinh (<1 tuổi)" style="flex:1;padding:4px 2px;font-size:11px;">Sơ sinh</button>
+                    <button type="button" class="segmented-btn btn-age-group ${p.ageGroup === 'CHILD' ? 'active' : ''}" data-index="${idx}" data-group="CHILD" title="Trẻ em (1-15 tuổi)" style="flex:1;padding:4px 2px;font-size:11px;">Trẻ em</button>
+                    <button type="button" class="segmented-btn btn-age-group ${p.ageGroup === 'ADULT' ? 'active' : ''}" data-index="${idx}" data-group="ADULT" title="Người lớn (16-59 tuổi)" style="flex:1;padding:4px 2px;font-size:11px;">Người lớn</button>
+                    <button type="button" class="segmented-btn btn-age-group ${p.ageGroup === 'ELDERLY' ? 'active' : ''}" data-index="${idx}" data-group="ELDERLY" title="Người cao tuổi (>=60 tuổi)" style="flex:1;padding:4px 2px;font-size:11px;">Cao tuổi</button>
                   </div>
                 </div>
 
@@ -2263,36 +2271,16 @@
             });
           });
 
-          wrapper.querySelectorAll('.inp-patient-age').forEach(inp => {
-            inp.addEventListener('input', (e) => {
-              const idx = parseInt(e.target.getAttribute('data-index'), 10);
-              const val = parseInt(e.target.value, 10);
-              if (patients[idx]) {
-                patients[idx].age = isNaN(val) ? '' : val;
-                if (!isNaN(val)) {
-                  patients[idx].ageGroup = val < 16 ? 'CHILD' : (val >= 60 ? 'ELDERLY' : 'ADULT');
-                  // Update group button active
-                  wrapper.querySelectorAll(`.btn-age-group[data-index="${idx}"]`).forEach(b => {
-                    b.classList.toggle('active', b.getAttribute('data-group') === patients[idx].ageGroup);
-                  });
-                }
-              }
-              updateRecommendations();
-            });
-          });
-
           wrapper.querySelectorAll('.btn-age-group').forEach(btn => {
             btn.addEventListener('click', (e) => {
               const idx = parseInt(e.target.getAttribute('data-index'), 10);
               const group = e.target.getAttribute('data-group');
               if (patients[idx]) {
                 patients[idx].ageGroup = group;
-                if (group === 'CHILD') patients[idx].age = 9;
+                if (group === 'INFANT') patients[idx].age = 0;
+                else if (group === 'CHILD') patients[idx].age = 9;
                 else if (group === 'ADULT') patients[idx].age = 35;
                 else if (group === 'ELDERLY') patients[idx].age = 68;
-
-                const ageInp = wrapper.querySelector(`.inp-patient-age[data-index="${idx}"]`);
-                if (ageInp) ageInp.value = patients[idx].age;
 
                 wrapper.querySelectorAll(`.btn-age-group[data-index="${idx}"]`).forEach(b => {
                   b.classList.toggle('active', b.getAttribute('data-group') === group);
@@ -2393,7 +2381,7 @@
         const getBestRecommendation = () => {
           syncPatientsFromDom();
           const address = paneContainer.querySelector('#rapid-address')?.value || activeCall.address || 'Đường 30/4, Phường Hưng Lợi, TP. Cần Thơ';
-          const hasChild = patients.some(p => (typeof p.age === 'number' && p.age < 16) || p.ageGroup === 'CHILD');
+          const hasChild = patients.some(p => p.ageGroup === 'INFANT' || p.ageGroup === 'CHILD' || (typeof p.age === 'number' && p.age < 16));
           const isMultiPatient = patients.length >= 2;
           const incObj = state.incidentTypes?.find(i => i.code === currentIncident);
 
@@ -2476,15 +2464,22 @@
               : '<span class="status-pill status-pill-available" style="font-size:10.5px;padding:2px 7px;font-weight:700;">TIÊU CHUẨN [VÀNG]</span>');
 
           // Summary Nạn nhân
+          const formatAgeGroup = (group) => {
+            if (group === 'INFANT') return 'Trẻ sơ sinh';
+            if (group === 'CHILD') return 'Trẻ em';
+            if (group === 'ELDERLY') return 'Người cao tuổi';
+            return 'Người lớn';
+          };
+
           let patientsSummaryHtml = '';
           if (patients.length === 1) {
             const p = patients[0];
-            const ageStr = p.age ? `${p.age}t` : (p.ageGroup === 'CHILD' ? 'Trẻ em' : (p.ageGroup === 'ELDERLY' ? 'Cao tuổi' : 'Lớn'));
+            const ageStr = formatAgeGroup(p.ageGroup);
             patientsSummaryHtml = `<span style="color:#FFF;font-weight:700;">${p.name || 'Nạn nhân 1'}</span> (${p.gender || 'Nam'}, ${ageStr}${p.notes ? ' · ' + p.notes : ''})`;
           } else {
             patientsSummaryHtml = `<strong style="color:#FDE68A;">${patients.length} nạn nhân:</strong> ` +
               patients.map((p, idx) => {
-                const ageStr = p.age ? `${p.age}t` : (p.ageGroup === 'CHILD' ? 'Trẻ' : (p.ageGroup === 'ELDERLY' ? 'Già' : 'Lớn'));
+                const ageStr = formatAgeGroup(p.ageGroup);
                 return `<span style="color:#FFF;">BN${idx + 1} (${p.gender || '?'}, ${ageStr})</span>`;
               }).join(' · ');
           }
@@ -2825,6 +2820,13 @@
             .filter(p => currentSelectedPersonnel.has(p.id))
             .map(p => ({ id: p.id, name: p.name, role: p.role, roleName: p.roleName, phone: p.phone }));
 
+          const ageGroupMap = {
+            'INFANT': 'Trẻ sơ sinh',
+            'CHILD': 'Trẻ em',
+            'ADULT': 'Người lớn',
+            'ELDERLY': 'Người cao tuổi'
+          };
+
           // 2. Create Case in StateManager
           const newCase = window.StateManager.createCase({
             callerName: caller,
@@ -2832,6 +2834,8 @@
             patient: {
               name: patientName,
               age: patientAge,
+              ageGroup: primaryPatient.ageGroup || 'ADULT',
+              ageGroupText: ageGroupMap[primaryPatient.ageGroup] || 'Người lớn',
               gender: primaryPatient.gender || 'Nam',
               notes: primaryPatient.notes || '',
               totalCount: patients.length
@@ -2839,6 +2843,8 @@
             patients: patients.map(p => ({
               name: p.name || 'Chưa rõ',
               age: p.age,
+              ageGroup: p.ageGroup || 'ADULT',
+              ageGroupText: ageGroupMap[p.ageGroup] || 'Người lớn',
               gender: p.gender,
               notes: p.notes
             })),
@@ -3267,33 +3273,9 @@
                 const name = operatorMap[item.operator] || item.operator;
                 return `<strong>${name}</strong>`;
               }
-            },
-            {
-              key: 'actions',
-              title: 'Thao tác',
-              sortable: false,
-              render: (item) => `
-                <div style="display:flex;gap:6px;align-items:center;">
-                  <button class="btn btn-default btn-sm" title="Nghe lại bản ghi âm" onclick="window.CCNV_UI.Toast.show('Nghe lại ghi âm', 'Đang phát lại đoạn ghi âm cuộc gọi 115...')" style="padding:4px 9px;display:inline-flex;align-items:center;justify-content:center;color:#38bdf8;">▶</button>
-                  <button class="btn btn-emergency btn-sm btn-create-case-from-call" data-phone="${item.phone}" data-caller="${item.caller || ''}" data-addr="${item.address || ''}">Tạo ca</button>
-                </div>
-              `
             }
           ]
         }).render();
-
-        paneContainer.querySelectorAll('.btn-create-case-from-call').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            const phone = e.currentTarget.getAttribute('data-phone');
-            const caller = e.currentTarget.getAttribute('data-caller') || 'Người báo tin';
-            const addr = e.currentTarget.getAttribute('data-addr') || '';
-            this.openCreateCaseDrawer({
-              callerPhone: phone,
-              callerName: caller,
-              address: addr
-            });
-          });
-        });
       }
 
       // --- TAB 3: DANH BẠ BỆNH VIỆN ---
@@ -7512,8 +7494,13 @@
                   <input type="text" id="form-patient-name" value="${prefill?.patientName || 'Nguyễn Văn Hưng'}" />
                 </div>
                 <div class="form-field">
-                  <label class="form-label">Tuổi</label>
-                  <input type="number" id="form-patient-age" value="${prefill?.patientAge || 34}" />
+                  <label class="form-label">Nhóm độ tuổi</label>
+                  <select id="form-patient-age-group">
+                    <option value="INFANT">Trẻ sơ sinh</option>
+                    <option value="CHILD">Trẻ em</option>
+                    <option value="ADULT" selected>Người lớn</option>
+                    <option value="ELDERLY">Người cao tuổi</option>
+                  </select>
                 </div>
                 <div class="form-field">
                   <label class="form-label">Giới tính</label>
@@ -7692,7 +7679,7 @@
         const caller = drawerOverlay.querySelector('#form-caller-name').value;
         const phone = drawerOverlay.querySelector('#form-caller-phone').value;
         const patientName = drawerOverlay.querySelector('#form-patient-name').value;
-        const patientAge = Number(drawerOverlay.querySelector('#form-patient-age').value);
+        const patientAgeGroup = drawerOverlay.querySelector('#form-patient-age-group')?.value || 'ADULT';
         const patientGender = drawerOverlay.querySelector('#form-patient-gender').value;
         const address = drawerOverlay.querySelector('#form-location-address').value;
         const incidentCode = drawerOverlay.querySelector('#form-incident-select').value;
@@ -7705,12 +7692,20 @@
         const targetCrew = state.crews.find(c => c.id === crewId);
         const incObj = state.incidentTypes.find(i => i.code === incidentCode);
 
+        const ageGroupMap = {
+          'INFANT': 'Trẻ sơ sinh',
+          'CHILD': 'Trẻ em',
+          'ADULT': 'Người lớn',
+          'ELDERLY': 'Người cao tuổi'
+        };
+
         const newCase = window.StateManager.createCase({
           callerName: caller,
           callerPhone: phone,
           patient: {
             name: patientName,
-            age: patientAge,
+            ageGroup: patientAgeGroup,
+            ageGroupText: ageGroupMap[patientAgeGroup] || 'Người lớn',
             gender: patientGender
           },
           location: {
@@ -8052,10 +8047,6 @@
                       <span>THÔNG TIN CHUNG NGƯỜI BỆNH</span>
                       <span class="badge badge-accent">ID: ${c.patient?.id || 'BN-' + c.code}</span>
                     </div>
-                    <button class="btn btn-default btn-xs" id="btn-toggle-edit-patient-central" style="border:1px solid var(--accent-cyan);color:var(--accent-cyan);font-size:11px;padding:3px 8px;display:flex;align-items:center;gap:4px;font-weight:600;">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                      <span>Sửa & Đồng bộ về xe</span>
-                    </button>
                   </div>
 
                   <!-- Central Quick Edit Form for Dispatcher / Doctor -->
@@ -8423,34 +8414,34 @@
 
                   <div style="display:flex;flex-direction:column;gap:12px;flex:1;">
                     <!-- Thành viên 1: Bác sĩ -->
-                    <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.02);border:1px solid var(--border-main);border-radius:6px;padding:8px 10px;">
-                      <div>
+                    <div style="display:flex;align-items:center;justify-content:flex-start;gap:20px;background:rgba(255,255,255,0.02);border:1px solid var(--border-main);border-radius:6px;padding:8px 12px;">
+                      <div style="min-width:180px;">
                         <div style="margin-bottom:2px;"><span class="badge badge-emergency" style="font-size:10.5px;">Bác sĩ Kíp trưởng</span></div>
                         <strong style="color:var(--text-white);font-size:12.5px;">${crewObj.doctor || 'BS. CKI. Nguyễn Văn Thành'}</strong>
                       </div>
-                      <a href="tel:0913111222" style="font-family:var(--font-mono);color:var(--accent-cyan);font-weight:600;font-size:12px;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+                      <a href="tel:0913111222" style="font-family:var(--font-mono);color:var(--accent-cyan);font-weight:600;font-size:12px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
                         ${window.CCNV_UI?.ICONS?.phone || ''} 0913.111.222
                       </a>
                     </div>
 
                     <!-- Thành viên 2: Điều dưỡng -->
-                    <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.02);border:1px solid var(--border-main);border-radius:6px;padding:8px 10px;">
-                      <div>
+                    <div style="display:flex;align-items:center;justify-content:flex-start;gap:20px;background:rgba(255,255,255,0.02);border:1px solid var(--border-main);border-radius:6px;padding:8px 12px;">
+                      <div style="min-width:180px;">
                         <div style="margin-bottom:2px;"><span class="badge badge-accent" style="font-size:10.5px;">Điều dưỡng CC</span></div>
                         <strong style="color:var(--text-white);font-size:12.5px;">${crewObj.nurse || 'ĐD. Trần Thị Mai'}</strong>
                       </div>
-                      <a href="tel:0913333444" style="font-family:var(--font-mono);color:var(--accent-cyan);font-weight:600;font-size:12px;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+                      <a href="tel:0913333444" style="font-family:var(--font-mono);color:var(--accent-cyan);font-weight:600;font-size:12px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
                         ${window.CCNV_UI?.ICONS?.phone || ''} 0913.333.444
                       </a>
                     </div>
 
                     <!-- Thành viên 3: Lái xe -->
-                    <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.02);border:1px solid var(--border-main);border-radius:6px;padding:8px 10px;">
-                      <div>
+                    <div style="display:flex;align-items:center;justify-content:flex-start;gap:20px;background:rgba(255,255,255,0.02);border:1px solid var(--border-main);border-radius:6px;padding:8px 12px;">
+                      <div style="min-width:180px;">
                         <div style="margin-bottom:2px;"><span class="badge badge-default" style="font-size:10.5px;">Lái xe Cứu thương</span></div>
                         <strong style="color:var(--text-white);font-size:12.5px;">${crewObj.driver || 'Lê Văn Hùng'}</strong>
                       </div>
-                      <a href="tel:0913555666" style="font-family:var(--font-mono);color:var(--accent-cyan);font-weight:600;font-size:12px;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+                      <a href="tel:0913555666" style="font-family:var(--font-mono);color:var(--accent-cyan);font-weight:600;font-size:12px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
                         ${window.CCNV_UI?.ICONS?.phone || ''} 0913.555.666
                       </a>
                     </div>
@@ -9193,7 +9184,7 @@
               Xe <strong style="color:var(--red-vivid);font-family:var(--font-mono);">${caseObj.dispatch.vehiclePlate}</strong> đang chở người bệnh về Khoa Cấp cứu!
             </div>
             <div style="font-size:13px;display:flex;flex-direction:column;gap:6px;color:var(--text-slate);">
-              <div>Bệnh nhân: <strong style="color:var(--text-white);">${caseObj.patient.name}</strong> (${caseObj.patient.age}T)</div>
+              <div>Bệnh nhân: <strong style="color:var(--text-white);">${caseObj.patient.name}</strong> (${caseObj.patient.age ? caseObj.patient.age + 'T' : (caseObj.patient.ageGroupText || 'Người lớn')})</div>
               <div>Tình trạng: <span class="badge badge-emergency">${caseObj.incident.name}</span></div>
               <div>Thời gian dự kiến cập bến: <strong style="color:var(--red-vivid);font-size:15px;">~6 phút</strong></div>
               <div>Hiện trường xuất phát: ${caseObj.location.address}</div>
