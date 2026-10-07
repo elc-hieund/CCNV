@@ -265,13 +265,6 @@
       const isHospital = user.role === 'HOSPITAL_RECEIVER';
       document.body.classList.toggle('hospital-mode', isHospital);
 
-      const brandTitleEl = document.querySelector('.sidebar-brand-title');
-      if (brandTitleEl) {
-        brandTitleEl.innerHTML = isHospital
-          ? 'CỔNG TIẾP NHẬN<br> & CẤP CỨU'
-          : 'TRUNG TÂM GIÁM SÁT<br> & ĐIỀU HÀNH';
-      }
-
       const avatarEl = document.getElementById('header-user-avatar');
       const logoutBtn = document.getElementById('btn-logout');
 
@@ -508,13 +501,6 @@
 
       const currentUser = window.StateManager.getCurrentUser();
       const isHospital = currentUser?.role === 'HOSPITAL_RECEIVER';
-
-      const brandTitleEl = document.querySelector('.sidebar-brand-title');
-      if (brandTitleEl) {
-        brandTitleEl.innerHTML = isHospital
-          ? 'CỔNG TIẾP NHẬN<br> & CẤP CỨU'
-          : 'TRUNG TÂM GIÁM SÁT<br> & ĐIỀU HÀNH';
-      }
       const chevronSvg = `<svg class="nav-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
 
       // Initialize collapse toggle button event
@@ -797,12 +783,9 @@
         const rawTitle = menuTitles[this.currentMenu] || 'Trung tâm Điều hành Cấp cứu 115';
         const parts = rawTitle.split('/').map(p => p.trim());
         const titleHtml = parts.map(p => `<span>${p}</span>`).join('<span style="color:var(--text-muted);font-size:11px;margin:0 2px;">/</span>');
-        const isHospital = this.isHospitalMode();
-        const portalPrefix = isHospital ? 'CỔNG TIẾP NHẬN & CẤP CỨU' : 'TRUNG TÂM GIÁM SÁT & ĐIỀU HÀNH';
-        const prefixColor = isHospital ? '#34D399' : '#60A5FA';
         headerLeft.innerHTML = `
           <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--text-white);font-weight:600;">
-            <span style="color:${prefixColor};font-weight:600;letter-spacing:0.2px;">${portalPrefix}</span>
+            <span style="color:#60A5FA;font-weight:600;letter-spacing:0.2px;">TRUNG TÂM GIÁM SÁT & ĐIỀU HÀNH</span>
             <span style="color:var(--text-muted);font-size:11px;">/</span>
             ${titleHtml}
           </div>
@@ -1792,53 +1775,53 @@
                 <div class="timeline-track-wrap">
                   <div class="timeline-segments-track">
                     ${segments.map(seg => {
-                      let segClass = 'pending';
-                      if (seg.status === 'done') {
-                        segClass = seg.isWithinSla ? 'ok' : 'fail';
-                      } else if (seg.status === 'active') {
-                        segClass = seg.isWithinSla ? 'active-ok' : 'active-fail';
-                      }
-                      return `<div class="timeline-segment-piece ${segClass}" title="${seg.fullName}: ${seg.isWithinSla ? 'Đạt SLA' : 'Vượt SLA'} (${seg.diff})"></div>`;
-                    }).join('')}
+          let segClass = 'pending';
+          if (seg.status === 'done') {
+            segClass = seg.isWithinSla ? 'ok' : 'fail';
+          } else if (seg.status === 'active') {
+            segClass = seg.isWithinSla ? 'active-ok' : 'active-fail';
+          }
+          return `<div class="timeline-segment-piece ${segClass}" title="${seg.fullName}: ${seg.isWithinSla ? 'Đạt SLA' : 'Vượt SLA'} (${seg.diff})"></div>`;
+        }).join('')}
                   </div>
 
                   <!-- 5 Mốc Node -->
                   ${milestones.map((m, idx) => {
-                    let dotClass = 'pending';
-                    let iconContent = idx + 1;
-                    if (m.status === 'done') {
-                      dotClass = m.isWithinSla ? 'sla-ok' : 'sla-fail';
-                      iconContent = m.isWithinSla ? '✓' : '!';
-                    } else if (m.status === 'active') {
-                      dotClass = m.isWithinSla ? 'sla-active-ok' : 'sla-active-fail';
-                      iconContent = m.isWithinSla ? '●' : '!';
-                    }
-                    return `
+          let dotClass = 'pending';
+          let iconContent = idx + 1;
+          if (m.status === 'done') {
+            dotClass = m.isWithinSla ? 'sla-ok' : 'sla-fail';
+            iconContent = m.isWithinSla ? '✓' : '!';
+          } else if (m.status === 'active') {
+            dotClass = m.isWithinSla ? 'sla-active-ok' : 'sla-active-fail';
+            iconContent = m.isWithinSla ? '●' : '!';
+          }
+          return `
                       <div class="timeline-node-item" title="${m.fullName}: Thực tế ${m.actual} · SLA ${m.slaStd} (${m.diff})">
                         <span class="timeline-node-name">${m.name}</span>
                         <div class="timeline-node-dot ${dotClass}">${iconContent}</div>
                         <span class="timeline-node-time" style="${!m.isWithinSla && m.status !== 'pending' ? 'color:#ef4444;font-weight:700;' : ''}">${m.actual}</span>
                       </div>
                     `;
-                  }).join('')}
+        }).join('')}
                 </div>
               </div>
 
               <!-- BẢNG LƯỚI ĐỐI CHIẾU CHI TIẾT TỪNG MỐC: THỰC TẾ & SLA ĐỘC LẬP -->
               <div class="milestones-breakdown-grid">
                 ${milestones.map(m => {
-                  let diffClass = 'target';
-                  let diffLabel = m.diff;
-                  if (m.status !== 'pending') {
-                    if (!m.isWithinSla) {
-                      diffClass = 'exceeded';
-                      diffLabel = `⚠ ${m.diff}`;
-                    } else {
-                      diffClass = 'ok';
-                      diffLabel = `✔ ${m.diff}`;
-                    }
-                  }
-                  return `
+          let diffClass = 'target';
+          let diffLabel = m.diff;
+          if (m.status !== 'pending') {
+            if (!m.isWithinSla) {
+              diffClass = 'exceeded';
+              diffLabel = `⚠ ${m.diff}`;
+            } else {
+              diffClass = 'ok';
+              diffLabel = `✔ ${m.diff}`;
+            }
+          }
+          return `
                     <div class="milestone-col-card ${!m.isWithinSla && m.status !== 'pending' ? 'has-exceeded' : ''}" title="${m.fullName}">
                       <span class="milestone-col-name">${m.name}</span>
                       <span class="milestone-col-actual">${m.actual}</span>
@@ -1851,7 +1834,7 @@
                       </span>
                     </div>
                   `;
-                }).join('')}
+        }).join('')}
               </div>
 
             </div>
@@ -3756,7 +3739,7 @@
             if (voiceAudio.currentTime < kw.time) {
               try {
                 voiceAudio.currentTime = Math.max(0, kw.time - 0.2);
-              } catch (e) {}
+              } catch (e) { }
             }
 
             // Cập nhật lại giao diện và chips
@@ -3953,7 +3936,7 @@
             try {
               voiceAudio.pause();
               voiceAudio.currentTime = 0;
-            } catch (e) {}
+            } catch (e) { }
 
             triggers = {
               incident: false,
@@ -3980,7 +3963,7 @@
                   console.log('Voice replay error:', err);
                 });
               }
-            } catch (e) {}
+            } catch (e) { }
 
             waveEq?.classList.add('is-playing');
             if (playText) playText.textContent = 'Tạm dừng';
@@ -4008,7 +3991,7 @@
             try {
               voiceAudio.currentTime = 41.71;
               voiceAudio.pause();
-            } catch (e) {}
+            } catch (e) { }
             if (playText) playText.textContent = 'Đàm thoại hoàn tất';
             waveEq?.classList.remove('is-playing');
             checkAutoFillTriggers(40.0);
