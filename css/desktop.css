@@ -502,7 +502,7 @@
 .brand-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex: 1;
   min-width: 0;
 }
@@ -522,10 +522,12 @@
 
 .sidebar-brand-title {
   color: var(--text-white);
-  font-size: 14.5px;
+  font-size: 11.5px;
   font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.1px;
+  text-transform: uppercase;
   white-space: nowrap;
-  letter-spacing: 0.3px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -1253,27 +1255,34 @@ body.hospital-mode .kpi-header-grid {
   border: 1px solid rgba(16, 185, 129, 0.4);
 }
 
-/* Xe đang làm nhiệm vụ: vẫn xanh lá, viền sáng + nhãn tốc độ đặc */
+/* Xe đang làm nhiệm vụ: đổi sang màu đỏ nổi bật, viền sáng đỏ + nhãn tốc độ đỏ */
 .map-veh-status-pill.mission {
-  background: #10b981;
-  color: #022c1d;
-  border: 1px solid #6ee7b7;
+  background: #ef4444;
+  color: #ffffff;
+  border: 1px solid #f87171;
   font-family: var(--font-mono);
   text-transform: none;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
 }
 
 .map-veh-capsule.is-mission {
-  border-color: #34d399;
-  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.45), 0 0 16px rgba(52, 211, 153, 0.45);
+  border-color: #ef4444;
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.45), 0 0 16px rgba(248, 113, 113, 0.45);
+}
+
+.map-veh-capsule.is-mission::after {
+  border-top-color: #ef4444;
 }
 
 .map-veh-capsule.is-mission .map-veh-icon-bubble {
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
   animation: veh-mission-glow 1.6s ease-in-out infinite;
 }
 
 @keyframes veh-mission-glow {
-  0%, 100% { box-shadow: 0 0 6px rgba(52, 211, 153, 0.6); }
-  50% { box-shadow: 0 0 16px rgba(52, 211, 153, 1); }
+  0%, 100% { box-shadow: 0 0 6px rgba(239, 68, 68, 0.6); }
+  50% { box-shadow: 0 0 16px rgba(248, 113, 113, 1); }
 }
 
 .map-leaflet-marker.is-active-marker {
@@ -1281,8 +1290,8 @@ body.hospital-mode .kpi-header-grid {
 }
 
 .map-leaflet-marker.is-active-marker .map-veh-capsule {
-  border-color: #6ee7b7 !important;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.45), 0 0 25px rgba(52, 211, 153, 0.9) !important;
+  border-color: #f87171 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.45), 0 0 25px rgba(248, 113, 113, 0.9) !important;
   transform: scale(1.12);
 }
 
@@ -4123,8 +4132,8 @@ body.critical-focus-active .kpi-header-grid {
 
 /* --- B2: Form tiếp nhận (tái sử dụng form Tổng đài · Cuộc gọi hiện tại) --- */
 .demo-intake-panel {
-  width: min(1320px, 98vw);
-  height: min(97vh, 1020px);
+  width: min(1440px, 98vw);
+  height: min(97vh, 980px);
   display: flex;
   flex-direction: column;
   background: var(--bg-main);
@@ -4170,9 +4179,27 @@ body.critical-focus-active .kpi-header-grid {
 
 .demo-intake-body {
   flex: 1;
-  overflow-y: auto;
-  padding: 12px 18px 16px;
+  overflow: hidden; /* Form khong scroll */
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
+
+.demo-intake-body .view-container-full {
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+  min-height: 0;
+}
+
+.demo-intake-body #call-tab-pane-container {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 
 @media (prefers-reduced-motion: reduce) {
   .btn-demo-dot,
@@ -4619,9 +4646,227 @@ body.critical-focus-active .kpi-header-grid {
 }
 
 /* =========================================================================
+   2-BAR HORIZONTAL TIMELINE & SLA COMPONENT (VEHICLE DETAIL PANEL)
+   ========================================================================= */
+.veh-dispatch-timeline-box {
+  background: linear-gradient(180deg, rgba(8, 20, 36, 0.95) 0%, rgba(13, 27, 46, 0.95) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: var(--radius-sm);
+  padding: 10px 10px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.veh-dispatch-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 6px;
+}
+
+.veh-dispatch-mission-card {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 6px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 11.5px;
+}
+
+.veh-horizontal-timelines {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: rgba(4, 12, 24, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 10px 8px 12px 8px;
+}
+
+.timeline-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.timeline-row-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.timeline-track-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 24px;
+  padding: 0 4px;
+}
+
+.timeline-track-bar {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 4px;
+  background: #1e293b;
+  border-radius: 2px;
+  z-index: 1;
+}
+
+.timeline-track-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.timeline-track-fill.actual {
+  background: linear-gradient(90deg, #10b981 0%, #38bdf8 65%, #f59e0b 100%);
+}
+
+.timeline-track-fill.sla {
+  background: linear-gradient(90deg, #059669 0%, #10b981 100%);
+}
+
+.timeline-node-item {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 22px;
+}
+
+.timeline-node-dot {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: 800;
+  border: 2px solid #0f172a;
+}
+
+.timeline-node-dot.done {
+  background: #10b981;
+  color: #000;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+}
+
+.timeline-node-dot.active {
+  background: #f59e0b;
+  color: #000;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.9);
+  animation: pulse-ring 1.5s infinite;
+}
+
+.timeline-node-dot.pending {
+  background: #334155;
+  color: #94a3b8;
+  border-color: #1e293b;
+}
+
+.timeline-node-dot.sla-node {
+  background: #0ea5e9;
+  color: #fff;
+  border-color: #0369a1;
+  box-shadow: 0 0 4px rgba(14, 165, 233, 0.4);
+}
+
+.timeline-node-time {
+  position: absolute;
+  top: 17px;
+  font-size: 8.5px;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+
+/* Lưới đối chiếu 5 mốc chi tiết */
+.milestones-breakdown-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  padding-top: 8px;
+  margin-top: 4px;
+}
+
+.milestone-col-card {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  padding: 5px 3px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.milestone-col-name {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #cbd5e1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.milestone-col-actual {
+  font-size: 9.5px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: #fff;
+}
+
+.milestone-col-sla {
+  font-size: 8.5px;
+  font-family: var(--font-mono);
+  color: #38bdf8;
+}
+
+.milestone-col-diff {
+  font-size: 8px;
+  padding: 1px 2px;
+  border-radius: 2px;
+  font-weight: 600;
+}
+.milestone-col-diff.fast {
+  background: rgba(16, 185, 129, 0.18);
+  color: #10b981;
+}
+.milestone-col-diff.current {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+.milestone-col-diff.target {
+  background: rgba(148, 163, 184, 0.1);
+  color: #94a3b8;
+}
+
+/* =========================================================================
    AI VOICE SPEECH-TO-TEXT & AUTOMATED INTAKE STUDIO STYLES
    ========================================================================= */
 .voice-stt-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
   background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(10, 25, 47, 0.98) 100%);
   border: 1px solid rgba(56, 189, 248, 0.35);
   border-radius: 10px;
@@ -4630,6 +4875,7 @@ body.critical-focus-active .kpi-header-grid {
 }
 
 .voice-stt-header {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -4668,51 +4914,6 @@ body.critical-focus-active .kpi-header-grid {
   100% { transform: scaleY(1.3); background: #38BDF8; box-shadow: 0 0 6px rgba(56, 189, 248, 0.8); }
 }
 
-/* Live Call Mini Controls (Khong tua, khong nghe lai) */
-.voice-audio-controls {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  background: rgba(6, 18, 32, 0.75);
-  border: 1px solid rgba(56, 189, 248, 0.2);
-  border-radius: 8px;
-  padding: 6px 12px;
-  margin-top: 8px;
-}
-
-.voice-ctrl-btn {
-  background: rgba(30, 41, 59, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #FFFFFF;
-  border-radius: 6px;
-  padding: 5px 12px;
-  font-size: 11.5px;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.voice-ctrl-btn:hover {
-  background: rgba(56, 189, 248, 0.2);
-  border-color: #38BDF8;
-  color: #38BDF8;
-}
-
-.voice-ctrl-btn.btn-play-pause {
-  background: linear-gradient(135deg, #0284C7, #0369A1);
-  border-color: #38BDF8;
-  color: #FFFFFF;
-}
-
-.voice-ctrl-btn.btn-play-pause:hover {
-  background: linear-gradient(135deg, #0369A1, #0284C7);
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
-}
-
 .voice-timer-display {
   font-family: var(--font-mono);
   font-size: 12px;
@@ -4721,15 +4922,18 @@ body.critical-focus-active .kpi-header-grid {
   font-weight: 600;
 }
 
-/* Conversation Dialogue Stream (Hien thi day du 5 luot kich ban thoai) */
+/* Conversation Dialogue Stream - CHI CHO PHEP SCROLL PHAN NAY */
 .voice-dialogue-feed {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-height: 280px;
-  overflow-y: auto;
-  padding: 8px 6px 6px 0;
+  padding: 8px 6px 8px 0;
   margin-top: 8px;
+  margin-bottom: 8px;
   scroll-behavior: smooth;
 }
 
@@ -4737,9 +4941,277 @@ body.critical-focus-active .kpi-header-grid {
   width: 5px;
 }
 .voice-dialogue-feed::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(56, 189, 248, 0.35);
   border-radius: 4px;
 }
+.voice-dialogue-feed::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.6);
+}
+
+/* Thanh thao tác dưới phần trích xuất kịch bản thoại (Cúp máy) */
+.voice-hangup-bar {
+  flex-shrink: 0;
+  margin-top: auto;
+  padding-top: 6px;
+  display: flex;
+  align-items: center;
+}
+
+.voice-hangup-bar .btn-voice-hangup {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.95) 0%, rgba(185, 28, 28, 0.98) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.6);
+  border-radius: 6px;
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35);
+  height: 38px;
+}
+
+.voice-hangup-bar .btn-voice-hangup:hover {
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+  border-color: #F87171;
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.65);
+  transform: translateY(-1px);
+}
+
+.voice-hangup-bar .btn-voice-hangup:active {
+  transform: translateY(0);
+}
+
+/* Thanh thao tác nút chuyển tab ở đáy cột form (Bước 1) căn ngang hàng với Cúp máy */
+.step1-action-bar {
+  flex-shrink: 0;
+  margin-top: auto;
+  padding-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.step1-action-bar .btn-call-next-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 18px;
+  background: linear-gradient(180deg, #2563EB 0%, #1D4ED8 100%);
+  border: 1px solid #3B82F6;
+  border-radius: 6px;
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+  height: 38px;
+}
+
+.step1-action-bar .btn-call-next-step:hover {
+  background: linear-gradient(180deg, #3B82F6 0%, #2563EB 100%);
+  border-color: #60A5FA;
+  box-shadow: 0 0 14px rgba(59, 130, 246, 0.6);
+  transform: translateY(-1px);
+}
+
+.step1-action-bar .btn-call-next-step:active {
+  transform: translateY(0);
+}
+
+/* 2-Column Emergency Call Intake Layout */
+.call-intake-layout-2col {
+  display: grid;
+  grid-template-columns: 440px 1fr;
+  gap: 14px;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.call-intake-forms-col {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.call-intake-forms-col .step-view-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  min-height: 0;
+}
+
+.call-intake-forms-col #pane-step-1 {
+  overflow-y: auto;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.call-intake-forms-col #pane-step-2 {
+  overflow-y: auto; /* Cho phep cuon nhe neu man hinh co do phan giai thap */
+  justify-content: flex-start;
+  gap: 6px;
+}
+
+/* Step 2 summary card compacting */
+.call-intake-forms-col .dispatch-summary-rec-card {
+  padding: 4px 8px;
+  gap: 4px;
+}
+
+.call-intake-forms-col .dispatch-summary-row {
+  gap: 8px;
+  padding-bottom: 3px;
+  font-size: 11px;
+}
+
+.call-intake-forms-col .summary-meta-item {
+  gap: 5px;
+}
+
+.call-intake-forms-col .dispatch-rec-proposal-box {
+  padding: 4px 6px;
+  gap: 6px;
+}
+
+.call-intake-forms-col .dispatch-rec-header {
+  font-size: 10px;
+}
+
+.call-intake-forms-col .dispatch-rec-items {
+  gap: 4px;
+  font-size: 10.5px;
+}
+
+.call-intake-forms-col .rec-item-badge {
+  padding: 1px 5px;
+  font-size: 10px;
+  gap: 3px;
+}
+
+.call-intake-forms-col .btn-apply-rec {
+  padding: 3px 8px;
+  font-size: 10px;
+  height: 26px;
+}
+
+.call-intake-forms-col .rapid-field-card {
+  padding: 4px 8px;
+  margin-bottom: 0;
+}
+
+.call-intake-forms-col .rapid-field-header {
+  margin-bottom: 2px;
+}
+
+.call-intake-forms-col #pane-step-2 .rapid-chip-grid {
+  gap: 5px !important;
+}
+
+.call-intake-forms-col #pane-step-2 .rapid-chip-btn {
+  padding: 3px 6px !important;
+  min-height: 26px !important;
+  gap: 5px !important;
+}
+
+.call-intake-forms-col #pane-step-2 .rapid-chip-btn .chip-title {
+  font-size: 11px !important;
+}
+
+.call-intake-forms-col #pane-step-2 .rapid-chip-btn .chip-desc {
+  font-size: 9.5px !important;
+  line-height: 1.15 !important;
+}
+
+.call-intake-forms-col #pane-step-2 .quick-kbd {
+  font-size: 9.5px !important;
+  padding: 1px 4px !important;
+}
+
+.call-intake-forms-col #pane-step-2 #rapid-symptoms-notes {
+  height: 28px !important;
+  min-height: 28px !important;
+  padding: 3px 6px !important;
+  font-size: 11px !important;
+}
+
+.call-intake-forms-col #pane-step-2 .btn-rapid-dispatch {
+  height: 36px !important;
+  padding: 6px 12px !important;
+}
+
+.call-intake-forms-col #pane-step-2 #btn-back-to-step1 {
+  height: 36px !important;
+  padding: 6px 10px !important;
+  font-size: 11.5px !important;
+}
+
+.call-intake-forms-col .patient-item-card {
+  padding: 8px 12px;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.call-intake-forms-col .patient-item-header {
+  padding-bottom: 4px;
+}
+
+.call-intake-forms-col #card-patient {
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.call-intake-forms-col .patient-list-container {
+  gap: 8px;
+  max-height: none;
+  height: auto;
+  overflow: visible;
+}
+
+.call-intake-forms-col .rapid-chip-btn {
+  padding: 4px 6px;
+  min-height: 30px;
+}
+
+.call-intake-forms-col .rapid-chip-btn .chip-title {
+  font-size: 11.5px;
+}
+
+.call-intake-forms-col .rapid-chip-btn .chip-desc {
+  font-size: 10px;
+}
+
+@media (max-height: 720px) {
+  .call-intake-forms-col #pane-step-1,
+  .call-intake-forms-col #pane-step-2 {
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 1080px) {
+  .call-intake-layout-2col {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
+  .call-intake-forms-col #pane-step-1,
+  .call-intake-forms-col #pane-step-2 {
+    overflow-y: visible;
+  }
+}
+
 
 .dialogue-bubble {
   display: flex;
@@ -4884,29 +5356,31 @@ body.critical-focus-active .kpi-header-grid {
   100% { transform: scale(1); opacity: 1; }
 }
 
-/* Auto-fill visual cue on input cards */
+/* Auto-fill visual cue on input cards - no bounding glow */
 .pulse-ai-autofill {
-  animation: pulse-ai-highlight 1.8s ease-out;
-  border-color: #10B981 !important;
-  box-shadow: 0 0 18px rgba(16, 185, 129, 0.45) !important;
+  animation: none !important;
+  box-shadow: none !important;
 }
 
 @keyframes pulse-ai-highlight {
-  0% { border-color: #34D399; box-shadow: 0 0 22px rgba(52, 211, 153, 0.8); }
-  50% { border-color: #10B981; box-shadow: 0 0 12px rgba(16, 185, 129, 0.4); }
-  100% { border-color: var(--border-accent); box-shadow: none; }
+  0%, 100% { box-shadow: none; }
 }
 
 .ai-card-pill {
-  font-size: 10.5px;
-  font-weight: 700;
-  background: rgba(16, 185, 129, 0.2);
-  color: #34D399;
-  border: 1px solid rgba(16, 185, 129, 0.4);
-  padding: 2px 7px;
-  border-radius: 4px;
-  letter-spacing: 0.3px;
-  animation: ai-tag-pop 0.3s ease;
+  display: none !important;
+}
+
+.dialogue-status-tag {
+  display: none !important;
+}
+
+/* Ẩn hoàn toàn popup thông báo toast ở App trung tâm */
+#toast-container,
+.toast {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 

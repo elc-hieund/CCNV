@@ -21,6 +21,11 @@
     }
 
     async init() {
+      // Tắt toàn bộ thông báo popup toast ở app trung tâm
+      if (window.CCNV_UI && window.CCNV_UI.Toast) {
+        window.CCNV_UI.Toast.show = () => { };
+      }
+
       // 1. Initialize State
       await window.StateManager.init();
 
@@ -780,7 +785,7 @@
         const titleHtml = parts.map(p => `<span>${p}</span>`).join('<span style="color:var(--text-muted);font-size:11px;margin:0 2px;">/</span>');
         headerLeft.innerHTML = `
           <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--text-white);font-weight:600;">
-            <span style="color:#60A5FA;font-weight:500;">CCNV 115 Cần Thơ</span>
+            <span style="color:#60A5FA;font-weight:600;letter-spacing:0.2px;">TRUNG TÂM GIÁM SÁT VÀ ĐIỀU HÀNH</span>
             <span style="color:var(--text-muted);font-size:11px;">/</span>
             ${titleHtml}
           </div>
@@ -925,7 +930,12 @@
       const state = window.StateManager.getState();
       const vehicles = state.vehicles || [];
       const activeCases = (state.cases || []).filter(c => !['COMPLETED', 'CANCELLED', 'CLOSED'].includes(c.status));
-      const caseOfPlate = (plate) => activeCases.find(c => c.dispatch?.vehiclePlate === plate);
+      const caseOfPlate = (plate) => {
+        if (!plate) return null;
+        return activeCases.find(c => c.dispatch?.vehiclePlate === plate || c.currentVehiclePlate === plate)
+          || (state.cases || []).find(c => c.dispatch?.vehiclePlate === plate && !['COMPLETED', 'CANCELLED', 'CLOSED'].includes(c.status))
+          || (state.demoCase && state.demoCase.dispatch?.vehiclePlate === plate ? state.demoCase : null);
+      };
       // Xe hiển thị mặc định ở dải dưới khi chưa chọn xe (ưu tiên xe đang có ca)
       const defaultVeh = vehicles.find(v => caseOfPlate(v.plate)) || vehicles[0];
       if (this.realtimeSelectedPlate && !vehicles.some(v => v.plate === this.realtimeSelectedPlate)) {
@@ -1139,6 +1149,23 @@
         listEl.querySelector('.btn-focus-selected-vehicle')?.addEventListener('click', (e) => {
           e.stopPropagation();
           this.mapInstance?.focusVehicle(targetVeh.plate, { animate: true });
+        });
+
+        // Nút bật/tắt mô phỏng điều động (khi xe đang ở chế độ chờ)
+        listEl.querySelector('.btn-toggle-sim-dispatch')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          targetVeh.isDispatchedSimulated = !targetVeh.isDispatchedSimulated;
+          const activeCase = caseOfPlate(targetVeh.plate);
+          listEl.innerHTML = this.renderVehicleDetailPanel(targetVeh, activeCase);
+          bindDetailPanelEvents(targetVeh);
+          window.CCNV_UI?.SoundFx?.playClick?.();
+        });
+
+        // Nút mở modal chi tiết ca từ widget xe
+        listEl.querySelector('.btn-open-case-from-veh')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const caseId = e.currentTarget.getAttribute('data-case-id');
+          if (caseId) this.openCaseDetailModal(caseId);
         });
       };
 
@@ -1596,6 +1623,199 @@
         'Máy thở đa năng', 'Monitor 7 thông số', 'Máy sốc tim AED', 'Bơm tiêm điện', 'Bộ nẹp cố định chấn thương'
       ];
 
+      // Tìm ca điều động gắn với xe này
+      const allCases = state?.cases || [];
+      const resolvedCase = activeCase
+        || allCases.find(c => c.dispatch?.vehiclePlate === v.plate || c.currentVehiclePlate === v.plate || c.id === v.currentCaseId)
+        || (v.currentCaseId ? allCases.find(c => c.id === v.currentCaseId) : null)
+        || (isEmergency || v.isDispatchedSimulated ? (allCases[0] || state?.demoCase || window.SEED_DATA?.demoCase) : null);
+
+      const isDispatched = isEmergency || !!v.isDispatchedSimulated || !!resolvedCase || v.status === 'DISPATCHED' || v.status === 'EN_ROUTE' || v.status === 'TRANSPORTING';
+
+      // Tạo HTML 2 thanh timeline dạng ngang (Thời gian SLA & Thời gian thực tế chia theo mốc)
+      let timelineSectionHtml = '';
+      if (isDispatched) {
+        const cCode = resolvedCase?.code || 'CC-261002-001';
+        const cSeverity = resolvedCase?.incident?.severityText || resolvedCase?.severityText || 'Khẩn cấp';
+        const cIncident = resolvedCase?.incident?.name || resolvedCase?.incidentName || 'Tai nạn giao thông';
+        const cLocation = resolvedCase?.location?.address || 'Cầu Hưng Lợi, TP. Cần Thơ';
+        const cHospName = resolvedCase?.dispatch?.hospitalName || 'BV Đa khoa Trung ương Cần Thơ';
+        const ms = resolvedCase?.milestones || [];
+
+        const getMilestoneTime = (stepKey, defaultTime) => {
+          const m = ms.find(item => item.step === stepKey);
+          return (m && m.time) ? m.time : defaultTime;
+        };
+
+        const milestones = [
+          {
+            name: 'Điều xe',
+            fullName: 'Phát lệnh điều xe',
+            actual: getMilestoneTime('DISPATCHED', '08:11:30'),
+            sla: '08:12:00',
+            slaStd: '≤ 2p',
+            diff: 'Sớm 45s',
+            status: 'done'
+          },
+          {
+            name: 'Xuất phát',
+            fullName: 'Kíp rời trạm',
+            actual: getMilestoneTime('CREW_CONFIRMED', '08:12:45'),
+            sla: '08:14:00',
+            slaStd: '≤ 2p',
+            diff: 'Sớm 45s',
+            status: 'done'
+          },
+          {
+            name: 'Hiện trường',
+            fullName: 'Đến hiện trường',
+            actual: getMilestoneTime('SCENE_ARRIVED', '08:18:20'),
+            sla: '08:22:00',
+            slaStd: '≤ 8p',
+            diff: 'Sớm 2p25s',
+            status: 'done'
+          },
+          {
+            name: 'Đến viện',
+            fullName: 'Tiếp cận sảnh cấp cứu viện',
+            actual: getMilestoneTime('HOSPITAL_ARRIVED', '08:28:40'),
+            sla: '08:32:00',
+            slaStd: '≤ 10p',
+            diff: 'Trong hạn',
+            status: resolvedCase?.status === 'COMPLETED' ? 'done' : 'active'
+          },
+          {
+            name: 'Bàn giao',
+            fullName: 'Ký bàn giao khoa Cấp cứu',
+            actual: getMilestoneTime('HANDOVER_DONE', '08:36:00'),
+            sla: '08:42:00',
+            slaStd: '≤ 10p',
+            diff: 'Mục tiêu',
+            status: resolvedCase?.status === 'COMPLETED' ? 'done' : 'pending'
+          }
+        ];
+
+        const doneCount = milestones.filter(m => m.status === 'done').length;
+        const hasActive = milestones.some(m => m.status === 'active');
+        const actualProgressPercent = hasActive ? Math.min(85, doneCount * 22 + 10) : (doneCount === 5 ? 100 : doneCount * 20);
+
+        timelineSectionHtml = `
+          <!-- KHỐI 2 THANH TIMELINE DẠNG NGANG (THỰC TẾ & ĐỊNH MỨC SLA) -->
+          <div class="veh-dispatch-timeline-box">
+            <!-- Header thông tin ca & Đánh giá SLA -->
+            <div class="veh-dispatch-header">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span class="live-dot" style="width:7px;height:7px;background:#ef4444;"></span>
+                <span style="font-size:11px;font-weight:700;color:var(--text-white);letter-spacing:0.3px;">TIẾN ĐỘ ĐIỀU ĐỘNG & THEO DÕI SLA</span>
+              </div>
+              <span class="badge badge-emerald" style="font-size:10px;font-weight:700;font-family:var(--font-mono);padding:2px 6px;">
+                ✔ ĐẠT CHUẨN SLA (-2p15s)
+              </span>
+            </div>
+
+            <!-- Tóm tắt ca đang phụ trách -->
+            <div class="veh-dispatch-mission-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-family:var(--font-mono);font-weight:700;color:var(--accent-cyan);">Ca ${cCode}</span>
+                <span class="badge badge-emergency" style="font-size:9.5px;padding:1px 5px;">${cSeverity}</span>
+              </div>
+              <div style="color:var(--text-white);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                ${cIncident} · ${cHospName}
+              </div>
+              <div style="font-size:10.5px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                Điểm đón: ${cLocation}
+              </div>
+            </div>
+
+            <!-- CỤM 2 THANH TIMELINE DẠNG NGANG -->
+            <div class="veh-horizontal-timelines">
+              
+              <!-- THANH 1: TIẾN TRÌNH THỜI GIAN THỰC TẾ (ACTUAL) -->
+              <div class="timeline-row">
+                <div class="timeline-row-label">
+                  <span style="color:#38bdf8;display:flex;align-items:center;gap:4px;">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    1. Thời gian thực tế
+                  </span>
+                  <span style="color:var(--text-muted);font-family:var(--font-mono);font-size:9.5px;">
+                    Đã chạy: <strong style="color:var(--yellow-vivid);">17p 10s</strong>
+                  </span>
+                </div>
+
+                <!-- Thanh ngang thực tế với các mốc node -->
+                <div class="timeline-track-wrap">
+                  <div class="timeline-track-bar">
+                    <div class="timeline-track-fill actual" style="width:${actualProgressPercent}%;"></div>
+                  </div>
+                  ${milestones.map((m, idx) => {
+          let dotClass = m.status === 'done' ? 'done' : (m.status === 'active' ? 'active' : 'pending');
+          let iconContent = m.status === 'done'
+            ? '✓'
+            : (m.status === 'active' ? '●' : (idx + 1));
+          return `
+                      <div class="timeline-node-item" title="${m.fullName}: Thực tế ${m.actual}">
+                        <div class="timeline-node-dot ${dotClass}">${iconContent}</div>
+                        <span class="timeline-node-time" style="${m.status === 'active' ? 'color:var(--yellow-vivid);font-weight:700;' : ''}">${m.actual}</span>
+                      </div>
+                    `;
+        }).join('')}
+                </div>
+              </div>
+
+              <!-- THANH 2: TIẾN TRÌNH ĐỊNH MỨC SLA (CHUẨN 115) -->
+              <div class="timeline-row" style="margin-top:6px;">
+                <div class="timeline-row-label">
+                  <span style="color:#10b981;display:flex;align-items:center;gap:4px;">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    2. Định mức SLA
+                  </span>
+                  <span style="color:var(--text-muted);font-family:var(--font-mono);font-size:9.5px;">
+                    Định mức: <strong style="color:#10b981;">≤ 32 phút</strong>
+                  </span>
+                </div>
+
+                <!-- Thanh ngang chuẩn SLA với các mốc node -->
+                <div class="timeline-track-wrap">
+                  <div class="timeline-track-bar">
+                    <div class="timeline-track-fill sla" style="width:100%;"></div>
+                  </div>
+                  ${milestones.map(m => `
+                    <div class="timeline-node-item" title="${m.fullName}: SLA ${m.sla} (${m.slaStd})">
+                      <div class="timeline-node-dot sla-node">S</div>
+                      <span class="timeline-node-time" style="color:#38bdf8;">${m.sla}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+
+              <!-- BẢNG LƯỚI ĐỐI CHIẾU CHI TIẾT TỪNG MỐC: THỰC TẾ & SLA -->
+              <div class="milestones-breakdown-grid">
+                ${milestones.map(m => `
+                  <div class="milestone-col-card" title="${m.fullName}">
+                    <span class="milestone-col-name">${m.name}</span>
+                    <span class="milestone-col-actual">${m.actual}</span>
+                    <span class="milestone-col-sla">SLA ${m.slaStd}</span>
+                    <span class="milestone-col-diff ${m.diff === 'Trong hạn' ? 'current' : (m.diff === 'Mục tiêu' ? 'target' : 'fast')}">
+                      ${m.diff}
+                    </span>
+                  </div>
+                `).join('')}
+              </div>
+
+            </div>
+        `;
+      } else {
+        // Nút mô phỏng nếu xe đang ở chế độ chờ (READY)
+        timelineSectionHtml = `
+          <div style="display:flex;justify-content:flex-end;margin-top:-4px;margin-bottom:2px;">
+            <button type="button" class="btn btn-ghost btn-xs btn-toggle-sim-dispatch" data-plate="${v.plate}" style="color:var(--accent-cyan);font-size:10.5px;padding:2px 8px;display:inline-flex;align-items:center;gap:4px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>Xem mô phỏng tiến trình SLA xe này</span>
+            </button>
+          </div>
+        `;
+      }
+
       return `
         <div class="vehicle-detail-panel-box">
           <!-- Navigation header: Back to list button -->
@@ -1631,6 +1851,9 @@
               <strong class="stat-val" style="color:#10B981;">${v.battery || 96}%</strong>
             </div>
           </div>
+
+          <!-- 2 THANH TIMELINE DẠNG NGANG & ĐỐI CHIẾU MỐC SLA KHI XE ĐƯỢC ĐIỀU ĐỘNG -->
+          ${timelineSectionHtml}
 
           <!-- Kíp trực phụ trách xe -->
           <div class="veh-detail-section">
@@ -1887,22 +2110,18 @@
         };
 
         paneContainer.innerHTML = `
-          <div style="display:flex;flex-direction:column;gap:12px;">
-            <!-- TOP LIVE CALL & VOICE HUD: SPEECH-TO-TEXT DEMO (LIVE CALL: KHONG TUA, KHONG NGHE LAI, KHONG ICON TU GEN) -->
-            <div class="voice-stt-panel" id="voice-stt-panel" style="margin-bottom:2px;">
+          <div class="call-intake-layout-2col">
+            <!-- CỘT TRÁI: LIVE CALL & VOICE HUD SPEECH-TO-TEXT (CHỈ SCROLL PHẦN TRÍCH XUẤT KỊCH BẢN) -->
+            <div class="voice-stt-panel" id="voice-stt-panel">
               <!-- Header: Live Call info + Waveform Equalizer + Status -->
               <div class="voice-stt-header">
-                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                  <span class="status-pill status-pill-new" style="display:flex;align-items:center;gap:6px;font-weight:700;">
-                    <span class="live-dot"></span> ĐANG ĐÀM THOẠI TRỰC TIẾP
-                  </span>
-                  <div style="font-size:16.5px;font-weight:700;color:var(--text-white);font-family:var(--font-mono);letter-spacing:0.5px;">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                  <div style="font-size:15px;font-weight:700;color:var(--text-white);font-family:var(--font-mono);letter-spacing:0.5px;">
                     ${activeCall.callerPhone || '0913.882.115'}
                   </div>
-                  <span style="font-size:11.5px;color:#94A3B8;">(Người gọi: ${activeCall.callerName || 'Người dân báo tin'})</span>
                 </div>
 
-                <div style="display:flex;align-items:center;gap:10px;">
+                <div style="display:flex;align-items:center;gap:8px;">
                   <!-- Soundwave equalizer -->
                   <div class="voice-wave-container" id="voice-wave-eq" title="Âm thanh đàm thoại thời gian thực">
                     <div class="voice-wave-bar"></div>
@@ -1911,220 +2130,179 @@
                     <div class="voice-wave-bar"></div>
                     <div class="voice-wave-bar"></div>
                   </div>
-                  <span class="voice-timer-display" id="voice-timer-display">00:00 / 00:41</span>
-                  <span class="badge badge-normal" style="font-size:10px;background:rgba(56,189,248,0.15);color:#38BDF8;border:1px solid rgba(56,189,248,0.35);font-weight:700;">
-                    AI BÓC TÁCH THOẠI & ĐIỀN FORM
-                  </span>
+                  <span class="voice-timer-display" id="voice-timer-display">00:00</span>
                 </div>
               </div>
 
-              <!-- Audio Live Call Controls (Khong tua, khong nghe lai, khong toc do) -->
-              <div class="voice-audio-controls">
-                <div style="display:flex;align-items:center;gap:8px;">
-                  <button type="button" class="voice-ctrl-btn btn-play-pause" id="btn-voice-toggle-play" title="Tạm dừng / Tiếp tục đàm thoại">
-                    <span id="voice-play-text">Tạm dừng</span>
-                  </button>
-                  <button type="button" class="voice-ctrl-btn" id="btn-voice-fill-instant" style="background:rgba(16,185,129,0.2);border-color:#10B981;color:#34D399;" title="Tự động điền nhanh toàn bộ form để kiểm tra">
-                    <span>Điền nhanh dữ liệu</span>
-                  </button>
-                </div>
-
-                <div style="display:flex;align-items:center;gap:8px;">
-                  <span style="font-size:11px;color:#64748B;font-style:italic;">Đàm thoại trực tiếp thời gian thực</span>
-                  <button type="button" class="voice-ctrl-btn" id="btn-call-hangup" style="color:var(--red-vivid);border-color:rgba(239,68,68,0.35);" title="Kết thúc cuộc gọi">
-                    <span>Gác máy</span>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Real-time Dialogue Feed (Speech-to-Text: Day du 5 luot kich ban) -->
+              <!-- Real-time Dialogue Feed (Speech-to-Text: Day du 5 luot kich ban - Chỉ phần này được scroll) -->
               <div class="voice-dialogue-feed" id="voice-dialogue-feed">
                 <!-- Rendered dynamically by voice demo engine -->
               </div>
 
-              <!-- AI Realtime Extracted Tags Bar (Khong emoji) -->
-              <div class="ai-extracted-tags-bar" id="ai-extracted-tags-bar">
-                <span class="ai-tags-label">AI TRÍCH XUẤT THỜI GIAN THỰC:</span>
-                <span id="ai-tag-placeholder" style="font-size:10.5px;color:#64748B;font-style:italic;">
-                  (Đang nhận dạng từ giọng nói...)
-                </span>
-              </div>
-            </div>
 
-
-
-            <!-- ======================================================= -->
-            <!-- STEP 1 VIEW PANE: THU THẬP THÔNG TIN CƠ BẢN (CARD 1..4) -->
-            <!-- ======================================================= -->
-            <div class="step-view-pane" id="pane-step-1">
-              <!-- FORM CARD 1: Thông tin bệnh nhân (Mở rộng đa nạn nhân) -->
-              <div class="rapid-field-card is-active-step" id="card-patient" data-step-id="1">
-                <div class="rapid-field-header" style="margin-bottom:8px;">
-                  <div class="rapid-field-title">
-                    <span class="rapid-step-num">1</span>
-                    <span>Thông tin Bệnh nhân / Nạn nhân</span>
-                    <span class="ai-card-pill" id="badge-ai-patient" style="display:none;">AI ĐÃ TỰ ĐIỀN</span>
-                  </div>
-                </div>
-
-                <!-- Bộ chọn nhanh số lượng bệnh nhân -->
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;background:rgba(15,23,42,0.45);padding:6px 10px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);">
-                  <div style="font-size:12px;font-weight:600;color:var(--text-slate);display:flex;align-items:center;gap:6px;">
-                    <span>Số lượng nạn nhân:</span>
-                    <span id="patient-count-badge" style="font-size:11px;background:#1E3A8A;color:#93C5FD;padding:1px 6px;border-radius:10px;font-weight:700;">1</span>
-                  </div>
-                  <div style="display:flex;gap:6px;" id="patient-count-selector">
-                    <button type="button" class="patient-count-btn active" data-count="1">1 người</button>
-                    <button type="button" class="patient-count-btn" data-count="2">2 người</button>
-                    <button type="button" class="patient-count-btn" data-count="3">3 người</button>
-                    <button type="button" class="patient-count-btn" id="btn-add-patient-quick">+ Thêm</button>
-                  </div>
-                </div>
-
-                <!-- Danh sách bệnh nhân (Dynamic multi-patient list) -->
-                <div class="patient-list-container" id="patient-items-wrapper">
-                  <!-- Được render bởi renderPatientsList() -->
-                </div>
-              </div>
-
-              <!-- FORM CARD 2: Vị trí hiện trường (Chỉ trường vị trí, không chú thích) -->
-              <div class="rapid-field-card" id="card-location" data-step-id="2">
-                <div class="rapid-field-header" style="margin-bottom:6px;">
-                  <div class="rapid-field-title">
-                    <span class="rapid-step-num">2</span>
-                    <span>Vị trí hiện trường đón cấp cứu</span>
-                    <span class="ai-card-pill" id="badge-ai-location" style="display:none;">AI ĐÃ TỰ ĐIỀN</span>
-                  </div>
-                </div>
-
-                <div class="form-field" style="margin-bottom:0;">
-                  <input type="text" id="rapid-address" value="${activeCall.address || ''}" placeholder="Đang nhận dạng địa chỉ từ cuộc gọi..." />
-                </div>
-              </div>
-
-              <!-- FORM CARD 3: Tình huống cấp cứu (Step 3 - Incident Selector 1 to 8) -->
-              <div class="rapid-field-card" id="card-incident" data-step-id="3" tabindex="0">
-                <div class="rapid-field-header">
-                  <div class="rapid-field-title">
-                    <span class="rapid-step-num">3</span>
-                    <span>Loại Tình huống Cấp cứu</span>
-                    <span class="ai-card-pill" id="badge-ai-incident" style="display:none;">AI ĐÃ TỰ ĐIỀN</span>
-                  </div>
-                  <div class="rapid-field-hint">
-                    <span>Bấm phím số:</span>
-                    <kbd class="quick-kbd">1..8</kbd> Chọn tình huống
-                  </div>
-                </div>
-
-                <div class="rapid-chip-grid rapid-chip-grid-4">
-                  <button type="button" tabindex="-1" class="rapid-chip-btn ${currentIncident === 'INC_TNGT' ? 'active' : ''}" data-incident="INC_TNGT" data-key="1">
-                    <kbd class="quick-kbd">1</kbd>
-                    <div class="chip-content">
-                      <span class="chip-title">Tai nạn</span>
-                      <span class="chip-desc">Va chạm đường bộ</span>
-                    </div>
-                  </button>
-                  <button type="button" tabindex="-1" class="rapid-chip-btn ${currentIncident === 'INC_STROKE' ? 'active' : ''}" data-incident="INC_STROKE" data-key="2">
-                    <kbd class="quick-kbd">2</kbd>
-                    <div class="chip-content">
-                      <span class="chip-title">Đột quỵ</span>
-                      <span class="chip-desc">Liệt mặt, yếu chi</span>
-                    </div>
-                  </button>
-                  <button type="button" tabindex="-1" class="rapid-chip-btn ${currentIncident === 'INC_CARDIAC' ? 'active' : ''}" data-incident="INC_CARDIAC" data-key="3">
-                    <kbd class="quick-kbd">3</kbd>
-                    <div class="chip-content">
-                      <span class="chip-title">Ngừng tim / CPR</span>
-                      <span class="chip-desc">Đau thắt, mất mạch</span>
-                    </div>
-                  </button>
-                  <button type="button" tabindex="-1" class="rapid-chip-btn ${currentIncident === 'INC_RESPIRATORY' ? 'active' : ''}" data-incident="INC_RESPIRATORY" data-key="4">
-                    <kbd class="quick-kbd">4</kbd>
-                    <div class="chip-content">
-                      <span class="chip-title">Suy hô hấp</span>
-                      <span class="chip-desc">Khó thở, tím tái</span>
-                    </div>
-                  </button>
-                  <button type="button" tabindex="-1" class="rapid-chip-btn ${currentIncident === 'INC_TRAUMA' ? 'active' : ''}" data-incident="INC_TRAUMA" data-key="5">
-                    <kbd class="quick-kbd">5</kbd>
-                    <div class="chip-content">
-                      <span class="chip-title">Chấn thương</span>
-                      <span class="chip-desc">Ngã cao, gãy xương</span>
-                    </div>
-                  </button>
-                  <button type="button" tabindex="-1" class="rapid-chip-btn ${currentIncident === 'INC_OBSTETRIC' ? 'active' : ''}" data-incident="INC_OBSTETRIC" data-key="6">
-                    <kbd class="quick-kbd">6</kbd>
-                    <div class="chip-content">
-                      <span class="chip-title">Sản khoa</span>
-                      <span class="chip-desc">Chuyển dạ, băng huyết</span>
-                    </div>
-                  </button>
-                  <button type="button" tabindex="-1" class="rapid-chip-btn ${currentIncident === 'INC_PEDIATRIC' ? 'active' : ''}" data-incident="INC_PEDIATRIC" data-key="7">
-                    <kbd class="quick-kbd">7</kbd>
-                    <div class="chip-content">
-                      <span class="chip-title">Co giật sốt cao</span>
-                      <span class="chip-desc">Cấp cứu nhi khoa</span>
-                    </div>
-                  </button>
-                  <button type="button" tabindex="-1" class="rapid-chip-btn ${currentIncident === 'INC_OTHER' ? 'active' : ''}" data-incident="INC_OTHER" data-key="8">
-                    <kbd class="quick-kbd">8</kbd>
-                    <div class="chip-content">
-                      <span class="chip-title">Khác...</span>
-                      <span class="chip-desc">Tình huống chung</span>
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              <!-- FORM CARD 4: Mức độ khẩn (Step 4 - Triage Priority 1, 2, 3) -->
-              <div class="rapid-field-card" id="card-severity" data-step-id="4" tabindex="0">
-                <div class="rapid-field-header">
-                  <div class="rapid-field-title">
-                    <span class="rapid-step-num">4</span>
-                    <span>Phân loại Mức độ Khẩn</span>
-                    <span class="ai-card-pill" id="badge-ai-severity" style="display:none;">AI ĐÃ TỰ ĐIỀN</span>
-                  </div>
-                  <div class="rapid-field-hint">
-                    <span>Bấm số:</span>
-                    <kbd class="quick-kbd kbd-red">1</kbd> Đỏ
-                    <kbd class="quick-kbd kbd-amber">2</kbd> Cam
-                    <kbd class="quick-kbd kbd-emerald">3</kbd> Xanh
-                  </div>
-                </div>
-
-                <div class="rapid-chip-grid rapid-chip-grid-3">
-                  <button type="button" tabindex="-1" class="rapid-chip-btn sev-critical ${currentSeverity === 'CRITICAL' ? 'active' : ''}" data-sev="CRITICAL" data-key="1">
-                    <kbd class="quick-kbd kbd-red">1</kbd>
-                    <div class="chip-content">
-                      <span class="chip-title" style="color:#FCA5A5;">TỐI KHẨN</span>
-                      <span class="chip-desc">Nguy kịch tính mạng</span>
-                    </div>
-                  </button>
-                  <button type="button" tabindex="-1" class="rapid-chip-btn sev-emergency ${currentSeverity === 'EMERGENCY' ? 'active' : ''}" data-sev="EMERGENCY" data-key="2">
-                    <kbd class="quick-kbd kbd-amber">2</kbd>
-                    <div class="chip-content">
-                      <span class="chip-title" style="color:#FCD34D;">KHẨN CẤP</span>
-                      <span class="chip-desc">Cần can thiệp sớm</span>
-                    </div>
-                  </button>
-                  <button type="button" tabindex="-1" class="rapid-chip-btn sev-routine ${currentSeverity === 'ROUTINE' ? 'active' : ''}" data-sev="ROUTINE" data-key="3">
-                    <kbd class="quick-kbd kbd-emerald">3</kbd>
-                    <div class="chip-content">
-                      <span class="chip-title" style="color:#6EE7B7;">TIÊU CHUẨN</span>
-                      <span class="chip-desc">Ổn định</span>
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              <!-- ACTION BAR CUỐI TAB 1 -->
-              <div style="display:flex;justify-content:flex-end;margin-top:4px;">
-                <button type="button" class="btn btn-primary" id="btn-next-to-step2" style="padding:10px 20px;font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:8px;background:linear-gradient(180deg, #2563EB 0%, #1D4ED8 100%);border-color:#3B82F6;cursor:pointer;">
-                  <span>Sang tab Điều phối ➔</span>
-                  <kbd class="quick-kbd" style="background:rgba(255,255,255,0.2);color:#FFF;border-color:rgba(255,255,255,0.3);font-size:11px;">Ctrl + Enter</kbd>
+              <!-- Thanh thao tác ngang cột trái: Cúp máy -->
+              <div class="voice-hangup-bar">
+                <button type="button" class="btn-voice-hangup" id="btn-call-hangup" title="Kết thúc cuộc gọi">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91"></path>
+                    <line x1="23" y1="1" x2="1" y2="23"></line>
+                  </svg>
+                  <span>Cúp máy</span>
                 </button>
               </div>
             </div>
+
+            <!-- CỘT PHẢI: FORM TIẾP NHẬN & ĐIỀU PHỐI (NHÌN THẤY TOÀN BỘ, KHÔNG CẦN SCROLL) -->
+            <div class="call-intake-forms-col">
+              <!-- STEP 1 VIEW PANE: THU THẬP THÔNG TIN CƠ BẢN (CARD 1..4) -->
+              <div class="step-view-pane" id="pane-step-1">
+                <!-- FORM CARD 1: Thông tin bệnh nhân (Mở rộng đa nạn nhân) -->
+                <div class="rapid-field-card is-active-step" id="card-patient" data-step-id="1">
+                  <div class="rapid-field-header" style="margin-bottom:4px;">
+                    <div class="rapid-field-title">
+                      <span class="rapid-step-num">1</span>
+                      <span>Thông tin Nạn nhân</span>
+                    </div>
+
+                    <!-- Bộ chọn nhanh số lượng bệnh nhân đặt trên header line để tiết kiệm chiều cao -->
+                    <div style="display:flex;align-items:center;gap:6px;">
+                      <div style="display:flex;gap:4px;" id="patient-count-selector">
+                        <button type="button" class="patient-count-btn" id="btn-add-patient-quick" style="padding:2px 7px;font-size:11px;">+ Thêm</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Danh sách bệnh nhân (Dynamic multi-patient list) -->
+                  <div class="patient-list-container" id="patient-items-wrapper">
+                    <!-- Được render bởi renderPatientsList() -->
+                  </div>
+                </div>
+
+                <!-- FORM CARD 2: Vị trí hiện trường (Chỉ trường vị trí, không chú thích) -->
+                <div class="rapid-field-card" id="card-location" data-step-id="2">
+                  <div class="rapid-field-header" style="margin-bottom:4px;">
+                    <div class="rapid-field-title">
+                      <span class="rapid-step-num">2</span>
+                      <span>Vị trí hiện trường đón cấp cứu</span>
+                    </div>
+                  </div>
+
+                  <div class="form-field" style="margin-bottom:0;">
+                    <input type="text" id="rapid-address" value="${activeCall.address || ''}" placeholder="Đang nhận dạng địa chỉ từ cuộc gọi..." style="height:30px;font-size:12px;" />
+                  </div>
+                </div>
+
+                <!-- FORM CARD 3: Tình huống cấp cứu (Step 3 - Incident Selector 1 to 8) -->
+                <div class="rapid-field-card" id="card-incident" data-step-id="3" tabindex="0">
+                  <div class="rapid-field-header" style="margin-bottom:4px;">
+                    <div class="rapid-field-title">
+                      <span class="rapid-step-num">3</span>
+                      <span>Loại Tình huống Cấp cứu</span>
+                    </div>
+                  </div>
+
+                  <div class="rapid-chip-grid rapid-chip-grid-4" style="gap:5px;">
+                    <button type="button" tabindex="-1" class="rapid-chip-btn ${currentIncident === 'INC_TNGT' ? 'active' : ''}" data-incident="INC_TNGT" data-key="1" style="padding:4px 8px;min-height:34px;">
+                      <kbd class="quick-kbd">1</kbd>
+                      <div class="chip-content">
+                        <span class="chip-title" style="font-size:11.5px;">Tai nạn</span>
+                        <span class="chip-desc" style="font-size:10px;">Va chạm đường bộ</span>
+                      </div>
+                    </button>
+                    <button type="button" tabindex="-1" class="rapid-chip-btn ${currentIncident === 'INC_STROKE' ? 'active' : ''}" data-incident="INC_STROKE" data-key="2" style="padding:4px 8px;min-height:34px;">
+                      <kbd class="quick-kbd">2</kbd>
+                      <div class="chip-content">
+                        <span class="chip-title" style="font-size:11.5px;">Đột quỵ</span>
+                        <span class="chip-desc" style="font-size:10px;">Liệt mặt, yếu chi</span>
+                      </div>
+                    </button>
+                    <button type="button" tabindex="-1" class="rapid-chip-btn ${currentIncident === 'INC_CARDIAC' ? 'active' : ''}" data-incident="INC_CARDIAC" data-key="3" style="padding:4px 8px;min-height:34px;">
+                      <kbd class="quick-kbd">3</kbd>
+                      <div class="chip-content">
+                        <span class="chip-title" style="font-size:11.5px;">Ngừng tim / CPR</span>
+                        <span class="chip-desc" style="font-size:10px;">Đau thắt, mất mạch</span>
+                      </div>
+                    </button>
+                    <button type="button" tabindex="-1" class="rapid-chip-btn ${currentIncident === 'INC_RESPIRATORY' ? 'active' : ''}" data-incident="INC_RESPIRATORY" data-key="4" style="padding:4px 8px;min-height:34px;">
+                      <kbd class="quick-kbd">4</kbd>
+                      <div class="chip-content">
+                        <span class="chip-title" style="font-size:11.5px;">Suy hô hấp</span>
+                        <span class="chip-desc" style="font-size:10px;">Khó thở, tím tái</span>
+                      </div>
+                    </button>
+                    <button type="button" tabindex="-1" class="rapid-chip-btn ${currentIncident === 'INC_TRAUMA' ? 'active' : ''}" data-incident="INC_TRAUMA" data-key="5" style="padding:4px 8px;min-height:34px;">
+                      <kbd class="quick-kbd">5</kbd>
+                      <div class="chip-content">
+                        <span class="chip-title" style="font-size:11.5px;">Chấn thương</span>
+                        <span class="chip-desc" style="font-size:10px;">Ngã cao, gãy xương</span>
+                      </div>
+                    </button>
+                    <button type="button" tabindex="-1" class="rapid-chip-btn ${currentIncident === 'INC_OBSTETRIC' ? 'active' : ''}" data-incident="INC_OBSTETRIC" data-key="6" style="padding:4px 8px;min-height:34px;">
+                      <kbd class="quick-kbd">6</kbd>
+                      <div class="chip-content">
+                        <span class="chip-title" style="font-size:11.5px;">Sản khoa</span>
+                        <span class="chip-desc" style="font-size:10px;">Chuyển dạ, băng huyết</span>
+                      </div>
+                    </button>
+                    <button type="button" tabindex="-1" class="rapid-chip-btn ${currentIncident === 'INC_PEDIATRIC' ? 'active' : ''}" data-incident="INC_PEDIATRIC" data-key="7" style="padding:4px 8px;min-height:34px;">
+                      <kbd class="quick-kbd">7</kbd>
+                      <div class="chip-content">
+                        <span class="chip-title" style="font-size:11.5px;">Co giật sốt cao</span>
+                        <span class="chip-desc" style="font-size:10px;">Cấp cứu nhi khoa</span>
+                      </div>
+                    </button>
+                    <button type="button" tabindex="-1" class="rapid-chip-btn ${currentIncident === 'INC_OTHER' ? 'active' : ''}" data-incident="INC_OTHER" data-key="8" style="padding:4px 8px;min-height:34px;">
+                      <kbd class="quick-kbd">8</kbd>
+                      <div class="chip-content">
+                        <span class="chip-title" style="font-size:11.5px;">Khác...</span>
+                        <span class="chip-desc" style="font-size:10px;">Tình huống chung</span>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- FORM CARD 4: Mức độ khẩn (Step 4 - Triage Priority 1, 2, 3) -->
+                <div class="rapid-field-card" id="card-severity" data-step-id="4" tabindex="0">
+                  <div class="rapid-field-header" style="margin-bottom:4px;">
+                    <div class="rapid-field-title">
+                      <span class="rapid-step-num">4</span>
+                      <span>Phân loại Mức độ Khẩn</span>
+                    </div>
+                  </div>
+
+                  <div class="rapid-chip-grid rapid-chip-grid-3" style="gap:6px;">
+                    <button type="button" tabindex="-1" class="rapid-chip-btn sev-critical ${currentSeverity === 'CRITICAL' ? 'active' : ''}" data-sev="CRITICAL" data-key="1" style="padding:5px 8px;min-height:36px;">
+                      <kbd class="quick-kbd kbd-red">1</kbd>
+                      <div class="chip-content">
+                        <span class="chip-title" style="color:#FCA5A5;font-size:11.5px;">TỐI KHẨN</span>
+                        <span class="chip-desc" style="font-size:10px;">Nguy kịch tính mạng</span>
+                      </div>
+                    </button>
+                    <button type="button" tabindex="-1" class="rapid-chip-btn sev-emergency ${currentSeverity === 'EMERGENCY' ? 'active' : ''}" data-sev="EMERGENCY" data-key="2" style="padding:5px 8px;min-height:36px;">
+                      <kbd class="quick-kbd kbd-amber">2</kbd>
+                      <div class="chip-content">
+                        <span class="chip-title" style="color:#FCD34D;font-size:11.5px;">KHẨN CẤP</span>
+                        <span class="chip-desc" style="font-size:10px;">Cần can thiệp sớm</span>
+                      </div>
+                    </button>
+                    <button type="button" tabindex="-1" class="rapid-chip-btn sev-routine ${currentSeverity === 'ROUTINE' ? 'active' : ''}" data-sev="ROUTINE" data-key="3" style="padding:5px 8px;min-height:36px;">
+                      <kbd class="quick-kbd kbd-emerald">3</kbd>
+                      <div class="chip-content">
+                        <span class="chip-title" style="color:#6EE7B7;font-size:11.5px;">TIÊU CHUẨN</span>
+                        <span class="chip-desc" style="font-size:10px;">Ổn định</span>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- THANH THAO TÁC CỘT PHẢI (BƯỚC 1): CĂN NGANG HÀNG NÚT CÚP MÁY CỘT TRÁI -->
+                <div class="step1-action-bar">
+                  <button type="button" class="btn-call-next-step" id="btn-next-to-step2" title="Chuyển sang Bước 2: Điều phối xe & kíp">
+                    <span>Sang tab Điều phối xe & kíp ➔</span>
+                    <kbd class="quick-kbd" style="background:rgba(255,255,255,0.2);color:#FFF;border-color:rgba(255,255,255,0.3);font-size:10.5px;">Ctrl + Enter</kbd>
+                  </button>
+                </div>
+              </div>
 
             <!-- ======================================================== -->
             <!-- STEP 2 VIEW PANE: ĐIỀU PHỐI & PHÁT LỆNH (CARD 5..8)      -->
@@ -2136,30 +2314,27 @@
 
               <!-- FORM CARD 5: Chọn Xe Cứu Thương (Step 5 - Chọn nhiều) -->
               <div class="rapid-field-card is-active-step" id="card-vehicle-type" data-step-id="5" tabindex="0">
-                <div class="rapid-field-header">
-                  <div class="rapid-field-title">
-                    <span class="rapid-step-num" style="background:#2563EB;color:#FFF;">5</span>
+                <div class="rapid-field-header" style="margin-bottom:2px;">
+                  <div class="rapid-field-title" style="font-size:12px;">
+                    <span class="rapid-step-num" style="background:#2563EB;color:#FFF;width:18px;height:18px;font-size:10px;line-height:18px;">5</span>
                     <span style="color:#60A5FA;">CHỌN XE CỨU THƯƠNG (CHỌN NHIỀU)</span>
-                  </div>
-                  <div class="rapid-field-hint">
-                    <span>Bấm [1..6] chọn xe · [A/B/C] theo loại:</span>
                   </div>
                 </div>
 
-                <div class="rapid-chip-grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                <div class="rapid-chip-grid" style="grid-template-columns: repeat(3, 1fr); gap: 5px;">
                   ${availableVehicles.map((v, idx) => {
           const isSelected = currentSelectedPlates.has(v.plate);
           const typeBadgeColor = v.type === 'Type A' ? '#93C5FD' : (v.type === 'Type B' ? '#5EEAD4' : '#C7D2FE');
           const typeClass = v.type === 'Type A' ? 'veh-type-a' : (v.type === 'Type B' ? 'veh-type-b' : 'veh-type-c');
           return `
-                      <button type="button" tabindex="-1" class="rapid-chip-btn ${typeClass} ${isSelected ? 'active' : ''}" data-veh-plate="${v.plate}" data-veh-type="${v.type}" data-key="${idx + 1}" style="text-align:left;padding:9px 12px;height:auto;display:flex;align-items:flex-start;gap:9px;">
-                        <kbd class="quick-kbd" style="margin-top:2px;">${idx + 1}</kbd>
+                      <button type="button" tabindex="-1" class="rapid-chip-btn ${typeClass} ${isSelected ? 'active' : ''}" data-veh-plate="${v.plate}" data-veh-type="${v.type}" data-key="${idx + 1}" style="text-align:left;padding:3px 6px;height:auto;display:flex;align-items:flex-start;gap:6px;">
+                        <kbd class="quick-kbd" style="margin-top:1px;font-size:9.5px;padding:1px 4px;">${idx + 1}</kbd>
                         <div class="chip-content" style="flex:1;">
-                          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;gap:4px;">
-                            <span class="chip-title" style="font-size:13px;font-family:var(--font-mono);font-weight:700;color:var(--text-white);">${v.plate}</span>
-                            <span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,0.08);color:${typeBadgeColor};">${v.type}</span>
+                          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1px;gap:4px;">
+                            <span class="chip-title" style="font-size:11.5px;font-family:var(--font-mono);font-weight:700;color:var(--text-white);">${v.plate}</span>
+                            <span style="font-size:9.5px;font-weight:700;padding:1px 4px;border-radius:3px;background:rgba(255,255,255,0.08);color:${typeBadgeColor};">${v.type}</span>
                           </div>
-                          <div class="chip-desc" style="font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                          <div class="chip-desc" style="font-size:9.5px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                             ${v.station}
                           </div>
                         </div>
@@ -2171,27 +2346,24 @@
 
               <!-- FORM CARD 6: Chọn Kíp Cấp Cứu (Step 6 - Chọn nhiều) -->
               <div class="rapid-field-card" id="card-crew-members" data-step-id="6" tabindex="0">
-                <div class="rapid-field-header">
-                  <div class="rapid-field-title">
-                    <span class="rapid-step-num" style="background:#0D9488;color:#FFF;">6</span>
+                <div class="rapid-field-header" style="margin-bottom:2px;">
+                  <div class="rapid-field-title" style="font-size:12px;">
+                    <span class="rapid-step-num" style="background:#0D9488;color:#FFF;width:18px;height:18px;font-size:10px;line-height:18px;">6</span>
                     <span style="color:#2DD4BF;">CHỌN KÍP CẤP CỨU TRỰC CA (CHỌN NHIỀU)</span>
-                  </div>
-                  <div class="rapid-field-hint">
-                    <span>Bấm phím [1..6] chọn nhân sự:</span>
                   </div>
                 </div>
 
-                <div class="rapid-chip-grid" style="grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                <div class="rapid-chip-grid" style="grid-template-columns: repeat(3, 1fr); gap: 5px;">
                   ${availablePersonnel.map((p, idx) => {
           const isSelected = currentSelectedPersonnel.has(p.id);
           return `
-                      <button type="button" tabindex="-1" class="rapid-chip-btn ${isSelected ? 'active' : ''}" data-person-id="${p.id}" data-key="${idx + 1}" style="text-align:left;padding:9px 12px;height:auto;display:flex;align-items:flex-start;gap:9px;">
-                        <kbd class="quick-kbd" style="margin-top:2px;">${idx + 1}</kbd>
+                      <button type="button" tabindex="-1" class="rapid-chip-btn ${isSelected ? 'active' : ''}" data-person-id="${p.id}" data-key="${idx + 1}" style="text-align:left;padding:3px 6px;height:auto;display:flex;align-items:flex-start;gap:6px;">
+                        <kbd class="quick-kbd" style="margin-top:1px;font-size:9.5px;padding:1px 4px;">${idx + 1}</kbd>
                         <div class="chip-content" style="flex:1;">
-                          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;gap:4px;">
-                            <span class="chip-title" style="font-size:12.5px;font-weight:700;color:var(--text-white);">${p.name}</span>
+                          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1px;gap:4px;">
+                            <span class="chip-title" style="font-size:11.5px;font-weight:700;color:var(--text-white);">${p.name}</span>
                           </div>
-                          <div class="chip-desc" style="font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                          <div class="chip-desc" style="font-size:9.5px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                             ${p.phone} · ${p.cert || 'Sẵn sàng'}
                           </div>
                         </div>
@@ -2203,27 +2375,24 @@
 
               <!-- FORM CARD 7: Chọn Bệnh Viện Tiếp Nhận (Step 7) -->
               <div class="rapid-field-card" id="card-hospital" data-step-id="7" tabindex="0">
-                <div class="rapid-field-header">
-                  <div class="rapid-field-title">
-                    <span class="rapid-step-num" style="background:#7C3AED;color:#FFF;">7</span>
+                <div class="rapid-field-header" style="margin-bottom:2px;">
+                  <div class="rapid-field-title" style="font-size:12px;">
+                    <span class="rapid-step-num" style="background:#7C3AED;color:#FFF;width:18px;height:18px;font-size:10px;line-height:18px;">7</span>
                     <span style="color:#C4B5FD;">CHỌN BỆNH VIỆN TIẾP NHẬN</span>
-                  </div>
-                  <div class="rapid-field-hint">
-                    <span>Bấm phím [1..${availableHospitals.length}] chọn BV tiếp nhận:</span>
                   </div>
                 </div>
 
-                <div class="rapid-chip-grid" style="grid-template-columns: repeat(${availableHospitals.length > 2 ? 2 : availableHospitals.length}, 1fr); gap: 10px;">
+                <div class="rapid-chip-grid" style="grid-template-columns: repeat(${availableHospitals.length > 2 ? 2 : availableHospitals.length}, 1fr); gap: 5px;">
                   ${availableHospitals.map((h, idx) => {
           const isSelected = currentHospitalId === h.id;
           return `
-                      <button type="button" tabindex="-1" class="rapid-chip-btn ${isSelected ? 'active' : ''}" data-hosp-id="${h.id}" data-key="${idx + 1}" style="text-align:left;padding:10px 12px;height:auto;display:flex;align-items:flex-start;gap:9px;">
-                        <kbd class="quick-kbd" style="margin-top:2px;">${idx + 1}</kbd>
+                      <button type="button" tabindex="-1" class="rapid-chip-btn ${isSelected ? 'active' : ''}" data-hosp-id="${h.id}" data-key="${idx + 1}" style="text-align:left;padding:4px 8px;height:auto;display:flex;align-items:flex-start;gap:6px;">
+                        <kbd class="quick-kbd" style="margin-top:1px;font-size:9.5px;padding:1px 4px;">${idx + 1}</kbd>
                         <div class="chip-content" style="flex:1;">
-                          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;gap:6px;">
-                            <span class="chip-title" style="font-size:12.5px;font-weight:700;color:var(--text-white);">${h.name}</span>
+                          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1px;gap:4px;">
+                            <span class="chip-title" style="font-size:11.5px;font-weight:700;color:var(--text-white);">${h.name}</span>
                           </div>
-                          <div class="chip-desc" style="font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                          <div class="chip-desc" style="font-size:9.5px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
                             ${h.hotline ? 'Hotline: ' + h.hotline : (h.phone || '')} · ${h.address || ''}
                           </div>
                         </div>
@@ -2235,11 +2404,10 @@
 
               <!-- FORM CARD 8: Ghi chú & Triệu chứng tóm tắt (Step 8) -->
               <div class="rapid-field-card" id="card-notes" data-step-id="8">
-                <div class="rapid-field-header" style="margin-bottom:6px;">
-                  <div class="rapid-field-title">
-                    <span class="rapid-step-num">8</span>
+                <div class="rapid-field-header" style="margin-bottom:2px;">
+                  <div class="rapid-field-title" style="font-size:12px;">
+                    <span class="rapid-step-num" style="width:18px;height:18px;font-size:10px;line-height:18px;">8</span>
                     <span>GHI CHÚ ĐIỀU PHỐI</span>
-                    <span class="ai-card-pill" id="badge-ai-notes" style="display:none;">AI ĐÃ TỰ ĐIỀN</span>
                   </div>
                 </div>
 
@@ -2249,21 +2417,23 @@
               </div>
 
               <!-- COMMAND ACTION BAR (CUỐI TAB 2) -->
-              <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px;">
-                <div style="display:flex;gap:10px;">
-                  <button type="button" class="btn btn-default" id="btn-back-to-step1" style="padding:12px 18px;font-weight:600;display:flex;align-items:center;gap:6px;">
+              <div style="display:flex;flex-direction:column;gap:10px;margin-top:auto;padding-top:6px;">
+                <div style="display:flex;gap:10px;height:38px;align-items:center;">
+                  <button type="button" class="btn btn-default" id="btn-back-to-step1" style="height:38px;padding:0 16px;font-weight:600;display:flex;align-items:center;gap:6px;">
                     <span>⬅ Thu thập thông tin</span>
                     <kbd class="quick-kbd">Esc</kbd>
                   </button>
 
-                  <button type="button" class="btn-rapid-dispatch" id="btn-rapid-dispatch" style="flex:1;display:flex;align-items:center;justify-content:center;gap:10px;">
-                    <span style="font-size:15px;letter-spacing:0.5px;font-weight:700;">PHÁT LỆNH ĐIỀU XE & TẠO CA CẤP CỨU</span>
+                  <button type="button" class="btn-rapid-dispatch" id="btn-rapid-dispatch" style="flex:1;height:38px;display:flex;align-items:center;justify-content:center;gap:10px;">
+                    <span style="font-size:14px;letter-spacing:0.5px;font-weight:700;">PHÁT LỆNH ĐIỀU XE & TẠO CA CẤP CỨU</span>
                     <kbd class="quick-kbd" style="background:rgba(0,0,0,0.3);color:#FFF;border-color:rgba(255,255,255,0.4);font-size:11.5px;font-weight:700;padding:2px 7px;">Ctrl + Enter</kbd>
                   </button>
                 </div>
               </div>
             </div>
+            </div>
           </div>
+
 
           <!-- KEYBOARD SHORTCUTS CHEAT SHEET MODAL (OVERLAY) -->
           <div class="modal-overlay" id="shortcuts-cheat-modal-overlay">
@@ -2325,13 +2495,6 @@
                   </div>
                 </div>
 
-                <div class="cheat-section">
-                  <div class="cheat-section-title">3. Quản lý bệnh nhân</div>
-                  <div class="cheat-row">
-                    <span>Chọn nhanh 1, 2, 3 người bệnh</span>
-                    <span>Dùng chuột click các nút [1 người], [2 người], [3 người]</span>
-                  </div>
-                </div>
 
                 <div class="cheat-section">
                   <div class="cheat-section-title">4. Phát lệnh & Kết thúc</div>
@@ -2452,12 +2615,14 @@
           const wrapper = paneContainer.querySelector('#patient-items-wrapper');
           if (!wrapper) return;
 
+          wrapper.setAttribute('data-count', String(patients.length));
+
           wrapper.innerHTML = patients.map((p, idx) => `
             <div class="patient-item-card ${idx === 0 ? 'is-primary' : ''}" data-patient-index="${idx}">
               <div class="patient-item-header">
                 <div style="font-size:12px;font-weight:700;color:${idx === 0 ? '#93C5FD' : '#E2E8F0'};display:flex;align-items:center;gap:6px;">
-                  <span style="display:inline-block;width:18px;height:18px;border-radius:50%;background:${idx === 0 ? '#2563EB' : '#334155'};color:#FFF;font-size:10px;text-align:center;line-height:18px;font-weight:700;">${idx + 1}</span>
-                  <span>${idx === 0 ? 'Nạn nhân chính' : `Nạn nhân #${idx + 1}`}</span>
+                  <span style="display:inline-block;width:19px;height:19px;border-radius:50%;background:${idx === 0 ? '#2563EB' : '#334155'};color:#FFF;font-size:10px;text-align:center;line-height:19px;font-weight:700;">${idx + 1}</span>
+                  <span>Nạn nhân #${idx + 1}</span>
                 </div>
                 ${patients.length > 1 ? `
                   <button type="button" class="btn-remove-patient" data-remove-index="${idx}" title="Xóa bệnh nhân này">
@@ -2467,14 +2632,14 @@
               </div>
 
               <!-- Dòng 1: Họ tên + Nhóm độ tuổi + Giới tính -->
-              <div style="display:grid;grid-template-columns: 1.2fr 1.6fr 1fr; gap:8px; align-items:center;">
+              <div style="display:grid;grid-template-columns: 1.2fr 1.6fr 1fr; gap:6px; align-items:center;">
                 <div class="form-field" style="margin-bottom:0;">
-                  <label class="form-label" style="font-size:11px;margin-bottom:3px;color:var(--text-muted);">Họ tên / Bí danh</label>
-                  <input type="text" class="inp-patient-name" data-index="${idx}" value="${p.name || ''}" placeholder="Họ tên hoặc bí danh (VD: Nam áo đen)..." style="height:32px;font-size:12px;" />
+                  <label class="form-label" style="font-size:10.5px;margin-bottom:2px;color:var(--text-muted);">Họ tên / Bí danh</label>
+                  <input type="text" class="inp-patient-name" data-index="${idx}" value="${p.name || ''}" placeholder="Họ tên hoặc bí danh..." style="height:29px;font-size:12px;padding:3px 8px;" />
                 </div>
 
                 <div class="form-field" style="margin-bottom:0;">
-                  <label class="form-label" style="font-size:11px;margin-bottom:3px;color:var(--text-muted);">Nhóm độ tuổi</label>
+                  <label class="form-label" style="font-size:10.5px;margin-bottom:2px;color:var(--text-muted);">Nhóm độ tuổi</label>
                   <div class="segmented-group" style="width:100%;display:flex;">
                     <button type="button" class="segmented-btn btn-age-group ${p.ageGroup === 'INFANT' ? 'active' : ''}" data-index="${idx}" data-group="INFANT" title="Trẻ sơ sinh (<1 tuổi)" style="flex:1;padding:4px 2px;font-size:11px;">Sơ sinh</button>
                     <button type="button" class="segmented-btn btn-age-group ${p.ageGroup === 'CHILD' ? 'active' : ''}" data-index="${idx}" data-group="CHILD" title="Trẻ em (1-15 tuổi)" style="flex:1;padding:4px 2px;font-size:11px;">Trẻ em</button>
@@ -2484,25 +2649,21 @@
                 </div>
 
                 <div class="form-field" style="margin-bottom:0;">
-                  <label class="form-label" style="font-size:11px;margin-bottom:3px;color:var(--text-muted);">Giới tính</label>
+                  <label class="form-label" style="font-size:10.5px;margin-bottom:2px;color:var(--text-muted);">Giới tính</label>
                   <div class="segmented-group" style="width:100%;justify-content:space-between;">
-                    <button type="button" class="segmented-btn btn-gender ${p.gender === 'Nam' ? 'active' : ''}" data-index="${idx}" data-gender="Nam" style="flex:1;">Nam</button>
-                    <button type="button" class="segmented-btn btn-gender ${p.gender === 'Nữ' ? 'active' : ''}" data-index="${idx}" data-gender="Nữ" style="flex:1;">Nữ</button>
-                    <button type="button" class="segmented-btn btn-gender ${p.gender === 'Chưa rõ' ? 'active' : ''}" data-index="${idx}" data-gender="Chưa rõ" style="flex:1;">Chưa rõ</button>
+                    <button type="button" class="segmented-btn btn-gender ${p.gender === 'Nam' ? 'active' : ''}" data-index="${idx}" data-gender="Nam" style="flex:1;padding:4px 4px;font-size:11px;">Nam</button>
+                    <button type="button" class="segmented-btn btn-gender ${p.gender === 'Nữ' ? 'active' : ''}" data-index="${idx}" data-gender="Nữ" style="flex:1;padding:4px 4px;font-size:11px;">Nữ</button>
+                    <button type="button" class="segmented-btn btn-gender ${p.gender === 'Chưa rõ' ? 'active' : ''}" data-index="${idx}" data-gender="Chưa rõ" style="flex:1;padding:4px 4px;font-size:11px;">Chưa rõ</button>
                   </div>
                 </div>
               </div>
 
               <!-- Dòng 2: Ghi chú thương tổn riêng -->
               <div class="form-field" style="margin-bottom:0;">
-                <input type="text" class="inp-patient-notes" data-index="${idx}" value="${p.notes || ''}" placeholder="Ghi chú thương tổn / tình trạng riêng (VD: Bất tỉnh, chảy máu đầu, gãy tay, trầy xước nhẹ...)" style="height:30px;font-size:11.5px;" />
+                <input type="text" class="inp-patient-notes" data-index="${idx}" value="${p.notes || ''}" placeholder="Ghi chú thương tổn / tình trạng riêng (VD: Bất tỉnh, chảy máu đầu...)" style="height:27px;font-size:11.5px;padding:3px 8px;" />
               </div>
             </div>
           `).join('');
-
-          // Update count badge & button highlights
-          const countBadge = paneContainer.querySelector('#patient-count-badge');
-          if (countBadge) countBadge.textContent = patients.length;
 
           paneContainer.querySelectorAll('.patient-count-btn[data-count]').forEach(btn => {
             const count = parseInt(btn.getAttribute('data-count'), 10);
@@ -2940,14 +3101,17 @@
           currentStep = step;
           const step1Pane = paneContainer.querySelector('#pane-step-1');
           const step2Pane = paneContainer.querySelector('#pane-step-2');
+          const nextBtn = paneContainer.querySelector('#btn-next-to-step2');
           if (step === 1) {
             if (step1Pane) step1Pane.style.display = 'flex';
             if (step2Pane) step2Pane.style.display = 'none';
+            if (nextBtn) nextBtn.style.display = 'inline-flex';
             updateHud('1. Thu thập thông tin', 'Tab chuyển trường · Ctrl+Enter chuyển sang Điều phối');
             paneContainer.querySelector('.inp-patient-name')?.focus();
           } else {
             if (step1Pane) step1Pane.style.display = 'none';
             if (step2Pane) step2Pane.style.display = 'flex';
+            if (nextBtn) nextBtn.style.display = 'none';
             updateHud('2. Điều phối', 'Phím [1..6] chọn xe/kíp · Esc quay lại · Ctrl+Enter Phát lệnh');
             renderStep2SummaryAndRecommendation();
             updateVehicleMatch();
@@ -3277,20 +3441,8 @@
             }
           };
 
-          const flashCard = (cardId, badgeId, badgeText) => {
-            const card = paneContainer.querySelector(`#${cardId}`);
-            if (card) {
-              card.classList.remove('pulse-ai-autofill');
-              void card.offsetWidth;
-              card.classList.add('pulse-ai-autofill');
-            }
-            if (badgeId) {
-              const b = paneContainer.querySelector(`#${badgeId}`);
-              if (b) {
-                b.style.display = 'inline-flex';
-                if (badgeText) b.textContent = badgeText;
-              }
-            }
+          const flashCard = (cardId) => {
+            // No glowing bounding border
           };
 
           this.stopVoiceDemoAudio();
@@ -3360,9 +3512,7 @@
                   <div class="dialogue-speaker-name">
                     <div style="display:flex;align-items:center;gap:8px;">
                       <span class="speaker-pill ${isOp ? 'op' : 'caller'}">${seg.speakerLabel}</span>
-                      <span style="font-family:var(--font-mono);font-size:11px;color:#94A3B8;">[Lượt ${seg.turnNum} · ${formatTime(seg.start)} - ${formatTime(seg.end)}]</span>
                     </div>
-                    <span class="dialogue-status-tag" style="color:${statusColor};background:rgba(255,255,255,0.06);">[${statusLabel}]</span>
                   </div>
                   <div class="dialogue-text">${displayedText}</div>
                 </div>
@@ -3373,7 +3523,11 @@
 
             const activeEl = dialogueFeed.querySelector('.dialogue-bubble.is-active');
             if (activeEl) {
-              activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              const elOffsetTop = activeEl.offsetTop;
+              dialogueFeed.scrollTo({
+                top: Math.max(0, elOffsetTop - 20),
+                behavior: 'smooth'
+              });
             }
           };
 
@@ -3382,7 +3536,7 @@
             if (currentTime >= 7.5 && !triggers.incident) {
               triggers.incident = true;
               setIncident('INC_TNGT', false);
-              flashCard('card-incident', 'badge-ai-incident', 'AI ĐÃ CHỌN: TAI NẠN XE MÁY');
+              flashCard('card-incident');
               addAiTag('[TÌNH HUỐNG: TAI NẠN XE MÁY]');
               window.CCNV_UI.SoundFx.playBeep();
             }
@@ -3393,9 +3547,8 @@
               const addrInput = paneContainer.querySelector('#rapid-address');
               if (addrInput) {
                 addrInput.value = 'Đường Nguyễn Văn Cừ, trước cổng trường Đại học Cần Thơ, phía bên phải hướng đi vào trung tâm';
-                addrInput.style.borderColor = '#10B981';
               }
-              flashCard('card-location', 'badge-ai-location', 'AI ĐÃ ĐIỀN ĐỊA CHỈ');
+              flashCard('card-location');
               addAiTag('[HIỆN TRƯỜNG: ĐH CẦN THƠ, Đ. NGUYỄN VĂN CỪ]');
               window.CCNV_UI.SoundFx.playBeep();
             }
@@ -3423,7 +3576,7 @@
                 }
               ];
               renderPatientsList();
-              flashCard('card-patient', 'badge-ai-patient', 'AI ĐÃ ĐIỀN: 2 NẠN NHÂN (NAM, CAO TUỔI)');
+              flashCard('card-patient');
               addAiTag('[2 NẠN NHÂN: NAM, CAO TUỔI (NGUYỄN VĂN A & B)]');
               window.CCNV_UI.SoundFx.playBeep();
             }
@@ -3432,7 +3585,7 @@
             if (currentTime >= 26.5 && !triggers.severity) {
               triggers.severity = true;
               setSeverity('CRITICAL', false);
-              flashCard('card-severity', 'badge-ai-severity', 'AI ĐÃ PHÂN LOẠI: TỐI KHẨN');
+              flashCard('card-severity');
               addAiTag('[PHÂN LOẠI: TỐI KHẨN (ĐỎ)]');
               window.CCNV_UI.SoundFx.playEmergencyTone();
             }
@@ -3452,20 +3605,17 @@
                 const inp1 = wrapper.querySelector('.inp-patient-notes[data-index="1"]');
                 if (inp0) {
                   inp0.value = patients[0].notes;
-                  inp0.style.borderColor = '#10B981';
                 }
                 if (inp1) {
                   inp1.value = patients[1].notes;
-                  inp1.style.borderColor = '#10B981';
                 }
               }
               const notesTextarea = paneContainer.querySelector('#rapid-symptoms-notes');
               if (notesTextarea) {
                 notesTextarea.value = 'Tai nạn xe máy 2 nạn nhân nam cao tuổi (Nguyễn Văn A, Nguyễn Văn B). Nạn nhân 1: Còn thở, trả lời nhỏ, chân trái chảy máu nhiều. Nạn nhân 2: Bất tỉnh hoàn toàn, nghi chấn thương sọ não.';
-                notesTextarea.style.borderColor = '#10B981';
               }
-              flashCard('card-patient', 'badge-ai-patient', 'AI ĐÃ ĐIỀN ĐỦ MÔ TẢ THƯƠNG TỔN');
-              flashCard('card-notes', 'badge-ai-notes', 'AI ĐÃ ĐIỀN GHI CHÚ ĐIỀU PHỐI');
+              flashCard('card-patient');
+              flashCard('card-notes');
               addAiTag('[MÔ TẢ: 1 BẤT TỈNH, 1 CHẢY MÁU CHÂN]');
               window.CCNV_UI.SoundFx.playBeep();
             }
@@ -3487,7 +3637,7 @@
             const totalDur = voiceAudio.duration || 41.71;
 
             if (timerDisplay) {
-              timerDisplay.textContent = `${formatTime(curTime)} / ${formatTime(totalDur)}`;
+              timerDisplay.textContent = formatTime(curTime);
             }
 
             renderFullDialogueFeed(curTime);
@@ -3547,7 +3697,7 @@
           btnInstantFill?.addEventListener('click', () => {
             checkAutoFillTriggers(40.0);
             renderFullDialogueFeed(41.71);
-            if (timerDisplay) timerDisplay.textContent = '00:41 / 00:41';
+            if (timerDisplay) timerDisplay.textContent = '00:41';
             window.CCNV_UI.Toast.show(
               'AI ĐÃ HOÀN TẤT ĐIỀN FORM TỰ ĐỘNG',
               'Đã tự động trích xuất: Tai nạn xe máy · ĐH Cần Thơ · 2 Nạn nhân Nguyễn Văn A, B (Cao tuổi, Nam) · Tối khẩn.',
@@ -3569,7 +3719,7 @@
                 if (playText) playText.textContent = 'Bật âm thanh';
               });
             }
-          } catch (e) {}
+          } catch (e) { }
         };
 
         // Start Speech-to-Text & Auto-Fill Demo Engine
@@ -8769,10 +8919,10 @@
           <!-- 2. THANH ĐIỀU HƯỚNG TABS CHI TIẾT (FULL WIDTH) & ACTION CONTROLS -->
           <div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-elevated);border-bottom:1px solid var(--border-main);padding:0 24px;flex-shrink:0;">
             <div style="display:flex;align-items:center;">
-              <button class="panel-tab-btn active" data-tab="tab-overview" style="padding:10px 22px;font-size:13px;font-weight:600;">Tab Tổng quan</button>
-              <button class="panel-tab-btn" data-tab="tab-dispatch" style="padding:10px 22px;font-size:13px;font-weight:600;">Tab Phân công / Điều phối</button>
-              <button class="panel-tab-btn" data-tab="tab-documents" style="padding:10px 22px;font-size:13px;font-weight:600;">Tab Hồ sơ</button>
-              <button class="panel-tab-btn" data-tab="tab-logs" style="padding:10px 22px;font-size:13px;font-weight:600;">Tab Lịch sử (Log)</button>
+              <button class="panel-tab-btn active" data-tab="tab-overview" style="padding:10px 22px;font-size:13px;font-weight:600;">Tổng quan</button>
+              <button class="panel-tab-btn" data-tab="tab-dispatch" style="padding:10px 22px;font-size:13px;font-weight:600;">Phân công / Điều phối</button>
+              <button class="panel-tab-btn" data-tab="tab-documents" style="padding:10px 22px;font-size:13px;font-weight:600;">Hồ sơ</button>
+              <button class="panel-tab-btn" data-tab="tab-logs" style="padding:10px 22px;font-size:13px;font-weight:600;">Lịch sử</button>
             </div>
             <div style="display:flex;align-items:center;gap:10px;padding:6px 0;">
               ${(this.isHospitalMode() && (!state.cases.some(item => item.id === c.id || item.code === c.code) || c.hospitalResponse !== 'ACCEPTED')) ? `
@@ -8781,10 +8931,6 @@
                   <span>Xác nhận tiếp nhận</span>
                 </button>
               ` : ''}
-              <button class="btn btn-ghost btn-sm" id="btn-call-audio-quick" title="Bản ghi âm 115" style="border:1px solid var(--border-main);background:rgba(255,255,255,0.03);display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:5px 10px;">
-                <span style="color:#38bdf8;display:inline-flex;">${window.CCNV_UI?.ICONS?.phone || ''}</span>
-                <span>Ghi âm tiếp nhận (${callTimeRaw})</span>
-              </button>
               <button class="btn btn-ghost btn-sm" id="btn-close-case-modal" title="Đóng toàn màn hình (Esc)" style="width:30px;height:30px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:6px;background:rgba(255,255,255,0.06);color:var(--text-white);">
                 ${window.CCNV_UI.ICONS.x}
               </button>
@@ -9030,10 +9176,6 @@
                     <strong style="color:var(--text-white);letter-spacing:0.8px;">GIÁM SÁT GIS TRỰC TUYẾN 115</strong>
                   </div>
                   <div style="display:flex;align-items:center;gap:10px;">
-                    <span style="font-family:var(--font-mono);color:var(--accent-cyan);font-weight:600;">GPS LIVE · TẦN SỐ 154.200 MHz</span>
-                    <button type="button" class="btn btn-default btn-xs" id="btn-modal-map-recenter" style="padding:2px 8px;font-size:11px;color:#38bdf8;">
-                      Tâm ca
-                    </button>
                   </div>
                 </div>
 
@@ -9126,126 +9268,118 @@
           });
         }
 
-        // --- TAB 2: PHÂN CÔNG / ĐIỀU PHỐI (Layout Mở Rộng 3 Cột) ---
+        // --- TAB 2: PHÂN CÔNG / ĐIỀU PHỐI (Layout Dọc Chiếm Trọn Chiều Rộng) ---
         else if (tabName === 'tab-dispatch') {
           body.innerHTML = `
-            <div style="display:flex;flex-direction:column;gap:16px;">
-              <!-- LƯỚI 3 CỘT DỌC CÂN ĐỐI (1. XE NHẬN CA | 2. BỆNH VIỆN TIẾP NHẬN | 3. KÍP CẤP CỨU) -->
-              <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;align-items:stretch;">
-
-                <!-- CỘT 1: XE NHẬN CA & VẬN HÀNH -->
-                <div class="form-section" style="display:flex;flex-direction:column;">
-                  <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-main);padding-bottom:8px;margin-bottom:12px;">
-                    <span>1. XE NHẬN CA & VẬN HÀNH</span>
-                    <span class="badge badge-accent" style="font-family:var(--font-mono);font-size:12px;">${c.dispatch?.vehiclePlate || '65A-012.34'}</span>
-                  </div>
-
-                  <div style="display:flex;flex-direction:column;gap:10px;font-size:12.5px;flex:1;">
-                    <div style="display:flex;align-items:center;">
-                      <span style="width:130px;flex-shrink:0;color:var(--text-slate);">Biển số xe:</span>
-                      <strong style="color:var(--text-white);font-family:var(--font-mono);font-size:13.5px;">${c.dispatch?.vehiclePlate || '65A-012.34'}</strong>
-                    </div>
-                    <div style="display:flex;align-items:center;">
-                      <span style="width:130px;flex-shrink:0;color:var(--text-slate);">Phân loại xe:</span>
-                      <span class="badge badge-emergency">Type A (Hồi sức Chuyên sâu)</span>
-                    </div>
-                    <div style="display:flex;align-items:flex-start;">
-                      <span style="width:130px;flex-shrink:0;color:var(--text-slate);padding-top:2px;">Trạm đóng quân:</span>
-                      <div style="color:var(--text-white);line-height:1.4;">${c.dispatch?.stationName || 'Trạm Cấp cứu Ninh Kiều - 115 Cần Thơ'}</div>
-                    </div>
-                    <div style="display:flex;align-items:flex-start;">
-                      <span style="width:130px;flex-shrink:0;color:var(--text-slate);padding-top:2px;">Vận tốc:</span>
-                      <div style="line-height:1.4;"><strong style="color:#f59e0b;">${c.speed || 52} km/h</strong></div>
-                    </div>
-                  </div>
+            <div style="display:flex;flex-direction:column;gap:14px;width:100%;margin:0;">
+              <!-- 1. XE NHẬN CA & VẬN HÀNH -->
+              <div class="form-section" style="display:flex;flex-direction:column;">
+                <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-main);padding-bottom:8px;margin-bottom:12px;">
+                  <span>1. XE NHẬN CA & VẬN HÀNH</span>
+                  <span class="badge badge-accent" style="font-family:var(--font-mono);font-size:12px;">${c.dispatch?.vehiclePlate || '65A-012.34'}</span>
                 </div>
 
-                <!-- CỘT 2: BỆNH VIỆN TIẾP NHẬN & NGƯỜI NHẬN -->
-                <div class="form-section" style="display:flex;flex-direction:column;">
-                  <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-main);padding-bottom:8px;margin-bottom:12px;">
-                    <span>2. PHÂN CÔNG BỆNH VIỆN</span>
-                    <span class="badge badge-emerald" style="font-size:11px;">ĐÃ SẴN SÀNG</span>
+                <div style="display:flex;flex-direction:column;gap:10px;font-size:12.5px;">
+                  <div style="display:flex;align-items:center;">
+                    <span style="width:140px;flex-shrink:0;color:var(--text-slate);">Biển số xe:</span>
+                    <strong style="color:var(--text-white);font-family:var(--font-mono);font-size:13.5px;">${c.dispatch?.vehiclePlate || '65A-012.34'}</strong>
                   </div>
-
-                  <div style="display:flex;flex-direction:column;gap:10px;font-size:12.5px;flex:1;">
-                    <div style="display:flex;align-items:flex-start;">
-                      <span style="width:120px;flex-shrink:0;color:var(--text-slate);padding-top:2px;">Bệnh viện:</span>
-                      <strong style="color:var(--text-white);font-size:13px;line-height:1.4;">${c.dispatch?.hospitalName || 'Bệnh viện Đa khoa thành phố Cần Thơ'}</strong>
-                    </div>
-                    <div style="display:flex;align-items:flex-start;">
-                      <span style="width:120px;flex-shrink:0;color:var(--text-slate);padding-top:2px;">Địa chỉ:</span>
-                      <div style="color:var(--text-light);line-height:1.4;">Số 04 Châu Văn Liêm, P. Tân An, thành phố Cần Thơ</div>
-                    </div>
-                    <div style="display:flex;align-items:center;">
-                      <span style="width:120px;flex-shrink:0;color:var(--text-slate);">Người nhận:</span>
-                      <strong style="color:var(--accent-cyan);">${receiverName}</strong>
-                    </div>
-                    <div style="display:flex;align-items:flex-start;">
-                      <span style="width:120px;flex-shrink:0;color:var(--text-slate);padding-top:2px;">Khoa nhận:</span>
-                      <div style="line-height:1.4;">Khoa Hồi sức Cấp cứu (A9) · Buồng CC Ngoại</div>
-                    </div>
-                    <div style="display:flex;align-items:center;">
-                      <span style="width:120px;flex-shrink:0;color:var(--text-slate);">Thời gian xử lý:</span>
-                      <strong style="color:var(--emerald-light);font-family:var(--font-mono);">01p 15s</strong>
-                      <span style="color:var(--text-slate);font-size:11.5px;margin-left:4px;">(Từ tiếp nhận → Phân công)</span>
-                    </div>
-                    <div style="display:flex;align-items:center;">
-                      <span style="width:120px;flex-shrink:0;color:var(--text-slate);">Khả năng nhận:</span>
-                      <div><strong style="color:var(--emerald-light);">Sẵn sàng tiếp nhận</strong> (24/7)</div>
-                    </div>
-                    <div style="display:flex;align-items:center;">
-                      <span style="width:120px;flex-shrink:0;color:var(--text-slate);">Hotline trực:</span>
-                      <span style="font-family:var(--font-mono);color:var(--text-white);font-weight:600;">0292.3821.236</span>
-                    </div>
+                  <div style="display:flex;align-items:center;">
+                    <span style="width:140px;flex-shrink:0;color:var(--text-slate);">Phân loại xe:</span>
+                    <span class="badge badge-emergency">Type A (Hồi sức Chuyên sâu)</span>
+                  </div>
+                  <div style="display:flex;align-items:flex-start;">
+                    <span style="width:140px;flex-shrink:0;color:var(--text-slate);padding-top:2px;">Trạm đóng quân:</span>
+                    <div style="color:var(--text-white);line-height:1.4;">${c.dispatch?.stationName || 'Trạm Cấp cứu Ninh Kiều - 115 Cần Thơ'}</div>
+                  </div>
+                  <div style="display:flex;align-items:flex-start;">
+                    <span style="width:140px;flex-shrink:0;color:var(--text-slate);padding-top:2px;">Vận tốc:</span>
+                    <div style="line-height:1.4;"><strong style="color:#f59e0b;">${c.speed || 52} km/h</strong></div>
                   </div>
                 </div>
-
-                <!-- CỘT 3: DANH SÁCH KÍP CẤP CỨU NGOẠI VIỆN -->
-                <div class="form-section" style="display:flex;flex-direction:column;">
-                  <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-main);padding-bottom:8px;margin-bottom:12px;">
-                    <span>3. KÍP CẤP CỨU NGOẠI VIỆN</span>
-                  </div>
-
-                  <div style="display:flex;flex-direction:column;gap:12px;flex:1;">
-                    <!-- Thành viên 1: Bác sĩ -->
-                    <div style="display:flex;align-items:center;justify-content:flex-start;gap:20px;background:rgba(255,255,255,0.02);border:1px solid var(--border-main);border-radius:6px;padding:8px 12px;">
-                      <div style="min-width:180px;">
-                        <div style="margin-bottom:2px;"><span class="badge badge-emergency" style="font-size:10.5px;">Bác sĩ Kíp trưởng</span></div>
-                        <strong style="color:var(--text-white);font-size:12.5px;">${crewObj.doctor || 'BS. CKI. Nguyễn Văn Thành'}</strong>
-                      </div>
-                      <a href="tel:0913111222" style="font-family:var(--font-mono);color:var(--accent-cyan);font-weight:600;font-size:12px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
-                        ${window.CCNV_UI?.ICONS?.phone || ''} 0913.111.222
-                      </a>
-                    </div>
-
-                    <!-- Thành viên 2: Điều dưỡng -->
-                    <div style="display:flex;align-items:center;justify-content:flex-start;gap:20px;background:rgba(255,255,255,0.02);border:1px solid var(--border-main);border-radius:6px;padding:8px 12px;">
-                      <div style="min-width:180px;">
-                        <div style="margin-bottom:2px;"><span class="badge badge-accent" style="font-size:10.5px;">Điều dưỡng CC</span></div>
-                        <strong style="color:var(--text-white);font-size:12.5px;">${crewObj.nurse || 'ĐD. Trần Thị Mai'}</strong>
-                      </div>
-                      <a href="tel:0913333444" style="font-family:var(--font-mono);color:var(--accent-cyan);font-weight:600;font-size:12px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
-                        ${window.CCNV_UI?.ICONS?.phone || ''} 0913.333.444
-                      </a>
-                    </div>
-
-                    <!-- Thành viên 3: Lái xe -->
-                    <div style="display:flex;align-items:center;justify-content:flex-start;gap:20px;background:rgba(255,255,255,0.02);border:1px solid var(--border-main);border-radius:6px;padding:8px 12px;">
-                      <div style="min-width:180px;">
-                        <div style="margin-bottom:2px;"><span class="badge badge-default" style="font-size:10.5px;">Lái xe Cứu thương</span></div>
-                        <strong style="color:var(--text-white);font-size:12.5px;">${crewObj.driver || 'Lê Văn Hùng'}</strong>
-                      </div>
-                      <a href="tel:0913555666" style="font-family:var(--font-mono);color:var(--accent-cyan);font-weight:600;font-size:12px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
-                        ${window.CCNV_UI?.ICONS?.phone || ''} 0913.555.666
-                      </a>
-                    </div>
-                  </div>
-                </div>
-
               </div>
 
+              <!-- 2. BỆNH VIỆN TIẾP NHẬN & NGƯỜI NHẬN -->
+              <div class="form-section" style="display:flex;flex-direction:column;">
+                <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-main);padding-bottom:8px;margin-bottom:12px;">
+                  <span>2. PHÂN CÔNG BỆNH VIỆN</span>
+                  <span class="badge badge-emerald" style="font-size:11px;">ĐÃ SẴN SÀNG</span>
+                </div>
+
+                <div style="display:flex;flex-direction:column;gap:10px;font-size:12.5px;">
+                  <div style="display:flex;align-items:flex-start;">
+                    <span style="width:140px;flex-shrink:0;color:var(--text-slate);padding-top:2px;">Bệnh viện:</span>
+                    <strong style="color:var(--text-white);font-size:13px;line-height:1.4;">${c.dispatch?.hospitalName || 'Bệnh viện Đa khoa thành phố Cần Thơ'}</strong>
+                  </div>
+                  <div style="display:flex;align-items:flex-start;">
+                    <span style="width:140px;flex-shrink:0;color:var(--text-slate);padding-top:2px;">Địa chỉ:</span>
+                    <div style="color:var(--text-light);line-height:1.4;">Số 04 Châu Văn Liêm, P. Tân An, thành phố Cần Thơ</div>
+                  </div>
+                  <div style="display:flex;align-items:center;">
+                    <span style="width:140px;flex-shrink:0;color:var(--text-slate);">Người nhận:</span>
+                    <strong style="color:var(--accent-cyan);">${receiverName}</strong>
+                  </div>
+                  <div style="display:flex;align-items:flex-start;">
+                    <span style="width:140px;flex-shrink:0;color:var(--text-slate);padding-top:2px;">Khoa nhận:</span>
+                    <div style="line-height:1.4;">Khoa Hồi sức Cấp cứu (A9) · Buồng CC Ngoại</div>
+                  </div>
+                  <div style="display:flex;align-items:center;">
+                    <span style="width:140px;flex-shrink:0;color:var(--text-slate);">Thời gian xử lý:</span>
+                    <strong style="color:var(--emerald-light);font-family:var(--font-mono);">01p 15s</strong>
+                    <span style="color:var(--text-slate);font-size:11.5px;margin-left:4px;">(Từ tiếp nhận → Phân công)</span>
+                  </div>
+                  <div style="display:flex;align-items:center;">
+                    <span style="width:140px;flex-shrink:0;color:var(--text-slate);">Khả năng nhận:</span>
+                    <div><strong style="color:var(--emerald-light);">Sẵn sàng tiếp nhận</strong> (24/7)</div>
+                  </div>
+                  <div style="display:flex;align-items:center;">
+                    <span style="width:140px;flex-shrink:0;color:var(--text-slate);">Hotline trực:</span>
+                    <span style="font-family:var(--font-mono);color:var(--text-white);font-weight:600;">0292.3821.236</span>
+                  </div>
+                </div>
               </div>
 
+              <!-- 3. DANH SÁCH KÍP CẤP CỨU NGOẠI VIỆN -->
+              <div class="form-section" style="display:flex;flex-direction:column;">
+                <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-main);padding-bottom:8px;margin-bottom:12px;">
+                  <span>3. KÍP CẤP CỨU NGOẠI VIỆN</span>
+                </div>
+
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                  <!-- Thành viên 1: Bác sĩ -->
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:20px;background:rgba(255,255,255,0.02);border:1px solid var(--border-main);border-radius:6px;padding:9px 14px;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                      <span class="badge badge-emergency" style="font-size:10.5px;min-width:125px;text-align:center;">Bác sĩ Kíp trưởng</span>
+                      <strong style="color:var(--text-white);font-size:13px;">${crewObj.doctor || 'BS. CKI. Nguyễn Văn Thành'}</strong>
+                    </div>
+                    <a href="tel:0913111222" style="font-family:var(--font-mono);color:var(--accent-cyan);font-weight:600;font-size:12.5px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+                      ${window.CCNV_UI?.ICONS?.phone || ''} 0913.111.222
+                    </a>
+                  </div>
+
+                  <!-- Thành viên 2: Điều dưỡng -->
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:20px;background:rgba(255,255,255,0.02);border:1px solid var(--border-main);border-radius:6px;padding:9px 14px;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                      <span class="badge badge-accent" style="font-size:10.5px;min-width:125px;text-align:center;">Điều dưỡng CC</span>
+                      <strong style="color:var(--text-white);font-size:13px;">${crewObj.nurse || 'ĐD. Trần Thị Mai'}</strong>
+                    </div>
+                    <a href="tel:0913333444" style="font-family:var(--font-mono);color:var(--accent-cyan);font-weight:600;font-size:12.5px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+                      ${window.CCNV_UI?.ICONS?.phone || ''} 0913.333.444
+                    </a>
+                  </div>
+
+                  <!-- Thành viên 3: Lái xe -->
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:20px;background:rgba(255,255,255,0.02);border:1px solid var(--border-main);border-radius:6px;padding:9px 14px;">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                      <span class="badge badge-default" style="font-size:10.5px;min-width:125px;text-align:center;">Lái xe Cứu thương</span>
+                      <strong style="color:var(--text-white);font-size:13px;">${crewObj.driver || 'Lê Văn Hùng'}</strong>
+                    </div>
+                    <a href="tel:0913555666" style="font-family:var(--font-mono);color:var(--accent-cyan);font-weight:600;font-size:12.5px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+                      ${window.CCNV_UI?.ICONS?.phone || ''} 0913.555.666
+                    </a>
+                  </div>
+                </div>
+              </div>
             </div>
           `;
 
@@ -9285,26 +9419,174 @@
           });
         }
 
-        // --- TAB 3: HỒ SƠ (Thư viện hình ảnh & Tệp tin đính kèm) ---
+        // --- TAB 3: HỒ SƠ (Phân 2 phần: Hồ sơ cấp cứu & Tài liệu & Dữ liệu bổ sung) ---
         else if (tabName === 'tab-documents') {
           body.innerHTML = `
-            <div style="display:flex;flex-direction:column;gap:16px;">
+            <div style="display:flex;flex-direction:column;gap:18px;width:100%;margin:0;">
               
-              <!-- PHẦN 1: BỘ SƯU TẬP HÌNH ẢNH HIỆN TRƯỜNG & Y TẾ -->
+              <!-- PHẦN 1: HỒ SƠ CẤP CỨU (THÔNG TIN BỆNH ÁN, HỒ SƠ BÀN GIAO, THEO DÕI CHỈ SỐ, GHI ÂM CUỘC GỌI) -->
               <div class="form-section">
-                <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between;">
-                  <span>1. THƯ VIỆN HÌNH ẢNH HIỆN TRƯỜNG & Y TẾ (4 HÌNH ẢNH)</span>
-                  <button class="btn btn-default btn-sm" id="btn-upload-more-photo" style="display:inline-flex;align-items:center;gap:6px;">
-                    ${window.CCNV_UI?.ICONS?.camera || ''}
-                    <span>Chụp / Tải ảnh lên</span>
-                  </button>
+                <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-main);padding-bottom:10px;margin-bottom:14px;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="color:var(--accent-cyan);display:inline-flex;">${window.CCNV_UI?.ICONS?.fileText || ''}</span>
+                    <span style="font-weight:700;letter-spacing:0.3px;">1. HỒ SƠ CẤP CỨU</span>
+                  </div>
+                  <span style="font-size:12px;color:var(--text-muted);font-family:var(--font-mono);">Mã hồ sơ: HS-${c.code}</span>
                 </div>
 
-                <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:16px;margin-top:10px;">
+                <div class="data-table-container">
+                  <table class="command-table" style="font-size:12.5px;">
+                    <thead>
+                      <tr>
+                        <th style="width:280px;">Hạng mục hồ sơ</th>
+                        <th>Tên tệp tin</th>
+                        <th style="width:130px;">Kích thước</th>
+                        <th style="width:180px;">Thời gian ghi nhận</th>
+                        <th style="width:190px;">Người lập / Nguồn</th>
+                        <th style="width:130px;text-align:center;">Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- 1. Thông tin bệnh án -->
+                      <tr>
+                        <td>
+                          <div style="display:flex;align-items:center;gap:10px;">
+                            <span class="badge badge-emergency" style="font-size:11px;min-width:135px;text-align:center;padding:4px 8px;">Thông tin bệnh án</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div>
+                            <strong style="color:var(--text-white);font-family:var(--font-mono);">BenhAn_ePCR_${c.code}.pdf</strong>
+                            <div style="font-size:11px;color:var(--text-muted);">Bệnh án cấp cứu ngoại viện điện tử (ePCR) đầy đủ dấu sinh hiệu & chẩn đoán</div>
+                          </div>
+                        </td>
+                        <td>168 KB</td>
+                        <td style="font-family:var(--font-mono);font-size:12px;">08:30:15 - 02/10/2026</td>
+                        <td>${crewObj.doctor || 'BS. CKI. Nguyễn Văn Thành'}</td>
+                        <td style="text-align:center;">
+                          <div style="display:inline-flex;gap:8px;align-items:center;justify-content:center;">
+                            <button class="btn btn-ghost btn-sm" id="btn-view-doc-epcr" title="Xem" style="color:var(--accent-cyan);padding:5px 8px;display:inline-flex;align-items:center;justify-content:center;">
+                              ${window.CCNV_UI?.ICONS?.eye || ''}
+                            </button>
+                            <button class="btn btn-ghost btn-sm" id="btn-download-doc-epcr" title="Tải về" style="padding:5px 8px;display:inline-flex;align-items:center;justify-content:center;">
+                              ${window.CCNV_UI?.ICONS?.download || ''}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+
+                      <!-- 2. Hồ sơ bàn giao -->
+                      <tr>
+                        <td>
+                          <div style="display:flex;align-items:center;gap:10px;">
+                            <span class="badge badge-emerald" style="font-size:11px;min-width:135px;text-align:center;padding:4px 8px;">Hồ sơ bàn giao</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div>
+                            <strong style="color:var(--text-white);font-family:var(--font-mono);">BienBan_BanGiao_${c.code}.pdf</strong>
+                            <div style="font-size:11px;color:var(--text-muted);">Biên bản tiếp nhận & ký bàn giao người bệnh tại Khoa Cấp cứu tiếp nhận</div>
+                          </div>
+                        </td>
+                        <td>95 KB</td>
+                        <td style="font-family:var(--font-mono);font-size:12px;">08:42:00 - 02/10/2026</td>
+                        <td>${receiverName}</td>
+                        <td style="text-align:center;">
+                          <div style="display:inline-flex;gap:8px;align-items:center;justify-content:center;">
+                            <button class="btn btn-ghost btn-sm" id="btn-view-doc-handover" title="Xem" style="color:var(--accent-cyan);padding:5px 8px;display:inline-flex;align-items:center;justify-content:center;">
+                              ${window.CCNV_UI?.ICONS?.eye || ''}
+                            </button>
+                            <button class="btn btn-ghost btn-sm" id="btn-download-doc-handover" title="Tải về" style="padding:5px 8px;display:inline-flex;align-items:center;justify-content:center;">
+                              ${window.CCNV_UI?.ICONS?.download || ''}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+
+                      <!-- 3. Theo dõi chỉ số -->
+                      <tr>
+                        <td>
+                          <div style="display:flex;align-items:center;gap:10px;">
+                            <span class="badge badge-accent" style="font-size:11px;min-width:135px;text-align:center;padding:4px 8px;">Theo dõi chỉ số</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div>
+                            <strong style="color:var(--text-white);font-family:var(--font-mono);">TheoDoi_SinhHieu_ECG12Leads.xml</strong>
+                            <div style="font-size:11px;color:var(--text-muted);">Dữ liệu liên tục: Mạch (88 l/p), Huyết áp (130/80), SpO2 (97%), Nhịp tim đồ ECG</div>
+                          </div>
+                        </td>
+                        <td>54 KB</td>
+                        <td style="font-family:var(--font-mono);font-size:12px;">08:24:00 - 02/10/2026</td>
+                        <td>Monitor Xe ${c.dispatch?.vehiclePlate || '65A-012.34'}</td>
+                        <td style="text-align:center;">
+                          <div style="display:inline-flex;gap:8px;align-items:center;justify-content:center;">
+                            <button class="btn btn-ghost btn-sm" id="btn-view-doc-vitals" title="Xem biểu đồ" style="color:var(--accent-cyan);padding:5px 8px;display:inline-flex;align-items:center;justify-content:center;">
+                              ${window.CCNV_UI?.ICONS?.eye || ''}
+                            </button>
+                            <button class="btn btn-ghost btn-sm" id="btn-download-doc-vitals" title="Tải về" style="padding:5px 8px;display:inline-flex;align-items:center;justify-content:center;">
+                              ${window.CCNV_UI?.ICONS?.download || ''}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+
+                      <!-- 4. Ghi âm cuộc gọi -->
+                      <tr>
+                        <td>
+                          <div style="display:flex;align-items:center;gap:10px;">
+                            <span class="badge badge-amber" style="font-size:11px;min-width:135px;text-align:center;padding:4px 8px;">Ghi âm cuộc gọi</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div>
+                            <strong style="color:var(--text-white);font-family:var(--font-mono);">GhiAm_CuocGoi115_${c.callId || 'CALL-001'}.wav</strong>
+                            <div style="font-size:11px;color:var(--text-muted);">Âm thanh đàm thoại khẩn cấp ĐPV 115 tiếp nhận tin báo · Thời lượng 02:04</div>
+                          </div>
+                        </td>
+                        <td>2.3 MB</td>
+                        <td style="font-family:var(--font-mono);font-size:12px;">08:12:00 - 02/10/2026</td>
+                        <td>Tổng đài Cấp cứu 115</td>
+                        <td style="text-align:center;">
+                          <div style="display:inline-flex;gap:8px;align-items:center;justify-content:center;">
+                            <button class="btn btn-ghost btn-sm" id="btn-play-doc-audio" title="Nghe lại" style="color:#f59e0b;padding:5px 8px;display:inline-flex;align-items:center;justify-content:center;">
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                            </button>
+                            <button class="btn btn-ghost btn-sm" id="btn-download-doc-audio" title="Tải về" style="padding:5px 8px;display:inline-flex;align-items:center;justify-content:center;">
+                              ${window.CCNV_UI?.ICONS?.download || ''}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- PHẦN 2: TÀI LIỆU & DỮ LIỆU BỔ SUNG (HÌNH ẢNH, VIDEO CAMERA, CAN THIỆP Y TẾ) -->
+              <div class="form-section">
+                <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-main);padding-bottom:10px;margin-bottom:14px;">
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="color:#38bdf8;display:inline-flex;">${window.CCNV_UI?.ICONS?.camera || ''}</span>
+                    <span style="font-weight:700;letter-spacing:0.3px;">2. TÀI LIỆU & DỮ LIỆU BỔ SUNG</span>
+                  </div>
+                  <div style="display:flex;gap:8px;">
+                    <button class="btn btn-default btn-sm" id="btn-upload-more-photo" style="display:inline-flex;align-items:center;gap:6px;">
+                      ${window.CCNV_UI?.ICONS?.camera || ''}
+                      <span>Thêm ảnh / Video</span>
+                    </button>
+                    <button class="btn btn-default btn-sm" id="btn-upload-attachment" style="display:inline-flex;align-items:center;gap:6px;">
+                      <span>+ Đính kèm tệp tin</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- LƯỚI CARD TRUYỀN THÔNG ĐA PHƯƠNG TIỆN (ẢNH, VIDEO, CAN THIỆP Y TẾ) -->
+                <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:16px;">
                   
-                  <!-- Ảnh 1: Hiện trường -->
+                  <!-- Card 1: Hình ảnh Hiện trường -->
                   <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;">
-                    <div style="height:150px;background:#0c1929;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;" class="img-preview-card" data-title="Ảnh Hiện trường va chạm">
+                    <div style="height:140px;background:#0c1929;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;" class="img-preview-card" data-title="Ảnh Hiện trường tai nạn va chạm">
                       <svg width="100%" height="100%" viewBox="0 0 160 120">
                         <rect width="160" height="120" fill="#0f2338"/>
                         <path d="M 0 100 L 160 80" stroke="#334155" stroke-width="12" />
@@ -9316,249 +9598,130 @@
                         </g>
                         <text x="80" y="105" fill="#94a3b8" font-size="9" text-anchor="middle">HIỆN TRƯỜNG TAI NẠN</text>
                       </svg>
-                      <span class="badge badge-emergency" style="position:absolute;top:8px;left:8px;font-size:10px;">Hiện trường</span>
+                      <span class="badge badge-emergency" style="position:absolute;top:8px;left:8px;font-size:10px;">Hình ảnh</span>
+                      <span style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.6);color:#FFF;font-size:10px;padding:2px 6px;border-radius:4px;font-family:var(--font-mono);">1.8 MB</span>
                     </div>
                     <div style="padding:10px 12px;font-size:12px;">
-                      <div style="font-weight:600;color:var(--text-white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">IMG_HienTruong_01.jpg</div>
-                      <div style="color:var(--text-muted);font-size:11px;margin-top:2px;">Chụp lúc 08:18 · 1.8 MB</div>
+                      <div style="font-weight:600;color:var(--text-white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">IMG_HienTruong_TaiNan.jpg</div>
+                      <div style="color:var(--text-muted);font-size:11px;margin-top:2px;">Chụp lúc 08:18 · Vị trí Cầu Hưng Lợi</div>
                     </div>
                   </div>
 
-                  <!-- Ảnh 2: Tổn thương & Nẹp -->
+                  <!-- Card 2: Video Camera hành trình xe -->
                   <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;">
-                    <div style="height:150px;background:#0c1929;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;" class="img-preview-card" data-title="Ảnh Sơ cứu nẹp cố định tay">
+                    <div style="height:140px;background:#0c1929;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;" class="img-preview-card" data-title="Video Camera hành trình xe cấp cứu di chuyển đến viện">
+                      <svg width="100%" height="100%" viewBox="0 0 160 120">
+                        <rect width="160" height="120" fill="#081b2e"/>
+                        <circle cx="80" cy="55" r="22" fill="#38bdf8" opacity="0.25" />
+                        <polygon points="74,45 92,55 74,65" fill="#38bdf8" />
+                        <text x="80" y="105" fill="#38bdf8" font-size="9" font-weight="600" text-anchor="middle">VIDEO HÀNH TRÌNH XE</text>
+                      </svg>
+                      <span class="badge badge-accent" style="position:absolute;top:8px;left:8px;font-size:10px;background:rgba(14,165,233,0.2);color:#38bdf8;border-color:#38bdf8;">Video MP4</span>
+                      <span style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.6);color:#FFF;font-size:10px;padding:2px 6px;border-radius:4px;font-family:var(--font-mono);">01:30 · 18 MB</span>
+                    </div>
+                    <div style="padding:10px 12px;font-size:12px;">
+                      <div style="font-weight:600;color:var(--text-white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">VID_CameraHanhTrinh_65A01234.mp4</div>
+                      <div style="color:var(--text-muted);font-size:11px;margin-top:2px;">Camera hành trình trước xe · Vận tốc 52 km/h</div>
+                    </div>
+                  </div>
+
+                  <!-- Card 3: Can thiệp y tế (Nẹp cố định & Băng ép) -->
+                  <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;">
+                    <div style="height:140px;background:#0c1929;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;" class="img-preview-card" data-title="Ảnh Can thiệp sơ cứu băng ép & nẹp cố định cẳng tay">
                       <svg width="100%" height="100%" viewBox="0 0 160 120">
                         <rect width="160" height="120" fill="#132338"/>
-                        <circle cx="80" cy="55" r="22" fill="#38bdf8" opacity="0.2" />
-                        <g transform="translate(68, 43)" stroke="#38bdf8" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="80" cy="55" r="22" fill="#f472b6" opacity="0.2" />
+                        <g transform="translate(68, 43)" stroke="#f472b6" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                           <rect x="3" y="7" width="18" height="10" rx="3" transform="rotate(45 12 12)"/>
                           <path d="m14 8 2 2"/>
                           <path d="m8 14 2 2"/>
                         </g>
-                        <text x="80" y="105" fill="#94a3b8" font-size="9" text-anchor="middle">BĂNG NẸP CHI TRÊN</text>
+                        <text x="80" y="105" fill="#f472b6" font-size="9" text-anchor="middle">CAN THIỆP SƠ CỨU</text>
                       </svg>
-                      <span class="badge badge-accent" style="position:absolute;top:8px;left:8px;font-size:10px;">Y tế</span>
+                      <span class="badge" style="position:absolute;top:8px;left:8px;font-size:10px;background:rgba(244,114,182,0.18);color:#f472b6;border:1px solid rgba(244,114,182,0.4);">Can thiệp y tế</span>
+                      <span style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.6);color:#FFF;font-size:10px;padding:2px 6px;border-radius:4px;font-family:var(--font-mono);">2.1 MB</span>
                     </div>
                     <div style="padding:10px 12px;font-size:12px;">
-                      <div style="font-weight:600;color:var(--text-white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">IMG_SoCuu_NepTay_02.jpg</div>
-                      <div style="color:var(--text-muted);font-size:11px;margin-top:2px;">Chụp lúc 08:21 · 2.1 MB</div>
+                      <div style="font-weight:600;color:var(--text-white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">IMG_CanThiep_BangNepTay.jpg</div>
+                      <div style="color:var(--text-muted);font-size:11px;margin-top:2px;">Băng ép cầm máu & đặt nẹp cẳng tay phải</div>
                     </div>
                   </div>
 
-                  <!-- Ảnh 3: Điện tim ECG -->
+                  <!-- Card 4: Can thiệp y tế (Hồi sức hô hấp & Thở oxy) -->
                   <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;">
-                    <div style="height:150px;background:#0c1929;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;" class="img-preview-card" data-title="Ảnh Sóng điện tâm đồ ECG">
-                      <svg width="100%" height="100%" viewBox="0 0 160 120">
-                        <rect width="160" height="120" fill="#0b1e30"/>
-                        <path d="M 0 60 L 30 60 L 40 40 L 50 80 L 60 20 L 70 90 L 80 60 L 110 60 L 120 45 L 130 75 L 160 60" fill="none" stroke="#22c55e" stroke-width="2" />
-                        <text x="80" y="105" fill="#22c55e" font-size="9" font-weight="bold" text-anchor="middle">ECG 12 LEADS (NHỊP XOANG)</text>
-                      </svg>
-                      <span class="badge badge-emerald" style="position:absolute;top:8px;left:8px;font-size:10px;">ECG</span>
-                    </div>
-                    <div style="padding:10px 12px;font-size:12px;">
-                      <div style="font-weight:600;color:var(--text-white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">ECG_Monitor_12Leads.png</div>
-                      <div style="color:var(--text-muted);font-size:11px;margin-top:2px;">Chụp lúc 08:23 · 950 KB</div>
-                    </div>
-                  </div>
-
-                  <!-- Ảnh 4: Sảnh Bệnh viện -->
-                  <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;">
-                    <div style="height:150px;background:#0c1929;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;" class="img-preview-card" data-title="Ảnh Sảnh Cấp cứu Bệnh viện">
+                    <div style="height:140px;background:#0c1929;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;" class="img-preview-card" data-title="Ảnh Can thiệp thở oxy hỗ trợ trên khoang cứu thương">
                       <svg width="100%" height="100%" viewBox="0 0 160 120">
                         <rect width="160" height="120" fill="#142236"/>
-                        <circle cx="80" cy="55" r="22" fill="#f59e0b" opacity="0.2" />
-                        <g transform="translate(68, 43)" stroke="#f59e0b" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M18 20V6a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v14"/>
-                          <path d="M2 20h20"/>
-                          <path d="M10 9h4"/>
-                          <path d="M12 7v4"/>
+                        <circle cx="80" cy="55" r="22" fill="#2dd4bf" opacity="0.2" />
+                        <g transform="translate(68, 43)" stroke="#2dd4bf" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="12" cy="12" r="9"/>
+                          <path d="M12 7v5l3 3"/>
                         </g>
-                        <text x="80" y="105" fill="#94a3b8" font-size="9" text-anchor="middle">SẢNH TIẾP NHẬN BV</text>
+                        <text x="80" y="105" fill="#2dd4bf" font-size="9" text-anchor="middle">THỞ OXY HỖ TRỢ</text>
                       </svg>
-                      <span class="badge badge-amber" style="position:absolute;top:8px;left:8px;font-size:10px;">Bàn giao</span>
+                      <span class="badge" style="position:absolute;top:8px;left:8px;font-size:10px;background:rgba(45,212,191,0.18);color:#2dd4bf;border:1px solid rgba(45,212,191,0.4);">Hồi sức</span>
+                      <span style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.6);color:#FFF;font-size:10px;padding:2px 6px;border-radius:4px;font-family:var(--font-mono);">1.6 MB</span>
                     </div>
                     <div style="padding:10px 12px;font-size:12px;">
-                      <div style="font-weight:600;color:var(--text-white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">IMG_SanhCapCuu_BVDK.jpg</div>
-                      <div style="color:var(--text-muted);font-size:11px;margin-top:2px;">Chụp lúc 08:35 · 2.4 MB</div>
+                      <div style="font-weight:600;color:var(--text-white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">IMG_HoiSuc_ThoOxy_KhoangXe.jpg</div>
+                      <div style="color:var(--text-muted);font-size:11px;margin-top:2px;">Thở oxy cannula 3L/phút · SpO2 đạt 97%</div>
                     </div>
                   </div>
 
                 </div>
-              </div>
 
-              <!-- PHẦN 2: DANH MỤC TỆP TIN (FILE) ĐÍNH KÈM -->
-              <div class="form-section">
-                <div class="form-section-title" style="display:flex;align-items:center;justify-content:space-between;">
-                  <span>2. DANH MỤC TỆP TIN & HỒ SƠ ĐÍNH KÈM</span>
-                  <button class="btn btn-default btn-sm" id="btn-upload-attachment">
-                    + Đính kèm tệp tin mới
-                  </button>
+                <!-- Khu vực kéo thả tải lên tài liệu mới -->
+                <div style="margin-top:16px;border:2px dashed var(--border-accent);border-radius:8px;padding:18px;text-align:center;background:rgba(255,255,255,0.02);">
+                  <div style="color:var(--text-white);font-weight:600;font-size:13px;">Kéo & Thả tài liệu y tế, hình ảnh thương tổn hoặc video camera vào đây</div>
+                  <div style="color:var(--text-muted);font-size:11.5px;margin-top:4px;">Hỗ trợ định dạng tiếng Việt: PDF, DOCX, JPG, PNG, MP4, WAV · Tối đa 50MB</div>
                 </div>
-
-                <div class="data-table-container">
-                  <table class="command-table" style="font-size:12.5px;">
-                    <thead>
-                      <tr>
-                        <th>Tên tệp tin</th>
-                        <th style="width:180px;">Loại tài liệu</th>
-                        <th style="width:120px;">Kích thước</th>
-                        <th style="width:190px;">Thời gian đính kèm</th>
-                        <th style="width:200px;">Người tải lên</th>
-                        <th style="width:140px;">Thao tác</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <!-- File 1: ePCR PDF -->
-                      <tr>
-                        <td>
-                          <div style="display:flex;align-items:center;gap:10px;">
-                            <span style="display:inline-flex;color:var(--accent-cyan);">${window.CCNV_UI?.ICONS?.fileText || ''}</span>
-                            <div>
-                              <strong style="color:var(--text-white);font-family:var(--font-mono);">ePCR_${c.code}.pdf</strong>
-                              <div style="font-size:11px;color:var(--text-muted);">Phiếu bệnh án cấp cứu ngoại viện điện tử</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td><span class="badge badge-emergency">Bệnh án ePCR</span></td>
-                        <td>148 KB</td>
-                        <td style="font-family:var(--font-mono);">08:30:15 - 02/10/2026</td>
-                        <td>${crewObj.doctor || 'BS. Nguyễn Văn Thành'}</td>
-                        <td>
-                          <div style="display:flex;gap:6px;">
-                            <button class="btn btn-ghost btn-sm" id="btn-view-doc-epcr" style="color:var(--accent-cyan);display:inline-flex;align-items:center;gap:4px;">
-                              ${window.CCNV_UI?.ICONS?.eye || ''}
-                              <span>Xem</span>
-                            </button>
-                            <button class="btn btn-ghost btn-sm" id="btn-download-doc-epcr" style="display:inline-flex;align-items:center;gap:4px;">
-                              ${window.CCNV_UI?.ICONS?.download || ''}
-                              <span>Tải về</span>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-
-                      <!-- File 2: Biên bản bàn giao người bệnh PDF -->
-                      <tr>
-                        <td>
-                          <div style="display:flex;align-items:center;gap:10px;">
-                            <span style="display:inline-flex;color:var(--emerald-light);">${window.CCNV_UI?.ICONS?.fileText || ''}</span>
-                            <div>
-                              <strong style="color:var(--text-white);font-family:var(--font-mono);">BienBan_BanGiao_${c.code}.pdf</strong>
-                              <div style="font-size:11px;color:var(--text-muted);">Biên bản tiếp nhận & bàn giao người bệnh tại BV</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td><span class="badge badge-emerald">Biên bản bàn giao</span></td>
-                        <td>92 KB</td>
-                        <td style="font-family:var(--font-mono);">08:42:00 - 02/10/2026</td>
-                        <td>${receiverName}</td>
-                        <td>
-                          <div style="display:flex;gap:6px;">
-                            <button class="btn btn-ghost btn-sm" id="btn-view-doc-handover" style="color:var(--accent-cyan);display:inline-flex;align-items:center;gap:4px;">
-                              ${window.CCNV_UI?.ICONS?.eye || ''}
-                              <span>Xem</span>
-                            </button>
-                            <button class="btn btn-ghost btn-sm" style="display:inline-flex;align-items:center;gap:4px;">
-                              ${window.CCNV_UI?.ICONS?.download || ''}
-                              <span>Tải về</span>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-
-                      <!-- File 3: Ghi âm cuộc gọi WAV -->
-                      <tr>
-                        <td>
-                          <div style="display:flex;align-items:center;gap:10px;">
-                            <span style="display:inline-flex;color:#f59e0b;">${window.CCNV_UI?.ICONS?.radio || ''}</span>
-                            <div>
-                              <strong style="color:var(--text-white);font-family:var(--font-mono);">Record_Call_115_${c.callId || 'CALL-001'}.wav</strong>
-                              <div style="font-size:11px;color:var(--text-muted);">File âm thanh cuộc gọi tiếp nhận 115 · Thời lượng 02:04</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td><span class="badge badge-accent">Ghi âm 115</span></td>
-                        <td>2.3 MB</td>
-                        <td style="font-family:var(--font-mono);">08:12:00 - 02/10/2026</td>
-                        <td>Hệ thống Tổng đài</td>
-                        <td>
-                          <div style="display:flex;gap:6px;">
-                            <button class="btn btn-default btn-sm" id="btn-play-doc-audio" style="color:#f59e0b;display:inline-flex;align-items:center;gap:4px;">
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                              <span>Nghe lại</span>
-                            </button>
-                            <button class="btn btn-ghost btn-sm" style="display:inline-flex;align-items:center;gap:4px;">
-                              ${window.CCNV_UI?.ICONS?.download || ''}
-                              <span>Tải về</span>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-
-                      <!-- File 4: ECG Waveform XML -->
-                      <tr>
-                        <td>
-                          <div style="display:flex;align-items:center;gap:10px;">
-                            <span style="display:inline-flex;color:#38bdf8;">${window.CCNV_UI?.ICONS?.activity || ''}</span>
-                            <div>
-                              <strong style="color:var(--text-white);font-family:var(--font-mono);">ECG_Digital_Waveform.xml</strong>
-                              <div style="font-size:11px;color:var(--text-muted);">Dữ liệu số sóng điện tim 12 chuyển đạo xuất từ Monitor</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td><span class="badge badge-default">Dữ liệu thô</span></td>
-                        <td>42 KB</td>
-                        <td style="font-family:var(--font-mono);">08:24:00 - 02/10/2026</td>
-                        <td>Monitor Xe ${c.dispatch?.vehiclePlate || '65A-012.34'}</td>
-                        <td>
-                          <div style="display:flex;gap:6px;">
-                            <button class="btn btn-ghost btn-sm" style="display:inline-flex;align-items:center;gap:4px;">
-                              ${window.CCNV_UI?.ICONS?.download || ''}
-                              <span>Tải về</span>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <!-- KHU VỰC DROPZONE TẢI LÊN FILE MỚI -->
-              <div style="border:2px dashed var(--border-accent);border-radius:8px;padding:22px;text-align:center;background:rgba(255,255,255,0.02);">
-                <div style="font-size:28px;margin-bottom:6px;"></div>
-                <div style="color:var(--text-white);font-weight:600;font-size:13.5px;">Kéo & Thả tài liệu, hình ảnh hoặc tệp tin ghi âm vào đây</div>
-                <div style="color:var(--text-muted);font-size:11.5px;margin-top:4px;">Hỗ trợ định dạng: PDF, DOCX, JPG, PNG, WAV, MP3 · Dung lượng tối đa: 50MB</div>
               </div>
 
             </div>
           `;
 
-          // Sự kiện xem preview ảnh
+          // Sự kiện xem preview ảnh / video
           body.querySelectorAll('.img-preview-card').forEach(card => {
             card.addEventListener('click', () => {
               const title = card.getAttribute('data-title');
-              window.CCNV_UI.Toast.show('Xem hình ảnh', `Đang mở chế độ xem phóng to: ${title}`);
+              window.CCNV_UI.Toast.show('Xem tệp đa phương tiện', `Đang mở trình xem phóng to: ${title}`);
             });
           });
 
           // Sự kiện xem ePCR
           body.querySelector('#btn-view-doc-epcr')?.addEventListener('click', () => {
-            window.CCNV_UI.Toast.show('Mở phiếu ePCR', `Đang tải mẫu ePCR của ca ${c.code}`);
+            window.CCNV_UI.Toast.show('Mở hồ sơ bệnh án', `Đang tải phiếu ePCR bệnh án điện tử ca ${c.code}`);
           });
 
-          // Sự kiện phát ghi âm
+          // Sự kiện xem biên bản bàn giao
+          body.querySelector('#btn-view-doc-handover')?.addEventListener('click', () => {
+            window.CCNV_UI.Toast.show('Mở hồ sơ bàn giao', `Đang xem biên bản bàn giao người bệnh tại bệnh viện`);
+          });
+
+          // Sự kiện xem chỉ số theo dõi
+          body.querySelector('#btn-view-doc-vitals')?.addEventListener('click', () => {
+            window.CCNV_UI.Toast.show('Theo dõi chỉ số', `Đang mở biểu đồ sinh hiệu và nhịp tim ECG liên tục`);
+          });
+
+          // Sự kiện phát ghi âm cuộc gọi
           body.querySelector('#btn-play-doc-audio')?.addEventListener('click', () => {
             window.CCNV_UI.SoundFx.playBeep();
-            window.CCNV_UI.Toast.show('Đang phát ghi âm', 'Đang phát lại đoạn trao đổi giữa ĐPV và người báo tin.');
+            window.CCNV_UI.Toast.show('Đang phát ghi âm cuộc gọi', 'Đang phát lại đoạn ghi âm đàm thoại giữa tổng đài 115 và người báo tin.');
+          });
+
+          // Sự kiện tải về các tệp
+          body.querySelectorAll('[id^="btn-download-doc-"]').forEach(btn => {
+            btn.addEventListener('click', () => {
+              window.CCNV_UI.Toast.show('Tải tệp tin', 'Đang tải tệp tin về thiết bị...');
+            });
           });
 
           body.querySelector('#btn-upload-more-photo')?.addEventListener('click', () => {
-            window.CCNV_UI.Toast.show('Tải ảnh', 'Mở hộp thoại chọn tệp hình ảnh từ thiết bị');
+            window.CCNV_UI.Toast.show('Tải ảnh / Video', 'Mở hộp thoại chọn tệp hình ảnh hoặc video camera từ thiết bị');
           });
 
           body.querySelector('#btn-upload-attachment')?.addEventListener('click', () => {
-            window.CCNV_UI.Toast.show('Đính kèm', 'Mở hộp thoại chọn tệp tài liệu từ thiết bị');
+            window.CCNV_UI.Toast.show('Đính kèm tài liệu', 'Mở hộp thoại chọn tệp tài liệu bổ sung từ thiết bị');
           });
         }
 
@@ -9674,10 +9837,7 @@
           const logsList = (c.logs && c.logs.length >= 3) ? c.logs : [
             { time: '08:10:15 - 02/10/2026', type: 'CALL', badge: 'NHẬN CUỘC GỌI', color: '#38bdf8', user: 'dpv01 (Nguyễn Văn An)', action: 'Tiếp nhận cuộc gọi khẩn cấp 115 từ số 0918.234.111. Báo tin va chạm giao thông tại Cầu Hưng Lợi.' },
             { time: '08:11:30 - 02/10/2026', type: 'DISPATCH', badge: 'ĐIỀU XE', color: '#fbbf24', user: 'dpv01 (Nguyễn Văn An)', action: `Tạo ca cấp cứu ${c.code}, phát lệnh điều động xe cứu thương ${c.dispatch?.vehiclePlate || '65A-012.34'} và gửi cảnh báo trước đến ${c.dispatch?.hospitalName || 'BV Đa khoa thành phố Cần Thơ'}.` },
-            { time: '08:12:10 - 02/10/2026', type: 'HOSPITAL', badge: 'BV PHẢN HỒI', color: '#34d399', user: 'bvdk.tiepnhan', action: `${c.dispatch?.hospitalName || 'BV Đa khoa thành phố Cần Thơ'} xác nhận sẵn sàng tiếp nhận người bệnh tại Khoa Cấp cứu (A9).` },
             { time: '08:12:45 - 02/10/2026', type: 'STATUS', badge: 'XUẤT PHÁT ĐẾN HIỆN TRƯỜNG', color: '#38bdf8', user: crewObj.driver || 'Lê Văn Hùng', action: 'Kíp cấp cứu xác nhận lên xe xuất phát từ trạm, bật còi ưu tiên di chuyển về phía hiện trường.' },
-            { time: '08:18:20 - 02/10/2026', type: 'STATUS', badge: 'TIẾP CẬN HIỆN TRƯỜNG', color: '#06b6d4', user: crewObj.doctor || 'BS. Nguyễn Văn Thành', action: 'Xe tiếp cận hiện trường tai nạn tại Khu vực Cầu Hưng Lợi, bắt đầu tiếp cận và thăm khám nạn nhân.' },
-            { time: '08:19:15 - 02/10/2026', type: 'STATUS', badge: 'ĐÓN BỆNH NHÂN THÀNH CÔNG', color: '#10b981', user: crewObj.driver || 'Lê Văn Hùng', action: 'Đã tiếp cận và đón người bệnh an toàn lên khoang cấp cứu của xe cứu thương.' },
             { time: '08:20:00 - 02/10/2026', type: 'MEDICAL', badge: 'CAN THIỆP Y TẾ', color: '#f472b6', user: crewObj.doctor || 'BS. Nguyễn Văn Thành', action: 'Đo sinh hiệu (HA 130/80, SpO2 97%), băng ép vô trùng cẳng tay phải, đặt nẹp cố định mềm chi trên.' },
             { time: '08:24:10 - 02/10/2026', type: 'STATUS', badge: 'TIẾP CẬN BỆNH VIỆN', color: '#a855f7', user: crewObj.driver || 'Lê Văn Hùng', action: `Bắt đầu vận chuyển khẩn cấp, tiếp cận sảnh cấp cứu ${c.dispatch?.hospitalName || 'BV Đa khoa thành phố Cần Thơ'}.` },
             { time: '08:42:00 - 02/10/2026', type: 'HANDOVER', badge: 'BÀN GIAO TẠI VIỆN', color: '#c084fc', user: receiverName, action: 'Xe đến sảnh cấp cứu viện, kíp trực tiến hành bàn giao hồ sơ bệnh án ePCR và người bệnh cho Bác sĩ trực khoa Cấp cứu.' }
@@ -10447,7 +10607,7 @@
         try {
           this._currentVoiceAudio.pause();
           this._currentVoiceAudio.currentTime = 0;
-        } catch (e) {}
+        } catch (e) { }
         this._currentVoiceAudio = null;
       }
       if (this._voiceRafId) {

@@ -168,7 +168,8 @@
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
-          <div class="legend-item"><span class="legend-dot" style="--c:#10b981;"></span><span>Xe cứu thương</span></div>
+          <div class="legend-item"><span class="legend-dot" style="--c:#ef4444;"></span><span>Xe đang làm nhiệm vụ</span></div>
+          <div class="legend-item"><span class="legend-dot" style="--c:#10b981;"></span><span>Xe sẵn sàng tiếp nhận</span></div>
           <div class="legend-item"><span class="legend-dot" style="--c:#38bdf8;"></span><span>Bệnh viện tiếp nhận</span></div>
           <div class="legend-item"><span class="legend-dot legend-dot-pulse" style="--c:#ef4444;"></span><span>Hiện trường sự cố</span></div>
           <div class="legend-item"><span class="legend-line legend-line-dashed"></span><span>Lộ trình đến hiện trường</span></div>
@@ -483,8 +484,8 @@
       if (!this.map) return; // destroyed while loading
       m.leg1 = buildPath(leg1);
       m.leg2 = buildPath(leg2);
+      this.drawMissionRoutes();
       if (this.focusPlate === m.plate) {
-        this.drawFocusRoute();
         this.fitFocus(true);
       }
     }
@@ -502,7 +503,7 @@
       Object.values(this.missions).forEach(m => this.advanceMission(m, dt, now));
 
       if (now - this.lastRouteRedraw > 200) {
-        this.updateFocusRemaining();
+        this.updateRemainingRoutes();
         this.lastRouteRedraw = now;
       }
       if (now - this.lastSpeedUpdate > 2000) {
@@ -616,7 +617,7 @@
         const kmStr = remM >= 1000 ? `${(remM / 1000).toFixed(1)} km` : `${Math.round(remM)} m`;
         const speedVal = this.vehicleMarkers[m.plate]?.data?.speed || 52;
         driverHudDist.innerHTML = `
-          <span style="color:#10B981;font-weight:700;">● ${speedVal} km/h</span>
+          <span style="color:#ef4444;font-weight:700;">● ${speedVal} km/h</span>
           <span style="color:#64748B;">·</span>
           <span style="color:#CBD5E1;">Còn ${kmStr}</span>
           <span style="color:#64748B;">·</span>
@@ -651,7 +652,7 @@
       });
 
       this.applyVisibility();
-      this.drawFocusRoute();
+      this.drawMissionRoutes();
       this.fitFocus(animate);
     }
 
@@ -660,9 +661,8 @@
       this.focusPlate = null;
       this.map.closePopup();
       Object.values(this.vehicleMarkers).forEach(item => item.marker.getElement()?.classList.remove('is-active-marker'));
-      this.focusLayer.clearLayers();
-      this.focusLines = null;
       this.applyVisibility();
+      this.drawMissionRoutes();
       this.map.flyTo(CITY_CENTER, CITY_ZOOM, { duration: 0.8 });
     }
 
@@ -690,44 +690,93 @@
       if (focus) this.vehicleMarkers[focus]?.marker.getElement()?.classList.add('is-active-marker');
     }
 
-    drawFocusRoute() {
+    drawMissionRoutes() {
+      if (!this.focusLayer) return;
       this.focusLayer.clearLayers();
-      this.focusLines = null;
-      const m = this.focusPlate ? this.missionByPlate(this.focusPlate) : null;
-      if (!m || !m.leg1 || !m.leg2) return;
+      this.routeLines = {};
       const L = window.L;
 
-      // Toàn tuyến (mờ) — thể hiện chặng đã đi qua
-      L.polyline(m.leg1.ll, { color: '#f87171', weight: 3, opacity: 0.22, dashArray: '6, 8' }).addTo(this.focusLayer);
-      L.polyline(m.leg2.ll, { color: '#38bdf8', weight: 3, opacity: 0.22 }).addTo(this.focusLayer);
+      const missionsToDraw = this.focusPlate
+        ? [this.missionByPlate(this.focusPlate)].filter(Boolean)
+        : Object.values(this.missions);
 
-      // Chặng còn lại (sáng)
-      this.focusLines = {
-        glow1: L.polyline([], { color: '#ef4444', weight: 9, opacity: 0.25, lineCap: 'round' }).addTo(this.focusLayer),
-        line1: L.polyline([], { color: '#fca5a5', weight: 3.5, opacity: 0.95, dashArray: '8, 7', lineCap: 'round' }).addTo(this.focusLayer),
-        glow2: L.polyline([], { color: '#0284c7', weight: 9, opacity: 0.3, lineCap: 'round' }).addTo(this.focusLayer),
-        line2: L.polyline([], { color: '#38bdf8', weight: 4, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }).addTo(this.focusLayer)
-      };
-      this.updateFocusRemaining();
+      missionsToDraw.forEach(m => {
+        if (!m || !m.leg1 || !m.leg2) return;
+        const isFocused = this.focusPlate === m.plate;
+
+        // Toàn tuyến (mờ) — thể hiện chặng đã đi qua
+        L.polyline(m.leg1.ll, {
+          color: '#f87171',
+          weight: isFocused ? 3 : 2.5,
+          opacity: isFocused ? 0.22 : 0.18,
+          dashArray: '6, 8'
+        }).addTo(this.focusLayer);
+
+        L.polyline(m.leg2.ll, {
+          color: '#38bdf8',
+          weight: isFocused ? 3 : 2.5,
+          opacity: isFocused ? 0.22 : 0.18
+        }).addTo(this.focusLayer);
+
+        // Chặng còn lại (sáng, nổi bật)
+        const lines = {
+          glow1: L.polyline([], {
+            color: '#ef4444',
+            weight: isFocused ? 9 : 6,
+            opacity: isFocused ? 0.25 : 0.2,
+            lineCap: 'round'
+          }).addTo(this.focusLayer),
+          line1: L.polyline([], {
+            color: '#fca5a5',
+            weight: isFocused ? 3.5 : 2.8,
+            opacity: 0.95,
+            dashArray: '8, 7',
+            lineCap: 'round'
+          }).addTo(this.focusLayer),
+          glow2: L.polyline([], {
+            color: '#0284c7',
+            weight: isFocused ? 9 : 6,
+            opacity: isFocused ? 0.3 : 0.22,
+            lineCap: 'round'
+          }).addTo(this.focusLayer),
+          line2: L.polyline([], {
+            color: '#38bdf8',
+            weight: isFocused ? 4 : 3,
+            opacity: 0.95,
+            lineCap: 'round',
+            lineJoin: 'round'
+          }).addTo(this.focusLayer)
+        };
+        this.routeLines[m.plate] = lines;
+      });
+
+      this.updateRemainingRoutes();
     }
 
-    updateFocusRemaining() {
-      if (!this.focusLines) return;
-      const m = this.missionByPlate(this.focusPlate);
-      if (!m || !m.leg1 || !m.leg2) return;
-      const phase = m.progress.phase;
-      const pos = m.pos || pointAt(phase === 'TO_SCENE' ? m.leg1 : m.leg2, m.progress.dist);
-      const remaining = (leg) => [pos.latlng, ...leg.ll.slice(pos.idx + 1)];
+    updateRemainingRoutes() {
+      if (!this.routeLines) return;
+      Object.entries(this.routeLines).forEach(([plate, lines]) => {
+        const m = this.missionByPlate(plate);
+        if (!m || !m.leg1 || !m.leg2) return;
+        const phase = m.progress.phase;
+        const pos = m.pos || pointAt(phase === 'TO_SCENE' ? m.leg1 : m.leg2, m.progress.dist);
+        const remaining = (leg) => [pos.latlng, ...leg.ll.slice(pos.idx + 1)];
 
-      let rem1 = [], rem2 = [];
-      if (phase === 'TO_SCENE') { rem1 = remaining(m.leg1); rem2 = m.leg2.ll; }
-      else if (phase === 'PICKUP') { rem2 = m.leg2.ll; }
-      else if (phase === 'TO_HOSP') { rem2 = remaining(m.leg2); }
+        let rem1 = [], rem2 = [];
+        if (phase === 'TO_SCENE') {
+          rem1 = remaining(m.leg1);
+          rem2 = m.leg2.ll;
+        } else if (phase === 'PICKUP') {
+          rem2 = m.leg2.ll;
+        } else if (phase === 'TO_HOSP') {
+          rem2 = remaining(m.leg2);
+        }
 
-      this.focusLines.glow1.setLatLngs(rem1);
-      this.focusLines.line1.setLatLngs(rem1);
-      this.focusLines.glow2.setLatLngs(rem2);
-      this.focusLines.line2.setLatLngs(rem2);
+        lines.glow1.setLatLngs(rem1);
+        lines.line1.setLatLngs(rem1);
+        lines.glow2.setLatLngs(rem2);
+        lines.line2.setLatLngs(rem2);
+      });
     }
 
     fitFocus(animate = true) {
@@ -755,7 +804,7 @@
           <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1e3a56;padding-bottom:6px;margin-bottom:8px;">
             <div style="display:flex;align-items:center;gap:6px;">
               <strong style="color:#ffffff;font-family:var(--font-mono);font-size:14px;">${v.plate}</strong>
-              <span style="font-size:10px;padding:2px 6px;border-radius:4px;background:${m ? '#059669' : '#047857'};color:#ffffff;font-weight:700;">
+              <span style="font-size:10px;padding:2px 6px;border-radius:4px;background:${m ? '#ef4444' : '#047857'};color:#ffffff;font-weight:700;">
                 ${m ? 'ĐANG LÀM NHIỆM VỤ' : 'SẴN SÀNG'}
               </span>
             </div>
@@ -796,7 +845,7 @@
             <div>Vị trí: <strong style="color:#ffffff;">${c.location?.address || '—'}</strong></div>
             <div>Bệnh nhân: <strong style="color:#ffffff;">${c.patient?.name || 'Chưa rõ'}${c.patient?.age ? ` (${c.patient.age}T)` : (c.patient?.ageGroupText ? ` (${c.patient.ageGroupText})` : '')}</strong></div>
             <div>Tình trạng: <span style="color:#fbbf24;">${c.incident?.name || '—'} · ${c.incident?.severityText || ''}</span></div>
-            <div>Xe phụ trách: <strong style="color:#34d399;font-family:var(--font-mono);">${m.plate}</strong></div>
+            <div>Xe phụ trách: <strong style="color:#f87171;font-family:var(--font-mono);">${m.plate}</strong></div>
             <div>Bệnh viện đích: <strong style="color:#38bdf8;">${m.hosp.name}</strong></div>
           </div>
         </div>
