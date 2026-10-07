@@ -1938,14 +1938,51 @@
       if (!vehicles || vehicles.length === 0) {
         return `<div style="text-align:center;padding:24px;color:var(--text-muted);">Không tìm thấy phương tiện</div>`;
       }
-      return vehicles.map(v => {
-        const isEmergency = v.status === 'EMERGENCY';
+
+      const state = window.StateManager?.getState();
+      const allCases = (state?.cases || []).filter(c => !['COMPLETED', 'CANCELLED', 'CLOSED'].includes(c.status));
+
+      // Chỉ kiểm tra phân công khi đang chạy demo hoặc thực sự có ca điều động được phát lệnh
+      const isDemoActive = Boolean(this.demoRunning || state?.demoRunning);
+
+      // Hàm kiểm tra xe có đang được phân công/điều động thực hiện ca cấp cứu hay không
+      const isVehicleDispatched = (v) => {
+        if (!v) return false;
+        // Nếu không trong chế độ demo và không có ca active nào thì tất cả xe ở trạng thái bình thường
+        if (!isDemoActive && allCases.length === 0 && !v.isDispatchedSimulated) {
+          return false;
+        }
+
+        if (v.status === 'EMERGENCY' || v.status === 'DISPATCHED' || v.status === 'EN_ROUTE' || v.status === 'TRANSPORTING') return true;
+        if (v.isDispatchedSimulated) return true;
+        if (v.currentCaseId) return true;
+        const hasCase = allCases.some(c => c.dispatch?.vehiclePlate === v.plate || c.currentVehiclePlate === v.plate);
+        if (hasCase) return true;
+        if (isDemoActive && state?.demoCase && state.demoCase.dispatch?.vehiclePlate === v.plate) return true;
+        return false;
+      };
+
+      // Tự động đẩy xe đang được phân công lên đầu danh sách (chỉ khi có xe nhận ca)
+      const sortedVehicles = [...vehicles].sort((a, b) => {
+        const aDisp = isVehicleDispatched(a) ? 1 : 0;
+        const bDisp = isVehicleDispatched(b) ? 1 : 0;
+        if (aDisp !== bDisp) {
+          return bDisp - aDisp; // 1 (được phân công) đứng trước 0
+        }
+        return 0; // Giữ nguyên thứ tự ban đầu nếu chưa có ca
+      });
+
+      return sortedVehicles.map(v => {
+        const isEmergency = isVehicleDispatched(v);
         const isSelected = v.plate === selectedPlate;
+        const statusBadge = isEmergency
+          ? window.CCNV_UI.Badges.forVehicleStatus('EMERGENCY')
+          : window.CCNV_UI.Badges.forVehicleStatus(v.status || 'READY');
         return `
           <div class="vehicle-card ${isEmergency ? 'is-emergency' : ''} ${isSelected ? 'is-selected' : ''}" data-plate="${v.plate}">
             <div class="vehicle-card-top">
               <span class="vehicle-plate">${v.plate}</span>
-              ${window.CCNV_UI.Badges.forVehicleStatus(v.status)}
+              ${window.CCNV_UI.Badges.forVehicleStatus(isEmergency ? 'EMERGENCY' : v.status)}
             </div>
             <div style="font-size:12px;color:var(--text-white);margin-top:2px;">${v.station}</div>
             <div class="vehicle-meta-row">
@@ -2122,6 +2159,14 @@
                 </div>
 
                 <div style="display:flex;align-items:center;gap:8px;">
+                  <button type="button" class="btn-header-replay" id="btn-header-replay" title="Nghe lại cuộc gọi từ đầu">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                      <path d="M3 3v5h5"></path>
+                    </svg>
+                    <span>Nghe lại</span>
+                  </button>
+
                   <!-- Soundwave equalizer -->
                   <div class="voice-wave-container" id="voice-wave-eq" title="Âm thanh đàm thoại thời gian thực">
                     <div class="voice-wave-bar"></div>
@@ -2139,11 +2184,34 @@
                 <!-- Rendered dynamically by voice demo engine -->
               </div>
 
+              <!-- TÓM TẮT TỪ KHÓA AI TRÍCH XUẤT (Click để nhảy & highlight câu thoại) -->
+              <div class="voice-keywords-summary-section" id="voice-keywords-summary-section">
+                <div class="voice-keywords-header">
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    <span class="voice-keywords-title">TÓM TẮT TỪ KHÓA AI</span>
+                    <span style="font-size:10px;color:#64748B;">(Bấm để nhảy tới đoạn thoại)</span>
+                  </div>
+                  <span class="voice-keywords-count" id="voice-keywords-count">0 từ khóa</span>
+                </div>
+                <div class="voice-keywords-chips-bar" id="voice-keywords-chips-bar">
+                  <span class="voice-kw-empty" id="voice-kw-empty">Đang lắng nghe và trích xuất từ khóa quan trọng...</span>
+                </div>
+              </div>
 
-              <!-- Thanh thao tác ngang cột trái: Cúp máy -->
+              <!-- Thanh thao tác ngang cột trái: Nghe lại & Cúp máy -->
               <div class="voice-hangup-bar">
+                <button type="button" class="btn-voice-replay" id="btn-call-replay" title="Phát lại toàn bộ cuộc gọi từ đầu">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                    <path d="M3 3v5h5"></path>
+                  </svg>
+                  <span>Nghe lại</span>
+                </button>
                 <button type="button" class="btn-voice-hangup" id="btn-call-hangup" title="Kết thúc cuộc gọi">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91"></path>
                     <line x1="23" y1="1" x2="1" y2="23"></line>
                   </svg>
@@ -3461,48 +3529,68 @@
           const padTime = (n) => String(Math.floor(n)).padStart(2, '0');
           const formatTime = (sec) => `${padTime(sec / 60)}:${padTime(sec % 60)}`;
 
+          let currentFocusedKeyword = null;
+          let currentFocusedTurnId = null;
+          let focusedKeywordTimeout = null;
+
+          const KEYWORDS_LIST = [
+            { id: 'kw-1', turnId: 1, text: 'tổng đài cấp cứu 115', display: 'Tổng đài 115', time: 1.0, color: '#38BDF8' },
+            { id: 'kw-2', turnId: 2, text: 'tai nạn xe máy', display: 'Tai nạn xe máy', time: 6.5, color: '#F59E0B' },
+            { id: 'kw-3', turnId: 2, text: 'ngã ra đường, nằm im', display: 'Ngã nằm im', time: 9.0, color: '#EF4444' },
+            { id: 'kw-4', turnId: 2, text: 'Đường Nguyễn Văn Cừ', display: 'Đ. Nguyễn Văn Cừ', time: 12.0, color: '#10B981' },
+            { id: 'kw-5', turnId: 2, text: 'Đại học Cần Thơ', display: 'ĐH Cần Thơ', time: 14.5, color: '#10B981' },
+            { id: 'kw-6', turnId: 4, text: 'Hai người nam giới cao tuổi', display: '2 nam cao tuổi', time: 22.0, color: '#A855F7' },
+            { id: 'kw-7', turnId: 4, text: 'Chân trái chảy máu nhiều', display: 'Chảy máu chân trái', time: 26.5, color: '#EF4444' },
+            { id: 'kw-8', turnId: 4, text: 'bất tỉnh hoàn toàn', display: 'Bất tỉnh hoàn toàn', time: 29.5, color: '#DC2626' },
+            { id: 'kw-9', turnId: 5, text: 'đừng di chuyển nạn nhân', display: 'Không di chuyển', time: 33.0, color: '#F59E0B' },
+            { id: 'kw-10', turnId: 5, text: 'dùng khăn sạch ấn chặt vết thương', display: 'Ấn chặt vết thương', time: 35.5, color: '#06B6D4' },
+            { id: 'kw-11', turnId: 5, text: 'Xe cấp cứu đang đến', display: 'Xe đang đến', time: 38.0, color: '#3B82F6' }
+          ];
+
           const highlightKeywords = (text, keywords = []) => {
             let html = text;
             keywords.forEach(kw => {
               const regex = new RegExp(`(${kw})`, 'gi');
-              html = html.replace(regex, '<mark class="ai-kw">$1</mark>');
+              const isFocused = currentFocusedKeyword && (
+                currentFocusedKeyword.toLowerCase().includes(kw.toLowerCase()) ||
+                kw.toLowerCase().includes(currentFocusedKeyword.toLowerCase())
+              );
+              const extraClass = isFocused ? ' is-focused-kw' : '';
+              html = html.replace(regex, `<mark class="ai-kw${extraClass}" data-kw="$1">$1</mark>`);
             });
             return html;
           };
 
-          // HIEN THI DAY DU TOAN BO 5 LUOT KICH BAN THOAI (Khong bi cat, co trang thai ro rang)
+          // NÓI ĐẾN ĐÂU HIỆN TEXT ĐẾN ĐẤY (Không hiển thị toàn bộ transcript trước khi nói)
+          let lastTurnCount = 0;
           const renderFullDialogueFeed = (currentTime) => {
             if (!dialogueFeed) return;
 
             let html = '';
+            let currentTurnCount = 0;
+
             DIALOGUE_SCRIPT.forEach(seg => {
-              const isFinished = currentTime >= seg.end;
-              const isActive = currentTime >= seg.start && currentTime < seg.end;
-              const isPending = currentTime < seg.start;
-              const isOp = seg.speakerRole === 'operator';
-
-              let statusClass = 'status-pending';
-              let statusLabel = `Chờ (${formatTime(seg.start)})`;
-              let statusColor = '#64748B';
-
-              if (isActive) {
-                statusClass = 'is-active';
-                statusLabel = 'ĐANG ĐÀM THOẠI';
-                statusColor = '#38BDF8';
-              } else if (isFinished) {
-                statusClass = 'is-completed';
-                statusLabel = 'ĐÃ GHI NHẬN';
-                statusColor = '#10B981';
+              // Nói đến đâu hiện đến đấy: Nếu âm thanh chưa chạy tới lượt thoại này thì KHÔNG hiển thị
+              if (currentTime < seg.start) {
+                return;
               }
 
+              currentTurnCount++;
+              const isFinished = currentTime >= seg.end;
+              const isActive = currentTime >= seg.start && currentTime < seg.end;
+              const isOp = seg.speakerRole === 'operator';
+
+              const isBubbleFocused = currentFocusedTurnId === seg.id;
+              let statusClass = isActive ? 'is-active' : 'is-completed';
+              if (isBubbleFocused) statusClass += ' is-bubble-focused';
+
               let displayedText = '';
-              if (isPending) {
-                displayedText = seg.text;
-              } else if (isFinished) {
+              if (isFinished) {
                 displayedText = highlightKeywords(seg.text, seg.keywords || []);
               } else {
-                const progress = Math.min(1, Math.max(0, (currentTime - seg.start) / (seg.end - seg.start)));
-                const charCount = Math.max(1, Math.floor(progress * seg.text.length));
+                const segDuration = Math.max(0.1, seg.end - seg.start);
+                const progress = Math.min(1, Math.max(0, (currentTime - seg.start) / segDuration));
+                const charCount = Math.min(seg.text.length, Math.max(1, Math.floor(progress * seg.text.length)));
                 const rawSlice = seg.text.slice(0, charCount);
                 displayedText = highlightKeywords(rawSlice, seg.keywords || []) + '<span class="typing-cursor"></span>';
               }
@@ -3519,16 +3607,115 @@
               `;
             });
 
+            if (!html) {
+              html = `<div style="text-align:center;padding:24px 12px;color:#64748B;font-size:12px;font-style:italic;">Đang kết nối cuộc gọi...</div>`;
+            }
+
             dialogueFeed.innerHTML = html;
 
-            const activeEl = dialogueFeed.querySelector('.dialogue-bubble.is-active');
-            if (activeEl) {
-              const elOffsetTop = activeEl.offsetTop;
-              dialogueFeed.scrollTo({
-                top: Math.max(0, elOffsetTop - 20),
-                behavior: 'smooth'
+            // Tự động cuộn theo dõi khi nội dung mới xuất hiện hoặc đang đàm thoại (chỉ khi không đang bấm xem focus keyword)
+            const isNearBottom = (dialogueFeed.scrollHeight - dialogueFeed.scrollTop - dialogueFeed.clientHeight) < 100;
+            const hasNewTurn = currentTurnCount > lastTurnCount;
+            if ((isNearBottom || hasNewTurn) && !currentFocusedKeyword) {
+              dialogueFeed.scrollTop = dialogueFeed.scrollHeight;
+            }
+            lastTurnCount = currentTurnCount;
+          };
+
+          // HIỂN THỊ TÓM TẮT TỪ KHÓA & BẤM ĐỂ NHẢY LÊN HIGHLIGHT
+          let lastKwCount = -1;
+          const renderKeywordsSummary = (currentTime) => {
+            const chipsBar = paneContainer.querySelector('#voice-keywords-chips-bar');
+            const countEl = paneContainer.querySelector('#voice-keywords-count');
+            if (!chipsBar) return;
+
+            const activeKws = KEYWORDS_LIST.filter(kw => currentTime >= kw.time);
+
+            if (countEl) {
+              countEl.textContent = `${activeKws.length} từ khóa`;
+            }
+
+            if (activeKws.length === 0) {
+              if (lastKwCount !== 0) {
+                lastKwCount = 0;
+                chipsBar.innerHTML = `<span class="voice-kw-empty">Đang lắng nghe và trích xuất từ khóa quan trọng...</span>`;
+              }
+              return;
+            }
+
+            if (activeKws.length !== lastKwCount) {
+              lastKwCount = activeKws.length;
+              let html = '';
+              activeKws.forEach(kw => {
+                const isActive = currentFocusedKeyword === kw.text;
+                html += `
+                  <button type="button" class="voice-kw-chip${isActive ? ' is-active' : ''}" data-kw-id="${kw.id}" title="Bấm để nhảy tới đoạn thoại: ${kw.text}">
+                    <span class="voice-kw-dot" style="background:${kw.color};"></span>
+                    <span class="voice-kw-text">${kw.display}</span>
+                    <span class="voice-kw-time">${formatTime(kw.time)}</span>
+                  </button>
+                `;
+              });
+              chipsBar.innerHTML = html;
+
+              chipsBar.querySelectorAll('.voice-kw-chip').forEach(chipEl => {
+                chipEl.addEventListener('click', (e) => {
+                  e.stopPropagation();
+                  const kwId = chipEl.getAttribute('data-kw-id');
+                  const kw = KEYWORDS_LIST.find(k => k.id === kwId);
+                  if (kw) {
+                    onKeywordClick(kw);
+                  }
+                });
               });
             }
+          };
+
+          const onKeywordClick = (kw) => {
+            if (focusedKeywordTimeout) clearTimeout(focusedKeywordTimeout);
+
+            currentFocusedKeyword = kw.text;
+            currentFocusedTurnId = kw.turnId;
+
+            // Nếu câu thoại này chưa xuất hiện (ví dụ bấm từ khóa tương lai), nhảy thời gian audio tới đoạn keyword đó
+            if (voiceAudio.currentTime < kw.time) {
+              try {
+                voiceAudio.currentTime = Math.max(0, kw.time - 0.2);
+              } catch (e) {}
+            }
+
+            // Cập nhật lại giao diện và chips
+            renderFullDialogueFeed(Math.max(voiceAudio.currentTime, kw.time + 0.5));
+
+            // Cập nhật class is-active trên chip
+            const chipsBar = paneContainer.querySelector('#voice-keywords-chips-bar');
+            if (chipsBar) {
+              chipsBar.querySelectorAll('.voice-kw-chip').forEach(c => {
+                c.classList.toggle('is-active', c.getAttribute('data-kw-id') === kw.id);
+              });
+            }
+
+            // Nhảy lên và highlight phần đoạn keyword trong dialogue feed
+            if (dialogueFeed) {
+              const bubble = dialogueFeed.querySelector(`#dialogue-turn-${kw.turnId}`);
+              if (bubble) {
+                const mark = bubble.querySelector('.ai-kw.is-focused-kw') || bubble.querySelector('.ai-kw') || bubble;
+                const scrollPos = mark.offsetTop - dialogueFeed.offsetTop - 24;
+                dialogueFeed.scrollTo({
+                  top: Math.max(0, scrollPos),
+                  behavior: 'smooth'
+                });
+              }
+            }
+
+            // Tự động tắt trạng thái focus sau 3.5s
+            focusedKeywordTimeout = setTimeout(() => {
+              currentFocusedKeyword = null;
+              currentFocusedTurnId = null;
+              renderFullDialogueFeed(voiceAudio.currentTime);
+              const chips = paneContainer.querySelector('#voice-keywords-chips-bar');
+              if (chips) chips.querySelectorAll('.voice-kw-chip').forEach(c => c.classList.remove('is-active'));
+            }, 3500);
           };
 
           const checkAutoFillTriggers = (currentTime) => {
@@ -3641,6 +3828,7 @@
             }
 
             renderFullDialogueFeed(curTime);
+            renderKeywordsSummary(curTime);
             checkAutoFillTriggers(curTime);
 
             if (!voiceAudio.paused && !voiceAudio.ended) {
@@ -3684,6 +3872,59 @@
             }
           });
 
+          const btnCallReplay = paneContainer.querySelector('#btn-call-replay');
+          const btnHeaderReplay = paneContainer.querySelector('#btn-header-replay');
+
+          const replayAudioCall = () => {
+            try {
+              voiceAudio.pause();
+              voiceAudio.currentTime = 0;
+            } catch (e) {}
+
+            triggers = {
+              incident: false,
+              location: false,
+              patients: false,
+              severity: false,
+              symptoms: false,
+              ready: false
+            };
+
+            lastTurnCount = 0;
+            lastKwCount = -1;
+            currentFocusedKeyword = null;
+            currentFocusedTurnId = null;
+            if (timerDisplay) timerDisplay.textContent = '00:00';
+            renderFullDialogueFeed(0.0);
+            renderKeywordsSummary(0.0);
+
+            // Bật lại phát âm thanh từ đầu
+            try {
+              const playPromise = voiceAudio.play();
+              if (playPromise !== undefined) {
+                playPromise.catch(err => {
+                  console.log('Voice replay error:', err);
+                });
+              }
+            } catch (e) {}
+
+            waveEq?.classList.add('is-playing');
+            if (playText) playText.textContent = 'Tạm dừng';
+
+            if (this._voiceRafId) cancelAnimationFrame(this._voiceRafId);
+            this._voiceRafId = requestAnimationFrame(onVoiceTick);
+          };
+
+          btnCallReplay?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            replayAudioCall();
+          });
+
+          btnHeaderReplay?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            replayAudioCall();
+          });
+
           btnHangup?.addEventListener('click', () => {
             this.stopVoiceDemoAudio();
             if (demo?.onCancel) demo.onCancel();
@@ -3695,8 +3936,15 @@
           });
 
           btnInstantFill?.addEventListener('click', () => {
+            try {
+              voiceAudio.currentTime = 41.71;
+              voiceAudio.pause();
+            } catch (e) {}
+            if (playText) playText.textContent = 'Đàm thoại hoàn tất';
+            waveEq?.classList.remove('is-playing');
             checkAutoFillTriggers(40.0);
             renderFullDialogueFeed(41.71);
+            renderKeywordsSummary(41.71);
             if (timerDisplay) timerDisplay.textContent = '00:41';
             window.CCNV_UI.Toast.show(
               'AI ĐÃ HOÀN TẤT ĐIỀN FORM TỰ ĐỘNG',
@@ -3706,8 +3954,9 @@
             );
           });
 
-          // Khoi tao hien thi day du 5 luot kich ban ngay tu giay dau tien
+          // Khởi tạo hiển thị từ 0s (chỉ lượt thoại đầu tiên chuẩn bị nói, các câu sau chưa nói sẽ không hiện)
           renderFullDialogueFeed(0.0);
+          renderKeywordsSummary(0.0);
 
           // Tiep nhan thi phat voice luon
           try {

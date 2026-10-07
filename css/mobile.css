@@ -1079,23 +1079,7 @@ body.driver-phone-body {
   to { box-shadow: inset 0 0 45px rgba(229, 37, 33, 0.85); }
 }
 
-/* Driver SOS Modal Options */
-.driver-sos-option-card {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-accent);
-  border-radius: 10px;
-  padding: 12px 14px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
 
-.driver-sos-option-card:hover, .driver-sos-option-card:active {
-  border-color: var(--red-primary);
-  background: rgba(229, 37, 33, 0.15);
-}
 
 /* Patient Info Form Grid for Mobile */
 .epcr-patient-card {

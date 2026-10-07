@@ -384,9 +384,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Modals
       const dispatchModal = document.getElementById('modal-dispatch-alert');
       const btnCloseDispatch = document.getElementById('btn-close-dispatch-order');
-      const btnConfirmDispatch = document.getElementById('btn-confirm-dispatch-order');
-      const modalDriverSos = document.getElementById('modal-driver-sos');
-      const btnCloseSosModal = document.getElementById('btn-close-sos-modal');
+      const btnRejectDispatch = document.getElementById('btn-reject-dispatch-order');
+      const dispatchTrack = document.getElementById('dispatch-slider-track');
+      const dispatchKnob = document.getElementById('dispatch-slider-knob');
+      const dispatchFill = document.getElementById('dispatch-slider-fill');
+      const dispatchLabel = document.getElementById('dispatch-slider-label');
 
       // Khởi tạo bản đồ chính
       function initDriverMap() {
@@ -525,12 +527,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         simState.dist = 0;
         simState.pauseUntil = 0;
 
+        // 0. Hiển thị lại Header mặc định khi chưa nhận ca
+        const defaultHeader = document.getElementById('driver-default-header');
+        if (defaultHeader) defaultHeader.style.display = 'flex';
+
         // 1. Ẩn HUD dẫn đường và Dock điều khiển
         if (navFloatingHud) navFloatingHud.style.display = 'none';
         if (missionDock) {
           missionDock.style.display = 'none';
           missionDock.classList.remove('expanded');
         }
+        document.getElementById('driver-map-controls')?.classList.remove('in-mission');
         if (dockDetails) dockDetails.style.display = 'none';
         if (dockExpandIcon) dockExpandIcon.textContent = '▲';
 
@@ -560,12 +567,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateStepperUI(1);
         resetSlider(1);
 
-        if (showNotification && window.CCNV_UI?.Toast) {
-          window.CCNV_UI.Toast.show(
-            'HOÀN TẤT CA & SẴN SÀNG',
-            'Đã bàn giao bệnh nhân thành công. Hệ thống đưa bản đồ về trạng thái trực ban ban đầu.'
-          );
-        }
       }
 
       function clearMissionMapLayers() {
@@ -596,10 +597,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       // =========================================================================
-      // POPUP NHẬN THÔNG TIN CA & XÁC NHẬN
+      // POPUP NHẬN THÔNG TIN CA & XÁC NHẬN (SLIDE-TO-CONFIRM & TỪ CHỐI)
       // =========================================================================
+      function resetDispatchSlider() {
+        if (!dispatchKnob || !dispatchFill || !dispatchLabel) return;
+        dispatchKnob.style.transition = 'none';
+        dispatchFill.style.transition = 'none';
+        dispatchKnob.style.transform = 'translateX(0px)';
+        dispatchFill.style.width = '0%';
+        dispatchLabel.style.opacity = '1';
+        dispatchLabel.textContent = 'VUỐT SANG PHẢI: XÁC NHẬN NHẬN LỆNH ❯❯❯';
+      }
+
       function openDispatchAlertPopup() {
         if (dispatchModal) {
+          resetDispatchSlider();
           dispatchModal.classList.add('active');
           playEmergencyAlarm();
           if (navigator.vibrate) navigator.vibrate([300, 150, 300, 150, 400]);
@@ -610,11 +622,93 @@ document.addEventListener('DOMContentLoaded', async () => {
         dispatchModal.classList.remove('active');
       });
 
-      // Bấm XÁC NHẬN NHẬN LỆNH & XUẤT PHÁT
-      btnConfirmDispatch?.addEventListener('click', () => {
+      // Bấm nút Từ chối nhận ca
+      btnRejectDispatch?.addEventListener('click', () => {
         dispatchModal.classList.remove('active');
-        if (navigator.vibrate) navigator.vibrate(100);
-        startMissionNavigation();
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      });
+
+      // Vuốt từ trái sang phải để xác nhận nhận lệnh (Slide-to-Confirm)
+      let isDispatchDragging = false;
+      let dispatchStartX = 0;
+      let dispatchCurrentX = 0;
+
+      function onDispatchDragStart(e) {
+        if (!dispatchKnob || !dispatchTrack) return;
+        isDispatchDragging = true;
+        dispatchStartX = (e.touches ? e.touches[0].clientX : e.clientX);
+        dispatchKnob.style.transition = 'none';
+        dispatchFill.style.transition = 'none';
+      }
+
+      function onDispatchDragMove(e) {
+        if (!isDispatchDragging || !dispatchKnob || !dispatchTrack) return;
+        const clientX = (e.touches ? e.touches[0].clientX : e.clientX);
+        const trackWidth = dispatchTrack.clientWidth || 300;
+        const knobWidth = dispatchKnob.clientWidth || 46;
+        const maxDist = trackWidth - knobWidth - 8;
+        
+        dispatchCurrentX = Math.max(0, Math.min(clientX - dispatchStartX, maxDist));
+        dispatchKnob.style.transform = `translateX(${dispatchCurrentX}px)`;
+        const percent = (dispatchCurrentX / maxDist) * 100;
+        dispatchFill.style.width = `${percent}%`;
+        if (dispatchLabel) {
+          dispatchLabel.style.opacity = `${Math.max(0, 1 - (percent / 60))}`;
+        }
+      }
+
+      function onDispatchDragEnd() {
+        if (!isDispatchDragging || !dispatchKnob || !dispatchTrack) return;
+        isDispatchDragging = false;
+        
+        const trackWidth = dispatchTrack.clientWidth || 300;
+        const knobWidth = dispatchKnob.clientWidth || 46;
+        const maxDist = trackWidth - knobWidth - 8;
+
+        if (dispatchCurrentX >= maxDist * 0.72) {
+          // Vuốt thành công sang phải
+          dispatchKnob.style.transition = 'transform 0.15s ease';
+          dispatchFill.style.transition = 'width 0.15s ease';
+          dispatchKnob.style.transform = `translateX(${maxDist}px)`;
+          dispatchFill.style.width = '100%';
+          if (dispatchLabel) {
+            dispatchLabel.textContent = '✔ ĐÃ TIẾP NHẬN LỆNH ĐIỀU ĐỘNG';
+            dispatchLabel.style.opacity = '1';
+          }
+
+          if (navigator.vibrate) navigator.vibrate([150, 80, 200]);
+
+          setTimeout(() => {
+            dispatchModal.classList.remove('active');
+            startMissionNavigation();
+          }, 220);
+        } else {
+          // Chưa vuốt tới ngưỡng -> Trả về ban đầu
+          dispatchKnob.style.transition = 'transform 0.25s ease';
+          dispatchFill.style.transition = 'width 0.25s ease';
+          dispatchKnob.style.transform = 'translateX(0px)';
+          dispatchFill.style.width = '0%';
+          if (dispatchLabel) {
+            dispatchLabel.style.opacity = '1';
+          }
+        }
+      }
+
+      // Gắn sự kiện kéo/vuốt cho thanh Slide-to-Confirm Nhận lệnh
+      if (dispatchKnob) {
+        dispatchKnob.addEventListener('mousedown', onDispatchDragStart);
+        window.addEventListener('mousemove', onDispatchDragMove);
+        window.addEventListener('mouseup', onDispatchDragEnd);
+
+        dispatchKnob.addEventListener('touchstart', onDispatchDragStart, { passive: true });
+        window.addEventListener('touchmove', onDispatchDragMove, { passive: true });
+        window.addEventListener('touchend', onDispatchDragEnd);
+      }
+
+      // Bấm nút Xem lệnh ca trên header mặc định
+      document.getElementById('btn-header-open-dispatch')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openDispatchAlertPopup();
       });
 
       // =========================================================================
@@ -623,9 +717,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       async function startMissionNavigation() {
         isMissionActive = true;
 
+        // 0. Ẩn Header mặc định khi chuyển sang chế độ dẫn đường chiến thuật
+        const defaultHeader = document.getElementById('driver-default-header');
+        if (defaultHeader) defaultHeader.style.display = 'none';
+
         // 1. Hiển thị HUD dẫn đường trên và Dock thông tin dưới
         if (navFloatingHud) navFloatingHud.style.display = 'flex';
         if (missionDock) missionDock.style.display = 'block';
+        document.getElementById('driver-map-controls')?.classList.add('in-mission');
 
         // 2. Nút định vị xe
         const btnRecenter = document.getElementById('btn-driver-recenter');
@@ -673,13 +772,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           });
         } catch (e) {}
 
-        if (window.CCNV_UI?.Toast) {
-          window.CCNV_UI.Toast.show(
-            'ĐÃ XUẤT PHÁT CẤP CỨU',
-            'Xe 65A-012.34 bắt đầu dẫn đường khẩn cấp tới Chân Cầu Hưng Lợi.',
-            true
-          );
-        }
+
 
         // Bắt đầu vòng lặp chuyển động mượt mà 60fps
         stopSimulation();
@@ -940,13 +1033,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             badgeHeaderPhase.style.background = '#F59E0B';
           }
           if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-          if (window.CCNV_UI?.Toast) {
-            window.CCNV_UI.Toast.show(
-              'ĐÃ ĐẾN HIỆN TRƯỜNG',
-              'Xe 65A-012.34 đã tiếp cận Chân Cầu Hưng Lợi. Kíp cấp cứu đang đưa nạn nhân lên xe (dừng 3.5s).',
-              true
-            );
-          }
         } else if (targetState === 3) {
           // State 3: Di chuyển tới viện
           m.phase = 'TO_HOSP';
@@ -958,13 +1044,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (badgeHeaderPhase) {
             badgeHeaderPhase.textContent = 'CHUYỂN VIỆN';
             badgeHeaderPhase.style.background = '#0284C7';
-          }
-          if (window.CCNV_UI?.Toast) {
-            window.CCNV_UI.Toast.show(
-              'XUẤT PHÁT VỀ BỆNH VIỆN',
-              'Bệnh nhân đã lên xe. Đang di chuyển khẩn cấp về Bệnh viện Đa khoa thành phố Cần Thơ.',
-              true
-            );
           }
         } else if (targetState === 4) {
           // State 4: Bàn giao bệnh nhân
@@ -984,13 +1063,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (sliderKnob) sliderKnob.style.transform = `translateX(${(sliderTrack?.clientWidth || 280) - 50}px)`;
 
           if (navigator.vibrate) navigator.vibrate([250, 100, 250]);
-          if (window.CCNV_UI?.Toast) {
-            window.CCNV_UI.Toast.show(
-              'BÀN GIAO BỆNH NHÂN THÀNH CÔNG',
-              'Đã bàn giao bệnh nhân Phan Văn Đức cho Khoa Cấp cứu Bệnh viện Đa khoa thành phố Cần Thơ. Đang chuẩn bị hoàn tất...',
-              true
-            );
-          }
 
           // Dừng mô phỏng
           stopSimulation();
@@ -1217,36 +1289,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         toggleMissionDock();
       });
 
-      btnDriverSos?.addEventListener('click', () => {
-        modalDriverSos?.classList.add('active');
-        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-      });
-
-      btnCloseSosModal?.addEventListener('click', () => {
-        modalDriverSos?.classList.remove('active');
-      });
-
-      document.querySelectorAll('.driver-sos-option-card').forEach(card => {
-        card.addEventListener('click', () => {
-          modalDriverSos?.classList.remove('active');
-          if (window.CCNV_UI?.Toast) {
-            window.CCNV_UI.Toast.show(
-              'ĐÃ GỬI TÍN HIỆU SOS',
-              'Trung tâm điều hành 115 Cần Thơ đã nhận được báo cáo sự cố của xe 65A-012.34.'
-            );
-          }
-        });
-      });
-
-      document.getElementById('btn-submit-sos-alert')?.addEventListener('click', () => {
-        modalDriverSos?.classList.remove('active');
-        if (window.CCNV_UI?.Toast) {
-          window.CCNV_UI.Toast.show(
-            'ĐÃ GỬI TÍN HIỆU SOS KHẨN CẤP',
-            'Trung tâm điều hành 115 Cần Thơ đã nhận được cảnh báo ưu tiên từ xe 65A-012.34.',
-            true
-          );
-        }
+      // Nút SOS: Không có tương tác gì theo yêu cầu
+      btnDriverSos?.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
       });
 
       // Modal Đổi xe (Vehicle Switcher)
@@ -1315,27 +1361,120 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
-      // Audio summary player for patient info
+      // Audio summary player for patient info & call recording
+      let summaryAudioObj = null;
+      let isAudioPlaying = false;
+
       window.playPatientAudioSummary = function() {
+        const floatAudioBtn = document.getElementById('driver-btn-audio-summary');
+        
+        // Nếu đang phát thì nhấn lại để dừng
+        if (isAudioPlaying) {
+          if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+          }
+          if (summaryAudioObj) {
+            summaryAudioObj.pause();
+            summaryAudioObj.currentTime = 0;
+          }
+          isAudioPlaying = false;
+          if (floatAudioBtn) floatAudioBtn.classList.remove('is-playing');
+          return;
+        }
+
         const pName = document.getElementById('driver-patient-name')?.innerText || 'Phan Văn Đức';
         const pDemo = document.getElementById('driver-patient-demographics')?.innerText || '58 tuổi, Nam';
         const pSymp = document.getElementById('driver-patient-symptoms')?.innerText || 'Chấn thương sọ não, đa chấn thương phần mềm';
-        const pLoc = document.getElementById('driver-scene-address')?.innerText || 'Chân Cầu Hưng Lợi';
+        const pLoc = document.getElementById('driver-scene-address')?.innerText || 'Chân Cầu Hưng Lợi (hướng Cái Răng sang Ninh Kiều)';
 
-        const textToSpeech = `Tóm tắt ca cấp cứu: Bệnh nhân ${pName}, ${pDemo}. Tình trạng: ${pSymp}. Vị trí hiện trường: ${pLoc}. Bệnh viện tiếp nhận: Bệnh viện Đa khoa thành phố Cần Thơ.`;
+        const textToSpeech = `Tóm tắt ca cấp cứu: Bệnh nhân ${pName}, ${pDemo}. Tình trạng: ${pSymp}. Vị trí hiện trường: ${pLoc}. Bệnh viện tiếp nhận dự kiến: Bệnh viện Đa khoa thành phố Cần Thơ. Đang phát lại đoạn ghi âm cuộc gọi tiếp nhận tin báo từ tổng đài 115.`;
 
-        if (window.CCNV_UI?.Toast) {
-          window.CCNV_UI.Toast.show('🔊 Phát tóm tắt ca cấp cứu', `Đang phát âm thanh tóm tắt cho bệnh nhân ${pName}...`);
-        }
+        isAudioPlaying = true;
+        if (floatAudioBtn) floatAudioBtn.classList.add('is-playing');
 
         if ('speechSynthesis' in window) {
           window.speechSynthesis.cancel();
           const utterance = new SpeechSynthesisUtterance(textToSpeech);
           utterance.lang = 'vi-VN';
           utterance.rate = 0.95;
+          utterance.onend = () => {
+            isAudioPlaying = false;
+            if (floatAudioBtn) floatAudioBtn.classList.remove('is-playing');
+          };
+          utterance.onerror = () => {
+            isAudioPlaying = false;
+            if (floatAudioBtn) floatAudioBtn.classList.remove('is-playing');
+          };
           window.speechSynthesis.speak(utterance);
+        } else {
+          // Fallback nếu trình duyệt không hỗ trợ Web Speech
+          setTimeout(() => {
+            isAudioPlaying = false;
+            if (floatAudioBtn) floatAudioBtn.classList.remove('is-playing');
+          }, 8000);
         }
       };
+
+      // Ghi âm gửi trước cho Bệnh viện tiếp nhận
+      let isHospitalRecording = false;
+
+      function toggleRecordForHospital() {
+        const floatRecBtn = document.getElementById('driver-btn-record-hospital');
+        const dockRecBtn = document.getElementById('btn-record-hospital-dock');
+        const dockRecLabel = document.getElementById('dock-rec-label');
+
+        isHospitalRecording = !isHospitalRecording;
+
+        if (isHospitalRecording) {
+          // Bắt đầu ghi âm
+          if (floatRecBtn) {
+            floatRecBtn.classList.add('is-recording');
+            floatRecBtn.setAttribute('title', 'Đang ghi âm cho BV... Bấm để dừng & gửi');
+          }
+          if (dockRecBtn) {
+            dockRecBtn.style.color = '#EF4444';
+            dockRecBtn.style.borderColor = 'rgba(239,68,68,0.5)';
+            dockRecBtn.style.background = 'rgba(239,68,68,0.15)';
+          }
+          if (dockRecLabel) dockRecLabel.textContent = 'Đang ghi âm...';
+          if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
+        } else {
+          // Dừng và gửi ghi âm cho bệnh viện
+          if (floatRecBtn) {
+            floatRecBtn.classList.remove('is-recording');
+            floatRecBtn.setAttribute('title', 'Ghi âm báo trước cho Bệnh viện tiếp nhận');
+          }
+          if (dockRecBtn) {
+            dockRecBtn.style.color = '#34D399';
+            dockRecBtn.style.borderColor = 'rgba(16,185,129,0.35)';
+            dockRecBtn.style.background = 'rgba(8, 22, 38, 0.95)';
+          }
+          if (dockRecLabel) dockRecLabel.textContent = 'Đã gửi ghi âm';
+          if (navigator.vibrate) navigator.vibrate([80, 50, 80]);
+
+          setTimeout(() => {
+            if (dockRecLabel && !isHospitalRecording) {
+              dockRecLabel.textContent = 'Ghi âm cho BV';
+            }
+          }, 2500);
+        }
+      }
+
+      document.getElementById('driver-btn-record-hospital')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleRecordForHospital();
+      });
+
+      document.getElementById('btn-record-hospital-dock')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleRecordForHospital();
+      });
+
+      // Gắn sự kiện click cho nút tròn nghe tóm tắt trên nút SOS
+      document.getElementById('driver-btn-audio-summary')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        window.playPatientAudioSummary();
+      });
 
       // Khởi động bản đồ Leaflet
       setTimeout(() => {

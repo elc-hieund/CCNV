@@ -4948,22 +4948,77 @@ body.critical-focus-active .kpi-header-grid {
   background: rgba(56, 189, 248, 0.6);
 }
 
-/* Thanh thao tác dưới phần trích xuất kịch bản thoại (Cúp máy) */
+/* Thanh thao tác dưới phần trích xuất kịch bản thoại (Nghe lại & Cúp máy) */
 .voice-hangup-bar {
   flex-shrink: 0;
   margin-top: auto;
   padding-top: 6px;
   display: flex;
   align-items: center;
+  gap: 8px;
+}
+
+.voice-hangup-bar .btn-voice-replay {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 12px;
+  background: rgba(14, 116, 144, 0.22);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  border-radius: 6px;
+  color: #38BDF8;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  height: 38px;
+  white-space: nowrap;
+}
+
+.voice-hangup-bar .btn-voice-replay:hover {
+  background: rgba(14, 116, 144, 0.45);
+  border-color: #38BDF8;
+  color: #FFFFFF;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+  transform: translateY(-1px);
+}
+
+.voice-hangup-bar .btn-voice-replay:active {
+  transform: translateY(0);
+}
+
+.btn-header-replay {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 5px;
+  color: #38BDF8;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  line-height: 1.2;
+}
+
+.btn-header-replay:hover {
+  background: rgba(56, 189, 248, 0.28);
+  border-color: #38BDF8;
+  color: #FFFFFF;
 }
 
 .voice-hangup-bar .btn-voice-hangup {
-  width: 100%;
+  flex: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 8px 14px;
+  padding: 8px 12px;
   background: linear-gradient(135deg, rgba(220, 38, 38, 0.95) 0%, rgba(185, 28, 28, 0.98) 100%);
   border: 1px solid rgba(239, 68, 68, 0.6);
   border-radius: 6px;
@@ -4975,6 +5030,7 @@ body.critical-focus-active .kpi-header-grid {
   transition: all 0.18s ease;
   box-shadow: 0 2px 8px rgba(220, 38, 38, 0.35);
   height: 38px;
+  white-space: nowrap;
 }
 
 .voice-hangup-bar .btn-voice-hangup:hover {
@@ -5381,6 +5437,163 @@ body.critical-focus-active .kpi-header-grid {
   visibility: hidden !important;
   opacity: 0 !important;
   pointer-events: none !important;
+}
+
+/* =========================================================================
+   TÓM TẮT KEYWORD AI TRÍCH XUẤT & CLICK TO HIGHLIGHT JUMP
+   ========================================================================= */
+.voice-keywords-summary-section {
+  flex-shrink: 0;
+  margin-top: 6px;
+  margin-bottom: 8px;
+  padding: 8px 10px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 8px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.voice-keywords-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  gap: 8px;
+}
+
+.voice-keywords-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #38BDF8;
+  letter-spacing: 0.4px;
+}
+
+.voice-keywords-count {
+  font-size: 10px;
+  color: #94A3B8;
+  font-family: var(--font-mono);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+.voice-keywords-chips-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  max-height: 60px;
+  overflow-y: auto;
+  align-items: center;
+}
+
+.voice-keywords-chips-bar::-webkit-scrollbar {
+  width: 3px;
+}
+
+.voice-keywords-chips-bar::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.35);
+  border-radius: 3px;
+}
+
+.voice-kw-empty {
+  font-size: 11px;
+  color: #64748B;
+  font-style: italic;
+  padding: 2px 0;
+}
+
+.voice-kw-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #E2E8F0;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+  line-height: 1.2;
+}
+
+.voice-kw-chip:hover {
+  background: rgba(14, 116, 144, 0.5);
+  border-color: #38BDF8;
+  color: #FFFFFF;
+  transform: translateY(-1px);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+}
+
+.voice-kw-chip.is-active {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: #F59E0B;
+  color: #FDE68A;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+}
+
+.voice-kw-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.voice-kw-text {
+  white-space: nowrap;
+}
+
+.voice-kw-time {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: #38BDF8;
+  opacity: 0.85;
+}
+
+/* Hiệu ứng nhấp nháy highlight khi click vào keyword */
+@keyframes kwFocusGlow {
+  0% {
+    background: #F59E0B;
+    color: #000000;
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.9);
+    transform: scale(1.05);
+  }
+  30% {
+    background: #FBBF24;
+    color: #000000;
+    box-shadow: 0 0 18px 6px rgba(245, 158, 11, 0.95);
+    transform: scale(1.1);
+  }
+  60% {
+    background: #38BDF8;
+    color: #000000;
+    box-shadow: 0 0 14px 4px rgba(56, 189, 248, 0.85);
+    transform: scale(1.05);
+  }
+  100% {
+    background: rgba(56, 189, 248, 0.35);
+    color: #38BDF8;
+    box-shadow: none;
+    transform: scale(1);
+  }
+}
+
+.ai-kw.is-focused-kw {
+  animation: kwFocusGlow 2.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards !important;
+  display: inline-block;
+  border-radius: 4px;
+  padding: 1px 6px !important;
+  border: 1px solid #F59E0B !important;
+  font-weight: 800 !important;
+}
+
+.dialogue-bubble.is-bubble-focused {
+  border-left-color: #F59E0B !important;
+  background: rgba(245, 158, 11, 0.18) !important;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.45) !important;
+  transition: all 0.3s ease;
 }
 
 

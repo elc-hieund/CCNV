@@ -107,7 +107,7 @@
     }
 
     .driver-map-controls.in-mission {
-      top: 112px;
+      top: 130px;
     }
 
     .driver-map-btn {
@@ -174,12 +174,90 @@
       user-select: none;
     }
 
-    @keyframes driver-sos-pulse {
+    /* Standalone Circular Audio Summary Button (Fixed above SOS button) */
+    .driver-floating-audio-standalone {
+      position: absolute;
+      bottom: 292px;
+      right: 14px;
+      z-index: 600 !important;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #0284C7 0%, #0369A1 75%, #075985 100%);
+      border: 2px solid rgba(255, 255, 255, 0.85);
+      color: #FFFFFF;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      pointer-events: auto;
+      box-shadow: 0 4px 16px rgba(2, 132, 199, 0.65), 0 0 12px rgba(56, 189, 248, 0.45);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .driver-floating-audio-standalone:hover,
+    .driver-floating-audio-standalone:active {
+      transform: scale(1.08);
+      box-shadow: 0 6px 24px rgba(2, 132, 199, 0.9), 0 0 18px rgba(56, 189, 248, 0.7);
+    }
+
+    .driver-floating-audio-standalone.is-playing {
+      background: radial-gradient(circle at 35% 35%, #10B981 0%, #059669 75%, #047857 100%);
+      box-shadow: 0 4px 18px rgba(16, 185, 129, 0.8), 0 0 14px rgba(16, 185, 129, 0.6);
+      animation: driver-audio-pulse 1.4s infinite ease-in-out;
+    }
+
+    @keyframes driver-audio-pulse {
+
+      0%,
+      100% {
+        box-shadow: 0 4px 16px rgba(16, 185, 129, 0.7), 0 0 0 0 rgba(16, 185, 129, 0.6);
+      }
+
+      50% {
+        box-shadow: 0 4px 22px rgba(16, 185, 129, 0.95), 0 0 0 8px rgba(16, 185, 129, 0);
+      }
+    }
+
+    /* Standalone Circular Voice Record Button for Hospital (Fixed above Audio Summary) */
+    .driver-floating-record-standalone {
+      position: absolute;
+      bottom: 348px;
+      right: 14px;
+      z-index: 600 !important;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #059669 0%, #047857 75%, #064E3B 100%);
+      border: 2px solid rgba(255, 255, 255, 0.85);
+      color: #FFFFFF;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      pointer-events: auto;
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.65), 0 0 12px rgba(16, 185, 129, 0.45);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .driver-floating-record-standalone:hover,
+    .driver-floating-record-standalone:active {
+      transform: scale(1.08);
+      box-shadow: 0 6px 24px rgba(16, 185, 129, 0.9), 0 0 18px rgba(52, 211, 153, 0.7);
+    }
+
+    .driver-floating-record-standalone.is-recording {
+      background: radial-gradient(circle at 35% 35%, #EF4444 0%, #DC2626 75%, #991B1B 100%);
+      box-shadow: 0 4px 20px rgba(239, 68, 68, 0.9), 0 0 16px rgba(239, 68, 68, 0.8);
+      animation: driver-rec-pulse 1.2s infinite ease-in-out;
+    }
+
+    @keyframes driver-rec-pulse {
       0%, 100% {
-        box-shadow: 0 4px 16px rgba(239, 68, 68, 0.65), 0 0 0 0 rgba(239, 68, 68, 0.6);
+        box-shadow: 0 4px 16px rgba(239, 68, 68, 0.8), 0 0 0 0 rgba(239, 68, 68, 0.6);
       }
       50% {
-        box-shadow: 0 4px 22px rgba(239, 68, 68, 0.9), 0 0 0 8px rgba(239, 68, 68, 0);
+        box-shadow: 0 4px 24px rgba(239, 68, 68, 1), 0 0 0 8px rgba(239, 68, 68, 0);
       }
     }
 
@@ -336,6 +414,56 @@
 <body class="driver-phone-body">
   <div class="mobile-app-wrapper driver-mobile-app" id="driver-app-root">
 
+    <!-- HEADER MẶC ĐỊNH KHI CHƯA NHẬN CA (STATE TRỰC BAN SẴN SÀNG) -->
+    <header class="driver-mobile-header" id="driver-default-header">
+      <div class="driver-header-main-row">
+        <!-- Trái: Logo & Tên kíp / Biển số xe -->
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div
+            style="width:36px;height:36px;border-radius:8px;background:transparent;border:none;box-shadow:none;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
+            <img src="assets/app_logo.svg" alt="115" style="width:100%;height:100%;object-fit:contain;display:block;" />
+          </div>
+          <div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <strong style="color:#FFFFFF;font-size:14px;letter-spacing:0.3px;font-family:var(--font-mono);"
+                id="driver-header-plate">65A-012.34</strong>
+            </div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:1px;">
+              Tài xế: <span style="color:#CBD5E1;font-weight:600;" id="driver-header-driver-name">Lê Văn Hùng</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phải: Mức độ ca cấp cứu -->
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div style="text-align:right;">
+            <div style="font-size:10px;color:#94A3B8;text-transform:uppercase;letter-spacing:0.5px;font-weight:700;">Mức
+              độ ca</div>
+            <span class="badge badge-emergency" id="driver-header-case-severity"
+              style="font-size:11px;padding:3px 8px;font-weight:800;letter-spacing:0.3px;background:rgba(239,68,68,0.22);color:#FCA5A5;border:1px solid rgba(239,68,68,0.5);border-radius:6px;display:inline-flex;align-items:center;gap:4px;margin-top:2px;">
+              <span
+                style="width:6px;height:6px;border-radius:50%;background:#EF4444;box-shadow:0 0 6px #EF4444;"></span>
+              Tối khẩn
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dòng phụ: Thông tin chốt trạm thường trực -->
+      <div class="driver-sub-bar"
+        style="border-top:1px dashed rgba(255,255,255,0.08);padding-top:6px;margin-top:2px;display:flex;align-items:center;justify-content:space-between;">
+        <div
+          style="display:flex;align-items:center;gap:6px;font-size:11px;color:#94A3B8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.5">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+          <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="driver-header-station">Trạm Cấp
+            cứu Cái Răng</span>
+        </div>
+      </div>
+    </header>
+
     <!-- 4. FULL-SCREEN VIETMAP-STYLE TACTICAL NAVIGATION INTERFACE -->
     <main class="driver-full-screen-map" id="driver-main-container">
       <div class="driver-full-map-wrap">
@@ -362,8 +490,30 @@
           </button>
         </div>
 
-        <!-- Standalone Circular Floating SOS Button (Fixed in place in all scenarios) -->
-        <button type="button" class="driver-floating-sos-standalone" id="driver-btn-sos" title="Phát tín hiệu SOS khẩn cấp" aria-label="Phát tín hiệu SOS">
+        <!-- Standalone Circular Voice Record Button for Hospital (Phía trên nút Nghe tóm tắt) -->
+        <button type="button" class="driver-floating-record-standalone" id="driver-btn-record-hospital"
+          title="Ghi âm báo trước cho Bệnh viện tiếp nhận" aria-label="Ghi âm cho bệnh viện">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+            <line x1="12" y1="19" x2="12" y2="23"></line>
+            <line x1="8" y1="23" x2="16" y2="23"></line>
+          </svg>
+        </button>
+
+        <!-- Standalone Circular Floating Audio Summary Button (Phía trên nút SOS) -->
+        <button type="button" class="driver-floating-audio-standalone" id="driver-btn-audio-summary"
+          title="Nghe tóm tắt ca cấp cứu (Ghi âm)" aria-label="Nghe tóm tắt ca">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+        </button>
+
+        <!-- Standalone Circular Floating SOS Button -->
+        <button type="button" class="driver-floating-sos-standalone" id="driver-btn-sos" title="SOS" aria-label="SOS">
           <span class="sos-icon-label">SOS</span>
         </button>
 
@@ -375,11 +525,18 @@
               style="width:100%;height:100%;display:block;object-fit:contain;transition:transform 0.3s ease;" />
           </div>
           <div class="nav-hud-info">
-            <div
-              style="display:flex;align-items:center;gap:6px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-              <span style="font-size:10.5px;font-weight:700;color:#38BDF8;letter-spacing:0.5px;">ĐÍCH ĐẾN:</span>
-              <strong style="color:#FFFFFF;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
-                id="nav-hospital-name">Hiện trường: Cầu Hưng Lợi</strong>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;gap:6px;">
+              <div style="display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;">
+                <span style="font-size:10.5px;font-weight:700;color:#38BDF8;letter-spacing:0.5px;flex-shrink:0;">ĐÍCH
+                  ĐẾN:</span>
+                <strong
+                  style="color:#FFFFFF;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
+                  id="nav-hospital-name">Hiện trường: Cầu Hưng Lợi</strong>
+              </div>
+              <span class="badge badge-emergency"
+                style="font-size:9.5px;padding:1px 6px;font-weight:800;background:rgba(239,68,68,0.25);color:#FCA5A5;border:1px solid rgba(239,68,68,0.6);border-radius:4px;flex-shrink:0;white-space:nowrap;">
+                TỐI KHẨN
+              </span>
             </div>
             <div class="nav-next-dist" id="nav-next-dist">Còn 350 m</div>
             <div class="nav-next-street" id="nav-next-street">Đi thẳng qua Cầu Hưng Lợi</div>
@@ -402,9 +559,13 @@
 
           <!-- Dock Header: Quick ETA Status & Toggle Details -->
           <div class="dock-main-header">
-            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:6px;">
+            <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;">
               <span style="font-size:12px;font-weight:700;color:#CBD5E1;letter-spacing:0.3px;">THÔNG TIN CA CẤP
                 CỨU</span>
+              <span class="badge badge-emergency"
+                style="font-size:10.5px;padding:2px 7px;font-weight:800;background:rgba(239,68,68,0.25);color:#FCA5A5;border:1px solid rgba(239,68,68,0.6);border-radius:4px;">
+                Ưu tiên 1 (Nguy kịch)
+              </span>
             </div>
             <button type="button" class="btn btn-default btn-xs dock-expand-btn" id="btn-dock-toggle-expand"
               title="Mở rộng / Thu gọn chi tiết">
@@ -430,15 +591,27 @@
               </div>
             </div>
 
-            <!-- Quick Action Trio: Call buttons & Audio Summary for Driver -->
+            <!-- Quick Action Trio: Call buttons & Audio Record / Summary for Driver -->
             <div class="quick-action-trio" style="margin-top:8px;">
-              <button class="quick-call-btn" id="btn-audio-summary" onclick="playPatientAudioSummary()" type="button" title="Nghe ghi âm tóm tắt bệnh nhân">
+              <button class="quick-call-btn" id="btn-audio-summary" onclick="playPatientAudioSummary()" type="button"
+                title="Nghe ghi âm tóm tắt bệnh nhân">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.5"
                   stroke-linecap="round" stroke-linejoin="round">
                   <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                   <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
                 </svg>
                 <span>Nghe tóm tắt</span>
+              </button>
+              <button class="quick-call-btn" id="btn-record-hospital-dock" type="button"
+                style="color:#34D399;border-color:rgba(16,185,129,0.35);" title="Ghi âm báo trước cho bệnh viện">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                  <line x1="12" y1="19" x2="12" y2="23"></line>
+                  <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+                <span id="dock-rec-label">Ghi âm cho BV</span>
               </button>
               <a href="tel:115" class="quick-call-btn" id="btn-call-dispatch">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.5"
@@ -539,6 +712,14 @@
       <!-- Case Info Card -->
       <div
         style="background:rgba(8, 24, 39, 0.95);border:1px solid #1E3A56;border-radius:12px;padding:12px 14px;margin-bottom:14px;width:100%;text-align:left;font-size:12.5px;color:#CBD5E1;box-shadow:0 4px 18px rgba(0,0,0,0.45);">
+        <div style="margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;">
+          <div><strong style="color:#FFFFFF;">Mức độ ca:</strong></div>
+          <span class="badge badge-emergency"
+            style="font-size:11px;padding:3px 9px;font-weight:800;letter-spacing:0.3px;background:rgba(239,68,68,0.25);color:#FCA5A5;border:1px solid #EF4444;border-radius:6px;display:inline-flex;align-items:center;gap:5px;">
+            <span style="width:6px;height:6px;border-radius:50%;background:#EF4444;box-shadow:0 0 6px #EF4444;"></span>
+            TỐI KHẨN
+          </span>
+        </div>
         <div style="margin-bottom:6px;"><strong style="color:#FFFFFF;">Hiện trường:</strong> Chân Cầu Hưng Lợi (hướng
           Cái Răng sang Ninh Kiều)</div>
         <div style="margin-bottom:6px;"><strong style="color:#FFFFFF;">Khoảng cách:</strong> 2.1 km (Ước tính di chuyển
@@ -552,80 +733,42 @@
         Kíp trực bấm xác nhận để Trung tâm kích hoạt luồng xanh giao thông và đồng bộ hành trình xe theo thời gian thực.
       </p>
 
-      <!-- Big 1-Touch Confirm Button -->
-      <button class="btn btn-emergency-touch" id="btn-confirm-dispatch-order"
-        style="width:100%;min-height:54px;font-size:15px;letter-spacing:0.5px;font-weight:800;border-radius:12px;box-shadow:0 8px 24px rgba(229,37,33,0.65);">
-        XÁC NHẬN NHẬN LỆNH & XUẤT PHÁT
-      </button>
-    </div>
-  </div>
-
-  <!-- ================= 7. MODAL DRIVER SOS & HỖ TRỢ KHẨN (TX-02) ================= -->
-  <div class="bottom-sheet-backdrop" id="modal-driver-sos">
-    <div class="bottom-sheet-modal">
-      <div class="bottom-sheet-handle"></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-        <h3 style="color:#FFFFFF;margin:0;font-size:16px;font-weight:800;">TRỢ GIÚP & BÁO CÁO SỰ CỐ XE KHẨN CẤP</h3>
-        <button class="btn btn-default btn-xs" id="btn-close-sos-modal"
-          style="font-size:11px;padding:2px 8px;">Đóng</button>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <div class="driver-sos-option-card" data-sos-type="ACCIDENT">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FF4D47" stroke-width="2.5">
-            <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-          </svg>
-          <div>
-            <strong style="color:#FFFFFF;font-size:13.5px;display:block;">Xe cứu thương gặp sự cố / va chạm</strong>
-            <span style="font-size:11.5px;color:#94A3B8;">Yêu cầu Trung tâm điều động xe khác thay thế lập tức</span>
+      <!-- Slider vuốt từ trái sang phải để nhận lệnh & xuất phát -->
+      <div class="slide-confirm-container" id="dispatch-slide-box" style="margin-top:4px;width:100%;">
+        <div class="slide-track" id="dispatch-slider-track"
+          style="height:54px;position:relative;background:linear-gradient(90deg, #1e1b4b 0%, #0f172a 100%);border:1.5px solid rgba(239,68,68,0.55);border-radius:27px;overflow:hidden;box-shadow:inset 0 2px 6px rgba(0,0,0,0.6), 0 4px 16px rgba(229,37,33,0.25);">
+          <div class="slide-fill" id="dispatch-slider-fill"
+            style="position:absolute;left:0;top:0;height:100%;background:linear-gradient(90deg, #dc2626, #ef4444);width:0;border-radius:27px;transition:width 0.1s ease;">
           </div>
-        </div>
-
-        <div class="driver-sos-option-card" data-sos-type="TRAFFIC">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.5">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-          </svg>
-          <div>
-            <strong style="color:#FFFFFF;font-size:13.5px;display:block;">Ùn tắc nghiêm trọng / Cần CSGT hỗ
-              trợ</strong>
-            <span style="font-size:11.5px;color:#94A3B8;">Trung tâm kết nối cảnh sát giao thông mở đường ưu
-              tiên</span>
-          </div>
-        </div>
-
-        <div class="driver-sos-option-card" data-sos-type="SECURITY">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.5">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          </svg>
-          <div>
-            <strong style="color:#FFFFFF;font-size:13.5px;display:block;">Nguy cơ an ninh / Bạo lực tại hiện
-              trường</strong>
-            <span style="font-size:11.5px;color:#94A3B8;">Yêu cầu lực lượng công an phường hỗ trợ bảo vệ kíp cấp
-              cứu</span>
-          </div>
-        </div>
-
-        <div class="driver-sos-option-card" data-sos-type="CONSULT">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-          </svg>
-          <div>
-            <strong style="color:#FFFFFF;font-size:13.5px;display:block;">Yêu cầu Bác sĩ Trung tâm hội chẩn từ
-              xa</strong>
-            <span style="font-size:11.5px;color:#94A3B8;">Bệnh nhân diễn biến phức tạp cần chỉ đạo chuyên môn
-              gấp</span>
+          <span class="slide-text" id="dispatch-slider-label"
+            style="position:absolute;width:100%;text-align:center;line-height:54px;color:#F1F5F9;font-weight:800;font-size:12px;letter-spacing:0.8px;user-select:none;pointer-events:none;z-index:2;text-shadow:0 1px 3px rgba(0,0,0,0.8);">
+            VUỐT SANG PHẢI: XÁC NHẬN NHẬN LỆNH ❯❯❯
+          </span>
+          <div class="slide-knob" id="dispatch-slider-knob"
+            style="position:absolute;left:4px;top:4px;width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 35% 35%, #EF4444 0%, #DC2626 75%, #991B1B 100%);display:flex;align-items:center;justify-content:center;color:#FFFFFF;cursor:grab;touch-action:none;box-shadow:0 3px 12px rgba(0,0,0,0.6), 0 0 14px rgba(239,68,68,0.7);z-index:3;transition:transform 0.1s ease;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
           </div>
         </div>
       </div>
 
-      <button class="btn btn-emergency-touch" id="btn-submit-sos-alert" style="margin-top:14px;min-height:50px;">
-        PHÁT TÍN HIỆU ƯU TIÊN VỀ TRUNG TÂM
+      <!-- Nút Từ chối nhận ca -->
+      <button type="button" class="btn btn-ghost" id="btn-reject-dispatch-order"
+        style="width:100%;margin-top:10px;min-height:38px;padding:8px 14px;border:1px solid rgba(239,68,68,0.35);border-radius:10px;background:rgba(239,68,68,0.08);color:#fca5a5;font-size:12.5px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;transition:all 0.2s ease;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="15" y1="9" x2="9" y2="15"></line>
+          <line x1="9" y1="9" x2="15" y2="15"></line>
+        </svg>
+        <span>Từ chối nhận ca</span>
       </button>
     </div>
   </div>
+
+
 
   <!-- ================= 8. MODAL CHỌN XE DEMO (TX-00) ================= -->
   <div class="bottom-sheet-backdrop" id="modal-vehicle-picker">
