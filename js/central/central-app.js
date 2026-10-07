@@ -265,6 +265,13 @@
       const isHospital = user.role === 'HOSPITAL_RECEIVER';
       document.body.classList.toggle('hospital-mode', isHospital);
 
+      const brandTitleEl = document.querySelector('.sidebar-brand-title');
+      if (brandTitleEl) {
+        brandTitleEl.innerHTML = isHospital
+          ? 'CỔNG TIẾP NHẬN<br> & CẤP CỨU'
+          : 'TRUNG TÂM GIÁM SÁT<br> & ĐIỀU HÀNH';
+      }
+
       const avatarEl = document.getElementById('header-user-avatar');
       const logoutBtn = document.getElementById('btn-logout');
 
@@ -501,6 +508,13 @@
 
       const currentUser = window.StateManager.getCurrentUser();
       const isHospital = currentUser?.role === 'HOSPITAL_RECEIVER';
+
+      const brandTitleEl = document.querySelector('.sidebar-brand-title');
+      if (brandTitleEl) {
+        brandTitleEl.innerHTML = isHospital
+          ? 'CỔNG TIẾP NHẬN<br> & CẤP CỨU'
+          : 'TRUNG TÂM GIÁM SÁT<br> & ĐIỀU HÀNH';
+      }
       const chevronSvg = `<svg class="nav-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
 
       // Initialize collapse toggle button event
@@ -783,9 +797,12 @@
         const rawTitle = menuTitles[this.currentMenu] || 'Trung tâm Điều hành Cấp cứu 115';
         const parts = rawTitle.split('/').map(p => p.trim());
         const titleHtml = parts.map(p => `<span>${p}</span>`).join('<span style="color:var(--text-muted);font-size:11px;margin:0 2px;">/</span>');
+        const isHospital = this.isHospitalMode();
+        const portalPrefix = isHospital ? 'CỔNG TIẾP NHẬN & CẤP CỨU' : 'TRUNG TÂM GIÁM SÁT & ĐIỀU HÀNH';
+        const prefixColor = isHospital ? '#34D399' : '#60A5FA';
         headerLeft.innerHTML = `
           <div style="display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--text-white);font-weight:600;">
-            <span style="color:#60A5FA;font-weight:600;letter-spacing:0.2px;">TRUNG TÂM GIÁM SÁT VÀ ĐIỀU HÀNH</span>
+            <span style="color:${prefixColor};font-weight:600;letter-spacing:0.2px;">${portalPrefix}</span>
             <span style="color:var(--text-muted);font-size:11px;">/</span>
             ${titleHtml}
           </div>

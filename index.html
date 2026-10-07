@@ -39,9 +39,9 @@
     .hub-container {
       position: relative;
       z-index: 1;
-      max-width: 1200px;
+      max-width: 1280px;
       margin: 0 auto;
-      padding: 48px 24px 32px;
+      padding: 40px 24px 32px;
       flex: 1;
       display: flex;
       flex-direction: column;
@@ -52,7 +52,7 @@
     /* Header */
     .hub-header {
       text-align: center;
-      margin-bottom: 48px;
+      margin-bottom: 40px;
     }
 
     .badge-pill {
@@ -98,7 +98,7 @@
     }
 
     .hub-title {
-      font-size: 32px;
+      font-size: 30px;
       font-weight: 700;
       color: #FFFFFF;
       letter-spacing: -0.5px;
@@ -109,7 +109,7 @@
     .hub-subtitle {
       font-size: 16px;
       color: var(--text-gray);
-      max-width: 680px;
+      max-width: 720px;
       margin: 0 auto;
       line-height: 1.6;
     }
@@ -117,9 +117,9 @@
     /* Portal Grid */
     .portal-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 24px;
-      margin-bottom: 48px;
+      margin-bottom: 40px;
     }
 
     .portal-card {
@@ -127,7 +127,7 @@
       border: 1px solid var(--border-main);
       backdrop-filter: blur(12px);
       border-radius: 14px;
-      padding: 32px 28px;
+      padding: 28px 26px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -159,29 +159,33 @@
       background: linear-gradient(90deg, #E52521, #FF5A55);
     }
 
-    .portal-card.card-citizen:hover::before {
-      background: linear-gradient(90deg, #06B6D4, #3B82F6);
+    .portal-card.card-hospital:hover::before {
+      background: linear-gradient(90deg, #10B981, #059669);
     }
 
     .portal-card.card-driver:hover::before {
       background: linear-gradient(90deg, #F59E0B, #10B981);
     }
 
+    .portal-card.card-citizen:hover::before {
+      background: linear-gradient(90deg, #06B6D4, #3B82F6);
+    }
+
     .card-top {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
     }
 
     .icon-wrapper {
-      width: 52px;
-      height: 52px;
+      width: 48px;
+      height: 48px;
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
+      font-size: 22px;
     }
 
     .icon-central {
@@ -190,16 +194,22 @@
       border: 1px solid rgba(229, 37, 33, 0.3);
     }
 
-    .icon-citizen {
-      background: rgba(6, 182, 212, 0.15);
-      color: #38BDF8;
-      border: 1px solid rgba(6, 182, 212, 0.3);
+    .icon-hospital {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34D399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
     }
 
     .icon-driver {
       background: rgba(245, 158, 11, 0.15);
       color: #FBBF24;
       border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .icon-citizen {
+      background: rgba(6, 182, 212, 0.15);
+      color: #38BDF8;
+      border: 1px solid rgba(6, 182, 212, 0.3);
     }
 
     .device-tag {
@@ -215,30 +225,30 @@
     }
 
     .card-content h3 {
-      font-size: 20px;
+      font-size: 19px;
       font-weight: 700;
       color: #FFFFFF;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .card-content p {
-      font-size: 14px;
+      font-size: 13.5px;
       color: var(--text-gray);
-      line-height: 1.6;
-      margin-bottom: 20px;
+      line-height: 1.55;
+      margin-bottom: 18px;
     }
 
     .feature-list {
       list-style: none;
       padding: 0;
-      margin: 0 0 24px 0;
+      margin: 0 0 22px 0;
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
 
     .feature-list li {
-      font-size: 13px;
+      font-size: 12.5px;
       color: var(--text-muted);
       display: flex;
       align-items: center;
@@ -256,9 +266,9 @@
       justify-content: center;
       gap: 8px;
       width: 100%;
-      padding: 12px 18px;
+      padding: 11px 16px;
       border-radius: 8px;
-      font-size: 14px;
+      font-size: 13.5px;
       font-weight: 600;
       background: var(--bg-elevated);
       color: #FFFFFF;
@@ -276,6 +286,27 @@
       border-color: #E52521;
       color: #FFFFFF;
       box-shadow: 0 4px 14px rgba(229, 37, 33, 0.4);
+    }
+
+    .portal-card.card-hospital:hover .card-btn {
+      background: #059669;
+      border-color: #059669;
+      color: #FFFFFF;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+    }
+
+    .portal-card.card-driver:hover .card-btn {
+      background: #D97706;
+      border-color: #D97706;
+      color: #FFFFFF;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+    }
+
+    .portal-card.card-citizen:hover .card-btn {
+      background: #0284C7;
+      border-color: #0284C7;
+      color: #FFFFFF;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
     }
 
     /* Footer */
@@ -312,13 +343,13 @@
       background: #10B981;
     }
 
-    @media (max-width: 768px) {
-      .hub-title {
-        font-size: 24px;
-      }
-
+    @media (max-width: 900px) {
       .portal-grid {
         grid-template-columns: 1fr;
+      }
+
+      .hub-title {
+        font-size: 24px;
       }
 
       .hub-footer {
@@ -335,14 +366,14 @@
     <header class="hub-header">
       <h1 class="hub-title">HỆ THỐNG GIÁM SÁT VÀ ĐIỀU HÀNH PHƯƠNG TIỆN CẤP CỨU NGOẠI VIỆN</h1>
       <p class="hub-subtitle">
-        Cổng điều phối và ứng dụng Cấp Cứu Ngoại Viện. Chọn phân hệ bên dưới để bắt đầu truy cập hệ thống
+        Chọn phân hệ bên dưới để bắt đầu truy cập hệ thống
       </p>
     </header>
 
     <!-- Portal Cards -->
     <main class="portal-grid">
-      <!-- 1. Central Dispatch -->
-      <a href="central.html" class="portal-card card-central" id="link-central">
+      <!-- 1. Trung tâm - EAMS Central -->
+      <a href="central.html" class="portal-card card-central" id="link-central" onclick="sessionStorage.setItem('ccnv_logged_in_user', 'dpv01')">
         <div>
           <div class="card-top">
             <div class="icon-wrapper icon-central">
@@ -353,12 +384,11 @@
                 <line x1="12" y1="17" x2="12" y2="21"></line>
               </svg>
             </div>
-            <span class="device-tag">Desktop Console</span>
+            <span class="device-tag">Máy tính để bàn</span>
           </div>
           <div class="card-content">
-            <h3>Trung Tâm Điều Hành</h3>
-            <p>Hệ thống giám sát, tiếp nhận cuộc gọi khẩn cấp, bản đồ GIS thời gian thực và điều phối mạng lưới xe cấp
-              cứu toàn thành phố.</p>
+            <h3>Trung Tâm Giám Sát & Điều Hành</h3>
+            <p>Hệ thống giám sát tổng thể, tiếp nhận cuộc gọi khẩn cấp 115, bản đồ GIS thời gian thực và điều phối mạng lưới xe cấp cứu toàn thành phố.</p>
             <ul class="feature-list">
               <li>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
@@ -386,7 +416,97 @@
         </div>
       </a>
 
-      <!-- 2. Citizen App -->
+      <!-- 2. Bệnh viện tiếp nhận - EAMS Hospital -->
+      <a href="central.html" class="portal-card card-hospital" id="link-hospital" onclick="sessionStorage.setItem('ccnv_logged_in_user', 'bvtu.tn')">
+        <div>
+          <div class="card-top">
+            <div class="icon-wrapper icon-hospital">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 21h18"></path>
+                <path d="M5 21V7l8-4v18"></path>
+                <path d="M19 21V11l-6-3"></path>
+                <path d="M9 9h1"></path>
+                <path d="M9 13h1"></path>
+                <path d="M9 17h1"></path>
+              </svg>
+            </div>
+            <span class="device-tag">Máy tính / Bệnh viện</span>
+          </div>
+          <div class="card-content">
+            <h3>Cổng Tiếp Nhận & Cấp Cứu Bệnh Viện</h3>
+            <p>Hệ thống dành cho các cơ sở y tế tiếp nhận thông tin bệnh nhân trước viện, xem hồ sơ bệnh án điện tử (ePCR) và xác nhận sẵn sàng tiếp nhận.</p>
+            <ul class="feature-list">
+              <li>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Cảnh báo trước ca cấp cứu đang di chuyển tới
+              </li>
+              <li>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Xem bệnh án điện tử ePCR & sinh hiệu thời gian thực
+              </li>
+              <li>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Xác nhận tiếp nhận & cập nhật năng lực giường bệnh
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="card-btn">
+          Mở Cổng Tiếp Nhận &rarr;
+        </div>
+      </a>
+
+      <!-- 3. Driver / Kíp xe - EAMS Crew -->
+      <a href="driver.html" class="portal-card card-driver" id="link-driver">
+        <div>
+          <div class="card-top">
+            <div class="icon-wrapper icon-driver">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+              </svg>
+            </div>
+            <span class="device-tag">Điện thoại / Máy tính bảng</span>
+          </div>
+          <div class="card-content">
+            <h3>Ứng Dụng Kíp Cấp Cứu & Lái Xe</h3>
+            <p>Ứng dụng dành cho kíp cấp cứu trên xe tiếp nhận lệnh điều động từ trung tâm, dẫn đường GIS và cập nhật hồ sơ bệnh nhân.</p>
+            <ul class="feature-list">
+              <li>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Nhận ca điều động với âm thanh cảnh báo
+              </li>
+              <li>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Dẫn đường GPS tới hiện trường & bệnh viện
+              </li>
+              <li>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Cập nhật sinh hiệu & trạng thái ca cấp cứu
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="card-btn">
+          Mở App Kíp Xe &rarr;
+        </div>
+      </a>
+
+      <!-- 4. Người dân - EAMS Citizen -->
       <a href="citizen.html" class="portal-card card-citizen" id="link-citizen">
         <div>
           <div class="card-top">
@@ -397,12 +517,11 @@
                 <line x1="12" y1="18" x2="12.01" y2="18"></line>
               </svg>
             </div>
-            <span class="device-tag">Mobile</span>
+            <span class="device-tag">Ứng dụng di động</span>
           </div>
           <div class="card-content">
-            <h3>Cổng Người Dân</h3>
-            <p>Ứng dụng hỗ trợ người dân gọi cấp cứu 115 một chạm, truyền tọa độ GPS chuẩn xác, tra cứu cẩm nang sơ cứu
-              tại chỗ.</p>
+            <h3>Cổng Cứu Nạn & Cấp Cứu Người Dân</h3>
+            <p>Ứng dụng hỗ trợ người dân gọi cấp cứu 115 một chạm, truyền tọa độ GPS chuẩn xác, tra cứu cẩm nang sơ cứu tại chỗ.</p>
             <ul class="feature-list">
               <li>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
@@ -427,50 +546,6 @@
         </div>
         <div class="card-btn">
           Mở App Người Dân &rarr;
-        </div>
-      </a>
-
-      <!-- 3. Driver & Crew App -->
-      <a href="driver.html" class="portal-card card-driver" id="link-driver">
-        <div>
-          <div class="card-top">
-            <div class="icon-wrapper icon-driver">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
-              </svg>
-            </div>
-            <span class="device-tag">Mobile / Tablet</span>
-          </div>
-          <div class="card-content">
-            <h3>App Kíp Xe & Tài Xế</h3>
-            <p>Ứng dụng dành cho kíp cấp cứu trên xe tiếp nhận lệnh điều động từ trung tâm, dẫn đường GIS và cập nhật hồ
-              sơ bệnh nhân.</p>
-            <ul class="feature-list">
-              <li>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-                Nhận ca điều động với âm thanh cảnh báo
-              </li>
-              <li>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-                Dẫn đường GPS tới hiện trường & bệnh viện
-              </li>
-              <li>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-                Cập nhật sinh hiệu & trạng thái ca cấp cứu
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div class="card-btn">
-          Mở App Tài Xế &rarr;
         </div>
       </a>
     </main>
