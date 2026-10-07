@@ -206,8 +206,8 @@ window.SEED_DATA = {
       "id": "VEH-07",
       "plate": "65A-012.34",
       "type": "Type A",
-      "typeName": "Hồi sức cấp cứu cao cấp (ICU di động)",
-      "station": "Trạm Cấp cứu Cái Răng (Kíp 3)",
+      "typeName": "Hồi sức cấp cứu cao cấp",
+      "station": "Trạm Cấp cứu Cái Răng",
       "stationId": "ST_CR",
       "coords": [10.0105, 105.7700],
       "mapPos": { "x": 530, "y": 590 },
@@ -625,4 +625,4 @@ window.SEED_DATA = {
     { "id": "LOG-106", "time": "08:18:20", "user": "CREW-03", "action": "Xe 65A-012.34 đến hiện trường Cầu Hưng Lợi" }
   ]
 }
-;
+  ;

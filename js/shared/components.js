@@ -101,8 +101,31 @@
   // --- 3. TOAST SYSTEM ---
   const Toast = {
     show(title, desc = '', isEmergency = false, duration = 4000) {
-      // Disabled toast notifications across all screens per user request
-      return;
+      try {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+          container = document.createElement('div');
+          container.id = 'toast-container';
+          document.body.appendChild(container);
+        }
+        const el = document.createElement('div');
+        el.className = `toast ${isEmergency ? 'toast-emergency' : ''}`;
+        el.innerHTML = `
+          <div class="toast-content">
+            <div class="toast-title">${title}</div>
+            ${desc ? `<div class="toast-desc">${desc}</div>` : ''}
+          </div>
+        `;
+        container.appendChild(el);
+        setTimeout(() => {
+          el.style.opacity = '0';
+          el.style.transform = 'translateY(12px)';
+          el.style.transition = 'all 0.3s ease';
+          setTimeout(() => el.remove(), 300);
+        }, duration);
+      } catch (e) {
+        console.warn('Toast display failed:', e);
+      }
     }
   };
 

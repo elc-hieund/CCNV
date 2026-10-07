@@ -251,33 +251,56 @@
         };
       });
 
-      // 2. Hospitals (xanh nước biển, Bệnh viện Đa khoa thành phố Cần Thơ làm nổi bật vì là trung tâm)
+      // Helper to format short hospital names for map display
+      const formatHospShortName = (fullName) => {
+        if (!fullName) return '';
+        let s = fullName.trim();
+        s = s.replace(/Bệnh viện Đa khoa thành phố Cần Thơ/gi, 'BVĐK TP Cần Thơ');
+        s = s.replace(/Bệnh viện Đa khoa TP Cần Thơ/gi, 'BVĐK TP Cần Thơ');
+        s = s.replace(/Bệnh viện Đa khoa Trung ương Cần Thơ/gi, 'BVĐK TW Cần Thơ');
+        s = s.replace(/Bệnh viện Ung bướu Cần Thơ/gi, 'BV Ung bướu Cần Thơ');
+        s = s.replace(/Bệnh viện Nhi đồng Cần Thơ/gi, 'BV Nhi đồng Cần Thơ');
+        s = s.replace(/Bệnh viện Đa khoa/gi, 'BVĐK');
+        s = s.replace(/Bệnh viện/gi, 'BV');
+        s = s.replace(/thành phố/gi, 'TP');
+        return s;
+      };
+
+      // 2. Hospitals (xanh nước biển, Bệnh viện Đa khoa TP Cần Thơ làm nổi bật vì là trung tâm)
       hospitals.forEach(h => {
         const coords = h.coords || CITY_CENTER;
         const isRestricted = h.status === 'RESTRICTED';
-        const isCenter = h.isCenter || h.id === 'HOSP_BVDK' || h.name?.includes('Đa khoa thành phố Cần Thơ') || h.name?.includes('Đa khoa thành phố Cần Thơ');
-        const statusLabel = h.statusText || (isRestricted ? 'Hạn chế' : 'Đang nhận');
-        const displayName = h.name.startsWith('BV ') ? h.name.replace(/^BV\s+/, 'Bệnh viện ') : h.name;
+        const isCenter = h.isCenter || h.id === 'HOSP_BVDK' || h.name?.includes('Đa khoa thành phố Cần Thơ') || h.name?.includes('Đa khoa TP Cần Thơ');
+        const statusLabel = isRestricted ? 'HẠN CHẾ' : 'SẴN SÀNG';
+        const fullDisplayName = h.name.startsWith('BV ') ? h.name.replace(/^BV\s+/, 'Bệnh viện ') : h.name;
+        const shortName = formatHospShortName(fullDisplayName);
+
         const icon = window.L.divIcon({
           className: 'map-leaflet-marker',
           html: `
             <div class="map-hosp-hub-badge ${isCenter ? 'is-center-hospital' : ''}">
               <div class="map-hosp-shield ${isCenter ? 'is-center' : ''} ${isRestricted ? 'restricted' : ''}">
                 <div class="map-hosp-cross-icon">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round">
-                    <line x1="12" y1="4" x2="12" y2="20"></line>
-                    <line x1="4" y1="12" x2="20" y2="12"></line>
-                  </svg>
+                  ${isCenter ? `
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                  ` : `
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round">
+                      <line x1="12" y1="4" x2="12" y2="20"></line>
+                      <line x1="4" y1="12" x2="20" y2="12"></line>
+                    </svg>
+                  `}
                 </div>
-                <span class="map-hosp-title-text" title="${displayName}">${displayName}</span>
+                <span class="map-hosp-title-text" title="${fullDisplayName}">${shortName}</span>
                 <span class="map-hosp-bed-chip" title="Trạng thái tiếp nhận cấp cứu">${isCenter ? 'TRUNG TÂM · ' + statusLabel : statusLabel}</span>
               </div>
             </div>
           `,
-          iconSize: [280, 40],
-          iconAnchor: [140, 20]
+          iconSize: [230, 44],
+          iconAnchor: [115, 22]
         });
-        const marker = window.L.marker(coords, { icon, zIndexOffset: isCenter ? 250 : 100 }).addTo(this.map);
+        const marker = window.L.marker(coords, { icon, zIndexOffset: isCenter ? 350 : 100 }).addTo(this.map);
         marker.bindPopup(this.createHospitalPopupHtml(h), { autoPan: false });
         marker.on('click', () => this.onHospitalSelect?.(h.id));
         this.hospitalMarkers[h.id] = { marker, data: h };

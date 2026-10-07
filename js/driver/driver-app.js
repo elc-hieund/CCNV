@@ -714,29 +714,33 @@ document.addEventListener('DOMContentLoaded', async () => {
           sceneMarker.setLatLng(scenePt);
         }
 
-        // 2. Marker Bệnh viện đích
+        // 2. Marker Bệnh viện đích (Thiết kế lại nổi bật, dễ nhìn)
         if (!hospMarker) {
           const hospIcon = window.L.divIcon({
             className: 'map-leaflet-marker',
             html: `
-              <div class="map-hosp-hub-badge">
-                <div class="map-hosp-cross-icon">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                  </svg>
+              <div class="map-hosp-hub-badge driver-hosp-pin">
+                <div class="map-hosp-shield" style="border-color:#10B981;box-shadow:0 0 16px rgba(16,185,129,0.5);">
+                  <div class="map-hosp-cross-icon" style="background:linear-gradient(135deg, #10B981, #047857);box-shadow:0 0 10px rgba(16,185,129,0.8);">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                  </div>
+                  <div style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;">
+                    <span class="map-hosp-title-text" style="color:#FFFFFF;font-weight:700;font-size:11.5px;letter-spacing:0.2px;">BVĐK TP CẦN THƠ</span>
+                    <span class="map-hosp-bed-chip" style="background:rgba(16,185,129,0.25);color:#34D399;font-weight:600;font-size:10px;padding:1px 5px;border-radius:4px;margin-top:1px;">🏥 ĐÍCH TIẾP NHẬN • SẴN SÀNG</span>
+                  </div>
                 </div>
-                <span class="map-hosp-title-text">BỆNH VIỆN ĐA KHOA THÀNH PHỐ CẦN THƠ</span>
-                <span class="map-hosp-bed-chip">Đích tiếp nhận</span>
               </div>
             `,
-            iconSize: [320, 32],
-            iconAnchor: [160, 16]
+            iconSize: [220, 42],
+            iconAnchor: [110, 42]
           });
 
           hospMarker = window.L.marker(hospPt, { icon: hospIcon, zIndexOffset: 300 })
             .addTo(driverMap)
-            .bindPopup('<b>BỆNH VIỆN TIẾP NHẬN</b><br>Bệnh viện Đa khoa thành phố Cần Thơ (Cổng Cấp cứu)');
+            .bindPopup('<b>BỆNH VIỆN TIẾP NHẬN</b><br>Bệnh viện Đa khoa TP Cần Thơ (Cổng Cấp cứu)');
         } else {
           hospMarker.setLatLng(hospPt);
         }
@@ -1213,6 +1217,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         toggleMissionDock();
       });
 
+      btnDriverSos?.addEventListener('click', () => {
+        modalDriverSos?.classList.add('active');
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      });
+
       btnCloseSosModal?.addEventListener('click', () => {
         modalDriverSos?.classList.remove('active');
       });
@@ -1227,6 +1236,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             );
           }
         });
+      });
+
+      document.getElementById('btn-submit-sos-alert')?.addEventListener('click', () => {
+        modalDriverSos?.classList.remove('active');
+        if (window.CCNV_UI?.Toast) {
+          window.CCNV_UI.Toast.show(
+            'ĐÃ GỬI TÍN HIỆU SOS KHẨN CẤP',
+            'Trung tâm điều hành 115 Cần Thơ đã nhận được cảnh báo ưu tiên từ xe 65A-012.34.',
+            true
+          );
+        }
       });
 
       // Modal Đổi xe (Vehicle Switcher)
@@ -1294,6 +1314,28 @@ document.addEventListener('DOMContentLoaded', async () => {
           console.warn('AudioContext not allowed without user gesture yet:', e);
         }
       }
+
+      // Audio summary player for patient info
+      window.playPatientAudioSummary = function() {
+        const pName = document.getElementById('driver-patient-name')?.innerText || 'Phan Văn Đức';
+        const pDemo = document.getElementById('driver-patient-demographics')?.innerText || '58 tuổi, Nam';
+        const pSymp = document.getElementById('driver-patient-symptoms')?.innerText || 'Chấn thương sọ não, đa chấn thương phần mềm';
+        const pLoc = document.getElementById('driver-scene-address')?.innerText || 'Chân Cầu Hưng Lợi';
+
+        const textToSpeech = `Tóm tắt ca cấp cứu: Bệnh nhân ${pName}, ${pDemo}. Tình trạng: ${pSymp}. Vị trí hiện trường: ${pLoc}. Bệnh viện tiếp nhận: Bệnh viện Đa khoa thành phố Cần Thơ.`;
+
+        if (window.CCNV_UI?.Toast) {
+          window.CCNV_UI.Toast.show('🔊 Phát tóm tắt ca cấp cứu', `Đang phát âm thanh tóm tắt cho bệnh nhân ${pName}...`);
+        }
+
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(textToSpeech);
+          utterance.lang = 'vi-VN';
+          utterance.rate = 0.95;
+          window.speechSynthesis.speak(utterance);
+        }
+      };
 
       // Khởi động bản đồ Leaflet
       setTimeout(() => {

@@ -107,7 +107,7 @@
     }
 
     .driver-map-controls.in-mission {
-      top: 86px;
+      top: 112px;
     }
 
     .driver-map-btn {
@@ -135,6 +135,52 @@
 
     #btn-driver-recenter {
       color: #38BDF8;
+    }
+
+    /* Standalone Circular SOS Button (Fixed above bottom dock at circled position) */
+    .driver-floating-sos-standalone {
+      position: absolute;
+      bottom: 236px;
+      right: 14px;
+      z-index: 600 !important;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #EF4444 0%, #B91C1C 75%, #7F1D1D 100%);
+      border: 2px solid rgba(255, 255, 255, 0.75);
+      color: #FFFFFF;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      pointer-events: auto;
+      box-shadow: 0 4px 16px rgba(239, 68, 68, 0.65), 0 0 12px rgba(239, 68, 68, 0.45);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      animation: driver-sos-pulse 2.2s infinite ease-in-out;
+    }
+
+    .driver-floating-sos-standalone:hover,
+    .driver-floating-sos-standalone:active {
+      transform: scale(1.08);
+      box-shadow: 0 6px 24px rgba(239, 68, 68, 0.9), 0 0 18px rgba(239, 68, 68, 0.7);
+    }
+
+    .driver-floating-sos-standalone .sos-icon-label {
+      font-weight: 850;
+      font-size: 13.5px;
+      letter-spacing: 0.8px;
+      color: #FFFFFF;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.75);
+      user-select: none;
+    }
+
+    @keyframes driver-sos-pulse {
+      0%, 100% {
+        box-shadow: 0 4px 16px rgba(239, 68, 68, 0.65), 0 0 0 0 rgba(239, 68, 68, 0.6);
+      }
+      50% {
+        box-shadow: 0 4px 22px rgba(239, 68, 68, 0.9), 0 0 0 8px rgba(239, 68, 68, 0);
+      }
     }
 
     /* Map Marker Capsules */
@@ -316,6 +362,11 @@
           </button>
         </div>
 
+        <!-- Standalone Circular Floating SOS Button (Fixed in place in all scenarios) -->
+        <button type="button" class="driver-floating-sos-standalone" id="driver-btn-sos" title="Phát tín hiệu SOS khẩn cấp" aria-label="Phát tín hiệu SOS">
+          <span class="sos-icon-label">SOS</span>
+        </button>
+
         <!-- 1. Top Turn-by-Turn Guidance HUD (VietMap Style) - Hidden in default mode -->
         <div class="nav-floating-hud" id="nav-floating-hud" style="display:none;">
           <div class="nav-direction-icon-box" id="nav-direction-icon-box"
@@ -379,8 +430,16 @@
               </div>
             </div>
 
-            <!-- Quick Action Trio: Call buttons for Driver (Centered & Phone Icons) -->
+            <!-- Quick Action Trio: Call buttons & Audio Summary for Driver -->
             <div class="quick-action-trio" style="margin-top:8px;">
+              <button class="quick-call-btn" id="btn-audio-summary" onclick="playPatientAudioSummary()" type="button" title="Nghe ghi âm tóm tắt bệnh nhân">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                </svg>
+                <span>Nghe tóm tắt</span>
+              </button>
               <a href="tel:115" class="quick-call-btn" id="btn-call-dispatch">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.5"
                   stroke-linecap="round" stroke-linejoin="round">
