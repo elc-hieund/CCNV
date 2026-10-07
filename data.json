@@ -252,19 +252,19 @@
   "personnel": [
     { "id": "PER-01", "name": "BS. CKI. Nguyễn Văn Thành", "role": "DOCTOR", "roleName": "Bác sĩ Cấp cứu", "cert": "CCHN Hồi sức Cấp cứu - ACLS", "phone": "0913.111.222", "status": "ON_DUTY" },
     { "id": "PER-02", "name": "ĐD. Trần Thị Mai", "role": "NURSE", "roleName": "Điều dưỡng cấp cứu", "cert": "Chứng chỉ Điều dưỡng Ngoại viện", "phone": "0913.333.444", "status": "ON_DUTY" },
-    { "id": "PER-03", "name": "Lê Văn Hùng", "role": "DRIVER", "roleName": "Lái xe cứu thương", "cert": "Bằng lái D + Chứng chỉ Sơ cấp cứu", "phone": "0913.555.666", "status": "ON_DUTY" },
+    { "id": "PER-03", "name": "LX. Lê Văn Hùng", "role": "DRIVER", "roleName": "Lái xe cứu thương", "cert": "Bằng lái D + Chứng chỉ Sơ cấp cứu", "phone": "0913.555.666", "status": "ON_DUTY" },
     { "id": "PER-04", "name": "BS. Hoàng Quốc Việt", "role": "DOCTOR", "roleName": "Bác sĩ Cấp cứu", "cert": "CCHN Hồi sức Cấp cứu - ATLS", "phone": "0908.112.233", "status": "ON_DUTY" },
     { "id": "PER-05", "name": "ĐD. Phạm Minh Tuấn", "role": "NURSE", "roleName": "Điều dưỡng cấp cứu", "cert": "Chứng chỉ Hồi sinh Tim phổi nâng cao", "phone": "0908.445.566", "status": "ON_DUTY" },
-    { "id": "PER-06", "name": "Đỗ Hữu Tài", "role": "DRIVER", "roleName": "Lái xe cứu thương", "cert": "Bằng lái D + Tập huấn Lái xe an toàn khẩn cấp", "phone": "0908.778.899", "status": "ON_DUTY" },
+    { "id": "PER-06", "name": "LX. Đỗ Hữu Tài", "role": "DRIVER", "roleName": "Lái xe cứu thương", "cert": "Bằng lái D + Tập huấn Lái xe an toàn khẩn cấp", "phone": "0908.778.899", "status": "ON_DUTY" },
     { "id": "PER-07", "name": "BS. Võ Văn Kiệt", "role": "DOCTOR", "roleName": "Bác sĩ Cấp cứu", "cert": "CCHN Cấp cứu đa khoa", "phone": "0939.001.002", "status": "ON_DUTY" },
     { "id": "PER-08", "name": "ĐD. Nguyễn Thị Thúy", "role": "NURSE", "roleName": "Điều dưỡng cấp cứu", "cert": "Chứng chỉ Chăm sóc Bệnh nhân nguy kịch", "phone": "0939.003.004", "status": "ON_DUTY" },
-    { "id": "PER-09", "name": "Trần Văn Bình", "role": "DRIVER", "roleName": "Lái xe cứu thương", "cert": "Bằng lái D", "phone": "0939.005.006", "status": "ON_DUTY" },
+    { "id": "PER-09", "name": "LX. Trần Văn Bình", "role": "DRIVER", "roleName": "Lái xe cứu thương", "cert": "Bằng lái D", "phone": "0939.005.006", "status": "ON_DUTY" },
     { "id": "PER-10", "name": "BS. Lê Hồng Phúc", "role": "DOCTOR", "roleName": "Bác sĩ Cấp cứu", "cert": "CCHN Chấn thương chỉnh hình", "phone": "0944.111.333", "status": "ON_DUTY" },
     { "id": "PER-11", "name": "ĐD. Trương Mỹ Hoa", "role": "NURSE", "roleName": "Điều dưỡng cấp cứu", "cert": "Chứng chỉ Sơ cứu vết thương", "phone": "0944.222.444", "status": "ON_DUTY" },
-    { "id": "PER-12", "name": "Nguyễn Hữu Nghĩa", "role": "DRIVER", "roleName": "Lái xe cứu thương", "cert": "Bằng lái D", "phone": "0944.555.777", "status": "ON_DUTY" },
+    { "id": "PER-12", "name": "LX. Nguyễn Hữu Nghĩa", "role": "DRIVER", "roleName": "Lái xe cứu thương", "cert": "Bằng lái D", "phone": "0944.555.777", "status": "ON_DUTY" },
     { "id": "PER-13", "name": "BS. Đặng Văn Nam", "role": "DOCTOR", "roleName": "Bác sĩ Cấp cứu", "cert": "CCHN Nội khoa Cấp cứu", "phone": "0918.234.567", "status": "ON_DUTY" },
     { "id": "PER-14", "name": "ĐD. Bùi Thị Thảo", "role": "NURSE", "roleName": "Điều dưỡng cấp cứu", "cert": "Chứng chỉ Cấp cứu Nhi", "phone": "0918.345.678", "status": "ON_DUTY" },
-    { "id": "PER-15", "name": "Lý Văn Tùng", "role": "DRIVER", "roleName": "Lái xe cứu thương", "cert": "Bằng lái D", "phone": "0918.456.789", "status": "ON_DUTY" }
+    { "id": "PER-15", "name": "LX. Lý Văn Tùng", "role": "DRIVER", "roleName": "Lái xe cứu thương", "cert": "Bằng lái D", "phone": "0918.456.789", "status": "ON_DUTY" }
   ],
   "crews": [
     {
@@ -275,7 +275,7 @@
       "defaultVehicle": "65A-011.15",
       "doctor": "BS. CKI. Nguyễn Văn Thành",
       "nurse": "ĐD. Trần Thị Mai",
-      "driver": "Lê Văn Hùng",
+      "driver": "LX. Lê Văn Hùng",
       "status": "READY",
       "statusText": "Sẵn sàng"
     },
@@ -287,7 +287,7 @@
       "defaultVehicle": "65A-016.88",
       "doctor": "BS. Hoàng Quốc Việt",
       "nurse": "ĐD. Phạm Minh Tuấn",
-      "driver": "Đỗ Hữu Tài",
+      "driver": "LX. Đỗ Hữu Tài",
       "status": "READY",
       "statusText": "Sẵn sàng (Ưu tiên gợi ý)"
     },
@@ -299,7 +299,7 @@
       "defaultVehicle": "65A-012.34",
       "doctor": "BS. Võ Văn Kiệt",
       "nurse": "ĐD. Nguyễn Thị Thúy",
-      "driver": "Trần Văn Bình",
+      "driver": "LX. Trần Văn Bình",
       "status": "READY",
       "statusText": "Sẵn sàng"
     },
@@ -311,7 +311,7 @@
       "defaultVehicle": "65A-018.89",
       "doctor": "BS. Lê Hồng Phúc",
       "nurse": "ĐD. Trương Mỹ Hoa",
-      "driver": "Nguyễn Hữu Nghĩa",
+      "driver": "LX. Nguyễn Hữu Nghĩa",
       "status": "READY",
       "statusText": "Sẵn sàng"
     },
@@ -323,7 +323,7 @@
       "defaultVehicle": "65A-019.99",
       "doctor": "BS. Đặng Văn Nam",
       "nurse": "ĐD. Bùi Thị Thảo",
-      "driver": "Lý Văn Tùng",
+      "driver": "LX. Lý Văn Tùng",
       "status": "READY",
       "statusText": "Sẵn sàng"
     }

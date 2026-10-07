@@ -541,8 +541,8 @@
           </div>
           <div class="nav-submenu">
             <div class="nav-subitem ${this.currentMenu === 'realtime-map' ? 'active' : ''}" data-menu="realtime-map">Bản đồ</div>
-            <div class="nav-subitem ${this.currentMenu === 'vehicles-status' ? 'active' : ''}" data-menu="vehicles-status">Tình trạng xe</div>
-            <div class="nav-subitem ${this.currentMenu === 'hospitals-status' ? 'active' : ''}" data-menu="hospitals-status">Tình trạng bệnh viện</div>
+            <div class="nav-subitem ${this.currentMenu === 'vehicles-status' ? 'active' : ''}" data-menu="vehicles-status">Xe cứu thương</div>
+            <div class="nav-subitem ${this.currentMenu === 'hospitals-status' ? 'active' : ''}" data-menu="hospitals-status">Đơn vị cấp cứu</div>
           </div>
 
           <!-- 2. CẤP CỨU [Menu đơn duy nhất - Toàn bộ Vòng đời & Tiếp nhận] -->
@@ -736,9 +736,9 @@
         'receiving-status': 'Cấp cứu',
         // 3. Giám sát
         'realtime-map': 'Giám sát / Bản đồ',
-        'vehicles-status': 'Giám sát / Tình trạng xe',
+        'vehicles-status': 'Giám sát / Xe cứu thương',
         'crews-status': 'Giám sát / Kíp trực',
-        'hospitals-status': 'Giám sát / Tình trạng bệnh viện',
+        'hospitals-status': 'Giám sát / Đơn vị cấp cứu',
         // 4. Ca trực
         'shifts-calendar': 'Ca trực',
         'shifts-schedule': 'Ca trực',
@@ -1105,6 +1105,21 @@
         listEl.querySelector('#btn-back-to-veh-list')?.addEventListener('click', (e) => {
           e.stopPropagation();
           setSelection(null);
+        });
+
+        // Nút Chi tiết (đẩy vào màn hình Xe cứu thương)
+        listEl.querySelector('#btn-veh-goto-detail')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const plate = e.currentTarget.getAttribute('data-plate') || targetVeh.plate;
+          this.navigateTo('vehicles-status');
+          setTimeout(() => {
+            const tableMount = document.getElementById('vehicles-status-table-mount');
+            const searchInput = tableMount?.querySelector('input[type="search"], input[type="text"]');
+            if (searchInput) {
+              searchInput.value = plate;
+              searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+          }, 150);
         });
 
         // Nút chuyển chế độ Camera (Cam trước / Cam sau)
@@ -1652,64 +1667,80 @@
             name: 'Điều xe',
             fullName: 'Phát lệnh điều xe',
             actual: getMilestoneTime('DISPATCHED', '08:11:30'),
+            durationText: '45s',
             sla: '08:12:00',
             slaStd: '≤ 2p',
-            diff: 'Sớm 45s',
+            diff: 'Sớm 1p15s',
+            isWithinSla: true,
             status: 'done'
           },
           {
             name: 'Xuất phát',
             fullName: 'Kíp rời trạm',
             actual: getMilestoneTime('CREW_CONFIRMED', '08:12:45'),
+            durationText: '1p 15s',
             sla: '08:14:00',
             slaStd: '≤ 2p',
             diff: 'Sớm 45s',
+            isWithinSla: true,
             status: 'done'
           },
           {
             name: 'Hiện trường',
             fullName: 'Đến hiện trường',
             actual: getMilestoneTime('SCENE_ARRIVED', '08:18:20'),
+            durationText: '5p 35s',
             sla: '08:22:00',
             slaStd: '≤ 8p',
             diff: 'Sớm 2p25s',
+            isWithinSla: true,
             status: 'done'
           },
           {
             name: 'Đến viện',
             fullName: 'Tiếp cận sảnh cấp cứu viện',
             actual: getMilestoneTime('HOSPITAL_ARRIVED', '08:28:40'),
+            durationText: '10p 20s',
             sla: '08:32:00',
             slaStd: '≤ 10p',
-            diff: 'Trong hạn',
+            diff: 'Vượt 20s',
+            isWithinSla: false, // Chặng này 10p20s > 10p SLA -> ĐỎ
             status: resolvedCase?.status === 'COMPLETED' ? 'done' : 'active'
           },
           {
             name: 'Bàn giao',
             fullName: 'Ký bàn giao khoa Cấp cứu',
             actual: getMilestoneTime('HANDOVER_DONE', '08:36:00'),
+            durationText: '--',
             sla: '08:42:00',
             slaStd: '≤ 10p',
             diff: 'Mục tiêu',
+            isWithinSla: true,
             status: resolvedCase?.status === 'COMPLETED' ? 'done' : 'pending'
           }
         ];
 
-        const doneCount = milestones.filter(m => m.status === 'done').length;
-        const hasActive = milestones.some(m => m.status === 'active');
-        const actualProgressPercent = hasActive ? Math.min(85, doneCount * 22 + 10) : (doneCount === 5 ? 100 : doneCount * 20);
+        // 4 phân đoạn giữa 5 mốc tính SLA độc lập
+        const segments = [
+          milestones[1],
+          milestones[2],
+          milestones[3],
+          milestones[4]
+        ];
+
+        const hasExceededMilestone = milestones.some(m => m.status !== 'pending' && !m.isWithinSla);
 
         timelineSectionHtml = `
-          <!-- KHỐI 2 THANH TIMELINE DẠNG NGANG (THỰC TẾ & ĐỊNH MỨC SLA) -->
+          <!-- KHỐI 1 THANH TIMELINE DẠNG NGANG (SLA TÍNH ĐỘC LẬP TỪNG MỐC) -->
           <div class="veh-dispatch-timeline-box">
             <!-- Header thông tin ca & Đánh giá SLA -->
             <div class="veh-dispatch-header">
               <div style="display:flex;align-items:center;gap:6px;">
-                <span class="live-dot" style="width:7px;height:7px;background:#ef4444;"></span>
+                <span class="live-dot" style="width:7px;height:7px;background:${hasExceededMilestone ? '#ef4444' : '#10b981'};"></span>
                 <span style="font-size:11px;font-weight:700;color:var(--text-white);letter-spacing:0.3px;">TIẾN ĐỘ ĐIỀU ĐỘNG & THEO DÕI SLA</span>
               </div>
-              <span class="badge badge-emerald" style="font-size:10px;font-weight:700;font-family:var(--font-mono);padding:2px 6px;">
-                ✔ ĐẠT CHUẨN SLA (-2p15s)
+              <span class="badge ${hasExceededMilestone ? 'badge-warning' : 'badge-emerald'}" style="font-size:10px;font-weight:700;font-family:var(--font-mono);padding:2px 7px;${hasExceededMilestone ? 'background:rgba(239,68,68,0.18);color:#ef4444;border:1px solid rgba(239,68,68,0.45);' : ''}">
+                ${hasExceededMilestone ? '⚠ 1 MỐC VƯỢT SLA' : '✔ CÁC MỐC ĐẠT SLA'}
               </span>
             </div>
 
@@ -1727,82 +1758,87 @@
               </div>
             </div>
 
-            <!-- CỤM 2 THANH TIMELINE DẠNG NGANG -->
+            <!-- THANH TIMELINE 1 LINE DUY NHẤT: CHIA THEO TỪNG MỐC, TÍNH SLA ĐỘC LẬP (XANH / ĐỎ) -->
             <div class="veh-horizontal-timelines">
-              
-              <!-- THANH 1: TIẾN TRÌNH THỜI GIAN THỰC TẾ (ACTUAL) -->
               <div class="timeline-row">
                 <div class="timeline-row-label">
-                  <span style="color:#38bdf8;display:flex;align-items:center;gap:4px;">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    1. Thời gian thực tế
+                  <span style="color:#38bdf8;display:flex;align-items:center;gap:5px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    Tiến trình SLA (Từng mốc độc lập)
                   </span>
                   <span style="color:var(--text-muted);font-family:var(--font-mono);font-size:9.5px;">
-                    Đã chạy: <strong style="color:var(--yellow-vivid);">17p 10s</strong>
+                    Đã chạy: <strong style="color:var(--yellow-vivid);">17p 10s</strong> / Định mức: <strong style="color:#10b981;">≤ 32p</strong>
                   </span>
                 </div>
 
-                <!-- Thanh ngang thực tế với các mốc node -->
+                <!-- 1 Line timeline bar chia mốc với phân đoạn chuyển màu xanh / đỏ -->
                 <div class="timeline-track-wrap">
-                  <div class="timeline-track-bar">
-                    <div class="timeline-track-fill actual" style="width:${actualProgressPercent}%;"></div>
+                  <div class="timeline-segments-track">
+                    ${segments.map(seg => {
+                      let segClass = 'pending';
+                      if (seg.status === 'done') {
+                        segClass = seg.isWithinSla ? 'ok' : 'fail';
+                      } else if (seg.status === 'active') {
+                        segClass = seg.isWithinSla ? 'active-ok' : 'active-fail';
+                      }
+                      return `<div class="timeline-segment-piece ${segClass}" title="${seg.fullName}: ${seg.isWithinSla ? 'Đạt SLA' : 'Vượt SLA'} (${seg.diff})"></div>`;
+                    }).join('')}
                   </div>
+
+                  <!-- 5 Mốc Node -->
                   ${milestones.map((m, idx) => {
-          let dotClass = m.status === 'done' ? 'done' : (m.status === 'active' ? 'active' : 'pending');
-          let iconContent = m.status === 'done'
-            ? '✓'
-            : (m.status === 'active' ? '●' : (idx + 1));
-          return `
-                      <div class="timeline-node-item" title="${m.fullName}: Thực tế ${m.actual}">
+                    let dotClass = 'pending';
+                    let iconContent = idx + 1;
+                    if (m.status === 'done') {
+                      dotClass = m.isWithinSla ? 'sla-ok' : 'sla-fail';
+                      iconContent = m.isWithinSla ? '✓' : '!';
+                    } else if (m.status === 'active') {
+                      dotClass = m.isWithinSla ? 'sla-active-ok' : 'sla-active-fail';
+                      iconContent = m.isWithinSla ? '●' : '!';
+                    }
+                    return `
+                      <div class="timeline-node-item" title="${m.fullName}: Thực tế ${m.actual} · SLA ${m.slaStd} (${m.diff})">
+                        <span class="timeline-node-name">${m.name}</span>
                         <div class="timeline-node-dot ${dotClass}">${iconContent}</div>
-                        <span class="timeline-node-time" style="${m.status === 'active' ? 'color:var(--yellow-vivid);font-weight:700;' : ''}">${m.actual}</span>
+                        <span class="timeline-node-time" style="${!m.isWithinSla && m.status !== 'pending' ? 'color:#ef4444;font-weight:700;' : ''}">${m.actual}</span>
                       </div>
                     `;
-        }).join('')}
+                  }).join('')}
                 </div>
               </div>
 
-              <!-- THANH 2: TIẾN TRÌNH ĐỊNH MỨC SLA (CHUẨN 115) -->
-              <div class="timeline-row" style="margin-top:6px;">
-                <div class="timeline-row-label">
-                  <span style="color:#10b981;display:flex;align-items:center;gap:4px;">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    2. Định mức SLA
-                  </span>
-                  <span style="color:var(--text-muted);font-family:var(--font-mono);font-size:9.5px;">
-                    Định mức: <strong style="color:#10b981;">≤ 32 phút</strong>
-                  </span>
-                </div>
-
-                <!-- Thanh ngang chuẩn SLA với các mốc node -->
-                <div class="timeline-track-wrap">
-                  <div class="timeline-track-bar">
-                    <div class="timeline-track-fill sla" style="width:100%;"></div>
-                  </div>
-                  ${milestones.map(m => `
-                    <div class="timeline-node-item" title="${m.fullName}: SLA ${m.sla} (${m.slaStd})">
-                      <div class="timeline-node-dot sla-node">S</div>
-                      <span class="timeline-node-time" style="color:#38bdf8;">${m.sla}</span>
-                    </div>
-                  `).join('')}
-                </div>
-              </div>
-
-              <!-- BẢNG LƯỚI ĐỐI CHIẾU CHI TIẾT TỪNG MỐC: THỰC TẾ & SLA -->
+              <!-- BẢNG LƯỚI ĐỐI CHIẾU CHI TIẾT TỪNG MỐC: THỰC TẾ & SLA ĐỘC LẬP -->
               <div class="milestones-breakdown-grid">
-                ${milestones.map(m => `
-                  <div class="milestone-col-card" title="${m.fullName}">
-                    <span class="milestone-col-name">${m.name}</span>
-                    <span class="milestone-col-actual">${m.actual}</span>
-                    <span class="milestone-col-sla">SLA ${m.slaStd}</span>
-                    <span class="milestone-col-diff ${m.diff === 'Trong hạn' ? 'current' : (m.diff === 'Mục tiêu' ? 'target' : 'fast')}">
-                      ${m.diff}
-                    </span>
-                  </div>
-                `).join('')}
+                ${milestones.map(m => {
+                  let diffClass = 'target';
+                  let diffLabel = m.diff;
+                  if (m.status !== 'pending') {
+                    if (!m.isWithinSla) {
+                      diffClass = 'exceeded';
+                      diffLabel = `⚠ ${m.diff}`;
+                    } else {
+                      diffClass = 'ok';
+                      diffLabel = `✔ ${m.diff}`;
+                    }
+                  }
+                  return `
+                    <div class="milestone-col-card ${!m.isWithinSla && m.status !== 'pending' ? 'has-exceeded' : ''}" title="${m.fullName}">
+                      <span class="milestone-col-name">${m.name}</span>
+                      <span class="milestone-col-actual">${m.actual}</span>
+                      <span class="milestone-col-duration" style="font-size:8px;font-family:var(--font-mono);color:${!m.isWithinSla && m.status !== 'pending' ? '#ef4444' : '#94a3b8'};">
+                        (${m.durationText})
+                      </span>
+                      <span class="milestone-col-sla">SLA ${m.slaStd}</span>
+                      <span class="milestone-col-diff ${diffClass}">
+                        ${diffLabel}
+                      </span>
+                    </div>
+                  `;
+                }).join('')}
               </div>
 
             </div>
+          </div>
         `;
       } else {
         // Nút mô phỏng nếu xe đang ở chế độ chờ (READY)
@@ -1818,12 +1854,17 @@
 
       return `
         <div class="vehicle-detail-panel-box">
-          <!-- Navigation header: Back to list button -->
+          <!-- Navigation header: Back to list button & Goto full detail button -->
           <div class="veh-detail-nav-header">
-            <button type="button" class="btn-back-to-veh-list" id="btn-back-to-veh-list">
+            <button type="button" class="btn-back-to-veh-list" id="btn-back-to-veh-list" title="Quay lại danh sách xe">
               ‹ Danh sách xe
             </button>
-            <span class="veh-detail-header-title">Chi tiết Phương tiện</span>
+            <button type="button" class="btn-veh-goto-detail" id="btn-veh-goto-detail" data-plate="${v.plate}" title="Xem chi tiết phương tiện trên màn Xe cứu thương">
+              <span>Chi tiết</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
           </div>
 
           <!-- Main Vehicle Overview Header -->
@@ -2121,6 +2162,7 @@
           { id: 'HOSP_BVUB', name: 'Bệnh viện Ung bướu Cần Thơ', hotline: '0292.3817.901', address: 'Số 20 Châu Văn Liêm, P. An Lạc, thành phố Cần Thơ', availableBeds: 6, statusText: 'Đang nhận' }
         ];
         let currentHospitalId = demo ? (demo.hospitalId || 'HOSP_BVTU' || availableHospitals[0]?.id) : null;
+        let isRecAppliedDismissed = false;
 
         let currentSeverity = (activeCall.severity && activeCall.severity.length > 0) ? activeCall.severity : null;
         let currentGender = activeCall.patientGender || '';
@@ -2201,15 +2243,8 @@
                 </div>
               </div>
 
-              <!-- Thanh thao tác ngang cột trái: Nghe lại & Cúp máy -->
+              <!-- Thanh thao tác ngang cột trái: Cúp máy -->
               <div class="voice-hangup-bar">
-                <button type="button" class="btn-voice-replay" id="btn-call-replay" title="Phát lại toàn bộ cuộc gọi từ đầu">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-                    <path d="M3 3v5h5"></path>
-                  </svg>
-                  <span>Nghe lại</span>
-                </button>
                 <button type="button" class="btn-voice-hangup" id="btn-call-hangup" title="Kết thúc cuộc gọi">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91"></path>
@@ -2424,15 +2459,25 @@
                 <div class="rapid-chip-grid" style="grid-template-columns: repeat(3, 1fr); gap: 5px;">
                   ${availablePersonnel.map((p, idx) => {
           const isSelected = currentSelectedPersonnel.has(p.id);
+          const pName = p.name || '';
+          let displayName = pName;
+          if (p.role === 'DRIVER' && !displayName.startsWith('LX.') && !displayName.startsWith('Lái xe')) {
+            displayName = 'LX. ' + displayName;
+          } else if (p.role === 'DOCTOR' && !displayName.startsWith('BS')) {
+            displayName = 'BS. ' + displayName;
+          } else if (p.role === 'NURSE' && !displayName.startsWith('ĐD')) {
+            displayName = 'ĐD. ' + displayName;
+          }
+
           return `
                       <button type="button" tabindex="-1" class="rapid-chip-btn ${isSelected ? 'active' : ''}" data-person-id="${p.id}" data-key="${idx + 1}" style="text-align:left;padding:3px 6px;height:auto;display:flex;align-items:flex-start;gap:6px;">
                         <kbd class="quick-kbd" style="margin-top:1px;font-size:9.5px;padding:1px 4px;">${idx + 1}</kbd>
                         <div class="chip-content" style="flex:1;">
                           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1px;gap:4px;">
-                            <span class="chip-title" style="font-size:11.5px;font-weight:700;color:var(--text-white);">${p.name}</span>
+                            <span class="chip-title" style="font-size:11.5px;font-weight:700;color:var(--text-white);">${displayName}</span>
                           </div>
-                          <div class="chip-desc" style="font-size:9.5px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                            ${p.phone} · ${p.cert || 'Sẵn sàng'}
+                          <div class="chip-desc" style="font-size:10px;color:var(--text-muted);font-family:var(--font-mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                            ${p.phone || ''}
                           </div>
                         </div>
                       </button>
@@ -2480,7 +2525,7 @@
                 </div>
 
                 <div class="form-field" style="margin-bottom:0;">
-                  <textarea id="rapid-symptoms-notes" rows="2" placeholder="Đang nhận dạng triệu chứng từ cuộc gọi...">${activeCall.notes || ''}</textarea>
+                  <textarea id="rapid-symptoms-notes" rows="3" placeholder="Đang nhận dạng triệu chứng từ cuộc gọi...">${activeCall.notes || ''}</textarea>
                 </div>
               </div>
 
@@ -2978,36 +3023,43 @@
           const isFullyApplied = isVehiclesMatch && isCrewMatch && isHospMatch;
 
           box.innerHTML = `
-            <!-- PHẦN 1: TÓM TẮT THÔNG TIN TỪ BƯỚC 1 -->
+            <!-- PHẦN 1: TÓM TẮT THÔNG TIN TỪ BƯỚC 1 (1 DÒNG DUY NHẤT) -->
             <div class="dispatch-summary-row">
-              <div class="summary-meta-item" style="flex:1.4;min-width:260px;">
-                <span style="display:inline-flex;align-items:center;color:#60A5FA;">${window.CCNV_UI.ICONS.users}</span>
-                <div>
-                  <span style="font-size:10.5px;color:var(--text-muted);display:block;margin-bottom:1px;text-transform:uppercase;letter-spacing:0.3px;">Nạn nhân:</span>
-                  <div style="font-size:12px;line-height:1.35;">${patientsSummaryHtml}</div>
+              <div class="summary-meta-item" style="flex:1.2;min-width:0;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;">
+                <span style="display:inline-flex;align-items:center;color:#60A5FA;flex-shrink:0;">${window.CCNV_UI.ICONS.users}</span>
+                <span style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.3px;font-weight:700;flex-shrink:0;">NẠN NHÂN:</span>
+                <div style="font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${patientsSummaryHtml}</div>
+              </div>
+
+              <div class="summary-meta-item" style="flex:1.4;min-width:0;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;">
+                <span style="display:inline-flex;align-items:center;color:#F59E0B;flex-shrink:0;">${window.CCNV_UI.ICONS.mapPin}</span>
+                <span style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.3px;font-weight:700;flex-shrink:0;">HIỆN TRƯỜNG:</span>
+                <div style="font-size:11.5px;color:#FFF;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${address}">${address}</div>
+              </div>
+
+              <div class="summary-meta-item" style="flex:1.4;min-width:0;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;">
+                <span style="display:inline-flex;align-items:center;color:var(--red-vivid);flex-shrink:0;">${window.CCNV_UI.ICONS.alertTriangle}</span>
+                <span style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.3px;font-weight:700;flex-shrink:0;">TÌNH HUỐNG & MỨC ĐỘ:</span>
+                <div style="display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;">
+                  <strong style="color:#FFF;font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${incName}</strong>
+                  ${sevBadge}
                 </div>
               </div>
 
-              <div class="summary-meta-item" style="flex:1.2;min-width:200px;">
-                <span style="display:inline-flex;align-items:center;color:#F59E0B;">${window.CCNV_UI.ICONS.mapPin}</span>
-                <div>
-                  <span style="font-size:10.5px;color:var(--text-muted);display:block;margin-bottom:1px;text-transform:uppercase;letter-spacing:0.3px;">Hiện trường:</span>
-                  <div style="font-size:12px;color:#FFF;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px;" title="${address}">${address}</div>
+              ${isRecAppliedDismissed ? `
+                <div style="margin-left:auto;display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                  <span style="font-size:10.5px;color:#34D399;font-weight:600;display:inline-flex;align-items:center;gap:4px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Đã áp dụng gợi ý
+                  </span>
+                  <button type="button" id="btn-reopen-rec" style="background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);border-radius:4px;color:#38BDF8;font-size:10.5px;font-weight:600;cursor:pointer;padding:2px 7px;white-space:nowrap;transition:all 0.15s ease;" title="Mở lại khung gợi ý chi tiết">
+                    Xem lại gợi ý
+                  </button>
                 </div>
-              </div>
-
-              <div class="summary-meta-item" style="flex:1;min-width:180px;">
-                <span style="display:inline-flex;align-items:center;color:var(--red-vivid);">${window.CCNV_UI.ICONS.alertTriangle}</span>
-                <div>
-                  <span style="font-size:10.5px;color:var(--text-muted);display:block;margin-bottom:1px;text-transform:uppercase;letter-spacing:0.3px;">Tình huống & Mức độ:</span>
-                  <div style="display:flex;align-items:center;gap:6px;line-height:1.35;">
-                    <strong style="color:#FFF;font-size:12px;">${incName}</strong>
-                    ${sevBadge}
-                  </div>
-                </div>
-              </div>
+              ` : ''}
             </div>
 
+            ${isRecAppliedDismissed ? '' : `
             <!-- PHẦN 2: PHƯƠNG ÁN ĐỀ XUẤT TỐI ƯU & NÚT 1-CLICK ÁP DỤNG -->
             <div class="dispatch-rec-proposal-box">
               <div class="dispatch-rec-details">
@@ -3034,22 +3086,28 @@
 
               <div>
                 <button type="button" class="btn-apply-rec ${isFullyApplied ? 'applied' : ''}" id="btn-apply-recommended-dispatch" title="Nhấn để tự động tích chọn toàn bộ các trường xe, kíp và bệnh viện theo phương án tối ưu">
-                  ${isFullyApplied
-              ? `<span style="display:inline-flex;align-items:center;gap:5px;">${window.CCNV_UI.ICONS.check} Đã áp dụng toàn bộ</span>`
-              : `<span style="display:inline-flex;align-items:center;gap:5px;">${window.CCNV_UI.ICONS.activity} Áp dụng phương án gợi ý</span>`
-            }
+                  <span style="display:inline-flex;align-items:center;gap:5px;">${window.CCNV_UI.ICONS.activity} Áp dụng phương án gợi ý</span>
                 </button>
               </div>
             </div>
+            `}
           `;
 
           // Gắn sự kiện 1-Click áp dụng phương án
           box.querySelector('#btn-apply-recommended-dispatch')?.addEventListener('click', () => {
             applyRecommendedDispatch();
           });
+
+          // Gắn sự kiện mở lại khung gợi ý nếu muốn xem lại
+          box.querySelector('#btn-reopen-rec')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            isRecAppliedDismissed = false;
+            renderStep2SummaryAndRecommendation();
+          });
         };
 
         const applyRecommendedDispatch = () => {
+          isRecAppliedDismissed = true;
           const rec = getBestRecommendation();
           currentSelectedPlates = new Set(rec.bestPlates);
           currentVehicleTypes = new Set();
@@ -3872,7 +3930,6 @@
             }
           });
 
-          const btnCallReplay = paneContainer.querySelector('#btn-call-replay');
           const btnHeaderReplay = paneContainer.querySelector('#btn-header-replay');
 
           const replayAudioCall = () => {
@@ -3914,11 +3971,6 @@
             if (this._voiceRafId) cancelAnimationFrame(this._voiceRafId);
             this._voiceRafId = requestAnimationFrame(onVoiceTick);
           };
-
-          btnCallReplay?.addEventListener('click', (e) => {
-            e.stopPropagation();
-            replayAudioCall();
-          });
 
           btnHeaderReplay?.addEventListener('click', (e) => {
             e.stopPropagation();
