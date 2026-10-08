@@ -107,14 +107,38 @@
         }
       }
 
-      // Initialize current user
-      const savedUser = sessionStorage.getItem(STORAGE_KEY_CURRENT_USER);
-      if (savedUser && this.state.accounts.some(a => a.id === savedUser)) {
-        this.currentUser = this.state.accounts.find(a => a.id === savedUser);
-      } else {
-        // Default to dispatcher 01
-        this.currentUser = this.state.accounts[0];
+      // Initialize current user (Support URL search params override e.g. ?role=hospital, ?role=dispatcher)
+      let paramUser = null;
+      if (typeof window !== 'undefined' && window.location && window.location.search) {
+        try {
+          const urlParams = new URLSearchParams(window.location.search);
+          const qRole = (urlParams.get('role') || '').toLowerCase();
+          const qAcc = urlParams.get('account') || urlParams.get('user');
+          if (qAcc && this.state.accounts.some(a => a.id === qAcc || a.username === qAcc)) {
+            paramUser = this.state.accounts.find(a => a.id === qAcc || a.username === qAcc);
+          } else if (qRole === 'hospital' || qRole === 'benhvien') {
+            paramUser = this.state.accounts.find(a => a.role === 'HOSPITAL_RECEIVER') || this.state.accounts[0];
+          } else if (qRole === 'dispatcher' || qRole === 'central' || qRole === 'trungtam') {
+            paramUser = this.state.accounts.find(a => a.role === 'DISPATCHER') || this.state.accounts[0];
+          }
+        } catch (e) {
+          console.warn('Error parsing URL query params:', e);
+        }
+      }
+
+      if (paramUser) {
+        this.currentUser = paramUser;
         sessionStorage.setItem(STORAGE_KEY_CURRENT_USER, this.currentUser.id);
+        sessionStorage.setItem('ccnv_logged_in_user', this.currentUser.id);
+      } else {
+        const savedUser = sessionStorage.getItem(STORAGE_KEY_CURRENT_USER);
+        if (savedUser && this.state.accounts.some(a => a.id === savedUser)) {
+          this.currentUser = this.state.accounts.find(a => a.id === savedUser);
+        } else {
+          // Default to dispatcher 01
+          this.currentUser = this.state.accounts[0];
+          sessionStorage.setItem(STORAGE_KEY_CURRENT_USER, this.currentUser.id);
+        }
       }
 
       window.appState = this.state;

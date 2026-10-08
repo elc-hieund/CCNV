@@ -77,10 +77,21 @@
     return { ll, cum, total: cum[cum.length - 1] };
   }
 
+  function computeBearing(a, b) {
+    if (!a || !b) return 0;
+    const lat1 = a.lat * Math.PI / 180;
+    const lat2 = b.lat * Math.PI / 180;
+    const dLng = (b.lng - a.lng) * Math.PI / 180;
+    const y = Math.sin(dLng) * Math.cos(lat2);
+    const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+    const brng = Math.atan2(y, x) * 180 / Math.PI;
+    return (brng + 360) % 360;
+  }
+
   function pointAt(path, d) {
     const last = path.ll.length - 1;
-    if (d <= 0 || last === 0) return { latlng: path.ll[0], idx: 0 };
-    if (d >= path.total) return { latlng: path.ll[last], idx: last };
+    if (d <= 0 || last === 0) return { latlng: path.ll[0], idx: 0, bearing: 0 };
+    if (d >= path.total) return { latlng: path.ll[last], idx: last, bearing: 0 };
     let lo = 0, hi = last;
     while (hi - lo > 1) {
       const mid = (lo + hi) >> 1;
@@ -89,7 +100,8 @@
     const seg = path.cum[hi] - path.cum[lo];
     const t = seg ? (d - path.cum[lo]) / seg : 0;
     const a = path.ll[lo], b = path.ll[hi];
-    return { latlng: window.L.latLng(a.lat + (b.lat - a.lat) * t, a.lng + (b.lng - a.lng) * t), idx: lo };
+    const bearing = computeBearing(a, b);
+    return { latlng: window.L.latLng(a.lat + (b.lat - a.lat) * t, a.lng + (b.lng - a.lng) * t), idx: lo, bearing };
   }
 
   // Tiến trình xe được giữ qua các lần re-render (theo mã ca)
@@ -272,34 +284,34 @@
         const coords = h.coords || CITY_CENTER;
         const isRestricted = h.status === 'RESTRICTED';
         const isCenter = h.isCenter || h.id === 'HOSP_BVDK' || h.name?.includes('Đa khoa thành phố Cần Thơ') || h.name?.includes('Đa khoa TP Cần Thơ');
-        const statusLabel = isRestricted ? 'HẠN CHẾ' : 'SẴN SÀNG';
-        const fullDisplayName = h.name.startsWith('BV ') ? h.name.replace(/^BV\s+/, 'Bệnh viện ') : h.name;
+        const fullDisplayName = h.name ? (h.name.startsWith('BV ') ? h.name.replace(/^BV\s+/, 'Bệnh viện ') : h.name) : 'Bệnh viện';
         const shortName = formatHospShortName(fullDisplayName);
-
+        const iconW = isCenter ? 144 : 130;
+        const iconH = isCenter ? 58 : 54;
         const icon = window.L.divIcon({
           className: 'map-leaflet-marker',
           html: `
-            <div class="map-hosp-hub-badge ${isCenter ? 'is-center-hospital' : ''}">
-              <div class="map-hosp-shield ${isCenter ? 'is-center' : ''} ${isRestricted ? 'restricted' : ''}">
-                <div class="map-hosp-cross-icon">
-                  ${isCenter ? `
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                    </svg>
-                  ` : `
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round">
-                      <line x1="12" y1="4" x2="12" y2="20"></line>
-                      <line x1="4" y1="12" x2="20" y2="12"></line>
-                    </svg>
-                  `}
-                </div>
-                <span class="map-hosp-title-text" title="${fullDisplayName}">${shortName}</span>
-                <span class="map-hosp-bed-chip" title="Trạng thái tiếp nhận cấp cứu">${isCenter ? 'TRUNG TÂM · ' + statusLabel : statusLabel}</span>
+            <div class="map-hosp-stem-marker ${isCenter ? 'is-center-hospital' : ''} ${isRestricted ? 'restricted' : ''}">
+              <div class="map-hosp-top-card ${isRestricted ? 'is-busy' : 'is-ready'}">
+                <span class="map-hosp-name-line" title="${fullDisplayName}">${shortName}</span>
               </div>
+              <div class="map-hosp-shield-icon">
+                ${isCenter ? `
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="#FEF3C7" stroke="#FEF3C7" stroke-width="1.5">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                  </svg>
+                ` : `
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round">
+                    <line x1="12" y1="4" x2="12" y2="20"></line>
+                    <line x1="4" y1="12" x2="20" y2="12"></line>
+                  </svg>
+                `}
+              </div>
+              <div class="map-hosp-stem-pin"></div>
             </div>
           `,
-          iconSize: [230, 44],
-          iconAnchor: [115, 22]
+          iconSize: [iconW, iconH],
+          iconAnchor: [Math.round(iconW / 2), iconH]
         });
         const marker = window.L.marker(coords, { icon, zIndexOffset: isCenter ? 350 : 100 }).addTo(this.map);
         marker.bindPopup(this.createHospitalPopupHtml(h), { autoPan: false });
@@ -342,24 +354,35 @@
         const startCoords = mission
           ? (mission.progress.phase === 'TO_SCENE' ? mission.origin : mission.scene)
           : (v.coords || VEH_COORDS[v.plate] || CITY_CENTER);
+        const isReady = !mission;
         const icon = window.L.divIcon({
           className: 'map-leaflet-marker',
           html: `
-            <div class="map-veh-capsule ${mission ? 'is-mission' : ''}">
-              <div class="map-veh-icon-bubble">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1 .4-1 1v9h2"></path>
-                  <circle cx="7" cy="17" r="2"></circle>
-                  <path d="M9 17h6"></path>
-                  <circle cx="17" cy="17" r="2"></circle>
-                </svg>
+            <div class="map-veh-stem-marker ${mission ? 'is-mission' : 'is-ready'}">
+              <div class="map-veh-top-badge ${isReady ? 'is-ready' : 'is-busy'}">
+                <span class="map-veh-plate-val">${v.plate}</span>
+                ${mission ? `<span class="map-veh-status-pill">${(v.speed || 50)} km/h</span>` : ''}
               </div>
-              <span class="map-veh-plate">${v.plate}</span>
-              <span class="map-veh-status-pill ${mission ? 'mission' : 'ready'}">${mission ? (v.speed || 50) + ' km/h' : 'Sẵn sàng'}</span>
+              <div class="map-veh-puck">
+                <div class="map-veh-heading-arrow">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2L4 20l8-4 8 4z"/>
+                  </svg>
+                </div>
+                <div class="map-veh-icon-center" style="display:flex;align-items:center;justify-content:center;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1 .4-1 1v9h2"></path>
+                    <circle cx="7" cy="17" r="2"></circle>
+                    <path d="M9 17h6"></path>
+                    <circle cx="17" cy="17" r="2"></circle>
+                  </svg>
+                </div>
+              </div>
+              <div class="map-veh-stem-pin"></div>
             </div>
           `,
-          iconSize: [150, 36],
-          iconAnchor: [75, 18]
+          iconSize: [106, 52],
+          iconAnchor: [53, 52]
         });
         const marker = window.L.marker(startCoords, { icon, zIndexOffset: mission ? 1000 : 200 }).addTo(this.map);
         marker.bindPopup(() => this.createVehiclePopupHtml(v), { autoPan: false });
@@ -550,7 +573,16 @@
       }
 
       m.pos = pointAt(leg, p.dist);
-      this.vehicleMarkers[m.plate]?.marker.setLatLng(m.pos.latlng);
+      const vehItem = this.vehicleMarkers[m.plate];
+      if (vehItem) {
+        vehItem.marker.setLatLng(m.pos.latlng);
+        if (m.pos.bearing !== undefined) {
+          const arrowEl = vehItem.marker.getElement()?.querySelector('.map-veh-heading-arrow');
+          if (arrowEl) {
+            arrowEl.style.transform = `rotate(${Math.round(m.pos.bearing)}deg)`;
+          }
+        }
+      }
 
       // Cập nhật ETA giảm dần theo khoảng cách thực tế còn lại
       this.updateMissionETA(m);

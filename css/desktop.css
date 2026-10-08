@@ -1031,13 +1031,13 @@ body.hospital-mode .kpi-header-grid {
   display: inline;
 }
 
-/* Left side panel floating widget */
+/* Left side panel floating widget (Tăng thêm 30% bề rộng: 504px -> 655px) */
 .side-panel-container.left-floating-widget {
   position: absolute;
   top: 12px;
   left: 12px;
   bottom: 96px;
-  width: 360px;
+  width: 655px;
   max-width: calc(100% - 24px);
   z-index: 1001;
   background-color: rgba(9, 21, 35, 0.95);
@@ -1094,7 +1094,7 @@ body.hospital-mode .kpi-header-grid {
 .map-bottom-grid.bottom-floating-widget {
   position: absolute;
   bottom: 10px;
-  left: 384px;
+  left: 675px;
   right: 12px;
   height: 82px;
   z-index: 999;
@@ -1108,7 +1108,7 @@ body.hospital-mode .kpi-header-grid {
 /* Vị trí hiển thị của dải thông tin dưới giữ nguyên không đổi khi đóng/mở panel */
 .side-panel-container.left-floating-widget.is-collapsed ~ .map-bottom-grid.bottom-floating-widget,
 .command-viewport.map-fullscreen-mode:has(.side-panel-container.is-collapsed) .map-bottom-grid.bottom-floating-widget {
-  left: 384px;
+  left: 675px;
 }
 
 
@@ -1190,94 +1190,132 @@ body.hospital-mode .kpi-header-grid {
   transform: translateY(-3px) scale(1.06);
 }
 
-/* --- 1. VEHICLE MARKER: CAPSULE PILL DESIGN --- */
-.map-veh-capsule {
+/* ============================================================
+   TACTICAL MAP MARKERS (V2): 2-TIER STEM PIN ARCHITECTURE
+   - Mũi neo cắm chuẩn xác 100% vào tim đường / cổng bệnh viện
+   - Phân biệt rõ rệt giữa Xe (Động, Puck xoay hướng) và BV (Tĩnh, Landmark Tháp/Khiên)
+   - Thu nhỏ bề ngang từ 240px xuống ~120-140px, chống va chạm che lấp đường
+   - BVĐK TP Cần Thơ nổi bật rực rỡ với Hào quang Vàng Gold Trung tâm
+   ============================================================ */
+
+/* --- 1. VEHICLE MARKER: DYNAMIC NAVIGATION STEM PIN --- */
+.map-veh-stem-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  user-select: none;
+  cursor: pointer;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.75));
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.map-veh-stem-marker:hover {
+  transform: translateY(-4px) scale(1.08);
+  z-index: 9999 !important;
+}
+
+/* Thẻ thông tin Biển số (Tầng trên của xe) */
+.map-veh-top-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: rgba(11, 23, 38, 0.94);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(16, 185, 129, 0.5);
-  border-radius: 20px;
-  padding: 4px 10px 4px 5px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7), 0 0 12px rgba(16, 185, 129, 0.25);
-  position: relative;
-  white-space: nowrap;
-  user-select: none;
-  transition: all 0.2s ease;
-}
-
-.map-veh-capsule::after {
-  content: '';
-  position: absolute;
-  bottom: -6px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-top: 6px solid rgba(11, 23, 38, 0.94);
-}
-
-.map-veh-icon-bubble {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #10b981, #047857);
-  display: flex;
-  align-items: center;
   justify-content: center;
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
-  flex-shrink: 0;
-}
-
-.map-veh-plate {
+  gap: 5px;
+  border-radius: 8px;
+  padding: 3px 8px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+  margin-bottom: 2px;
   font-family: var(--font-mono);
   font-weight: 700;
   font-size: 11.5px;
-  color: #FFFFFF;
-  letter-spacing: 0.4px;
+}
+
+/* NẾU SẴN SÀNG: NỀN XANH LÁ, TEXT TRẮNG */
+.map-veh-top-badge.is-ready {
+  background: #059669 !important;
+  color: #FFFFFF !important;
+  border: 1.5px solid #10b981 !important;
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.5) !important;
+}
+
+/* NẾU KHÔNG SẴN SÀNG (LÀM NHIỆM VỤ): NỀN ĐỎ, TEXT TRẮNG */
+.map-veh-top-badge.is-busy {
+  background: #dc2626 !important;
+  color: #FFFFFF !important;
+  border: 1.5px solid #ef4444 !important;
+  box-shadow: 0 2px 10px rgba(220, 38, 38, 0.6) !important;
+}
+
+.map-veh-plate-val {
+  color: #FFFFFF !important;
+  font-weight: 700;
+  letter-spacing: 0.3px;
 }
 
 .map-veh-status-pill {
   font-size: 9.5px;
   font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #FFFFFF !important;
 }
 
-.map-veh-status-pill.ready {
-  background: rgba(16, 185, 129, 0.2);
+/* Puck điều hướng tròn ở giữa */
+.map-veh-puck {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981, #047857);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.7);
+  position: relative;
+  border: 1.5px solid #FFFFFF;
+  color: #FFFFFF;
+}
+
+/* Mũi tên chỉ hướng di chuyển theo tim đường (Heading Arrow) */
+.map-veh-heading-arrow {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  margin-left: -5px;
+  width: 10px;
+  height: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.4);
+  filter: drop-shadow(0 0 4px #10b981);
+  transform-origin: center 22px;
+  transition: transform 0.25s linear;
 }
 
-/* Xe đang làm nhiệm vụ: đổi sang màu đỏ nổi bật, viền sáng đỏ + nhãn tốc độ đỏ */
-.map-veh-status-pill.mission {
-  background: #ef4444;
-  color: #ffffff;
-  border: 1px solid #f87171;
-  font-family: var(--font-mono);
-  text-transform: none;
-  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+/* Chân cắm nhọn neo đúng tim đường */
+.map-veh-stem-pin {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid #10b981;
+  margin-top: -1px;
 }
 
-.map-veh-capsule.is-mission {
-  border-color: #ef4444;
-  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.45), 0 0 16px rgba(248, 113, 113, 0.45);
-}
-
-.map-veh-capsule.is-mission::after {
-  border-top-color: #ef4444;
-}
-
-.map-veh-capsule.is-mission .map-veh-icon-bubble {
+/* Trạng thái xe đang làm nhiệm vụ (Màu đỏ khẩn cấp) */
+.map-veh-stem-marker.is-mission .map-veh-puck {
   background: linear-gradient(135deg, #ef4444, #b91c1c);
-  box-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
-  animation: veh-mission-glow 1.6s ease-in-out infinite;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.9);
+  animation: veh-mission-glow 1.5s infinite ease-in-out;
+}
+.map-veh-stem-marker.is-mission .map-veh-heading-arrow {
+  color: #fca5a5;
+  filter: drop-shadow(0 0 5px #ef4444);
+}
+.map-veh-stem-marker.is-mission .map-veh-stem-pin {
+  border-top-color: #ef4444;
 }
 
 @keyframes veh-mission-glow {
@@ -1285,122 +1323,127 @@ body.hospital-mode .kpi-header-grid {
   50% { box-shadow: 0 0 16px rgba(248, 113, 113, 1); }
 }
 
-.map-leaflet-marker.is-active-marker {
-  z-index: 9000 !important;
+.map-leaflet-marker.is-active-marker .map-veh-stem-marker {
+  transform: scale(1.15);
+  filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.9));
 }
-
-.map-leaflet-marker.is-active-marker .map-veh-capsule {
+.map-leaflet-marker.is-active-marker .map-veh-stem-marker .map-veh-top-badge {
   border-color: #f87171 !important;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.45), 0 0 25px rgba(248, 113, 113, 0.9) !important;
-  transform: scale(1.12);
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.8) !important;
 }
 
-/* --- 2. HOSPITAL MARKER: FLOATING MEDICAL HUB BADGE --- */
-.map-hosp-hub-badge {
+/* --- 2. HOSPITAL MARKER: FIXED MEDICAL HUB LANDMARK SHIELD --- */
+.map-hosp-stem-marker {
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
   user-select: none;
+  cursor: pointer;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.75));
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.map-hosp-shield {
+.map-hosp-stem-marker:hover {
+  transform: translateY(-4px) scale(1.06);
+  z-index: 9999 !important;
+}
+
+.map-hosp-top-card {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  padding: 3px 10px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+  margin-bottom: 2px;
+  font-weight: 700;
+  font-size: 11.5px;
+  letter-spacing: 0.3px;
+}
+
+/* NẾU SẴN SÀNG: NỀN XANH LÁ, TEXT TRẮNG */
+.map-hosp-top-card.is-ready {
+  background: #059669 !important;
+  color: #FFFFFF !important;
+  border: 1.5px solid #10b981 !important;
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.45) !important;
+}
+
+/* NẾU KHÔNG SẴN SÀNG (HẠN CHẾ): NỀN ĐỎ, TEXT TRẮNG */
+.map-hosp-top-card.is-busy {
+  background: #dc2626 !important;
+  color: #FFFFFF !important;
+  border: 1.5px solid #ef4444 !important;
+  box-shadow: 0 2px 10px rgba(220, 38, 38, 0.55) !important;
+}
+
+.map-hosp-name-line {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #FFFFFF !important;
+  letter-spacing: 0.3px;
+  line-height: 1.25;
+}
+
+/* Biểu tượng Khiên Chữ Thập Y Tế */
+.map-hosp-shield-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #0284c7, #0369a1);
   display: flex;
   align-items: center;
-  gap: 6px;
-  background: rgba(7, 19, 32, 0.94);
-  backdrop-filter: blur(8px);
-  border: 1.5px solid rgba(56, 189, 248, 0.65);
-  border-radius: 18px;
-  padding: 3px 8px 3px 4px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6), 0 0 12px rgba(56, 189, 248, 0.3);
-  position: relative;
+  justify-content: center;
+  border: 1.5px solid #38bdf8;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+  color: #FFFFFF;
 }
 
-.map-hosp-shield::after {
-  content: '';
-  position: absolute;
-  bottom: -5px;
-  left: 50%;
-  transform: translateX(-50%);
+.map-hosp-stem-pin {
   width: 0;
   height: 0;
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
-  border-top: 5px solid rgba(7, 19, 32, 0.94);
+  border-top: 6px solid #38bdf8;
+  margin-top: -1px;
 }
 
-.map-hosp-cross-icon {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #38bdf8, #0369a1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #FFFFFF;
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.7);
-  flex-shrink: 0;
-}
-
-.map-hosp-title-text {
-  font-size: 11px;
-  font-weight: 700;
-  color: #f1f5f9;
-  letter-spacing: 0.2px;
-  max-width: 200px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.map-hosp-bed-chip {
-  font-size: 10px;
-  font-weight: 700;
-  background: rgba(16, 185, 129, 0.18);
-  color: #34d399;
-  padding: 1px 7px;
-  border-radius: 8px;
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  font-family: inherit;
-  white-space: nowrap;
-}
-
-/* Nổi bật Trung tâm: Bệnh viện Đa khoa thành phố Cần Thơ (Vàng Hổ Phách Gold Glowing) */
-.map-hosp-shield.is-center {
-  background: linear-gradient(90deg, rgba(20, 15, 5, 0.96) 0%, rgba(38, 26, 8, 0.96) 100%);
-  border: 2px solid #F59E0B;
-  box-shadow: 0 0 24px rgba(245, 158, 11, 0.75), 0 4px 16px rgba(0, 0, 0, 0.85);
-  padding: 4px 10px 4px 5px;
+/* NỔI BẬT: BỆNH VIỆN ĐA KHOA THÀNH PHỐ CẦN THƠ (TRUNG TÂM TIẾP NHẬN 115) */
+.map-hosp-stem-marker.is-center-hospital .map-hosp-top-card.is-ready {
+  background: #059669 !important;
+  color: #FFFFFF !important;
+  border: 2px solid #F59E0B !important;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.75), 0 3px 8px rgba(0, 0, 0, 0.8) !important;
   animation: centerHospitalGlow 2.4s infinite ease-in-out;
 }
 
-.map-hosp-shield.is-center::after {
-  border-top-color: rgba(38, 26, 8, 0.96);
+.map-hosp-stem-marker.is-center-hospital .map-hosp-top-card.is-busy {
+  background: #dc2626 !important;
+  color: #FFFFFF !important;
+  border: 2px solid #F59E0B !important;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.75), 0 3px 8px rgba(0, 0, 0, 0.8) !important;
 }
 
-.map-hosp-shield.is-center .map-hosp-cross-icon {
-  width: 25px;
-  height: 25px;
-  background: linear-gradient(135deg, #F59E0B, #D97706);
-  color: #FFFFFF;
+.map-hosp-stem-marker.is-center-hospital .map-hosp-name-line {
+  font-size: 12px;
+  font-weight: 800;
+  color: #FFFFFF !important;
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+}
+
+.map-hosp-stem-marker.is-center-hospital .map-hosp-shield-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #F59E0B, #B45309);
+  border: 2px solid #FDE68A;
   box-shadow: 0 0 14px rgba(245, 158, 11, 0.95);
 }
 
-.map-hosp-shield.is-center .map-hosp-title-text {
-  font-size: 11.5px;
-  font-weight: 800;
-  color: #FEF3C7;
-  max-width: 220px;
-  text-shadow: 0 0 10px rgba(245, 158, 11, 0.8);
-}
-
-.map-hosp-shield.is-center .map-hosp-bed-chip {
-  background: rgba(245, 158, 11, 0.25);
-  color: #FBBF24;
-  border-color: rgba(245, 158, 11, 0.6);
-  font-weight: 800;
-  letter-spacing: 0.3px;
+.map-hosp-stem-marker.is-center-hospital .map-hosp-stem-pin {
+  border-top-color: #F59E0B;
 }
 
 @keyframes centerHospitalGlow {
@@ -1414,17 +1457,9 @@ body.hospital-mode .kpi-header-grid {
   }
 }
 
-.map-hosp-shield.restricted {
-  border-color: rgba(245, 158, 11, 0.7);
-}
-.map-hosp-shield.restricted .map-hosp-cross-icon {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-}
-.map-hosp-shield.restricted .map-hosp-bed-chip {
-  background: rgba(245, 158, 11, 0.2);
-  color: #fbbf24;
-  border-color: rgba(245, 158, 11, 0.4);
-}
+/* Fallback legacy classes */
+.map-veh-capsule { display: none; }
+.map-hosp-hub-badge { display: none; }
 
 /* --- 3. INCIDENT MARKER: TACTICAL SOS RADAR BEACON --- */
 .map-incident-beacon-container {
@@ -4222,6 +4257,13 @@ body.critical-focus-active .kpi-header-grid {
   height: 100%;
   z-index: 70;
   border-radius: 0;
+}
+
+.modal-overlay.case-detail-in-body:not(.active) {
+  display: none !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
 }
 
 /* --- 2 TABS TÁCH BIỆT: THU THẬP THÔNG TIN <-> ĐIỀU PHỐI --- */
