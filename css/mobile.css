@@ -963,15 +963,18 @@ body.driver-phone-body {
 
 .dock-info-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 6px;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
 .dock-info-box {
-  background: rgba(6, 17, 30, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  min-width: 0;
+  background: rgba(6, 17, 30, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   padding: 8px 10px;
+  overflow: hidden;
+  word-break: break-word;
 }
 
 .dock-box-label {

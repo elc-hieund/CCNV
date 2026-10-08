@@ -1031,13 +1031,13 @@ body.hospital-mode .kpi-header-grid {
   display: inline;
 }
 
-/* Left side panel floating widget (Tăng thêm 30% bề rộng: 504px -> 655px) */
+/* Left side panel floating widget (Kích thước gọn 360px tối ưu diện tích bản đồ) */
 .side-panel-container.left-floating-widget {
   position: absolute;
   top: 12px;
   left: 12px;
-  bottom: 96px;
-  width: 655px;
+  bottom: 20px;
+  width: 360px;
   max-width: calc(100% - 24px);
   z-index: 1001;
   background-color: rgba(9, 21, 35, 0.95);
@@ -1094,7 +1094,7 @@ body.hospital-mode .kpi-header-grid {
 .map-bottom-grid.bottom-floating-widget {
   position: absolute;
   bottom: 10px;
-  left: 675px;
+  left: 384px;
   right: 12px;
   height: 82px;
   z-index: 999;
@@ -1108,7 +1108,7 @@ body.hospital-mode .kpi-header-grid {
 /* Vị trí hiển thị của dải thông tin dưới giữ nguyên không đổi khi đóng/mở panel */
 .side-panel-container.left-floating-widget.is-collapsed ~ .map-bottom-grid.bottom-floating-widget,
 .command-viewport.map-fullscreen-mode:has(.side-panel-container.is-collapsed) .map-bottom-grid.bottom-floating-widget {
-  left: 675px;
+  left: 384px;
 }
 
 

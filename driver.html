@@ -88,6 +88,38 @@
       box-shadow: 0 0 12px rgba(16, 185, 129, 0.3) !important;
     }
 
+    #btn-call-citizen:hover {
+      border-color: #34D399 !important;
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.45) !important;
+      background: linear-gradient(90deg, rgba(16,185,129,0.32) 0%, rgba(5,150,105,0.4) 100%) !important;
+    }
+
+    .dock-quick-caller-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid rgba(16, 185, 129, 0.55);
+      color: #34D399;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.25);
+    }
+
+    .dock-quick-caller-btn:hover,
+    .dock-quick-caller-btn:active {
+      background: rgba(16, 185, 129, 0.35);
+      border-color: #10B981;
+      color: #FFFFFF;
+      box-shadow: 0 0 14px rgba(16, 185, 129, 0.5);
+      transform: translateY(-1px);
+    }
+
     /* Floating Map Zoom & Recenter Controls */
     .driver-map-controls {
       position: absolute;
@@ -142,21 +174,29 @@
       position: absolute;
       bottom: 236px;
       right: 14px;
-      z-index: 600 !important;
+      z-index: 600;
       width: 48px;
       height: 48px;
       border-radius: 50%;
       background: radial-gradient(circle at 35% 35%, #EF4444 0%, #B91C1C 75%, #7F1D1D 100%);
       border: 2px solid rgba(255, 255, 255, 0.75);
       color: #FFFFFF;
-      display: flex !important;
+      display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       pointer-events: auto;
       box-shadow: 0 4px 16px rgba(239, 68, 68, 0.65), 0 0 12px rgba(239, 68, 68, 0.45);
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s ease;
       animation: driver-sos-pulse 2.2s infinite ease-in-out;
+    }
+
+    .driver-floating-sos-standalone.is-hidden,
+    #tab-driver-map:has(.nav-floating-mission-dock.expanded) #driver-btn-sos {
+      display: none !important;
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
     }
 
     .driver-floating-sos-standalone:hover,
@@ -174,218 +214,368 @@
       user-select: none;
     }
 
-    /* Standalone Circular Audio Summary Button (Fixed above SOS button) */
-    .driver-floating-audio-standalone {
-      position: absolute;
-      bottom: 292px;
-      right: 14px;
-      z-index: 600 !important;
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 35% 35%, #0284C7 0%, #0369A1 75%, #075985 100%);
-      border: 2px solid rgba(255, 255, 255, 0.85);
-      color: #FFFFFF;
-      display: flex !important;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      pointer-events: auto;
-      box-shadow: 0 4px 16px rgba(2, 132, 199, 0.65), 0 0 12px rgba(56, 189, 248, 0.45);
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
 
-    .driver-floating-audio-standalone:hover,
-    .driver-floating-audio-standalone:active {
-      transform: scale(1.08);
-      box-shadow: 0 6px 24px rgba(2, 132, 199, 0.9), 0 0 18px rgba(56, 189, 248, 0.7);
-    }
-
-    .driver-floating-audio-standalone.is-playing {
-      background: radial-gradient(circle at 35% 35%, #10B981 0%, #059669 75%, #047857 100%);
-      box-shadow: 0 4px 18px rgba(16, 185, 129, 0.8), 0 0 14px rgba(16, 185, 129, 0.6);
-      animation: driver-audio-pulse 1.4s infinite ease-in-out;
-    }
-
-    @keyframes driver-audio-pulse {
-
-      0%,
-      100% {
-        box-shadow: 0 4px 16px rgba(16, 185, 129, 0.7), 0 0 0 0 rgba(16, 185, 129, 0.6);
-      }
-
-      50% {
-        box-shadow: 0 4px 22px rgba(16, 185, 129, 0.95), 0 0 0 8px rgba(16, 185, 129, 0);
-      }
-    }
-
-    /* Standalone Circular Voice Record Button for Hospital (Fixed above Audio Summary) */
-    .driver-floating-record-standalone {
-      position: absolute;
-      bottom: 348px;
-      right: 14px;
-      z-index: 600 !important;
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 35% 35%, #059669 0%, #047857 75%, #064E3B 100%);
-      border: 2px solid rgba(255, 255, 255, 0.85);
-      color: #FFFFFF;
-      display: flex !important;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      pointer-events: auto;
-      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.65), 0 0 12px rgba(16, 185, 129, 0.45);
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
-
-    .driver-floating-record-standalone:hover,
-    .driver-floating-record-standalone:active {
-      transform: scale(1.08);
-      box-shadow: 0 6px 24px rgba(16, 185, 129, 0.9), 0 0 18px rgba(52, 211, 153, 0.7);
-    }
-
-    .driver-floating-record-standalone.is-recording {
-      background: radial-gradient(circle at 35% 35%, #EF4444 0%, #DC2626 75%, #991B1B 100%);
-      box-shadow: 0 4px 20px rgba(239, 68, 68, 0.9), 0 0 16px rgba(239, 68, 68, 0.8);
-      animation: driver-rec-pulse 1.2s infinite ease-in-out;
-    }
-
-    @keyframes driver-rec-pulse {
-
-      0%,
-      100% {
-        box-shadow: 0 4px 16px rgba(239, 68, 68, 0.8), 0 0 0 0 rgba(239, 68, 68, 0.6);
-      }
-
-      50% {
-        box-shadow: 0 4px 24px rgba(239, 68, 68, 1), 0 0 0 8px rgba(239, 68, 68, 0);
-      }
-    }
-
-    /* Map Marker Capsules */
+    /* ============================================================
+       TACTICAL MAP MARKERS (V2): 2-TIER STEM PIN ARCHITECTURE (SYNCED FROM CENTRAL)
+       ============================================================ */
     .map-leaflet-marker {
       background: transparent;
       border: none;
+      cursor: pointer;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .map-veh-capsule {
+    .map-leaflet-marker:hover > * {
+      transform: translateY(-3px) scale(1.06);
+    }
+
+    /* --- 1. VEHICLE MARKER: DYNAMIC NAVIGATION STEM PIN --- */
+    .map-veh-stem-marker {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      user-select: none;
+      cursor: pointer;
+      filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.75));
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .map-veh-stem-marker:hover {
+      transform: translateY(-4px) scale(1.08);
+      z-index: 9999 !important;
+    }
+
+    /* Thẻ thông tin Biển số (Tầng trên của xe) */
+    .map-veh-top-badge {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 4px 8px 4px 6px;
-      background: rgba(8, 20, 34, 0.95);
-      border: 1.5px solid #10b981;
-      border-radius: 20px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 10px rgba(16, 185, 129, 0.3);
-      white-space: nowrap;
-      pointer-events: auto;
-    }
-
-    .map-veh-capsule.is-mission {
-      border-color: #ef4444;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 14px rgba(239, 68, 68, 0.45);
-    }
-
-    .map-veh-icon-bubble {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: #10b981;
-      display: flex;
-      align-items: center;
       justify-content: center;
-      flex-shrink: 0;
-      transition: transform 0.2s ease-out;
-    }
-
-    .map-veh-capsule.is-mission .map-veh-icon-bubble {
-      background: #ef4444;
-    }
-
-    .map-veh-plate {
-      font-size: 11.5px;
+      gap: 5px;
+      border-radius: 8px;
+      padding: 3px 8px;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.6);
+      white-space: nowrap;
+      margin-bottom: 2px;
+      font-family: var(--font-mono, monospace);
       font-weight: 700;
-      color: #FFFFFF;
-      font-family: var(--font-mono);
+      font-size: 11.5px;
+    }
+
+    /* NẾU SẴN SÀNG: NỀN XANH LÁ, TEXT TRẮNG */
+    .map-veh-top-badge.is-ready {
+      background: #059669 !important;
+      color: #FFFFFF !important;
+      border: 1.5px solid #10b981 !important;
+      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.5) !important;
+    }
+
+    /* NẾU KHÔNG SẴN SÀNG (LÀM NHIỆM VỤ): NỀN ĐỎ, TEXT TRẮNG */
+    .map-veh-top-badge.is-busy {
+      background: #dc2626 !important;
+      color: #FFFFFF !important;
+      border: 1.5px solid #ef4444 !important;
+      box-shadow: 0 2px 10px rgba(220, 38, 38, 0.6) !important;
+    }
+
+    .map-veh-plate-val {
+      color: #FFFFFF !important;
+      font-weight: 700;
       letter-spacing: 0.3px;
     }
 
     .map-veh-status-pill {
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 700;
-      padding: 2px 6px;
-      border-radius: 10px;
-      background: rgba(16, 185, 129, 0.2);
-      color: #10b981;
-      border: 1px solid rgba(16, 185, 129, 0.4);
+      padding: 1px 5px;
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.35);
+      color: #FFFFFF !important;
     }
 
-    .map-veh-status-pill.mission {
-      background: rgba(239, 68, 68, 0.25);
-      color: #f87171;
-      border-color: rgba(239, 68, 68, 0.5);
-    }
-
-    .map-incident-capsule {
-      width: 140px;
-      height: 30px;
-      box-sizing: border-box;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 0 10px;
-      background: rgba(20, 8, 8, 0.94);
-      border: 1.5px solid #ef4444;
-      border-radius: 15px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7), 0 0 14px rgba(239, 68, 68, 0.5);
-      white-space: nowrap;
-    }
-
-    .map-hosp-hub-badge {
-      width: 320px;
-      height: 32px;
-      box-sizing: border-box;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 0 10px;
-      background: rgba(6, 18, 32, 0.95);
-      border: 1.5px solid #38bdf8;
-      border-radius: 16px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7), 0 0 14px rgba(56, 189, 248, 0.4);
-      white-space: nowrap;
-    }
-
-    .map-hosp-cross-icon {
-      width: 18px;
-      height: 18px;
-      border-radius: 5px;
-      background: #0284c7;
-      color: #FFFFFF;
+    /* Puck điều hướng tròn ở giữa */
+    .map-veh-puck {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #10b981, #047857);
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-shrink: 0;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.7);
+      position: relative;
+      border: 1.5px solid #FFFFFF;
+      color: #FFFFFF;
     }
 
-    .map-hosp-title-text {
+    /* Mũi tên chỉ hướng di chuyển theo tim đường (Heading Arrow) */
+    .map-veh-heading-arrow {
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      margin-left: -5px;
+      width: 10px;
+      height: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #34d399;
+      filter: drop-shadow(0 0 4px #10b981);
+      transform-origin: center 22px;
+      transition: transform 0.25s linear;
+    }
+
+    /* Chân cắm nhọn neo đúng tim đường */
+    .map-veh-stem-pin {
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 6px solid #10b981;
+      margin-top: -1px;
+    }
+
+    /* Trạng thái xe đang làm nhiệm vụ (Màu đỏ khẩn cấp) */
+    .map-veh-stem-marker.is-mission .map-veh-puck {
+      background: linear-gradient(135deg, #ef4444, #b91c1c);
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.9);
+      animation: veh-mission-glow 1.5s infinite ease-in-out;
+    }
+    .map-veh-stem-marker.is-mission .map-veh-heading-arrow {
+      color: #fca5a5;
+      filter: drop-shadow(0 0 5px #ef4444);
+    }
+    .map-veh-stem-marker.is-mission .map-veh-stem-pin {
+      border-top-color: #ef4444;
+    }
+
+    @keyframes veh-mission-glow {
+      0%, 100% { box-shadow: 0 0 6px rgba(239, 68, 68, 0.6); }
+      50% { box-shadow: 0 0 16px rgba(248, 113, 113, 1); }
+    }
+
+    .map-leaflet-marker.is-active-marker .map-veh-stem-marker {
+      transform: scale(1.15);
+      filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.9));
+    }
+    .map-leaflet-marker.is-active-marker .map-veh-stem-marker .map-veh-top-badge {
+      border-color: #f87171 !important;
+      box-shadow: 0 0 14px rgba(239, 68, 68, 0.8) !important;
+    }
+
+    /* --- 2. HOSPITAL MARKER: FIXED MEDICAL HUB LANDMARK SHIELD --- */
+    .map-hosp-stem-marker {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      user-select: none;
+      cursor: pointer;
+      filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.75));
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .map-hosp-stem-marker:hover {
+      transform: translateY(-4px) scale(1.06);
+      z-index: 9999 !important;
+    }
+
+    .map-hosp-top-card {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      padding: 3px 10px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.6);
+      white-space: nowrap;
+      margin-bottom: 2px;
+      font-weight: 700;
+      font-size: 11.5px;
+      letter-spacing: 0.3px;
+    }
+
+    /* NẾU SẴN SÀNG: NỀN XANH LÁ, TEXT TRẮNG */
+    .map-hosp-top-card.is-ready {
+      background: #059669 !important;
+      color: #FFFFFF !important;
+      border: 1.5px solid #10b981 !important;
+      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.45) !important;
+    }
+
+    /* NẾU KHÔNG SẴN SÀNG (HẠN CHẾ): NỀN ĐỎ, TEXT TRẮNG */
+    .map-hosp-top-card.is-busy {
+      background: #dc2626 !important;
+      color: #FFFFFF !important;
+      border: 1.5px solid #ef4444 !important;
+      box-shadow: 0 2px 10px rgba(220, 38, 38, 0.55) !important;
+    }
+
+    .map-hosp-name-line {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #FFFFFF !important;
+      letter-spacing: 0.3px;
+      line-height: 1.25;
+    }
+
+    /* Biểu tượng Khiên Chữ Thập Y Tế */
+    .map-hosp-shield-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px solid #38bdf8;
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+      color: #FFFFFF;
+    }
+
+    .map-hosp-stem-pin {
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 6px solid #38bdf8;
+      margin-top: -1px;
+    }
+
+    /* NỔI BẬT: BỆNH VIỆN ĐA KHOA THÀNH PHỐ CẦN THƠ (TRUNG TÂM TIẾP NHẬN 115) */
+    .map-hosp-stem-marker.is-center-hospital .map-hosp-top-card.is-ready {
+      background: #059669 !important;
+      color: #FFFFFF !important;
+      border: 2px solid #F59E0B !important;
+      box-shadow: 0 0 16px rgba(245, 158, 11, 0.75), 0 3px 8px rgba(0, 0, 0, 0.8) !important;
+      animation: centerHospitalGlow 2.4s infinite ease-in-out;
+    }
+
+    .map-hosp-stem-marker.is-center-hospital .map-hosp-top-card.is-busy {
+      background: #dc2626 !important;
+      color: #FFFFFF !important;
+      border: 2px solid #F59E0B !important;
+      box-shadow: 0 0 16px rgba(245, 158, 11, 0.75), 0 3px 8px rgba(0, 0, 0, 0.8) !important;
+    }
+
+    .map-hosp-stem-marker.is-center-hospital .map-hosp-name-line {
+      font-size: 12px;
+      font-weight: 800;
+      color: #FFFFFF !important;
+      text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+    }
+
+    .map-hosp-stem-marker.is-center-hospital .map-hosp-shield-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, #F59E0B, #B45309);
+      border: 2px solid #FDE68A;
+      box-shadow: 0 0 14px rgba(245, 158, 11, 0.95);
+    }
+
+    .map-hosp-stem-marker.is-center-hospital .map-hosp-stem-pin {
+      border-top-color: #F59E0B;
+    }
+
+    @keyframes centerHospitalGlow {
+      0%, 100% {
+        box-shadow: 0 0 18px rgba(245, 158, 11, 0.55), 0 4px 16px rgba(0, 0, 0, 0.8);
+        border-color: #F59E0B;
+      }
+      50% {
+        box-shadow: 0 0 32px rgba(245, 158, 11, 0.95), 0 0 12px rgba(251, 191, 36, 0.7);
+        border-color: #FBBF24;
+      }
+    }
+
+    /* --- 3. INCIDENT MARKER: TACTICAL SOS RADAR BEACON --- */
+    .map-incident-beacon-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .map-incident-banner {
+      background: linear-gradient(90deg, #dc2626, #ef4444);
+      color: #FFFFFF;
+      padding: 4px 10px;
+      border-radius: 14px;
       font-size: 11px;
       font-weight: 700;
-      color: #FFFFFF;
-      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 15px rgba(220, 38, 38, 0.7), 0 0 20px rgba(239, 68, 68, 0.5);
+      border: 1px solid #fca5a5;
+      white-space: nowrap;
+      position: relative;
+      z-index: 5;
+      animation: pulse-beacon-tag 2s infinite ease-in-out;
     }
 
-    .map-hosp-bed-chip {
-      font-size: 9.5px;
-      font-weight: 700;
-      color: #38bdf8;
-      background: rgba(56, 189, 248, 0.18);
-      padding: 1px 5px;
-      border-radius: 8px;
-      flex-shrink: 0;
+    .map-incident-banner::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 5px solid #dc2626;
+    }
+
+    .map-incident-radar-rings {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60px;
+      height: 60px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .map-incident-radar-rings .ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid #ef4444;
+      opacity: 0;
+      animation: ripple-wave 2.2s infinite cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .map-incident-radar-rings .ring:nth-child(2) {
+      animation-delay: 0.7s;
+    }
+    .map-incident-radar-rings .ring:nth-child(3) {
+      animation-delay: 1.4s;
+    }
+
+    @keyframes ripple-wave {
+      0% { transform: scale(0.2); opacity: 0.9; }
+      100% { transform: scale(2.6); opacity: 0; }
+    }
+
+    @keyframes pulse-beacon-tag {
+      0%, 100% { transform: scale(1); box-shadow: 0 4px 15px rgba(220, 38, 38, 0.7), 0 0 20px rgba(239, 68, 68, 0.5); }
+      50% { transform: scale(1.04); box-shadow: 0 6px 20px rgba(239, 68, 68, 0.9), 0 0 28px rgba(239, 68, 68, 0.8); }
+    }
+
+    .map-incident-shake {
+      position: relative;
+      z-index: 5;
+      transform-origin: 50% 100%;
+      animation: incident-shake 1.5s ease-in-out infinite;
+    }
+
+    @keyframes incident-shake {
+      0%, 100% { transform: rotate(0deg); }
+      20% { transform: rotate(-2deg); }
+      40% { transform: rotate(2deg); }
+      60% { transform: rotate(-1deg); }
+      80% { transform: rotate(1deg); }
     }
 
     .legend-dot-pulse {
@@ -527,27 +717,6 @@
           </button>
         </div>
 
-        <!-- Standalone Circular Voice Record Button for Hospital (Phía trên nút Nghe tóm tắt) -->
-        <button type="button" class="driver-floating-record-standalone" id="driver-btn-record-hospital"
-          title="Ghi âm báo trước cho Bệnh viện tiếp nhận" aria-label="Ghi âm cho bệnh viện">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-            <line x1="12" y1="19" x2="12" y2="23"></line>
-            <line x1="8" y1="23" x2="16" y2="23"></line>
-          </svg>
-        </button>
-
-        <!-- Standalone Circular Floating Audio Summary Button (Phía trên nút SOS) -->
-        <button type="button" class="driver-floating-audio-standalone" id="driver-btn-audio-summary"
-          title="Nghe tóm tắt ca cấp cứu (Ghi âm)" aria-label="Nghe tóm tắt ca">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"
-            stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-          </svg>
-        </button>
 
         <!-- Standalone Circular Floating SOS Button -->
         <button type="button" class="driver-floating-sos-standalone" id="driver-btn-sos" title="SOS" aria-label="SOS">
@@ -597,10 +766,9 @@
           <!-- Dock Header: Quick ETA Status & Toggle Details -->
           <div class="dock-main-header">
             <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;">
-              <span style="font-size:12px;font-weight:700;color:#CBD5E1;letter-spacing:0.3px;">THÔNG TIN CA CẤP
-                CỨU</span>
+              <span style="font-size:12.5px;font-weight:750;color:#CBD5E1;letter-spacing:0.3px;white-space:nowrap;">THÔNG TIN CA CẤP CỨU</span>
               <span class="badge badge-emergency"
-                style="font-size:10.5px;padding:2px 7px;font-weight:800;background:rgba(239,68,68,0.25);color:#FCA5A5;border:1px solid rgba(239,68,68,0.6);border-radius:4px;">
+                style="font-size:10.5px;padding:2px 7px;font-weight:800;background:rgba(239,68,68,0.25);color:#FCA5A5;border:1px solid rgba(239,68,68,0.6);border-radius:4px;white-space:nowrap;">
                 KHẨN CẤP
               </span>
             </div>
@@ -616,57 +784,68 @@
             <div class="dock-info-grid">
               <div class="dock-info-box">
                 <span class="dock-box-label">Nạn nhân:</span>
-                <strong style="color:#FFFFFF;font-size:12.5px;" id="driver-patient-name">Phan Văn Đức</strong>
-                <span id="driver-patient-demographics" style="color:#CBD5E1;font-size:11.5px;">| 58 tuổi | Nam</span>
-                <div id="driver-patient-symptoms" style="font-size:11px;color:#94A3B8;margin-top:2px;">Chấn thương sọ
-                  não, đa chấn thương phần mềm</div>
+                <strong style="color:#FFFFFF;font-size:12.5px;display:block;" id="driver-patient-demographics">Người cao tuổi · Nam</strong>
+                <div id="driver-patient-symptoms" style="font-size:11px;color:#94A3B8;margin-top:2px;line-height:1.35;">Chấn thương sọ não, đa chấn thương phần mềm</div>
               </div>
               <div class="dock-info-box">
                 <span class="dock-box-label">Hiện trường tai nạn:</span>
-                <strong style="color:#FFFFFF;font-size:12.5px;" id="driver-scene-address">Chân Cầu Hưng Lợi (hướng Cái
-                  Răng sang Ninh Kiều)</strong>
+                <strong style="color:#FFFFFF;font-size:12.5px;line-height:1.35;display:block;" id="driver-scene-address">Chân Cầu Hưng Lợi (hướng Cái Răng sang Ninh Kiều)</strong>
+              </div>
+              <div class="dock-info-box" style="grid-column: 1 / -1; display:flex; align-items:center; justify-content:space-between; gap:10px; background:rgba(16,185,129,0.08); border-color:rgba(16,185,129,0.25);">
+                <div style="min-width:0;flex:1;">
+                  <span class="dock-box-label" style="color:#34D399;">Người báo tin:</span>
+                  <strong style="color:#FFFFFF;font-size:12.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="driver-caller-info">Người dân báo tin · 0913.882.115</strong>
+                </div>
+                <a href="tel:0913882115" class="dock-quick-caller-btn" id="btn-call-citizen" title="Gọi điện cho người báo tin" style="flex-shrink:0;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                  </svg>
+                  <span>Gọi người báo</span>
+                </a>
               </div>
             </div>
 
-            <!-- Quick Action Trio: Call buttons & Audio Record / Summary for Driver -->
+            <!-- Quick Action 2x2 Grid: Audio, Record, Dispatch, Hospital with unique semantic icons -->
             <div class="quick-action-trio" style="margin-top:8px;">
               <button class="quick-call-btn" id="btn-audio-summary" onclick="playPatientAudioSummary()" type="button"
-                title="Nghe ghi âm tóm tắt bệnh nhân">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.5"
+                style="border-color:rgba(56,189,248,0.35);color:#38BDF8;" title="Nghe ghi âm tóm tắt bệnh nhân">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.3"
                   stroke-linecap="round" stroke-linejoin="round">
                   <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                   <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
                 </svg>
-                <span>Nghe tóm tắt</span>
+                <span style="color:#F1F5F9;">Nghe tóm tắt</span>
               </button>
               <button class="quick-call-btn" id="btn-record-hospital-dock" type="button"
-                style="color:#34D399;border-color:rgba(16,185,129,0.35);" title="Ghi âm báo trước cho bệnh viện">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"
+                style="border-color:rgba(16,185,129,0.35);color:#34D399;" title="Ghi âm báo trước cho bệnh viện">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.3"
                   stroke-linecap="round" stroke-linejoin="round">
                   <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
                   <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
                   <line x1="12" y1="19" x2="12" y2="23"></line>
                   <line x1="8" y1="23" x2="16" y2="23"></line>
                 </svg>
-                <span id="dock-rec-label">Ghi âm cho BV</span>
+                <span id="dock-rec-label" style="color:#F1F5F9;">Ghi âm cho BV</span>
               </button>
-              <a href="tel:115" class="quick-call-btn" id="btn-call-dispatch">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.5"
+              <a href="tel:115" class="quick-call-btn" id="btn-call-dispatch"
+                style="border-color:rgba(245,158,11,0.35);color:#F59E0B;" title="Gọi Tổng đài điều phối 115">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.2"
                   stroke-linecap="round" stroke-linejoin="round">
-                  <path
-                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
-                  </path>
+                  <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
+                  <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
                 </svg>
-                <span>Trung tâm</span>
+                <span style="color:#F1F5F9;">Tổng đài 115</span>
               </a>
-              <a href="tel:02923821236" class="quick-call-btn" id="btn-call-hospital">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2.5"
+              <a href="tel:02923821236" class="quick-call-btn" id="btn-call-hospital"
+                style="border-color:rgba(6,182,212,0.35);color:#06B6D4;" title="Liên hệ Khoa cấp cứu bệnh viện tiếp nhận">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="2.2"
                   stroke-linecap="round" stroke-linejoin="round">
-                  <path
-                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
-                  </path>
+                  <path d="M3 21h18"></path>
+                  <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path>
+                  <path d="M9 10h6"></path>
+                  <path d="M12 7v6"></path>
                 </svg>
-                <span>Bệnh viện tiếp nhận</span>
+                <span style="color:#F1F5F9;">BV tiếp nhận</span>
               </a>
             </div>
           </div>
@@ -761,8 +940,8 @@
           Cái Răng sang Ninh Kiều)</div>
         <div style="margin-bottom:6px;"><strong style="color:#FFFFFF;">Khoảng cách:</strong> 2.1 km (Ước tính di chuyển
           ~3.5 phút)</div>
-        <div style="margin-bottom:6px;"><strong style="color:#FFFFFF;">Nạn nhân:</strong> Chưa rõ danh tính (Nam, khoảng
-          50 tuổi) | Đa chấn thương</div>
+        <div style="margin-bottom:6px;"><strong style="color:#FFFFFF;">Nạn nhân:</strong> Người cao tuổi (Nam) | Đa chấn thương</div>
+        <div style="margin-bottom:6px;"><strong style="color:#FFFFFF;">Người báo tin:</strong> <span id="dispatch-caller-info">Người dân báo tin (0913.882.115)</span></div>
         <div><strong style="color:#FFFFFF;">Bệnh viện đích dự kiến:</strong> Bệnh viện Đa khoa TW</div>
       </div>
 

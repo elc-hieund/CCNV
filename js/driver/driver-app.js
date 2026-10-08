@@ -47,24 +47,64 @@ document.addEventListener('DOMContentLoaded', async () => {
         const hospNameEl = document.getElementById('driver-hospital-name');
         const btnCallCitizen = document.getElementById('btn-call-citizen');
 
+        const ageGroupMap = {
+          INFANT: 'Sơ sinh',
+          CHILD: 'Trẻ em',
+          ADULT: 'Người trưởng thành',
+          ELDERLY: 'Người cao tuổi'
+        };
+        const getAgeGroupText = (pat) => {
+          if (pat?.ageGroupText) return pat.ageGroupText;
+          if (pat?.ageGroup && ageGroupMap[pat.ageGroup]) return ageGroupMap[pat.ageGroup];
+          if (typeof pat?.age === 'number') {
+            if (pat.age < 1) return 'Sơ sinh';
+            if (pat.age < 16) return 'Trẻ em';
+            if (pat.age >= 60) return 'Người cao tuổi';
+            return 'Người trưởng thành';
+          }
+          return 'Người trưởng thành';
+        };
+
         if (caseCodeEl) caseCodeEl.textContent = c.code || 'CC-261002-001';
         const caseTitleEl = document.getElementById('driver-case-title');
         if (caseTitleEl) caseTitleEl.textContent = `${(inc.name || 'CẤP CỨU').toUpperCase()} — ${loc.district ? loc.district.toUpperCase() : 'CẦN THƠ'}`;
         if (caseEtaEl) caseEtaEl.textContent = c.eta || '~4 PHÚT';
-        if (pNameEl) pNameEl.textContent = p.name || 'Không rõ danh tính';
+        if (pNameEl) pNameEl.style.display = 'none';
         if (pDemoEl) {
-          const ageStr = p.age ? `${p.age} tuổi` : '—';
+          const ageGroupStr = getAgeGroupText(p);
           const genderStr = p.gender || '—';
           const bloodStr = p.bloodType ? ` · Máu ${p.bloodType}` : '';
-          pDemoEl.textContent = `(${ageStr}, ${genderStr}${bloodStr})`;
+          pDemoEl.textContent = `${ageGroupStr} · ${genderStr}${bloodStr}`;
         }
         if (pSymptomsEl) {
           pSymptomsEl.textContent = p.symptom || inc.description || 'Chấn thương sọ não, đa chấn thương';
         }
         if (sceneAddrEl) sceneAddrEl.textContent = loc.address || 'Hiện trường Cần Thơ';
         if (hospNameEl) hospNameEl.textContent = disp.hospitalName || 'Bệnh viện Đa khoa thành phố Cần Thơ';
+        
+        const callerPhone = c.callerPhone || p.phone || '0913.882.115';
+        const callerName = c.callerName || 'Người dân báo tin';
+
+        const callerInfoEl = document.getElementById('driver-caller-info');
+        if (callerInfoEl) {
+          callerInfoEl.textContent = `${callerName} · ${callerPhone}`;
+        }
+
+        const dispatchCallerEl = document.getElementById('dispatch-caller-info');
+        if (dispatchCallerEl) {
+          dispatchCallerEl.textContent = `${callerName} (${callerPhone})`;
+        }
+
         if (btnCallCitizen) {
-          btnCallCitizen.href = `tel:${p.phone || c.callerPhone || '115'}`;
+          btnCallCitizen.href = `tel:${callerPhone}`;
+          btnCallCitizen.setAttribute('title', `Gọi cho người báo tin: ${callerName} (${callerPhone})`);
+        }
+
+
+        const btnCallCitizenInline = document.getElementById('btn-call-citizen-inline');
+        if (btnCallCitizenInline) {
+          btnCallCitizenInline.href = `tel:${callerPhone}`;
+          btnCallCitizenInline.setAttribute('title', `Gọi cho người báo tin: ${callerName} (${callerPhone})`);
         }
 
         // 2. Tab 2: Bản đồ dẫn đường
@@ -72,14 +112,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const navPatientInfo = document.getElementById('nav-patient-info');
         if (navHospName) navHospName.textContent = disp.hospitalName || 'Bệnh viện Đa khoa thành phố Cần Thơ';
         if (navPatientInfo) {
-          const ageText = p.age ? `${p.age}T` : '—';
-          navPatientInfo.textContent = `BN: ${p.name || 'Chưa rõ'} (${ageText}, ${p.gender || '—'}) · ${p.bloodType || 'O+'}`;
+          const ageGroupStr = getAgeGroupText(p);
+          navPatientInfo.textContent = `Nạn nhân: ${ageGroupStr} (${p.gender || '—'}) · ${p.bloodType || 'O+'}`;
         }
 
         // 3. Tab 3: ePCR Fields
         const epcrTitle = document.getElementById('epcr-patient-title');
-        const inputName = document.getElementById('epcr-input-name');
-        const inputAge = document.getElementById('epcr-input-age');
         const inputGender = document.getElementById('epcr-input-gender');
         const inputPhone = document.getElementById('epcr-input-phone');
         const inputBlood = document.getElementById('epcr-input-blood');
@@ -88,10 +126,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const inputSymptom = document.getElementById('epcr-input-symptom');
 
         if (epcrTitle) {
-          epcrTitle.textContent = `${p.name || 'Bệnh nhân'} · ${p.age ? p.age + 'T' : '—'} · ${p.gender || '—'}`;
+          const ageGroupStr = getAgeGroupText(p);
+          epcrTitle.textContent = `Nạn nhân · ${ageGroupStr} · ${p.gender || '—'}`;
         }
-        if (inputName) inputName.value = p.name || '';
-        if (inputAge) inputAge.value = p.age || '';
         if (inputGender && p.gender) inputGender.value = p.gender;
         if (inputPhone) inputPhone.value = p.phone || c.callerPhone || '';
         if (inputBlood && p.bloodType) inputBlood.value = p.bloodType;
@@ -117,12 +154,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (isRemoteUpdate) {
           flashSyncHighlight([
-            'driver-patient-name',
             'driver-patient-demographics',
             'driver-patient-symptoms',
             'nav-patient-info',
-            'epcr-input-name',
-            'epcr-input-age',
             'epcr-input-gender',
             'epcr-input-blood',
             'epcr-input-history',
@@ -136,8 +170,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const c = getActiveCase();
         if (!c) return;
 
-        const inputName = document.getElementById('epcr-input-name');
-        const inputAge = document.getElementById('epcr-input-age');
         const inputGender = document.getElementById('epcr-input-gender');
         const inputPhone = document.getElementById('epcr-input-phone');
         const inputBlood = document.getElementById('epcr-input-blood');
@@ -146,8 +178,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const inputSymptom = document.getElementById('epcr-input-symptom');
 
         const patch = {
-          name: inputName ? inputName.value.trim() : c.patient?.name,
-          age: inputAge && inputAge.value ? Number(inputAge.value) : c.patient?.age,
           gender: inputGender ? inputGender.value : c.patient?.gender,
           phone: inputPhone ? inputPhone.value.trim() : c.patient?.phone,
           bloodType: inputBlood ? inputBlood.value : c.patient?.bloodType,
@@ -304,11 +334,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         return { ll, cum, total: cum[cum.length - 1] };
       }
 
+      function computeBearing(from, to) {
+        const rad = Math.PI / 180;
+        const lat1 = from.lat * rad, lat2 = to.lat * rad;
+        const dLng = (to.lng - from.lng) * rad;
+        const y = Math.sin(dLng) * Math.cos(lat2);
+        const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+        return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
+      }
+
       function pointAt(path, d) {
         const L = window.L;
         const last = path.ll.length - 1;
-        if (d <= 0 || last === 0) return { latlng: path.ll[0], idx: 0 };
-        if (d >= path.total) return { latlng: path.ll[last], idx: last };
+        if (d <= 0 || last === 0) return { latlng: path.ll[0], idx: 0, bearing: 0 };
+        if (d >= path.total) return { latlng: path.ll[last], idx: last, bearing: 0 };
         let lo = 0, hi = last;
         while (hi - lo > 1) {
           const mid = (lo + hi) >> 1;
@@ -317,9 +356,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const seg = path.cum[hi] - path.cum[lo];
         const t = seg ? (d - path.cum[lo]) / seg : 0;
         const a = path.ll[lo], b = path.ll[hi];
+        const bearing = computeBearing(a, b);
         return {
           latlng: L.latLng(a.lat + (b.lat - a.lat) * t, a.lng + (b.lng - a.lng) * t),
-          idx: lo
+          idx: lo,
+          bearing
         };
       }
 
@@ -455,10 +496,19 @@ document.addEventListener('DOMContentLoaded', async () => {
           vehMarker = null;
         }
 
-        const iconHtml = isMission
-          ? `
-            <div class="map-veh-capsule is-mission" id="map-veh-capsule-el">
-              <div class="map-veh-icon-bubble">
+        const iconHtml = `
+          <div class="map-veh-stem-marker ${isMission ? 'is-mission' : 'is-ready'}" id="map-veh-stem-el">
+            <div class="map-veh-top-badge ${isMission ? 'is-busy' : 'is-ready'}">
+              <span class="map-veh-plate-val">65A-012.34</span>
+              <span class="map-veh-status-pill" id="map-veh-pill-text">${statusText}</span>
+            </div>
+            <div class="map-veh-puck">
+              <div class="map-veh-heading-arrow">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2L4 20l8-4 8 4z"/>
+                </svg>
+              </div>
+              <div class="map-veh-icon-center" style="display:flex;align-items:center;justify-content:center;">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1 .4-1 1v9h2"></path>
                   <circle cx="7" cy="17" r="2"></circle>
@@ -466,30 +516,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                   <circle cx="17" cy="17" r="2"></circle>
                 </svg>
               </div>
-              <span class="map-veh-plate">65A-012.34</span>
-              <span class="map-veh-status-pill mission" id="map-veh-pill-text">${statusText}</span>
             </div>
-          `
-          : `
-            <div class="map-veh-capsule" style="background:#081827;border:1.5px solid #10B981;">
-              <div class="map-veh-icon-bubble" style="background:#10B981;">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1 .4-1 1v9h2"></path>
-                  <circle cx="7" cy="17" r="2"></circle>
-                  <path d="M9 17h6"></path>
-                  <circle cx="17" cy="17" r="2"></circle>
-                </svg>
-              </div>
-              <span class="map-veh-plate" style="color:#FFFFFF;">65A-012.34</span>
-              <span class="map-veh-status-pill" id="map-veh-pill-text" style="background:rgba(16,185,129,0.22);color:#34D399;border:1px solid rgba(16,185,129,0.45);">${statusText}</span>
-            </div>
-          `;
+            <div class="map-veh-stem-pin"></div>
+          </div>
+        `;
 
         const vehIcon = window.L.divIcon({
           className: 'map-leaflet-marker',
           html: iconHtml,
-          iconSize: [160, 36],
-          iconAnchor: [80, 18]
+          iconSize: [106, 52],
+          iconAnchor: [53, 52]
         });
 
         vehMarker = window.L.marker(latlng, { icon: vehIcon, zIndexOffset: 1000 }).addTo(driverMap);
@@ -508,9 +544,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         const pill = document.getElementById('map-veh-pill-text');
         if (pill) {
           pill.textContent = text;
+        }
+        const topBadge = vehMarker?.getElement()?.querySelector('.map-veh-top-badge');
+        if (topBadge) {
           if (isMissionPhase) {
-            pill.className = 'map-veh-status-pill mission';
+            topBadge.classList.remove('is-ready');
+            topBadge.classList.add('is-busy');
+          } else {
+            topBadge.classList.remove('is-busy');
+            topBadge.classList.add('is-ready');
           }
+        }
+        const stemMarker = vehMarker?.getElement()?.querySelector('.map-veh-stem-marker');
+        if (stemMarker) {
+          stemMarker.classList.toggle('is-mission', !!isMissionPhase);
+          stemMarker.classList.toggle('is-ready', !isMissionPhase);
         }
       }
 
@@ -543,6 +591,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (missionDock) {
           missionDock.style.display = 'none';
           missionDock.classList.remove('expanded');
+        }
+        if (btnDriverSos) {
+          btnDriverSos.classList.remove('is-hidden');
+          btnDriverSos.style.display = 'flex';
         }
         document.getElementById('driver-map-controls')?.classList.remove('in-mission');
         if (dockDetails) dockDetails.style.display = 'none';
@@ -895,18 +947,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         const scenePt = simState.leg1 ? simState.leg1.ll[simState.leg1.ll.length - 1] : COORDS.scene;
         const hospPt = simState.leg2 ? simState.leg2.ll[simState.leg2.ll.length - 1] : COORDS.hospital;
 
-        // 1. Marker Hiện trường tai nạn (Pulse đỏ)
+        // 1. Marker Hiện trường tai nạn (Tactical SOS Radar Beacon)
         if (!sceneMarker) {
           const sceneIcon = window.L.divIcon({
             className: 'map-leaflet-marker',
             html: `
-              <div class="map-incident-capsule">
-                <span class="legend-dot-pulse"></span>
-                <span style="font-weight:700;font-size:11px;color:#fca5a5;letter-spacing:0.3px;">VỊ TRÍ TAI NẠN</span>
+              <div class="map-incident-beacon-container">
+                <div class="map-incident-radar-rings">
+                  <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+                </div>
+                <div class="map-incident-shake">
+                  <div class="map-incident-banner">
+                    <span class="map-incident-code" style="background:#EF4444;color:#FFFFFF;padding:1px 6px;border-radius:6px;font-weight:800;font-size:10px;letter-spacing:0.3px;">CODE ĐỎ</span>
+                    <span style="font-weight:700;font-size:11.5px;letter-spacing:0.2px;">HIỆN TRƯỜNG TAI NẠN</span>
+                    <span class="map-incident-eta" style="background:rgba(0,0,0,0.35);padding:1px 6px;border-radius:6px;color:#FDE047;font-weight:700;font-size:10.5px;">ETA ~4P</span>
+                  </div>
+                </div>
               </div>
             `,
-            iconSize: [140, 30],
-            iconAnchor: [70, 15]
+            iconSize: [260, 44],
+            iconAnchor: [130, 22]
           });
 
           sceneMarker = window.L.marker(scenePt, { icon: sceneIcon, zIndexOffset: 500 })
@@ -916,28 +976,25 @@ document.addEventListener('DOMContentLoaded', async () => {
           sceneMarker.setLatLng(scenePt);
         }
 
-        // 2. Marker Bệnh viện đích (Thiết kế lại nổi bật, dễ nhìn)
+        // 2. Marker Bệnh viện đích (Fixed Medical Hub Landmark Shield - BVĐK TP Cần Thơ)
         if (!hospMarker) {
           const hospIcon = window.L.divIcon({
             className: 'map-leaflet-marker',
             html: `
-              <div class="map-hosp-hub-badge driver-hosp-pin">
-                <div class="map-hosp-shield" style="border-color:#10B981;box-shadow:0 0 16px rgba(16,185,129,0.5);">
-                  <div class="map-hosp-cross-icon" style="background:linear-gradient(135deg, #10B981, #047857);box-shadow:0 0 10px rgba(16,185,129,0.8);">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4">
-                      <line x1="12" y1="5" x2="12" y2="19"></line>
-                      <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                  </div>
-                  <div style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;">
-                    <span class="map-hosp-title-text" style="color:#FFFFFF;font-weight:700;font-size:11.5px;letter-spacing:0.2px;">BVĐK TP CẦN THƠ</span>
-                    <span class="map-hosp-bed-chip" style="background:rgba(16,185,129,0.25);color:#34D399;font-weight:600;font-size:10px;padding:1px 5px;border-radius:4px;margin-top:1px;">🏥 ĐÍCH TIẾP NHẬN • SẴN SÀNG</span>
-                  </div>
+              <div class="map-hosp-stem-marker is-center-hospital">
+                <div class="map-hosp-top-card is-ready">
+                  <span class="map-hosp-name-line" title="Bệnh viện Đa khoa thành phố Cần Thơ">BVĐK TP CẦN THƠ</span>
                 </div>
+                <div class="map-hosp-shield-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="#FEF3C7" stroke="#FEF3C7" stroke-width="1.5">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                  </svg>
+                </div>
+                <div class="map-hosp-stem-pin"></div>
               </div>
             `,
-            iconSize: [220, 42],
-            iconAnchor: [110, 42]
+            iconSize: [144, 58],
+            iconAnchor: [72, 58]
           });
 
           hospMarker = window.L.marker(hospPt, { icon: hospIcon, zIndexOffset: 300 })
@@ -1090,6 +1147,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         m.pos = pointAt(currentLeg, m.dist);
         if (vehMarker && m.pos) {
           vehMarker.setLatLng(m.pos.latlng);
+          if (m.pos.bearing !== undefined) {
+            const arrowEl = vehMarker.getElement()?.querySelector('.map-veh-heading-arrow');
+            if (arrowEl) {
+              arrowEl.style.transform = `rotate(${Math.round(m.pos.bearing)}deg)`;
+            }
+          }
         }
 
         // Cập nhật đường vẽ co lại trước xe
@@ -1382,6 +1445,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (dockExpandIcon) dockExpandIcon.textContent = willOpen ? '▼' : '▲';
         if (btnToggleSheet) btnToggleSheet.classList.toggle('active', willOpen);
+
+        // Khi mở widget chi tiết lên thì ẩn đi nút SOS, đóng lại thì hiện lại
+        if (btnDriverSos) {
+          btnDriverSos.classList.toggle('is-hidden', willOpen);
+          btnDriverSos.style.display = willOpen ? 'none' : 'flex';
+        }
+
         if (navigator.vibrate) navigator.vibrate(25);
       }
 
@@ -1491,12 +1561,11 @@ document.addEventListener('DOMContentLoaded', async () => {
           return;
         }
 
-        const pName = document.getElementById('driver-patient-name')?.innerText || 'Phan Văn Đức';
-        const pDemo = document.getElementById('driver-patient-demographics')?.innerText || '58 tuổi, Nam';
+        const pDemo = document.getElementById('driver-patient-demographics')?.innerText || 'Người cao tuổi, Nam';
         const pSymp = document.getElementById('driver-patient-symptoms')?.innerText || 'Chấn thương sọ não, đa chấn thương phần mềm';
         const pLoc = document.getElementById('driver-scene-address')?.innerText || 'Chân Cầu Hưng Lợi (hướng Cái Răng sang Ninh Kiều)';
 
-        const textToSpeech = `Tóm tắt ca cấp cứu: Bệnh nhân ${pName}, ${pDemo}. Tình trạng: ${pSymp}. Vị trí hiện trường: ${pLoc}. Bệnh viện tiếp nhận dự kiến: Bệnh viện Đa khoa thành phố Cần Thơ. Đang phát lại đoạn ghi âm cuộc gọi tiếp nhận tin báo từ tổng đài 115.`;
+        const textToSpeech = `Tóm tắt ca cấp cứu: Nạn nhân ${pDemo}. Tình trạng: ${pSymp}. Vị trí hiện trường: ${pLoc}. Bệnh viện tiếp nhận dự kiến: Bệnh viện Đa khoa thành phố Cần Thơ. Đang phát lại đoạn ghi âm cuộc gọi tiếp nhận tin báo từ tổng đài 115.`;
 
         isAudioPlaying = true;
         if (floatAudioBtn) floatAudioBtn.classList.add('is-playing');
@@ -1569,20 +1638,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
 
-      document.getElementById('driver-btn-record-hospital')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleRecordForHospital();
-      });
-
       document.getElementById('btn-record-hospital-dock')?.addEventListener('click', (e) => {
         e.stopPropagation();
         toggleRecordForHospital();
       });
 
-      // Gắn sự kiện click cho nút tròn nghe tóm tắt trên nút SOS
-      document.getElementById('driver-btn-audio-summary')?.addEventListener('click', (e) => {
+      // Gắn sự kiện gọi cho người báo tin
+      function triggerCitizenCall(e) {
+        const c = getActiveCase();
+        const p = c?.patient || {};
+        const callerPhone = c?.callerPhone || p?.phone || '0913.882.115';
+        const callerName = c?.callerName || 'Người dân báo tin';
+        window.CCNV_UI?.SoundFx?.playBeep?.();
+        window.CCNV_UI?.Toast?.show(
+          'ĐANG KẾT NỐI CUỘC GỌI...',
+          `Đang gọi cho người báo tin: ${callerName} (${callerPhone})`,
+          false,
+          3500
+        );
+      }
+
+      document.getElementById('btn-call-citizen')?.addEventListener('click', (e) => {
+        triggerCitizenCall(e);
+      });
+      document.getElementById('btn-call-citizen-inline')?.addEventListener('click', (e) => {
         e.stopPropagation();
-        window.playPatientAudioSummary();
+        triggerCitizenCall(e);
       });
 
       // Khởi động bản đồ Leaflet

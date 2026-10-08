@@ -314,7 +314,9 @@
       if (patientPatch.symptom && c.incident) {
         c.incident.description = patientPatch.symptom;
       }
-      this.addCaseLog(caseId, `Cập nhật thông tin bệnh nhân: ${c.patient.name || 'Bệnh nhân'}`);
+      const patientDesc = c.patient.ageGroupText || 'Người trưởng thành';
+      const genderDesc = c.patient.gender ? ` (${c.patient.gender})` : '';
+      this.addCaseLog(caseId, `Cập nhật thông tin nạn nhân: ${patientDesc}${genderDesc}`);
       this.notify('PATIENT_UPDATED', { caseId, patient: c.patient, vehiclePlate: c.dispatch?.vehiclePlate });
       return c;
     }
