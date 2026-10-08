@@ -1263,20 +1263,17 @@
   z-index: 90001 !important;
 }
 
-/* Bottom Sheet Modal (Top Layer) */
-.bottom-sheet-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(3, 10, 18, 0.85);
-  backdrop-filter: blur(4px);
-  z-index: 92000 !important;
-  display: none;
-  align-items: flex-end;
-  justify-content: center;
-}
-
+/* Triệt để vô hiệu hóa và ẩn mọi popup thông báo Toast và popup hỏi lý do trên App Người dân */
+#toast-container,
+.toast,
+.toast-emergency,
+.toast-content,
+.bottom-sheet-backdrop,
 .bottom-sheet-backdrop.active {
-  display: flex !important;
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 /* 5-Second Safe Emergency Countdown Overlay - Highest Layer */

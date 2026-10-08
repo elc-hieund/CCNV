@@ -7318,29 +7318,8 @@
                 <strong style="color:#ffffff;"> ${inc.name || 'Tai nạn giao thông'}</strong> - ${inc.description || 'Đa chấn thương phần mềm, xây xát cẳng tay, theo dõi chấn thương ngực kín.'}
               </div>
 
-              <!-- 4 Ô Sinh hiệu nhanh -->
-              <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:8px;">
-                <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:6px;padding:6px;text-align:center;">
-                  <div style="font-size:10px;color:var(--text-slate);">Mạch</div>
-                  <div style="font-size:14px;font-weight:700;color:#ffffff;font-family:var(--font-mono);">${vit.pulse || 92} <span style="font-size:9px;color:var(--text-muted);">bpm</span></div>
-                </div>
-                <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:6px;padding:6px;text-align:center;">
-                  <div style="font-size:10px;color:var(--text-slate);">Huyết áp</div>
-                  <div style="font-size:14px;font-weight:700;color:#ffffff;font-family:var(--font-mono);">${vit.bp || '135/85'}</div>
-                </div>
-                <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:6px;padding:6px;text-align:center;">
-                  <div style="font-size:10px;color:var(--text-slate);">SpO2</div>
-                  <div style="font-size:14px;font-weight:700;color:#38bdf8;font-family:var(--font-mono);">${vit.spO2 || 95}%</div>
-                </div>
-                <div style="background:var(--bg-elevated);border:1px solid var(--border-main);border-radius:6px;padding:6px;text-align:center;">
-                  <div style="font-size:10px;color:var(--text-slate);">Glasgow</div>
-                  <div style="font-size:14px;font-weight:700;color:#34d399;font-family:var(--font-mono);">${vit.gcs || 14}đ</div>
-                </div>
-              </div>
-
-              <div style="margin-top:10px;font-size:11.5px;color:var(--text-slate);display:flex;align-items:center;justify-content:space-between;">
-                <span>Hiện trường: <strong>${demoCase.location?.address || 'Cầu Hưng Lợi, thành phố Cần Thơ'}</strong></span>
-                <span style="color:#10b981;display:inline-flex;align-items:center;gap:4px;">${window.CCNV_UI?.ICONS?.check || ''}<span>Sơ cứu & truyền dịch tại xe</span></span>
+              <div style="font-size:12px;color:var(--text-slate);">
+                <span>Hiện trường: <strong style="color:var(--text-white);">${demoCase.location?.address || 'Cầu Hưng Lợi, thành phố Cần Thơ'}</strong></span>
               </div>
             </div>
           </div>
@@ -9270,12 +9249,6 @@
               <button class="panel-tab-btn" data-tab="tab-logs" style="padding:10px 22px;font-size:13px;font-weight:600;">Lịch sử</button>
             </div>
             <div style="display:flex;align-items:center;gap:10px;padding:6px 0;">
-              ${(this.isHospitalMode() && (!state.cases.some(item => item.id === c.id || item.code === c.code) || c.hospitalResponse !== 'ACCEPTED')) ? `
-                <button class="btn btn-emergency btn-sm" id="btn-modal-confirm-hospital-case" style="font-weight:700;display:flex;align-items:center;gap:6px;box-shadow:0 0 16px rgba(239,68,68,0.45);padding:5px 12px;font-size:12px;">
-                  ${window.CCNV_UI?.ICONS?.check || ''}
-                  <span>Xác nhận tiếp nhận</span>
-                </button>
-              ` : ''}
               <button class="btn btn-ghost btn-sm" id="btn-close-case-modal" title="Đóng toàn màn hình (Esc)" style="width:30px;height:30px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:6px;background:rgba(255,255,255,0.06);color:var(--text-white);">
                 ${window.CCNV_UI.ICONS.x}
               </button>
@@ -9310,13 +9283,13 @@
                   <div>
                     <strong style="color:var(--red-vivid);font-size:14px;letter-spacing:0.3px;display:block;">XE CẤP CỨU ĐANG ĐẾN - CHỜ KHOA CẤP CỨU XÁC NHẬN TIẾP NHẬN</strong>
                     <div style="color:var(--text-light);font-size:12px;margin-top:2px;">
-                      Bệnh nhân đang được vận chuyển khẩn cấp từ hiện trường (Dự kiến đến sau 4 phút). Nhấn <strong>"Xác nhận tiếp nhận"</strong> để đưa ca vào danh sách cấp cứu chính thức.
+                      Bệnh nhân đang được vận chuyển khẩn cấp từ hiện trường (Dự kiến đến sau 4 phút). Nhấn <strong>"Tiếp nhận ca cấp cứu"</strong> để đưa ca vào danh sách cấp cứu chính thức.
                     </div>
                   </div>
                 </div>
                 <button class="btn btn-emergency btn-sm" id="btn-tab-overview-confirm-hospital-case" style="font-weight:700;padding:8px 20px;white-space:nowrap;box-shadow:0 0 15px rgba(239,68,68,0.4);display:flex;align-items:center;gap:6px;">
                   ${window.CCNV_UI?.ICONS?.check || ''}
-                  <span>Xác nhận tiếp nhận</span>
+                  <span>Tiếp nhận ca cấp cứu</span>
                 </button>
               </div>
             ` : ''}
@@ -10320,8 +10293,8 @@
       const handleConfirmHospitalAccept = () => {
         this.commitHospitalDemoCase(c);
         window.CCNV_UI.Toast.show(
-          'Đã xác nhận tiếp nhận',
-          `Khoa Cấp cứu đã xác nhận tiếp nhận người bệnh ${c.patient?.name || ''} (Mã: ${c.code}). Ca đã được ghi nhận vào danh sách cấp cứu!`
+          'Đã tiếp nhận ca cấp cứu',
+          `Khoa Cấp cứu đã tiếp nhận ca cấp cứu người bệnh ${c.patient?.name || ''} (Mã: ${c.code}). Ca đã được ghi nhận vào danh sách cấp cứu!`
         );
         closeModal();
         const mainViewport = document.getElementById('main-content-viewport');

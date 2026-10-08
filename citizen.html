@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="css/tokens.css?v=20261002_03" />
   <link rel="stylesheet" href="css/global.css?v=20261002_03" />
   <link rel="stylesheet" href="css/mobile.css?v=20261002_04" />
-  <link rel="stylesheet" href="css/citizen.css?v=20261004_01" />
+  <link rel="stylesheet" href="css/citizen.css?v=1791428500" />
 
   <!-- Leaflet GIS Real World Map Engine for Mobile Tracking & Facilities -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -156,6 +156,7 @@
     }
 
     .incall-end-btn {
+      flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -395,8 +396,31 @@
     }
 
     #home-facilities-map .leaflet-popup-pane,
-    #citizen-tracking-map .leaflet-popup-pane {
-      z-index: 400;
+    /* Voice Call Waveform Visualizer */
+    .incall-voice-wave {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3.5px;
+      margin: 2px 0 6px;
+      height: 14px;
+    }
+    .incall-voice-wave .voice-bar {
+      width: 3px;
+      height: 6px;
+      background: #10B981;
+      border-radius: 2px;
+      animation: voiceWavePulse 0.85s ease-in-out infinite alternate;
+    }
+    .incall-voice-wave.paused .voice-bar {
+      animation-play-state: paused !important;
+      opacity: 0.35;
+      height: 3px !important;
+    }
+    @keyframes voiceWavePulse {
+      0% { height: 4px; opacity: 0.5; }
+      50% { height: 14px; opacity: 1; }
+      100% { height: 6px; opacity: 0.7; }
     }
   </style>
 </head>
@@ -615,30 +639,43 @@
               </div>
               <div class="incall-timer-box">
                 <span id="call-timer-duration" class="incall-timer-text">00:01</span>
-                <span id="pending-dispatch-countdown-val" style="display:none;">10s</span>
+                <span id="pending-dispatch-countdown-val" style="display:none;">300s</span>
                 <span style="font-size:9.5px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.4px;">Thời gian
                   gọi</span>
               </div>
             </div>
 
+            <!-- Voice Call Waveform Visualizer -->
+            <div id="incall-voice-wave" class="incall-voice-wave" title="Đang kết nối đàm thoại 115">
+              <span class="voice-bar" style="animation-delay:0.1s;"></span>
+              <span class="voice-bar" style="animation-delay:0.35s;"></span>
+              <span class="voice-bar" style="animation-delay:0.2s;"></span>
+              <span class="voice-bar" style="animation-delay:0.5s;"></span>
+              <span class="voice-bar" style="animation-delay:0.15s;"></span>
+              <span class="voice-bar" style="animation-delay:0.4s;"></span>
+              <span class="voice-bar" style="animation-delay:0.25s;"></span>
+              <span class="voice-bar" style="animation-delay:0.45s;"></span>
+              <span class="voice-bar" style="animation-delay:0.1s;"></span>
+              <span class="voice-bar" style="animation-delay:0.3s;"></span>
+            </div>
+
+            <!-- Video / Audio Element phát voice đàm thoại cấp cứu 115 -->
+            <video id="citizen-emergency-voice-media" preload="auto" playsinline style="display:none;">
+              <source src="assets/voice_demo.m4a" type="audio/mp4">
+              <source src="assets/voice_demo.m4a" type="audio/x-m4a">
+              <source src="assets/voice_demo.m4a" type="audio/aac">
+            </video>
+
             <!-- In-call action controls: Speaker, Mute, End Call (100% Lucide SVG) -->
             <div class="incall-controls-bar">
               <button type="button" class="incall-control-btn active" id="btn-incall-speaker" title="Bật/Tắt Loa ngoài">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                </svg>
+                <span id="icon-incall-speaker" style="display:inline-flex;align-items:center;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                  </svg>
+                </span>
                 <span id="lbl-incall-speaker">Loa ngoài: BẬT</span>
-              </button>
-
-              <button type="button" class="incall-control-btn" id="btn-incall-mute" title="Tắt/Bật Micro">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                  <line x1="12" y1="19" x2="12" y2="23"></line>
-                  <line x1="8" y1="23" x2="16" y2="23"></line>
-                </svg>
-                <span id="lbl-incall-mute">Micro: BẬT</span>
               </button>
 
               <button type="button" class="incall-end-btn" id="btn-incall-end"
@@ -1313,7 +1350,7 @@
   <script src="js/shared/map.js?v=20261005_12"></script>
 
   <!-- Citizen Mobile App Controller -->
-  <script src="js/citizen/citizen-app.js?v=20261006_02"></script>
+  <script src="js/citizen/citizen-app.js?v=1791428500"></script>
 </body>
 
 </html>

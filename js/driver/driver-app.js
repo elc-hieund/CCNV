@@ -385,6 +385,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       const dispatchModal = document.getElementById('modal-dispatch-alert');
       const btnCloseDispatch = document.getElementById('btn-close-dispatch-order');
       const btnRejectDispatch = document.getElementById('btn-reject-dispatch-order');
+      const modalRejectDispatch = document.getElementById('modal-dispatch-reject');
+      const btnCloseRejectModal = document.getElementById('btn-close-reject-modal');
+      const btnCancelRejectReason = document.getElementById('btn-cancel-reject-reason');
+      const btnConfirmRejectReason = document.getElementById('btn-confirm-reject-reason');
+      const inputRejectReason = document.getElementById('input-dispatch-reject-reason');
+      const errorRejectReason = document.getElementById('error-dispatch-reject-reason');
+      const quickRejectBtns = document.querySelectorAll('.driver-reject-option-btn');
       const dispatchTrack = document.getElementById('dispatch-slider-track');
       const dispatchKnob = document.getElementById('dispatch-slider-knob');
       const dispatchFill = document.getElementById('dispatch-slider-fill');
@@ -549,9 +556,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // 3. Header badge về trạng thái SẴN SÀNG
         if (badgeHeaderPhase) {
-          badgeHeaderPhase.textContent = 'SẴN SÀNG';
-          badgeHeaderPhase.style.background = '#10B981';
-          badgeHeaderPhase.style.color = '#FFFFFF';
+          badgeHeaderPhase.innerHTML = `
+            <span style="width:6px;height:6px;border-radius:50%;background:#10B981;box-shadow:0 0 6px #10B981;"></span>
+            SẴN SÀNG
+          `;
+          badgeHeaderPhase.style.background = 'rgba(16,185,129,0.2)';
+          badgeHeaderPhase.style.border = '1px solid rgba(16,185,129,0.5)';
+          badgeHeaderPhase.style.color = '#34D399';
         }
 
         // 4. Xóa tuyến đường và điểm tai nạn khỏi bản đồ
@@ -622,10 +633,108 @@ document.addEventListener('DOMContentLoaded', async () => {
         dispatchModal.classList.remove('active');
       });
 
-      // Bấm nút Từ chối nhận ca
-      btnRejectDispatch?.addEventListener('click', () => {
-        dispatchModal.classList.remove('active');
+      // =========================================================================
+      // XỬ LÝ TỪ CHỐI NHẬN LỆNH ĐIỀU ĐỘNG & BẮT BUỘC NHẬP LÝ DO
+      // =========================================================================
+      function openRejectDispatchModal() {
+        if (!modalRejectDispatch) return;
+        // Reset form trạng thái ban đầu
+        if (inputRejectReason) {
+          inputRejectReason.value = '';
+          inputRejectReason.style.borderColor = '#1E3A56';
+        }
+        quickRejectBtns.forEach(b => b.classList.remove('selected'));
+        if (errorRejectReason) {
+          errorRejectReason.style.display = 'none';
+        }
+        modalRejectDispatch.classList.add('active');
         if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      }
+
+      function closeRejectDispatchModal() {
+        modalRejectDispatch?.classList.remove('active');
+      }
+
+      // Bấm nút "Từ chối nhận ca" trên popup Lệnh điều động -> Yêu cầu nhập lý do
+      btnRejectDispatch?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openRejectDispatchModal();
+      });
+
+      // Đóng modal lý do (Quay lại xem lệnh điều động)
+      btnCloseRejectModal?.addEventListener('click', closeRejectDispatchModal);
+      btnCancelRejectReason?.addEventListener('click', closeRejectDispatchModal);
+
+      // Bấm chọn nhanh danh mục lý do phổ biến
+      quickRejectBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          quickRejectBtns.forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          const reasonText = btn.getAttribute('data-reason') || '';
+          if (inputRejectReason) {
+            inputRejectReason.value = reasonText;
+            inputRejectReason.style.borderColor = '#1E3A56';
+            if (!reasonText) {
+              inputRejectReason.focus();
+            }
+          }
+          if (errorRejectReason) {
+            errorRejectReason.style.display = 'none';
+          }
+        });
+      });
+
+      // Lắng nghe khi tài xế gõ trực tiếp vào ô lý do
+      inputRejectReason?.addEventListener('input', () => {
+        if (inputRejectReason.value.trim().length > 0) {
+          if (errorRejectReason) errorRejectReason.style.display = 'none';
+          inputRejectReason.style.borderColor = '#38BDF8';
+        } else {
+          inputRejectReason.style.borderColor = '#1E3A56';
+        }
+      });
+
+      // Xác nhận từ chối nhận lệnh điều động
+      btnConfirmRejectReason?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const reason = (inputRejectReason?.value || '').trim();
+        if (!reason) {
+          if (errorRejectReason) {
+            errorRejectReason.style.display = 'flex';
+          }
+          if (inputRejectReason) {
+            inputRejectReason.style.borderColor = '#EF4444';
+            inputRejectReason.focus();
+          }
+          if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+          return;
+        }
+
+        // Đóng cả 2 modal
+        closeRejectDispatchModal();
+        dispatchModal?.classList.remove('active');
+
+        // Hiển thị thông báo Toast
+        if (window.CCNV_UI?.Toast) {
+          window.CCNV_UI.Toast.show(
+            'ĐÃ TỪ CHỐI LỆNH ĐIỀU ĐỘNG',
+            `Lý do: "${reason}". Hệ thống đã gửi báo cáo về Trung tâm điều hành 115.`
+          );
+        }
+
+        // Ghi nhận nhật ký ca trên StateManager nếu có
+        if (window.StateManager?.addCaseLog) {
+          try {
+            window.StateManager.addCaseLog('CASE-001', `Kíp xe 65A-012.34 từ chối nhận lệnh. Lý do: ${reason}`);
+          } catch (err) {
+            console.warn('StateManager error:', err);
+          }
+        }
+
+        // Cập nhật trạng thái xe trên giao diện bản đồ về sẵn sàng
+        updateVehiclePill('SẴN SÀNG', false);
+        if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
       });
 
       // Vuốt từ trái sang phải để xác nhận nhận lệnh (Slide-to-Confirm)
