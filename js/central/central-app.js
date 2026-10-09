@@ -37,7 +37,7 @@
         this.currentMenu = 'hospital-map';
         document.body.classList.add('hospital-mode');
         // Mặc định ở màn Bệnh viện tiếp nhận: Không có ca nào, chỉ hiện vị trí bệnh viện
-        try { sessionStorage.removeItem('ccnv_hospital_confirmed'); } catch (e) {}
+        try { sessionStorage.removeItem('ccnv_hospital_confirmed'); } catch (e) { }
         this.hospitalDemoRunning = false;
         this.hospitalAlertTriggered = false;
         this.resetAllToReady();
@@ -1030,13 +1030,13 @@
       // Khi đã bấm xác nhận (isHospConfirmed = true) thì mới hiển thị ca tiếp nhận.
       const hospitalCases = isHospital
         ? (isHospConfirmed ? activeCases.filter(c => {
-            if (c.hospitalResponse !== 'ACCEPTED') return false;
-            return !c.dispatch?.hospitalId ||
-              c.dispatch?.hospitalId === myHospId ||
-              c.dispatch?.hospitalName === myHospName ||
-              (myHospName && c.dispatch?.hospitalName && myHospName.includes(c.dispatch.hospitalName)) ||
-              (c.dispatch?.hospitalName && myHospName && c.dispatch.hospitalName.includes(myHospName));
-          }) : [])
+          if (c.hospitalResponse !== 'ACCEPTED') return false;
+          return !c.dispatch?.hospitalId ||
+            c.dispatch?.hospitalId === myHospId ||
+            c.dispatch?.hospitalName === myHospName ||
+            (myHospName && c.dispatch?.hospitalName && myHospName.includes(c.dispatch.hospitalName)) ||
+            (c.dispatch?.hospitalName && myHospName && c.dispatch.hospitalName.includes(myHospName));
+        }) : [])
         : activeCases;
 
       const displayCases = isHospital ? hospitalCases : activeCases;
@@ -1125,8 +1125,8 @@
 
               <div class="panel-list-scroll" id="vehicle-card-list">
                 ${isHospital
-                  ? this.renderHospitalCaseCards(displayCases, currentSelectedPlate)
-                  : this.renderVehicleCards(vehicles, currentSelectedPlate)}
+          ? this.renderHospitalCaseCards(displayCases, currentSelectedPlate)
+          : this.renderVehicleCards(vehicles, currentSelectedPlate)}
               </div>
             </div>
           </div>
@@ -7681,7 +7681,7 @@
       }
 
       // Lưu cờ xác nhận vào session cho cổng bệnh viện tiếp nhận
-      try { sessionStorage.setItem('ccnv_hospital_confirmed', 'true'); } catch (e) {}
+      try { sessionStorage.setItem('ccnv_hospital_confirmed', 'true'); } catch (e) { }
       this.hospitalDemoRunning = true;
       this.realtimeSelectedPlate = plate;
       this.setDemoButton(true);
@@ -7713,7 +7713,7 @@
     }
 
     endHospitalDemo() {
-      try { sessionStorage.removeItem('ccnv_hospital_confirmed'); } catch (e) {}
+      try { sessionStorage.removeItem('ccnv_hospital_confirmed'); } catch (e) { }
       this.hospitalDemoRunning = false;
       this.hospitalAlertTriggered = false;
       const state = window.StateManager.getState();
@@ -9890,7 +9890,7 @@
                   </div>
                   <div style="display:flex;align-items:flex-start;">
                     <span style="width:140px;flex-shrink:0;color:var(--text-slate);padding-top:2px;">Khoa nhận:</span>
-                    <div style="line-height:1.4;">Khoa Hồi sức Cấp cứu (A9) · Buồng CC Ngoại</div>
+                    <div style="line-height:1.4;">Khoa Hồi sức Cấp cứu</div>
                   </div>
                   <div style="display:flex;align-items:center;">
                     <span style="width:140px;flex-shrink:0;color:var(--text-slate);">Thời gian xử lý:</span>
@@ -11025,7 +11025,7 @@
       });
 
       // 4. Xóa cờ demo & đặt lại nút "Bắt đầu"
-      try { sessionStorage.removeItem('ccnv_hospital_confirmed'); } catch (e) {}
+      try { sessionStorage.removeItem('ccnv_hospital_confirmed'); } catch (e) { }
       this.demoRunning = false;
       this.hospitalDemoRunning = false;
       this.hospitalAlertTriggered = false;
