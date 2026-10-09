@@ -146,6 +146,40 @@
       this._tick = this.tick.bind(this);
     }
 
+    isHospitalMode() {
+      const currentUser = window.StateManager?.getCurrentUser?.();
+      return Boolean(this.options?.isHospital) || (currentUser?.role === 'HOSPITAL_RECEIVER');
+    }
+
+    getCurrentHospital(hospitals) {
+      const hList = hospitals || window.StateManager?.getState?.()?.hospitals || [];
+      const currentUser = window.StateManager?.getCurrentUser?.();
+      const myHospId = this.options?.hospitalId || currentUser?.hospitalId || 'HOSP_BVTU';
+      const myHospName = this.options?.hospitalName || currentUser?.organization || '';
+      return hList.find(h => h.id === myHospId)
+        || hList.find(h => myHospName && (h.name === myHospName || h.name?.includes(myHospName) || myHospName.includes(h.name)))
+        || hList.find(h => h.id === 'HOSP_BVTU')
+        || hList[0]
+        || { id: 'HOSP_BVTU', name: 'Bệnh viện Đa khoa Trung ương Cần Thơ', coords: [10.0270, 105.7620] };
+    }
+
+    isCaseForMyHospital(caseData) {
+      if (!this.isHospitalMode()) return true;
+      if (!caseData) return false;
+      const myHosp = this.getCurrentHospital();
+      const myHospId = myHosp?.id || 'HOSP_BVTU';
+      const myHospName = myHosp?.name || '';
+
+      const dHospId = caseData.dispatch?.hospitalId;
+      const dHospName = caseData.dispatch?.hospitalName;
+
+      if (dHospId && dHospId === myHospId) return true;
+      if (dHospName && myHospName) {
+        if (dHospName === myHospName || dHospName.includes(myHospName) || myHospName.includes(dHospName)) return true;
+      }
+      return false;
+    }
+
     render() {
       const container = document.getElementById(this.containerId);
       if (!container) return;
@@ -264,19 +298,17 @@
       }
 
       // 0. Xác định vai trò & Bệnh viện hiện tại (nếu ở chế độ Cổng Tiếp nhận & Cấp cứu Bệnh viện)
-      const isHospital = Boolean(this.options?.isHospital);
+      const isHospital = this.isHospitalMode();
       const isHospConfirmed = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('ccnv_hospital_confirmed') === 'true';
-      const myHospId = this.options?.hospitalId || 'HOSP_BVTU';
-      const myHospName = this.options?.hospitalName || '';
-      const currentHospital = hospitals.find(h => h.id === myHospId)
-        || hospitals.find(h => myHospName && (h.name === myHospName || h.name?.includes(myHospName) || myHospName.includes(h.name)))
-        || hospitals.find(h => h.id === 'HOSP_BVTU')
-        || hospitals[0];
+      const currentHospital = this.getCurrentHospital(hospitals);
 
       // Khi ở chế độ Bệnh viện tiếp nhận và CHƯA BẤM XÁC NHẬN:
       // Mặc định CHỈ HIỂN THỊ VỊ TRÍ CỦA BỆNH VIỆN TIẾP NHẬN, không vẽ xe, không chạy animation di chuyển
       if (isHospital && !isHospConfirmed) {
         this.missions = {};
+        this.hospitalMarkers = {};
+        this.vehicleMarkers = {};
+        this.incidentMarkers = {};
         const coords = currentHospital.coords || CITY_CENTER;
         const fullDisplayName = currentHospital.name ? (currentHospital.name.startsWith('BV ') ? currentHospital.name.replace(/^BV\s+/, 'Bệnh viện ') : currentHospital.name) : 'Bệnh viện';
         const shortName = formatHospShortName(fullDisplayName);
@@ -310,15 +342,19 @@
       }
 
       // KHI ĐÃ XÁC NHẬN HOẶC Ở APP TRUNG TÂM TIẾP NHẬN:
-      // Giữ nguyên 100% code di chuyển chuẩn nguyên bản của app trung tâm tiếp nhận
-      const activeCases = (state.cases || []).filter(c =>
+      // Trong vai trò Bệnh viện tiếp nhận: CHỈ LỌC CA ĐIỀU ĐỘNG ĐẾN BỆNH VIỆN NÀY (VD: xe 65A-012.34 đến BVĐK Trung ương)
+      const allActiveCases = (state.cases || []).filter(c =>
         !INACTIVE_STATUSES.includes(c.status) && c.dispatch?.vehiclePlate && c.location?.coords
       );
+      const activeCases = isHospital
+        ? allActiveCases.filter(c => this.isCaseForMyHospital(c))
+        : allActiveCases;
 
       // 1. Missions (ca đang hoạt động gắn với xe)
+      this.missions = {};
       activeCases.forEach(c => {
         const veh = vehicles.find(v => v.plate === c.dispatch.vehiclePlate);
-        const hosp = hospitals.find(h => h.id === c.dispatch.hospitalId) || hospitals[0];
+        const hosp = isHospital ? currentHospital : (hospitals.find(h => h.id === c.dispatch.hospitalId) || hospitals[0]);
         if (!veh || !hosp) return;
         if (!missionProgress[c.id]) {
           missionProgress[c.id] = { phase: initialPhase(c.status), dist: 0, pauseUntil: 0 };
@@ -340,7 +376,10 @@
       });
 
       // 2. Hospitals (vẽ các bệnh viện)
-      hospitals.forEach(h => {
+      // Khi là Bệnh viện tiếp nhận: TUYỆT ĐỐI CHỈ VẼ BỆNH VIỆN CỦA MÌNH (currentHospital), KHÔNG BAO GIỜ VẼ CÁC BỆNH VIỆN KHÁC!
+      const hospitalsToProcess = isHospital ? [currentHospital] : hospitals;
+      this.hospitalMarkers = {};
+      hospitalsToProcess.forEach(h => {
         const coords = h.coords || CITY_CENTER;
         const isRestricted = h.status === 'RESTRICTED';
         const isMyCurrentHosp = isHospital && h.id === currentHospital.id;
@@ -384,7 +423,9 @@
       });
 
       // 3. Incidents (chỉ vẽ các ca trong this.missions)
+      this.incidentMarkers = {};
       Object.values(this.missions).forEach(m => {
+        if (isHospital && !this.isCaseForMyHospital(m.caseData)) return;
         const c = m.caseData;
         const shortName = (c.incident?.name || 'Cấp cứu').split('/')[0].trim().toUpperCase();
         const icon = window.L.divIcon({
@@ -413,7 +454,17 @@
       });
 
       // 4. Vehicles (vẽ các xe cứu thương)
-      vehicles.forEach(v => {
+      // Khi là Bệnh viện tiếp nhận: TUYỆT ĐỐI CHỈ VẼ CÁC XE ĐƯỢC PHÂN CÔNG ĐẾN BỆNH VIỆN NÀY (VD: 65A-012.34)
+      // Tuyệt đối không bao giờ vẽ các xe không được phân công đến bệnh viện này!
+      const vehiclesToProcess = isHospital
+        ? vehicles.filter(v => {
+            const m = Object.values(this.missions).find(item => item.plate === v.plate);
+            return Boolean(m && this.isCaseForMyHospital(m.caseData));
+          })
+        : vehicles;
+
+      this.vehicleMarkers = {};
+      vehiclesToProcess.forEach(v => {
         const mission = this.missionByPlate(v.plate);
         const startCoords = mission
           ? (mission.progress.phase === 'TO_SCENE' ? mission.origin : mission.scene)
@@ -457,17 +508,28 @@
       this.bindLegend(container);
 
       // 5. Căn chỉnh góc nhìn bản đồ (Camera viewport)
-      if (isHospital && isHospConfirmed) {
-        const targetPts = [window.L.latLng(currentHospital.coords || CITY_CENTER)];
-        activeCases.forEach(c => {
-          if (c.location?.coords) targetPts.push(window.L.latLng(c.location.coords));
-          const veh = vehicles.find(v => v.plate === c.dispatch?.vehiclePlate);
-          if (veh?.coords) targetPts.push(window.L.latLng(veh.coords));
-        });
-        if (targetPts.length > 1) {
-          const bounds = window.L.latLngBounds(targetPts);
-          this.map.fitBounds(bounds, { padding: [90, 90], maxZoom: 16 });
+      if (isHospital) {
+        const hospMissions = Object.values(this.missions).filter(m => this.isCaseForMyHospital(m.caseData));
+        if (hospMissions.length > 0) {
+          const targetPts = [window.L.latLng(currentHospital.coords || CITY_CENTER)];
+          hospMissions.forEach(m => {
+            if (m.scene) targetPts.push(window.L.latLng(m.scene));
+            const veh = vehicles.find(v => v.plate === m.plate);
+            if (veh?.coords) targetPts.push(window.L.latLng(veh.coords));
+            else if (m.origin) targetPts.push(window.L.latLng(m.origin));
+          });
+          if (targetPts.length > 1) {
+            const bounds = window.L.latLngBounds(targetPts);
+            this.map.fitBounds(bounds, { padding: [90, 90], maxZoom: 16 });
+          } else {
+            this.map.setView(currentHospital.coords || CITY_CENTER, 15);
+          }
+        } else {
+          this.map.setView(currentHospital.coords || CITY_CENTER, 15);
         }
+      } else {
+        // Trung tâm điều hành: Tự động hiển thị toàn cảnh tất cả xe cứu thương và bệnh viện
+        this.clearFocus(false);
       }
 
       this.applyVisibility();
@@ -475,8 +537,13 @@
       setTimeout(() => this.map?.invalidateSize(), 200);
 
       // 6. Load routes then animate
-      Object.values(this.missions).forEach(m => this.loadMissionRoute(m));
-      this.rafId = requestAnimationFrame(this._tick);
+      const missionsToLoad = isHospital
+        ? Object.values(this.missions).filter(m => this.isCaseForMyHospital(m.caseData))
+        : Object.values(this.missions);
+      missionsToLoad.forEach(m => this.loadMissionRoute(m));
+      if (missionsToLoad.length > 0 || !isHospital) {
+        this.rafId = requestAnimationFrame(this._tick);
+      }
     }
 
     bindLegend(container) {
@@ -558,16 +625,37 @@
         zoomExtentBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           if (!this.map) return;
-          // Hủy trạng thái focus xe cụ thể nếu có để về toàn cảnh thành phố
+          const isHospital = this.isHospitalMode();
+          const currentHospital = this.getCurrentHospital();
+
           if (this.focusPlate) {
-            this.clearFocus();
+            this.clearFocus(true);
             this.onClearFocus?.();
           } else {
-            this.map.flyTo(CITY_CENTER, CITY_ZOOM, { duration: 0.8 });
+            if (isHospital) {
+              const activeMissions = Object.values(this.missions).filter(m => this.isCaseForMyHospital(m.caseData));
+              if (activeMissions.length > 0) {
+                const targetPts = [window.L.latLng(currentHospital.coords || CITY_CENTER)];
+                activeMissions.forEach(m => {
+                  if (m.scene) targetPts.push(window.L.latLng(m.scene));
+                  const vMarker = this.vehicleMarkers[m.plate]?.marker;
+                  if (vMarker) targetPts.push(vMarker.getLatLng());
+                  else if (m.pos?.latlng) targetPts.push(m.pos.latlng);
+                  else if (m.origin) targetPts.push(window.L.latLng(m.origin));
+                });
+                const bounds = window.L.latLngBounds(targetPts);
+                this.map.fitBounds(bounds, { padding: [80, 80], maxZoom: 16 });
+              } else {
+                this.map.flyTo(currentHospital.coords || CITY_CENTER, 15, { duration: 0.8 });
+              }
+            } else {
+              this.clearFocus(true);
+              this.onClearFocus?.();
+            }
           }
           window.CCNV_UI?.Toast?.show(
-            'BẢN ĐỒ TOÀN CẢNH',
-            'Đã chuyển góc nhìn về toàn cảnh thành phố Cần Thơ',
+            isHospital ? 'BỆNH VIỆN TIẾP NHẬN' : 'BẢN ĐỒ TOÀN CẢNH',
+            isHospital ? (currentHospital.name || 'Góc nhìn Bệnh viện tiếp nhận') : 'Đã chuyển góc nhìn về toàn cảnh thành phố Cần Thơ',
             true,
             2000
           );
@@ -596,7 +684,91 @@
     }
 
     missionByPlate(plate) {
-      return Object.values(this.missions).find(m => m.plate === plate) || null;
+      if (!plate) return null;
+      let m = Object.values(this.missions).find(item => item.plate === plate);
+      if (m) {
+        if (this.isHospitalMode() && !this.isCaseForMyHospital(m.caseData)) return null;
+        return m;
+      }
+
+      // Fallback: kiểm tra trực tiếp trong State nếu ca được tạo động hoặc mô phỏng điều động
+      const state = window.StateManager ? window.StateManager.getState() : (window.appState || window.SEED_DATA);
+      if (!state) return null;
+
+      const isHospital = this.isHospitalMode();
+      const allCases = (state.cases || []).filter(c => !INACTIVE_STATUSES.includes(c.status));
+      const veh = (state.vehicles || []).find(v => v.plate === plate);
+      let matchedCase = allCases.find(c => c.dispatch?.vehiclePlate === plate || c.currentVehiclePlate === plate || (veh?.currentCaseId && c.id === veh.currentCaseId));
+
+      if (!matchedCase && (veh?.status === 'EMERGENCY' || veh?.isDispatchedSimulated || state.demoRunning || this.options?.demoRunning || (isHospital && (state.hospitalDemoRunning || this.options?.hospitalDemoRunning)))) {
+        if (state.demoCase && (!state.demoCase.dispatch?.vehiclePlate || state.demoCase.dispatch.vehiclePlate === plate)) {
+          matchedCase = state.demoCase;
+        } else if (window.SEED_DATA?.demoCase && (!window.SEED_DATA.demoCase.dispatch?.vehiclePlate || window.SEED_DATA.demoCase.dispatch.vehiclePlate === plate)) {
+          matchedCase = window.SEED_DATA.demoCase;
+        }
+      }
+
+      if (matchedCase && isHospital && !this.isCaseForMyHospital(matchedCase)) {
+        return null;
+      }
+
+      if (matchedCase && matchedCase.location?.coords) {
+        const hospitals = state.hospitals || [];
+        const hosp = hospitals.find(h => h.id === matchedCase.dispatch?.hospitalId || (matchedCase.dispatch?.hospitalName && (h.name === matchedCase.dispatch.hospitalName || h.name.includes(matchedCase.dispatch.hospitalName) || matchedCase.dispatch.hospitalName.includes(h.name)))) || hospitals[0];
+        if (hosp) {
+          if (!missionProgress[matchedCase.id]) {
+            missionProgress[matchedCase.id] = { phase: initialPhase(matchedCase.status), dist: 0, pauseUntil: 0 };
+          }
+          m = {
+            caseId: matchedCase.id,
+            caseData: matchedCase,
+            plate: plate,
+            hospId: hosp.id,
+            hosp,
+            origin: VEH_COORDS[plate] || veh?.coords || CITY_CENTER,
+            scene: matchedCase.location.coords,
+            code: emergencyCodeFor(matchedCase),
+            leg1: null,
+            leg2: null,
+            pos: null,
+            progress: missionProgress[matchedCase.id]
+          };
+          this.missions[matchedCase.id] = m;
+
+          // Tạo marker hiện trường nếu chưa có trên bản đồ
+          if (!this.incidentMarkers[matchedCase.id] && this.map) {
+            const shortName = (matchedCase.incident?.name || 'Cấp cứu').split('/')[0].trim().toUpperCase();
+            const icon = window.L.divIcon({
+              className: 'map-leaflet-marker',
+              html: `
+                <div class="map-incident-beacon-container">
+                  <div class="map-incident-radar-rings">
+                    <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+                  </div>
+                  <div class="map-incident-shake">
+                    <div class="map-incident-banner">
+                      <span class="map-incident-code" style="--code-color:${m.code.color};">CODE ${m.code.key}</span>
+                      <span>${shortName}</span>
+                      ${matchedCase.eta ? `<span class="map-incident-eta">ETA ${matchedCase.eta}</span>` : ''}
+                    </div>
+                  </div>
+                </div>
+              `,
+              iconSize: [300, 40],
+              iconAnchor: [150, 20]
+            });
+            const marker = window.L.marker(m.scene, { icon, zIndexOffset: 500 }).addTo(this.map);
+            marker.bindPopup(this.createIncidentPopupHtml(m), { autoPan: false });
+            marker.on('click', () => this.onIncidentSelect?.(m.caseId));
+            this.incidentMarkers[m.caseId] = { marker, mission: m };
+          }
+
+          this.loadMissionRoute(m);
+          return m;
+        }
+      }
+
+      return null;
     }
 
     // --- Animation ---
@@ -771,40 +943,121 @@
       this.fitFocus(animate);
     }
 
-    clearFocus() {
+    clearFocus(animate = true) {
       if (!this.map) return;
       this.focusPlate = null;
       this.map.closePopup();
       Object.values(this.vehicleMarkers).forEach(item => item.marker.getElement()?.classList.remove('is-active-marker'));
       this.applyVisibility();
       this.drawMissionRoutes();
-      this.map.flyTo(CITY_CENTER, CITY_ZOOM, { duration: 0.8 });
+
+      const isHospital = this.isHospitalMode();
+      if (isHospital) {
+        const currentHospital = this.getCurrentHospital();
+        const activeMissions = Object.values(this.missions).filter(m => this.isCaseForMyHospital(m.caseData));
+        if (activeMissions.length > 0) {
+          const targetPts = [window.L.latLng(currentHospital.coords || CITY_CENTER)];
+          activeMissions.forEach(m => {
+            if (m.scene) targetPts.push(window.L.latLng(m.scene));
+            const vMarker = this.vehicleMarkers[m.plate]?.marker;
+            if (vMarker) targetPts.push(vMarker.getLatLng());
+            else if (m.pos?.latlng) targetPts.push(m.pos.latlng);
+            else if (m.origin) targetPts.push(window.L.latLng(m.origin));
+          });
+          const bounds = window.L.latLngBounds(targetPts);
+          this.map.fitBounds(bounds, { padding: [80, 80], maxZoom: 16 });
+        } else {
+          this.map.flyTo(currentHospital.coords || CITY_CENTER, 15, { duration: 0.8 });
+        }
+      } else {
+        // TRUNG TÂM ĐIỀU HÀNH:
+        // Hiển thị TOÀN BỘ xe cứu thương và TOÀN BỘ bệnh viện trên bản đồ
+        const pts = [];
+        Object.values(this.vehicleMarkers).forEach(item => {
+          if (item?.marker) pts.push(item.marker.getLatLng());
+        });
+        Object.values(this.hospitalMarkers).forEach(item => {
+          if (item?.marker) pts.push(item.marker.getLatLng());
+        });
+        Object.values(this.incidentMarkers).forEach(item => {
+          if (item?.marker) pts.push(item.marker.getLatLng());
+        });
+
+        if (pts.length > 0) {
+          const bounds = window.L.latLngBounds(pts);
+          const isFleetCollapsed = document.getElementById('fleet-side-panel')?.classList.contains('is-collapsed');
+          const leftPad = isFleetCollapsed ? 80 : 380;
+          const opts = {
+            paddingTopLeft: [leftPad, 60],
+            paddingBottomRight: [60, 60],
+            maxZoom: 14
+          };
+          if (animate) {
+            this.map.flyToBounds(bounds, { ...opts, duration: 0.8 });
+          } else {
+            this.map.fitBounds(bounds, opts);
+          }
+        } else {
+          this.map.flyTo(CITY_CENTER, CITY_ZOOM, { duration: 0.8 });
+        }
+      }
     }
 
     applyVisibility() {
+      const isHospital = this.isHospitalMode();
+      const currentHospital = this.getCurrentHospital();
       const focus = this.focusPlate;
       const m = focus ? this.missionByPlate(focus) : null;
       const setVisible = (marker, visible) => {
+        if (!marker) return;
         const has = this.map.hasLayer(marker);
         if (visible && !has) this.map.addLayer(marker);
         if (!visible && has) this.map.removeLayer(marker);
       };
 
-      Object.entries(this.vehicleMarkers).forEach(([plate, item]) => setVisible(item.marker, !focus || plate === focus));
-      Object.entries(this.hospitalMarkers).forEach(([id, item]) => setVisible(item.marker, !focus || (m && m.hospId === id)));
+      // 1. Xe cứu thương:
+      // Trong vai trò Bệnh viện tiếp nhận:
+      // TUYỆT ĐỐI CHỈ HIỂN THỊ XE ĐƯỢC PHÂN CÔNG ĐẾN BỆNH VIỆN NÀY (VD: 65A-012.34), không bao giờ hiển thị xe khác!
+      Object.entries(this.vehicleMarkers).forEach(([plate, item]) => {
+        if (isHospital) {
+          const vehMission = this.missionByPlate(plate);
+          const isAssigned = Boolean(vehMission && this.isCaseForMyHospital(vehMission.caseData));
+          const shouldShow = isAssigned && (!focus || plate === focus);
+          setVisible(item.marker, shouldShow);
+          return;
+        }
+        setVisible(item.marker, !focus || plate === focus);
+      });
 
-      // Marker điểm tai nạn (sự cố): Khi xe đã đến đón và đang di chuyển về bệnh viện (TO_HOSP/ARRIVED) thì ẩn điểm tai nạn đi, chỉ còn xe và bệnh viện tiếp nhận
+      // 2. Bệnh viện:
+      // Trong vai trò Bệnh viện tiếp nhận: TUYỆT ĐỐI CHỈ HIỂN THỊ DUY NHẤT BỆNH VIỆN CỦA MÌNH
+      Object.entries(this.hospitalMarkers).forEach(([id, item]) => {
+        if (isHospital) {
+          setVisible(item.marker, id === currentHospital.id);
+          return;
+        }
+        const shouldShow = !focus ? true : Boolean(m && (m.hospId === id || (m.hosp && m.hosp.id === id)));
+        setVisible(item.marker, shouldShow);
+      });
+
+      // 3. Hiện trường cấp cứu:
+      // Trong vai trò Bệnh viện tiếp nhận: TUYỆT ĐỐI CHỈ HIỂN THỊ HIỆN TRƯỜNG CA ĐIỀU ĐỘNG ĐẾN BỆNH VIỆN NÀY
       Object.entries(this.incidentMarkers).forEach(([cid, item]) => {
-        const mission = item.mission || Object.values(this.missions).find(mis => mis.caseId === cid);
-        const isPastPickup = mission && (mission.progress.phase === 'TO_HOSP' || mission.progress.phase === 'ARRIVED');
-        const shouldShow = (!isPastPickup) && (this.options?.isHospital
-          ? Boolean(m && m.caseId === cid)
-          : (!focus || (m && m.caseId === cid)));
+        const incMission = item.mission || Object.values(this.missions).find(mi => mi.caseId === cid);
+        if (isHospital) {
+          const isForMe = Boolean(incMission && this.isCaseForMyHospital(incMission.caseData));
+          const shouldShow = isForMe && (!focus || Boolean(m && m.caseId === cid));
+          setVisible(item.marker, shouldShow);
+          return;
+        }
+        const shouldShow = !focus ? true : Boolean(m && m.caseId === cid);
         setVisible(item.marker, shouldShow);
       });
 
       // Re-apply highlight (marker element is recreated when re-added)
-      if (focus) this.vehicleMarkers[focus]?.marker.getElement()?.classList.add('is-active-marker');
+      if (focus) {
+        this.vehicleMarkers[focus]?.marker.getElement()?.classList.add('is-active-marker');
+      }
     }
 
     drawMissionRoutes() {
@@ -812,31 +1065,33 @@
       this.focusLayer.clearLayers();
       this.routeLines = {};
       const L = window.L;
+      const isHospital = this.isHospitalMode();
 
-      const missionsToDraw = this.focusPlate
+      let missionsToDraw = this.focusPlate
         ? [this.missionByPlate(this.focusPlate)].filter(Boolean)
         : Object.values(this.missions);
+
+      if (isHospital) {
+        missionsToDraw = missionsToDraw.filter(m => this.isCaseForMyHospital(m?.caseData));
+      }
 
       missionsToDraw.forEach(m => {
         if (!m || !m.leg1 || !m.leg2) return;
         const isFocused = this.focusPlate === m.plate;
 
-        const isPastPickup = m.progress.phase === 'TO_HOSP' || m.progress.phase === 'ARRIVED' || m.progress.phase === 'COMPLETED';
+        // Chặng 1: Từ vị trí xuất phát đến hiện trường (màu đỏ cam / nét đứt)
+        L.polyline(m.leg1.ll, {
+          color: '#f87171',
+          weight: isFocused ? 3 : 2.5,
+          opacity: isFocused ? 0.35 : 0.18,
+          dashArray: '6, 8'
+        }).addTo(this.focusLayer);
 
-        // Toàn tuyến (mờ) — thể hiện chặng đã đi qua (chặng 1 tới hiện trường chỉ vẽ nếu chưa qua hiện trường)
-        if (!isPastPickup) {
-          L.polyline(m.leg1.ll, {
-            color: '#f87171',
-            weight: isFocused ? 3 : 2.5,
-            opacity: isFocused ? 0.22 : 0.18,
-            dashArray: '6, 8'
-          }).addTo(this.focusLayer);
-        }
-
+        // Chặng 2: Từ hiện trường về bệnh viện tiếp nhận (màu xanh dương)
         L.polyline(m.leg2.ll, {
           color: '#38bdf8',
-          weight: isFocused ? 3 : 2.5,
-          opacity: isFocused ? 0.22 : 0.18
+          weight: isFocused ? 3.5 : 2.5,
+          opacity: isFocused ? 0.45 : 0.2
         }).addTo(this.focusLayer);
 
         // Chặng còn lại (sáng, nổi bật)
@@ -913,7 +1168,9 @@
       const pts = [vehMarker.getLatLng(), window.L.latLng(m.scene), window.L.latLng(m.hosp.coords)];
       if (m.leg1) pts.push(...m.leg1.ll, ...m.leg2.ll);
       const bounds = window.L.latLngBounds(pts);
-      const opts = { paddingTopLeft: [40, 60], paddingBottomRight: [230, 40], maxZoom: 16 };
+      const isFleetCollapsed = document.getElementById('fleet-side-panel')?.classList.contains('is-collapsed');
+      const leftPad = isFleetCollapsed ? 80 : 360;
+      const opts = { paddingTopLeft: [50, leftPad], paddingBottomRight: [120, 60], maxZoom: 16 };
       animate ? this.map.flyToBounds(bounds, { ...opts, duration: 0.8 }) : this.map.fitBounds(bounds, opts);
     }
 

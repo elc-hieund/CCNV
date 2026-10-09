@@ -354,13 +354,26 @@
       50% { box-shadow: 0 0 16px rgba(248, 113, 113, 1); }
     }
 
-    .map-leaflet-marker.is-active-marker .map-veh-stem-marker {
+    /* Xe đang làm nhiệm vụ cấp cứu (is-mission): Khi chọn có viền & ánh đỏ khẩn cấp */
+    .map-leaflet-marker.is-active-marker .map-veh-stem-marker.is-mission {
       transform: scale(1.15);
       filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.9));
     }
-    .map-leaflet-marker.is-active-marker .map-veh-stem-marker .map-veh-top-badge {
+    .map-leaflet-marker.is-active-marker .map-veh-stem-marker.is-mission .map-veh-top-badge {
       border-color: #f87171 !important;
       box-shadow: 0 0 14px rgba(239, 68, 68, 0.8) !important;
+    }
+
+    /* Xe đang SẴN SÀNG (is-ready / không có lệnh cấp cứu): Khi chọn KHÔNG có viền đỏ, giữ ánh sáng xanh lá sẵn sàng */
+    .map-leaflet-marker.is-active-marker .map-veh-stem-marker.is-ready,
+    .map-leaflet-marker.is-active-marker .map-veh-stem-marker:not(.is-mission) {
+      transform: scale(1.15);
+      filter: drop-shadow(0 0 14px rgba(16, 185, 129, 0.85));
+    }
+    .map-leaflet-marker.is-active-marker .map-veh-stem-marker.is-ready .map-veh-top-badge,
+    .map-leaflet-marker.is-active-marker .map-veh-stem-marker:not(.is-mission) .map-veh-top-badge {
+      border-color: #34d399 !important;
+      box-shadow: 0 0 14px rgba(16, 185, 129, 0.8) !important;
     }
 
     /* --- 2. HOSPITAL MARKER: FIXED MEDICAL HUB LANDMARK SHIELD --- */

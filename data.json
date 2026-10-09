@@ -39,10 +39,22 @@
       "address": "Số 04 Châu Văn Liêm, P. Tân An, thành phố Cần Thơ",
       "phone": "0292.3821.236",
       "hotline": "0967.891.115",
-      "coords": [10.0332, 105.7865],
-      "mapPos": { "x": 620, "y": 380 },
+      "coords": [
+        10.0332,
+        105.7865
+      ],
+      "mapPos": {
+        "x": 620,
+        "y": 380
+      },
       "grade": "Hạng I",
-      "specialties": ["Cấp cứu đa khoa", "Đột quỵ não", "Chấn thương chỉnh hình", "Hồi sức tích cực (ICU)", "Can thiệp mạch"],
+      "specialties": [
+        "Cấp cứu đa khoa",
+        "Đột quỵ não",
+        "Chấn thương chỉnh hình",
+        "Hồi sức tích cực (ICU)",
+        "Can thiệp mạch"
+      ],
       "status": "AVAILABLE",
       "statusText": "Đang nhận",
       "emergencyBeds": 20,
@@ -58,10 +70,22 @@
       "address": "315 Nguyễn Văn Linh, P. An Khánh, thành phố Cần Thơ",
       "phone": "0292.3820.071",
       "hotline": "0901.234.567",
-      "coords": [10.0270, 105.7530],
-      "mapPos": { "x": 480, "y": 420 },
+      "coords": [
+        10.0270,
+        105.7530
+      ],
+      "mapPos": {
+        "x": 480,
+        "y": 420
+      },
       "grade": "Hạng Đặc biệt",
-      "specialties": ["Tim mạch can thiệp", "Đột quỵ cấp", "Phẫu thuật sọ não", "Hồi sức chống độc", "Ghép tạng"],
+      "specialties": [
+        "Tim mạch can thiệp",
+        "Đột quỵ cấp",
+        "Phẫu thuật sọ não",
+        "Hồi sức chống độc",
+        "Ghép tạng"
+      ],
       "status": "AVAILABLE",
       "statusText": "Đang nhận",
       "emergencyBeds": 25,
@@ -77,10 +101,21 @@
       "address": "345 Nguyễn Văn Cừ nối dài, P. An Bình, thành phố Cần Thơ",
       "phone": "0292.3748.358",
       "hotline": "0918.456.789",
-      "coords": [10.0195, 105.7480],
-      "mapPos": { "x": 450, "y": 490 },
+      "coords": [
+        10.0195,
+        105.7480
+      ],
+      "mapPos": {
+        "x": 450,
+        "y": 490
+      },
       "grade": "Hạng I - Chuyên khoa Nhi",
-      "specialties": ["Cấp cứu nhi khoa", "Hồi sức sơ sinh chuyên sâu (NICU)", "Ngoại nhi", "Chống độc nhi"],
+      "specialties": [
+        "Cấp cứu nhi khoa",
+        "Hồi sức sơ sinh chuyên sâu (NICU)",
+        "Ngoại nhi",
+        "Chống độc nhi"
+      ],
       "status": "AVAILABLE",
       "statusText": "Đang nhận",
       "emergencyBeds": 18,
@@ -96,10 +131,20 @@
       "address": "Số 04 Châu Văn Liêm, P. Tân An / CS2 P. An Bình, thành phố Cần Thơ",
       "phone": "0292.3817.901",
       "hotline": "0939.888.999",
-      "coords": [10.0520, 105.7590],
-      "mapPos": { "x": 510, "y": 290 },
+      "coords": [
+        10.0520,
+        105.7590
+      ],
+      "mapPos": {
+        "x": 510,
+        "y": 290
+      },
       "grade": "Hạng I - Chuyên khoa",
-      "specialties": ["Ung bướu", "Chăm sóc giảm nhẹ cấp tính", "Xử trí biến chứng hóa - xạ trị"],
+      "specialties": [
+        "Ung bướu",
+        "Chăm sóc giảm nhẹ cấp tính",
+        "Xử trí biến chứng hóa - xạ trị"
+      ],
       "status": "AVAILABLE",
       "statusText": "Đang nhận",
       "emergencyBeds": 10,
@@ -117,8 +162,14 @@
       "typeName": "Hồi sức cấp cứu cao cấp (ICU di động)",
       "station": "Chốt ĐH Cần Thơ (3/2 - Nguyễn Văn Linh)",
       "stationId": "ST_NK",
-      "coords": [10.0298, 105.7685],
-      "mapPos": { "x": 550, "y": 410 },
+      "coords": [
+        10.0298,
+        105.7685
+      ],
+      "mapPos": {
+        "x": 550,
+        "y": 410
+      },
       "speed": 0,
       "heading": 90,
       "status": "READY",
@@ -130,8 +181,18 @@
       "fuel": "88%",
       "oxygen": "98%",
       "currentCaseId": null,
-      "equipment": ["Máy thở đa năng", "Monitor 7 thông số", "Máy khử rung tim tự động", "Bơm tiêm điện", "Túi cấp cứu hồi sức"],
-      "camera": { "status": "LIVE", "fps": 25, "resolution": "1080p" }
+      "equipment": [
+        "Máy thở đa năng",
+        "Monitor 7 thông số",
+        "Máy khử rung tim tự động",
+        "Bơm tiêm điện",
+        "Túi cấp cứu hồi sức"
+      ],
+      "camera": {
+        "status": "LIVE",
+        "fps": 25,
+        "resolution": "1080p"
+      }
     },
     {
       "id": "VEH-03",
@@ -140,8 +201,14 @@
       "typeName": "Cứu thương tiêu chuẩn",
       "station": "Trạm Cấp cứu Trung tâm (BVĐK Cần Thơ)",
       "stationId": "ST_NK",
-      "coords": [10.0395, 105.7800],
-      "mapPos": { "x": 590, "y": 350 },
+      "coords": [
+        10.0395,
+        105.7800
+      ],
+      "mapPos": {
+        "x": 590,
+        "y": 350
+      },
       "speed": 0,
       "heading": 90,
       "status": "READY",
@@ -153,8 +220,19 @@
       "fuel": "85%",
       "oxygen": "95%",
       "currentCaseId": null,
-      "equipment": ["Monitor 5 thông số Nihon Kohden", "Máy khử rung tim tự động AED", "Bình oxy 10L kèm van giảm áp", "Bộ nẹp cổ - cột sống", "Bộ đặt nội khí quản", "Vali thuốc cấp cứu tiêu chuẩn"],
-      "camera": { "status": "LIVE", "fps": 25, "resolution": "1080p" }
+      "equipment": [
+        "Monitor 5 thông số Nihon Kohden",
+        "Máy khử rung tim tự động AED",
+        "Bình oxy 10L kèm van giảm áp",
+        "Bộ nẹp cổ - cột sống",
+        "Bộ đặt nội khí quản",
+        "Vali thuốc cấp cứu tiêu chuẩn"
+      ],
+      "camera": {
+        "status": "LIVE",
+        "fps": 25,
+        "resolution": "1080p"
+      }
     },
     {
       "id": "VEH-04",
@@ -163,8 +241,14 @@
       "typeName": "Cứu thương tiêu chuẩn",
       "station": "Trạm Cấp cứu Bình Thủy (Võ Văn Kiệt)",
       "stationId": "ST_BT",
-      "coords": [10.0580, 105.7460],
-      "mapPos": { "x": 450, "y": 230 },
+      "coords": [
+        10.0580,
+        105.7460
+      ],
+      "mapPos": {
+        "x": 450,
+        "y": 230
+      },
       "speed": 0,
       "heading": 0,
       "status": "READY",
@@ -176,18 +260,33 @@
       "fuel": "78%",
       "oxygen": "90%",
       "currentCaseId": null,
-      "equipment": ["Monitor 5 thông số", "AED", "Bộ cố định gãy xương hơi", "Bộ sơ cứu bỏng"],
-      "camera": { "status": "LIVE", "fps": 25, "resolution": "1080p" }
+      "equipment": [
+        "Monitor 5 thông số",
+        "AED",
+        "Bộ cố định gãy xương hơi",
+        "Bộ sơ cứu bỏng"
+      ],
+      "camera": {
+        "status": "LIVE",
+        "fps": 25,
+        "resolution": "1080p"
+      }
     },
     {
       "id": "VEH-05",
       "plate": "65A-019.99",
       "type": "Type C",
-      "typeName": "Vận chuyển chuyên dụng",
+      "typeName": "Vận chuyển",
       "station": "Trạm Cấp cứu Ô Môn (Quốc lộ 91)",
       "stationId": "ST_OM",
-      "coords": [10.0880, 105.7050],
-      "mapPos": { "x": 320, "y": 120 },
+      "coords": [
+        10.0880,
+        105.7050
+      ],
+      "mapPos": {
+        "x": 320,
+        "y": 120
+      },
       "speed": 0,
       "heading": 270,
       "status": "READY",
@@ -199,18 +298,32 @@
       "fuel": "80%",
       "oxygen": "85%",
       "currentCaseId": null,
-      "equipment": ["Cáng đẩy tự nâng thủy lực", "Bình oxy thở cá nhân", "Hộp dụng cụ băng bó vết thương"],
-      "camera": { "status": "STANDBY", "fps": 15, "resolution": "720p" }
+      "equipment": [
+        "Cáng đẩy tự nâng thủy lực",
+        "Bình oxy thở cá nhân",
+        "Hộp dụng cụ băng bó vết thương"
+      ],
+      "camera": {
+        "status": "STANDBY",
+        "fps": 15,
+        "resolution": "720p"
+      }
     },
     {
       "id": "VEH-07",
       "plate": "65A-012.34",
       "type": "Type A",
-      "typeName": "Hồi sức cấp cứu cao cấp (ICU di động)",
+      "typeName": "Hồi sức di động",
       "station": "Trạm Cấp cứu Cái Răng (Kíp 3)",
       "stationId": "ST_CR",
-      "coords": [10.0105, 105.7700],
-      "mapPos": { "x": 530, "y": 590 },
+      "coords": [
+        10.0105,
+        105.7700
+      ],
+      "mapPos": {
+        "x": 530,
+        "y": 590
+      },
       "speed": 0,
       "heading": 330,
       "status": "READY",
@@ -222,18 +335,33 @@
       "fuel": "85%",
       "oxygen": "92%",
       "currentCaseId": null,
-      "equipment": ["Monitor 5 thông số Nihon Kohden", "Máy thở cao cấp", "Máy sốc tim AED", "Bộ nẹp cố định chấn thương"],
-      "camera": { "status": "LIVE", "fps": 30, "resolution": "1080p" }
+      "equipment": [
+        "Monitor 5 thông số Nihon Kohden",
+        "Máy thở cao cấp",
+        "Máy sốc tim AED",
+        "Bộ nẹp cố định chấn thương"
+      ],
+      "camera": {
+        "status": "LIVE",
+        "fps": 30,
+        "resolution": "1080p"
+      }
     },
     {
       "id": "VEH-08",
       "plate": "65A-010.02",
       "type": "Type B",
-      "typeName": "Cứu thương tiêu chuẩn",
-      "station": "Chốt KDC Nam Cần Thơ (Hưng Phú)",
+      "typeName": "Cấp cứu cơ bản",
+      "station": "Chốt KDC Nam Cần Thơ",
       "stationId": "ST_CR",
-      "coords": [10.0215, 105.7850],
-      "mapPos": { "x": 610, "y": 490 },
+      "coords": [
+        10.0215,
+        105.7850
+      ],
+      "mapPos": {
+        "x": 610,
+        "y": 490
+      },
       "speed": 0,
       "heading": 270,
       "status": "READY",
@@ -245,26 +373,154 @@
       "fuel": "86%",
       "oxygen": "94%",
       "currentCaseId": null,
-      "equipment": ["Monitor 5 thông số", "AED", "Vali thuốc cấp cứu"],
-      "camera": { "status": "STANDBY", "fps": 15, "resolution": "720p" }
+      "equipment": [
+        "Monitor 5 thông số",
+        "AED",
+        "Vali thuốc cấp cứu"
+      ],
+      "camera": {
+        "status": "STANDBY",
+        "fps": 15,
+        "resolution": "720p"
+      }
     }
   ],
   "personnel": [
-    { "id": "PER-01", "name": "BS. CKI. Nguyễn Văn Thành", "role": "DOCTOR", "roleName": "Bác sĩ Cấp cứu", "cert": "CCHN Hồi sức Cấp cứu - ACLS", "phone": "0913.111.222", "status": "ON_DUTY" },
-    { "id": "PER-02", "name": "ĐD. Trần Thị Mai", "role": "NURSE", "roleName": "Điều dưỡng cấp cứu", "cert": "Chứng chỉ Điều dưỡng Ngoại viện", "phone": "0913.333.444", "status": "ON_DUTY" },
-    { "id": "PER-03", "name": "LX. Lê Văn Hùng", "role": "DRIVER", "roleName": "Lái xe cứu thương", "cert": "Bằng lái D + Chứng chỉ Sơ cấp cứu", "phone": "0913.555.666", "status": "ON_DUTY" },
-    { "id": "PER-04", "name": "BS. Hoàng Quốc Việt", "role": "DOCTOR", "roleName": "Bác sĩ Cấp cứu", "cert": "CCHN Hồi sức Cấp cứu - ATLS", "phone": "0908.112.233", "status": "ON_DUTY" },
-    { "id": "PER-05", "name": "ĐD. Phạm Minh Tuấn", "role": "NURSE", "roleName": "Điều dưỡng cấp cứu", "cert": "Chứng chỉ Hồi sinh Tim phổi nâng cao", "phone": "0908.445.566", "status": "ON_DUTY" },
-    { "id": "PER-06", "name": "LX. Đỗ Hữu Tài", "role": "DRIVER", "roleName": "Lái xe cứu thương", "cert": "Bằng lái D + Tập huấn Lái xe an toàn khẩn cấp", "phone": "0908.778.899", "status": "ON_DUTY" },
-    { "id": "PER-07", "name": "BS. Võ Văn Kiệt", "role": "DOCTOR", "roleName": "Bác sĩ Cấp cứu", "cert": "CCHN Cấp cứu đa khoa", "phone": "0939.001.002", "status": "ON_DUTY" },
-    { "id": "PER-08", "name": "ĐD. Nguyễn Thị Thúy", "role": "NURSE", "roleName": "Điều dưỡng cấp cứu", "cert": "Chứng chỉ Chăm sóc Bệnh nhân nguy kịch", "phone": "0939.003.004", "status": "ON_DUTY" },
-    { "id": "PER-09", "name": "LX. Trần Văn Bình", "role": "DRIVER", "roleName": "Lái xe cứu thương", "cert": "Bằng lái D", "phone": "0939.005.006", "status": "ON_DUTY" },
-    { "id": "PER-10", "name": "BS. Lê Hồng Phúc", "role": "DOCTOR", "roleName": "Bác sĩ Cấp cứu", "cert": "CCHN Chấn thương chỉnh hình", "phone": "0944.111.333", "status": "ON_DUTY" },
-    { "id": "PER-11", "name": "ĐD. Trương Mỹ Hoa", "role": "NURSE", "roleName": "Điều dưỡng cấp cứu", "cert": "Chứng chỉ Sơ cứu vết thương", "phone": "0944.222.444", "status": "ON_DUTY" },
-    { "id": "PER-12", "name": "LX. Nguyễn Hữu Nghĩa", "role": "DRIVER", "roleName": "Lái xe cứu thương", "cert": "Bằng lái D", "phone": "0944.555.777", "status": "ON_DUTY" },
-    { "id": "PER-13", "name": "BS. Đặng Văn Nam", "role": "DOCTOR", "roleName": "Bác sĩ Cấp cứu", "cert": "CCHN Nội khoa Cấp cứu", "phone": "0918.234.567", "status": "ON_DUTY" },
-    { "id": "PER-14", "name": "ĐD. Bùi Thị Thảo", "role": "NURSE", "roleName": "Điều dưỡng cấp cứu", "cert": "Chứng chỉ Cấp cứu Nhi", "phone": "0918.345.678", "status": "ON_DUTY" },
-    { "id": "PER-15", "name": "LX. Lý Văn Tùng", "role": "DRIVER", "roleName": "Lái xe cứu thương", "cert": "Bằng lái D", "phone": "0918.456.789", "status": "ON_DUTY" }
+    {
+      "id": "PER-01",
+      "name": "BS. CKI. Nguyễn Văn Thành",
+      "role": "DOCTOR",
+      "roleName": "Bác sĩ Cấp cứu",
+      "cert": "CCHN Hồi sức Cấp cứu - ACLS",
+      "phone": "0913.111.222",
+      "status": "ON_DUTY"
+    },
+    {
+      "id": "PER-02",
+      "name": "ĐD. Trần Thị Mai",
+      "role": "NURSE",
+      "roleName": "Điều dưỡng cấp cứu",
+      "cert": "Chứng chỉ Điều dưỡng Ngoại viện",
+      "phone": "0913.333.444",
+      "status": "ON_DUTY"
+    },
+    {
+      "id": "PER-03",
+      "name": "LX. Lê Văn Hùng",
+      "role": "DRIVER",
+      "roleName": "Lái xe cứu thương",
+      "cert": "Bằng lái D + Chứng chỉ Sơ cấp cứu",
+      "phone": "0913.555.666",
+      "status": "ON_DUTY"
+    },
+    {
+      "id": "PER-04",
+      "name": "BS. Hoàng Quốc Việt",
+      "role": "DOCTOR",
+      "roleName": "Bác sĩ Cấp cứu",
+      "cert": "CCHN Hồi sức Cấp cứu - ATLS",
+      "phone": "0908.112.233",
+      "status": "ON_DUTY"
+    },
+    {
+      "id": "PER-05",
+      "name": "ĐD. Phạm Minh Tuấn",
+      "role": "NURSE",
+      "roleName": "Điều dưỡng cấp cứu",
+      "cert": "Chứng chỉ Hồi sinh Tim phổi nâng cao",
+      "phone": "0908.445.566",
+      "status": "ON_DUTY"
+    },
+    {
+      "id": "PER-06",
+      "name": "LX. Đỗ Hữu Tài",
+      "role": "DRIVER",
+      "roleName": "Lái xe cứu thương",
+      "cert": "Bằng lái D + Tập huấn Lái xe an toàn khẩn cấp",
+      "phone": "0908.778.899",
+      "status": "ON_DUTY"
+    },
+    {
+      "id": "PER-07",
+      "name": "BS. Võ Văn Kiệt",
+      "role": "DOCTOR",
+      "roleName": "Bác sĩ Cấp cứu",
+      "cert": "CCHN Cấp cứu đa khoa",
+      "phone": "0939.001.002",
+      "status": "ON_DUTY"
+    },
+    {
+      "id": "PER-08",
+      "name": "ĐD. Nguyễn Thị Thúy",
+      "role": "NURSE",
+      "roleName": "Điều dưỡng cấp cứu",
+      "cert": "Chứng chỉ Chăm sóc Bệnh nhân nguy kịch",
+      "phone": "0939.003.004",
+      "status": "ON_DUTY"
+    },
+    {
+      "id": "PER-09",
+      "name": "LX. Trần Văn Bình",
+      "role": "DRIVER",
+      "roleName": "Lái xe cứu thương",
+      "cert": "Bằng lái D",
+      "phone": "0939.005.006",
+      "status": "ON_DUTY"
+    },
+    {
+      "id": "PER-10",
+      "name": "BS. Lê Hồng Phúc",
+      "role": "DOCTOR",
+      "roleName": "Bác sĩ Cấp cứu",
+      "cert": "CCHN Chấn thương chỉnh hình",
+      "phone": "0944.111.333",
+      "status": "ON_DUTY"
+    },
+    {
+      "id": "PER-11",
+      "name": "ĐD. Trương Mỹ Hoa",
+      "role": "NURSE",
+      "roleName": "Điều dưỡng cấp cứu",
+      "cert": "Chứng chỉ Sơ cứu vết thương",
+      "phone": "0944.222.444",
+      "status": "ON_DUTY"
+    },
+    {
+      "id": "PER-12",
+      "name": "LX. Nguyễn Hữu Nghĩa",
+      "role": "DRIVER",
+      "roleName": "Lái xe cứu thương",
+      "cert": "Bằng lái D",
+      "phone": "0944.555.777",
+      "status": "ON_DUTY"
+    },
+    {
+      "id": "PER-13",
+      "name": "BS. Đặng Văn Nam",
+      "role": "DOCTOR",
+      "roleName": "Bác sĩ Cấp cứu",
+      "cert": "CCHN Nội khoa Cấp cứu",
+      "phone": "0918.234.567",
+      "status": "ON_DUTY"
+    },
+    {
+      "id": "PER-14",
+      "name": "ĐD. Bùi Thị Thảo",
+      "role": "NURSE",
+      "roleName": "Điều dưỡng cấp cứu",
+      "cert": "Chứng chỉ Cấp cứu Nhi",
+      "phone": "0918.345.678",
+      "status": "ON_DUTY"
+    },
+    {
+      "id": "PER-15",
+      "name": "LX. Lý Văn Tùng",
+      "role": "DRIVER",
+      "roleName": "Lái xe cứu thương",
+      "cert": "Bằng lái D",
+      "phone": "0918.456.789",
+      "status": "ON_DUTY"
+    }
   ],
   "crews": [
     {
@@ -329,35 +585,239 @@
     }
   ],
   "locationPresets": [
-    { "name": "Ngã tư 30/4 - Nguyễn Văn Linh, P. Hưng Lợi, thành phố Cần Thơ", "coords": [10.0248, 105.7695], "mapPos": { "x": 540, "y": 440 }, "district": "P. Hưng Lợi", "landmark": "Cây xăng Hưng Lợi" },
-    { "name": "Đại học Cần Thơ - Cổng A đường 3/2, P. Xuân Khánh, thành phố Cần Thơ", "coords": [10.0298, 105.7702], "mapPos": { "x": 550, "y": 410 }, "district": "P. Xuân Khánh", "landmark": "Khu II ĐHCT" },
-    { "name": "Bến Ninh Kiều, Đường Hai Bà Trưng, P. Tân An, thành phố Cần Thơ", "coords": [10.0348, 105.7876], "mapPos": { "x": 625, "y": 375 }, "district": "P. Tân An", "landmark": "Tượng đài Bác Hồ" },
-    { "name": "Cầu Quang Trung, P. Hưng Phú, thành phố Cần Thơ", "coords": [10.0210, 105.7790], "mapPos": { "x": 585, "y": 475 }, "district": "P. Hưng Phú", "landmark": "Chân cầu phía Nam" },
-    { "name": "Chợ nổi Cái Răng, P. Lê Bình, thành phố Cần Thơ", "coords": [10.0020, 105.7510], "mapPos": { "x": 490, "y": 610 }, "district": "P. Lê Bình", "landmark": "Bến tàu du lịch" },
-    { "name": "Sân bay Quốc tế Cần Thơ, Đường Võ Văn Kiệt, P. Trà An, thành phố Cần Thơ", "coords": [10.0820, 105.7210], "mapPos": { "x": 370, "y": 160 }, "district": "P. Trà An", "landmark": "Nhà ga T1" },
-    { "name": "KCN Trà Nóc 1, P. Trà Nóc, thành phố Cần Thơ", "coords": [10.0980, 105.7050], "mapPos": { "x": 320, "y": 120 }, "district": "P. Trà Nóc", "landmark": "Cổng chào KCN" },
-    { "name": "Chợ Xuân Khánh, Đường 30/4, P. Xuân Khánh, thành phố Cần Thơ", "coords": [10.0280, 105.7750], "mapPos": { "x": 570, "y": 420 }, "district": "P. Xuân Khánh", "landmark": "Gần Vincom Xuân Khánh" },
-    { "name": "Khu Dân cư Hưng Phú 1, P. Hưng Phú, thành phố Cần Thơ", "coords": [10.0180, 105.7850], "mapPos": { "x": 610, "y": 490 }, "district": "P. Hưng Phú", "landmark": "Trục chính đường A1" },
-    { "name": "Bệnh viện Đa khoa TW Cần Thơ, P. An Khánh, thành phố Cần Thơ", "coords": [10.0270, 105.7530], "mapPos": { "x": 480, "y": 420 }, "district": "P. An Khánh", "landmark": "Cổng Cấp cứu 315 Nguyễn Văn Linh" }
+    {
+      "name": "Ngã tư 30/4 - Nguyễn Văn Linh, P. Hưng Lợi, thành phố Cần Thơ",
+      "coords": [
+        10.0248,
+        105.7695
+      ],
+      "mapPos": {
+        "x": 540,
+        "y": 440
+      },
+      "district": "P. Hưng Lợi",
+      "landmark": "Cây xăng Hưng Lợi"
+    },
+    {
+      "name": "Đại học Cần Thơ - Cổng A đường 3/2, P. Xuân Khánh, thành phố Cần Thơ",
+      "coords": [
+        10.0298,
+        105.7702
+      ],
+      "mapPos": {
+        "x": 550,
+        "y": 410
+      },
+      "district": "P. Xuân Khánh",
+      "landmark": "Khu II ĐHCT"
+    },
+    {
+      "name": "Bến Ninh Kiều, Đường Hai Bà Trưng, P. Tân An, thành phố Cần Thơ",
+      "coords": [
+        10.0348,
+        105.7876
+      ],
+      "mapPos": {
+        "x": 625,
+        "y": 375
+      },
+      "district": "P. Tân An",
+      "landmark": "Tượng đài Bác Hồ"
+    },
+    {
+      "name": "Cầu Quang Trung, P. Hưng Phú, thành phố Cần Thơ",
+      "coords": [
+        10.0210,
+        105.7790
+      ],
+      "mapPos": {
+        "x": 585,
+        "y": 475
+      },
+      "district": "P. Hưng Phú",
+      "landmark": "Chân cầu phía Nam"
+    },
+    {
+      "name": "Chợ nổi Cái Răng, P. Lê Bình, thành phố Cần Thơ",
+      "coords": [
+        10.0020,
+        105.7510
+      ],
+      "mapPos": {
+        "x": 490,
+        "y": 610
+      },
+      "district": "P. Lê Bình",
+      "landmark": "Bến tàu du lịch"
+    },
+    {
+      "name": "Sân bay Quốc tế Cần Thơ, Đường Võ Văn Kiệt, P. Trà An, thành phố Cần Thơ",
+      "coords": [
+        10.0820,
+        105.7210
+      ],
+      "mapPos": {
+        "x": 370,
+        "y": 160
+      },
+      "district": "P. Trà An",
+      "landmark": "Nhà ga T1"
+    },
+    {
+      "name": "KCN Trà Nóc 1, P. Trà Nóc, thành phố Cần Thơ",
+      "coords": [
+        10.0980,
+        105.7050
+      ],
+      "mapPos": {
+        "x": 320,
+        "y": 120
+      },
+      "district": "P. Trà Nóc",
+      "landmark": "Cổng chào KCN"
+    },
+    {
+      "name": "Chợ Xuân Khánh, Đường 30/4, P. Xuân Khánh, thành phố Cần Thơ",
+      "coords": [
+        10.0280,
+        105.7750
+      ],
+      "mapPos": {
+        "x": 570,
+        "y": 420
+      },
+      "district": "P. Xuân Khánh",
+      "landmark": "Gần Vincom Xuân Khánh"
+    },
+    {
+      "name": "Khu Dân cư Hưng Phú 1, P. Hưng Phú, thành phố Cần Thơ",
+      "coords": [
+        10.0180,
+        105.7850
+      ],
+      "mapPos": {
+        "x": 610,
+        "y": 490
+      },
+      "district": "P. Hưng Phú",
+      "landmark": "Trục chính đường A1"
+    },
+    {
+      "name": "Bệnh viện Đa khoa TW Cần Thơ, P. An Khánh, thành phố Cần Thơ",
+      "coords": [
+        10.0270,
+        105.7530
+      ],
+      "mapPos": {
+        "x": 480,
+        "y": 420
+      },
+      "district": "P. An Khánh",
+      "landmark": "Cổng Cấp cứu 315 Nguyễn Văn Linh"
+    }
   ],
   "incidentTypes": [
-    { "code": "INC_TNGT", "name": "Tai nạn giao thông", "severity": "EMERGENCY", "severityText": "Khẩn cấp", "suggestedType": "Type B", "guide": "Kiểm tra hô hấp, nẹp cố định cột sống cổ, cầm máu vết thương ngoài, không di chuyển người bệnh nếu nghi chấn thương cột sống." },
-    { "code": "INC_STROKE", "name": "Đột quỵ não / Nghi ngờ tai biến", "severity": "CRITICAL", "severityText": "Tối khẩn", "suggestedType": "Type A", "guide": "Thực hiện test FAST (Mặt, Tay, Nói, Giờ). Cho nằm đầu cao 30 độ, nới lỏng quần áo, không cho ăn uống bất cứ thứ gì, ghi nhận mốc giờ khởi phát triệu chứng." },
-    { "code": "INC_CARDIAC", "name": "Ngừng tuần hoàn / Đau thắt ngực cấp", "severity": "CRITICAL", "severityText": "Tối khẩn", "suggestedType": "Type A", "guide": "Bắt đầu ép tim ngoài lồng ngực (CPR) liên tục 100-120 lần/phút ngay lập tức. Ép sâu ít nhất 5cm giữa ngực nếu không có mạch." },
-    { "code": "INC_TRAUMA", "name": "Chấn thương nặng / Ngã cao", "severity": "EMERGENCY", "severityText": "Khẩn cấp", "suggestedType": "Type B", "guide": "Cố định nẹp tạm thời khớp trên và khớp dưới vùng tổn thương. Băng ép cầm máu bằng gạc vô khuẩn." },
-    { "code": "INC_OBSTETRIC", "name": "Cấp cứu sản khoa / Chuyển dạ nguy cấp", "severity": "EMERGENCY", "severityText": "Khẩn cấp", "suggestedType": "Type B", "guide": "Đặt sản phụ nằm nghiêng trái để tránh chèn ép tĩnh mạch chủ. Chuẩn bị khăn ấm sạch và theo dõi tần số cơn co tử cung." },
-    { "code": "INC_RESPIRATORY", "name": "Suy hô hấp cấp / Dị vật đường thở", "severity": "CRITICAL", "severityText": "Tối khẩn", "suggestedType": "Type A", "guide": "Làm thủ thuật Heimlich nếu dị vật đường thở. Đặt BN tư thế nửa nằm nửa ngồi (Fowler), thông thoáng đường thở." },
-    { "code": "INC_PEDIATRIC", "name": "Co giật sốt cao trẻ em", "severity": "EMERGENCY", "severityText": "Khẩn cấp", "suggestedType": "Type B", "guide": "Đặt trẻ nằm nghiêng sang một bên tránh sặc đờm dãi. Nới rộng áo quần, chườm ấm nách bẹn, tuyệt đối không nhét vật cứng vào miệng." },
-    { "code": "INC_OTHER", "name": "Các trường hợp cấp cứu khác", "severity": "ROUTINE", "severityText": "Thường", "suggestedType": "Type B", "guide": "Động viên tinh thần người bệnh, kiểm tra dấu hiệu sinh tồn cơ bản và giữ thông thoáng khu vực cấp cứu." }
+    {
+      "code": "INC_TNGT",
+      "name": "Tai nạn giao thông",
+      "severity": "EMERGENCY",
+      "severityText": "Khẩn cấp",
+      "suggestedType": "Type B",
+      "guide": "Kiểm tra hô hấp, nẹp cố định cột sống cổ, cầm máu vết thương ngoài, không di chuyển người bệnh nếu nghi chấn thương cột sống."
+    },
+    {
+      "code": "INC_STROKE",
+      "name": "Đột quỵ não / Nghi ngờ tai biến",
+      "severity": "CRITICAL",
+      "severityText": "Tối khẩn",
+      "suggestedType": "Type A",
+      "guide": "Thực hiện test FAST (Mặt, Tay, Nói, Giờ). Cho nằm đầu cao 30 độ, nới lỏng quần áo, không cho ăn uống bất cứ thứ gì, ghi nhận mốc giờ khởi phát triệu chứng."
+    },
+    {
+      "code": "INC_CARDIAC",
+      "name": "Ngừng tuần hoàn / Đau thắt ngực cấp",
+      "severity": "CRITICAL",
+      "severityText": "Tối khẩn",
+      "suggestedType": "Type A",
+      "guide": "Bắt đầu ép tim ngoài lồng ngực (CPR) liên tục 100-120 lần/phút ngay lập tức. Ép sâu ít nhất 5cm giữa ngực nếu không có mạch."
+    },
+    {
+      "code": "INC_TRAUMA",
+      "name": "Chấn thương nặng / Ngã cao",
+      "severity": "EMERGENCY",
+      "severityText": "Khẩn cấp",
+      "suggestedType": "Type B",
+      "guide": "Cố định nẹp tạm thời khớp trên và khớp dưới vùng tổn thương. Băng ép cầm máu bằng gạc vô khuẩn."
+    },
+    {
+      "code": "INC_OBSTETRIC",
+      "name": "Cấp cứu sản khoa / Chuyển dạ nguy cấp",
+      "severity": "EMERGENCY",
+      "severityText": "Khẩn cấp",
+      "suggestedType": "Type B",
+      "guide": "Đặt sản phụ nằm nghiêng trái để tránh chèn ép tĩnh mạch chủ. Chuẩn bị khăn ấm sạch và theo dõi tần số cơn co tử cung."
+    },
+    {
+      "code": "INC_RESPIRATORY",
+      "name": "Suy hô hấp cấp / Dị vật đường thở",
+      "severity": "CRITICAL",
+      "severityText": "Tối khẩn",
+      "suggestedType": "Type A",
+      "guide": "Làm thủ thuật Heimlich nếu dị vật đường thở. Đặt BN tư thế nửa nằm nửa ngồi (Fowler), thông thoáng đường thở."
+    },
+    {
+      "code": "INC_PEDIATRIC",
+      "name": "Co giật sốt cao trẻ em",
+      "severity": "EMERGENCY",
+      "severityText": "Khẩn cấp",
+      "suggestedType": "Type B",
+      "guide": "Đặt trẻ nằm nghiêng sang một bên tránh sặc đờm dãi. Nới rộng áo quần, chườm ấm nách bẹn, tuyệt đối không nhét vật cứng vào miệng."
+    },
+    {
+      "code": "INC_OTHER",
+      "name": "Các trường hợp cấp cứu khác",
+      "severity": "ROUTINE",
+      "severityText": "Thường",
+      "suggestedType": "Type B",
+      "guide": "Động viên tinh thần người bệnh, kiểm tra dấu hiệu sinh tồn cơ bản và giữ thông thoáng khu vực cấp cứu."
+    }
   ],
   "terminationReasons": [
-    { "code": "RS_CITIZEN_CANCEL", "name": "Người dân tự hủy yêu cầu", "isSystem": true },
-    { "code": "RS_DUPLICATE", "name": "Trùng ca / Trùng cuộc gọi", "isSystem": false },
-    { "code": "RS_FALSE_ALARM", "name": "Báo động giả / Quấy rối", "isSystem": false },
-    { "code": "RS_SELF_TRANSPORT", "name": "Người nhà tự chuyển viện trước khi xe đến", "isSystem": false },
-    { "code": "RS_DEATH_AT_SCENE", "name": "Tử vong trước khi tiếp cận (nghiệm thu y tế hiện trường)", "isSystem": false },
-    { "code": "RS_DISPATCH_MISTAKE", "name": "Điều phối nhầm xe / Thay đổi chiến lược điều phối", "isSystem": false },
-    { "code": "RS_OTHER", "name": "Lý do khác", "isSystem": false }
+    {
+      "code": "RS_CITIZEN_CANCEL",
+      "name": "Người dân tự hủy yêu cầu",
+      "isSystem": true
+    },
+    {
+      "code": "RS_DUPLICATE",
+      "name": "Trùng ca / Trùng cuộc gọi",
+      "isSystem": false
+    },
+    {
+      "code": "RS_FALSE_ALARM",
+      "name": "Báo động giả / Quấy rối",
+      "isSystem": false
+    },
+    {
+      "code": "RS_SELF_TRANSPORT",
+      "name": "Người nhà tự chuyển viện trước khi xe đến",
+      "isSystem": false
+    },
+    {
+      "code": "RS_DEATH_AT_SCENE",
+      "name": "Tử vong trước khi tiếp cận (nghiệm thu y tế hiện trường)",
+      "isSystem": false
+    },
+    {
+      "code": "RS_DISPATCH_MISTAKE",
+      "name": "Điều phối nhầm xe / Thay đổi chiến lược điều phối",
+      "isSystem": false
+    },
+    {
+      "code": "RS_OTHER",
+      "name": "Lý do khác",
+      "isSystem": false
+    }
   ],
   "callScenarios": [
     {
@@ -368,8 +828,14 @@
       "callerPhone": "0913.882.115",
       "callerName": "Trần Anh Vũ",
       "cellId": "Trạm BTS Hưng Lợi 03 - Bán kính ~350m",
-      "coords": [10.0248, 105.7695],
-      "mapPos": { "x": 540, "y": 440 },
+      "coords": [
+        10.0248,
+        105.7695
+      ],
+      "mapPos": {
+        "x": 540,
+        "y": 440
+      },
       "address": "Ngã tư 30/4 - Nguyễn Văn Linh, P. Hưng Lợi, thành phố Cần Thơ",
       "incidentCode": "INC_TNGT",
       "incidentName": "Tai nạn giao thông",
@@ -393,8 +859,14 @@
       "callerPhone": "0907.654.321",
       "callerName": "Lê Thị Hồng Hạnh",
       "cellId": "GPS thiết bị (Sai số ±3.5m)",
-      "coords": [10.0298, 105.7702],
-      "mapPos": { "x": 550, "y": 410 },
+      "coords": [
+        10.0298,
+        105.7702
+      ],
+      "mapPos": {
+        "x": 550,
+        "y": 410
+      },
       "address": "Đại học Cần Thơ - Cổng A đường 3/2, P. Xuân Khánh, thành phố Cần Thơ",
       "incidentCode": "INC_RESPIRATORY",
       "incidentName": "Suy hô hấp cấp / Co giật",
@@ -418,8 +890,14 @@
       "callerPhone": "0939.112.233",
       "callerName": "Nguyễn Văn Hùng",
       "cellId": "Trạm BTS An Hòa",
-      "coords": [10.0450, 105.7710],
-      "mapPos": { "x": 560, "y": 320 },
+      "coords": [
+        10.0450,
+        105.7710
+      ],
+      "mapPos": {
+        "x": 560,
+        "y": 320
+      },
       "address": "Đường Cách Mạng Tháng Tám, P. An Hòa, thành phố Cần Thơ",
       "incidentCode": "INC_OTHER",
       "incidentName": "Hỏi thông tin tiêm chủng & sơ cứu vết cắt nhẹ",
@@ -437,11 +915,61 @@
     }
   ],
   "callHistory": [
-    { "id": "CALL-20261002-001", "time": "08:10:15", "caller": "Trần Văn Nam", "phone": "0918.234.111", "type": "115", "status": "COMPLETED", "caseId": "CC-261002-001", "operator": "Nguyễn Văn An", "duration": "124s" },
-    { "id": "CALL-20261002-002", "time": "08:02:40", "caller": "Lê Thị Bích", "phone": "0909.112.334", "type": "APP", "status": "COMPLETED", "caseId": "CC-261001-018", "operator": "Trần Minh Đức", "duration": "95s" },
-    { "id": "CALL-20261002-003", "time": "07:45:10", "caller": "Phạm Văn Sơn", "phone": "0939.778.899", "type": "115", "status": "CONSULT_CLOSED", "caseId": null, "operator": "Nguyễn Văn An", "duration": "180s" },
-    { "id": "CALL-20261002-004", "time": "07:30:22", "caller": "Nguyễn Thị Mai", "phone": "0912.445.667", "type": "115", "status": "MISSED", "caseId": null, "operator": null, "duration": "0s" },
-    { "id": "CALL-20261002-005", "time": "07:15:00", "caller": "Hoàng Minh Tâm", "phone": "0988.334.556", "type": "115", "status": "COMPLETED", "caseId": "CC-261001-017", "operator": "Lê Hoàng Nam", "duration": "110s" }
+    {
+      "id": "CALL-20261002-001",
+      "time": "08:10:15",
+      "caller": "Trần Văn Nam",
+      "phone": "0918.234.111",
+      "type": "115",
+      "status": "COMPLETED",
+      "caseId": "CC-261002-001",
+      "operator": "Nguyễn Văn An",
+      "duration": "124s"
+    },
+    {
+      "id": "CALL-20261002-002",
+      "time": "08:02:40",
+      "caller": "Lê Thị Bích",
+      "phone": "0909.112.334",
+      "type": "APP",
+      "status": "COMPLETED",
+      "caseId": "CC-261001-018",
+      "operator": "Trần Minh Đức",
+      "duration": "95s"
+    },
+    {
+      "id": "CALL-20261002-003",
+      "time": "07:45:10",
+      "caller": "Phạm Văn Sơn",
+      "phone": "0939.778.899",
+      "type": "115",
+      "status": "CONSULT_CLOSED",
+      "caseId": null,
+      "operator": "Nguyễn Văn An",
+      "duration": "180s"
+    },
+    {
+      "id": "CALL-20261002-004",
+      "time": "07:30:22",
+      "caller": "Nguyễn Thị Mai",
+      "phone": "0912.445.667",
+      "type": "115",
+      "status": "MISSED",
+      "caseId": null,
+      "operator": null,
+      "duration": "0s"
+    },
+    {
+      "id": "CALL-20261002-005",
+      "time": "07:15:00",
+      "caller": "Hoàng Minh Tâm",
+      "phone": "0988.334.556",
+      "type": "115",
+      "status": "COMPLETED",
+      "caseId": "CC-261001-017",
+      "operator": "Lê Hoàng Nam",
+      "duration": "110s"
+    }
   ],
   "cases": [],
   "demoCase": {
@@ -463,8 +991,14 @@
     },
     "location": {
       "address": "Đường 30/4, Phường Hưng Lợi, thành phố Cần Thơ",
-      "coords": [10.0235, 105.7730],
-      "mapPos": { "x": 585, "y": 475 },
+      "coords": [
+        10.0235,
+        105.7730
+      ],
+      "mapPos": {
+        "x": 585,
+        "y": 475
+      },
       "district": "Phường Hưng Lợi"
     },
     "incident": {
@@ -494,25 +1028,89 @@
     "eta": "4 phút",
     "speed": 52,
     "milestones": [
-      { "step": "CALL_RECEIVED", "name": "Tiếp nhận cuộc gọi", "time": "08:10:15", "done": true },
-      { "step": "DISPATCHED", "name": "Phát lệnh điều xe", "time": "08:11:30", "done": true },
-      { "step": "CREW_CONFIRMED", "name": "Kíp xuất phát", "time": "08:12:45", "done": true },
-      { "step": "SCENE_ARRIVED", "name": "Đến hiện trường", "time": "08:18:20", "done": true },
-      { "step": "LEAVING_SCENE", "name": "Rời hiện trường", "time": "08:24:10", "done": true },
-      { "step": "HOSPITAL_ARRIVED", "name": "Đến bệnh viện", "time": null, "done": false },
-      { "step": "HANDOVER_DONE", "name": "Hoàn tất bàn giao", "time": null, "done": false }
+      {
+        "step": "CALL_RECEIVED",
+        "name": "Tiếp nhận cuộc gọi",
+        "time": "08:10:15",
+        "done": true
+      },
+      {
+        "step": "DISPATCHED",
+        "name": "Phát lệnh điều xe",
+        "time": "08:11:30",
+        "done": true
+      },
+      {
+        "step": "CREW_CONFIRMED",
+        "name": "Kíp xuất phát",
+        "time": "08:12:45",
+        "done": true
+      },
+      {
+        "step": "SCENE_ARRIVED",
+        "name": "Đến hiện trường",
+        "time": "08:18:20",
+        "done": true
+      },
+      {
+        "step": "LEAVING_SCENE",
+        "name": "Rời hiện trường",
+        "time": "08:24:10",
+        "done": true
+      },
+      {
+        "step": "HOSPITAL_ARRIVED",
+        "name": "Đến bệnh viện",
+        "time": null,
+        "done": false
+      },
+      {
+        "step": "HANDOVER_DONE",
+        "name": "Hoàn tất bàn giao",
+        "time": null,
+        "done": false
+      }
     ],
     "logs": [
-      { "time": "08:10:15", "user": "dpv01", "action": "Tiếp nhận cuộc gọi 115 từ số 0918.234.111" },
-      { "time": "08:11:30", "user": "dpv01", "action": "Tạo ca CC-261002-001, phát lệnh tới xe 65A-012.34 và cảnh báo Bệnh viện Đa khoa Trung ương Cần Thơ" },
-      { "time": "08:12:45", "user": "CREW-03", "action": "Kíp 3 xác nhận lên xe xuất phát" },
-      { "time": "08:24:10", "user": "CREW-03", "action": "Sơ cứu ổn định, bắt đầu vận chuyển bệnh nhân về Bệnh viện Đa khoa Trung ương Cần Thơ" }
+      {
+        "time": "08:10:15",
+        "user": "dpv01",
+        "action": "Tiếp nhận cuộc gọi 115 từ số 0918.234.111"
+      },
+      {
+        "time": "08:11:30",
+        "user": "dpv01",
+        "action": "Tạo ca CC-261002-001, phát lệnh tới xe 65A-012.34 và cảnh báo Bệnh viện Đa khoa Trung ương Cần Thơ"
+      },
+      {
+        "time": "08:12:45",
+        "user": "CREW-03",
+        "action": "Kíp 3 xác nhận lên xe xuất phát"
+      },
+      {
+        "time": "08:24:10",
+        "user": "CREW-03",
+        "action": "Sơ cứu ổn định, bắt đầu vận chuyển bệnh nhân về Bệnh viện Đa khoa Trung ương Cần Thơ"
+      }
     ],
     "epcr": {
       "patientStatus": "Tỉnh, tiếp xúc tốt, Glasgow 15 điểm",
-      "vitals": { "pulse": 88, "bp": "130/80 mmHg", "spO2": 97, "temp": 36.8, "rr": 18 },
-      "interventions": ["Băng ép vô trùng vết rách cẳng tay phải", "Thở oxy qua cannula 3L/phút", "Nẹp cố định mềm chi trên"],
-      "medications": ["Natriclorid 0.9% 500ml truyền tĩnh mạch", "Paracetamol 1g truyền giảm đau"],
+      "vitals": {
+        "pulse": 88,
+        "bp": "130/80 mmHg",
+        "spO2": 97,
+        "temp": 36.8,
+        "rr": 18
+      },
+      "interventions": [
+        "Băng ép vô trùng vết rách cẳng tay phải",
+        "Thở oxy qua cannula 3L/phút",
+        "Nẹp cố định mềm chi trên"
+      ],
+      "medications": [
+        "Natriclorid 0.9% 500ml truyền tĩnh mạch",
+        "Paracetamol 1g truyền giảm đau"
+      ],
       "progression": "Bệnh nhân đỡ đau tức ngực, huyết động ổn định trên đường vận chuyển."
     }
   },
@@ -583,22 +1181,91 @@
   ],
   "categories": {
     "vehicleTypes": [
-      { "id": "VT-1", "code": "TYPE_A", "name": "Type A - Cấp cứu hồi sức cao cấp (ICU di động)", "standards": "Trang bị máy thở cao cấp, monitor đa thông số, máy sốc tim tạo nhịp, bơm tiêm điện", "count": 1 },
-      { "id": "VT-2", "code": "TYPE_B", "name": "Type B - Cứu thương tiêu chuẩn", "standards": "Trang bị monitor 5 thông số, máy khử rung tim tự động AED, bình oxy, cáng nẹp", "count": 4 },
-      { "id": "VT-3", "code": "TYPE_C", "name": "Type C - Vận chuyển y tế chuyên dụng", "standards": "Trang bị cáng đẩy tự nâng, bình oxy thở cá nhân, vali sơ cấp cứu", "count": 1 }
+      {
+        "id": "VT-1",
+        "code": "TYPE_A",
+        "name": "Type A - Cấp cứu hồi sức cao cấp (ICU di động)",
+        "standards": "Trang bị máy thở cao cấp, monitor đa thông số, máy sốc tim tạo nhịp, bơm tiêm điện",
+        "count": 1
+      },
+      {
+        "id": "VT-2",
+        "code": "TYPE_B",
+        "name": "Type B - Cứu thương tiêu chuẩn",
+        "standards": "Trang bị monitor 5 thông số, máy khử rung tim tự động AED, bình oxy, cáng nẹp",
+        "count": 4
+      },
+      {
+        "id": "VT-3",
+        "code": "TYPE_C",
+        "name": "Type C - Vận chuyển y tế chuyên dụng",
+        "standards": "Trang bị cáng đẩy tự nâng, bình oxy thở cá nhân, vali sơ cấp cứu",
+        "count": 1
+      }
     ],
     "medicalEquipments": [
-      { "id": "EQ-01", "name": "Monitor đa thông số", "unit": "Bộ", "brand": "Nihon Kohden", "status": "ACTIVE" },
-      { "id": "EQ-02", "name": "Máy khử rung tim tự động AED", "unit": "Máy", "brand": "Zoll", "status": "ACTIVE" },
-      { "id": "EQ-03", "name": "Máy thở xách tay di động", "unit": "Máy", "brand": "Hamilton T1", "status": "ACTIVE" },
-      { "id": "EQ-04", "name": "Cáng xúc chuyên dụng nẹp cột sống", "unit": "Bộ", "brand": "Ferno", "status": "ACTIVE" },
-      { "id": "EQ-05", "name": "Bình oxy 10L kèm đồng hồ lưu lượng", "unit": "Bình", "brand": "Việt-Nhật", "status": "ACTIVE" },
-      { "id": "EQ-06", "name": "Bộ đặt nội khí quản có camera dẫn đường", "unit": "Bộ", "brand": "GlideScope", "status": "ACTIVE" }
+      {
+        "id": "EQ-01",
+        "name": "Monitor đa thông số",
+        "unit": "Bộ",
+        "brand": "Nihon Kohden",
+        "status": "ACTIVE"
+      },
+      {
+        "id": "EQ-02",
+        "name": "Máy khử rung tim tự động AED",
+        "unit": "Máy",
+        "brand": "Zoll",
+        "status": "ACTIVE"
+      },
+      {
+        "id": "EQ-03",
+        "name": "Máy thở xách tay di động",
+        "unit": "Máy",
+        "brand": "Hamilton T1",
+        "status": "ACTIVE"
+      },
+      {
+        "id": "EQ-04",
+        "name": "Cáng xúc chuyên dụng nẹp cột sống",
+        "unit": "Bộ",
+        "brand": "Ferno",
+        "status": "ACTIVE"
+      },
+      {
+        "id": "EQ-05",
+        "name": "Bình oxy 10L kèm đồng hồ lưu lượng",
+        "unit": "Bình",
+        "brand": "Việt-Nhật",
+        "status": "ACTIVE"
+      },
+      {
+        "id": "EQ-06",
+        "name": "Bộ đặt nội khí quản có camera dẫn đường",
+        "unit": "Bộ",
+        "brand": "GlideScope",
+        "status": "ACTIVE"
+      }
     ],
     "templates": [
-      { "id": "TPL-01", "name": "Biên bản Bàn giao Người bệnh Cấp cứu (Mẫu chuẩn Bộ Y Tế)", "version": "v3.2", "updatedAt": "2026-09-15" },
-      { "id": "TPL-02", "name": "Phiếu Tiếp nhận Cấp cứu Ngoại viện (ePCR)", "version": "v2.1", "updatedAt": "2026-09-20" },
-      { "id": "TPL-03", "name": "Biên bản Từ chối điều trị / Tự chuyển viện", "version": "v1.0", "updatedAt": "2026-08-10" }
+      {
+        "id": "TPL-01",
+        "name": "Biên bản Bàn giao Người bệnh Cấp cứu (Mẫu chuẩn Bộ Y Tế)",
+        "version": "v3.2",
+        "updatedAt": "2026-09-15"
+      },
+      {
+        "id": "TPL-02",
+        "name": "Phiếu Tiếp nhận Cấp cứu Ngoại viện (ePCR)",
+        "version": "v2.1",
+        "updatedAt": "2026-09-20"
+      },
+      {
+        "id": "TPL-03",
+        "name": "Biên bản Từ chối điều trị / Tự chuyển viện",
+        "version": "v1.0",
+        "updatedAt": "2026-08-10"
+      }
     ]
   },
   "stats": {
@@ -614,11 +1281,41 @@
     "handoverSuccessRate": "98.6%"
   },
   "auditLogs": [
-    { "id": "LOG-101", "time": "07:00:00", "user": "Hệ thống", "action": "Khởi tạo ca trực buổi sáng 02/10/2026, kích hoạt 5 kíp trực" },
-    { "id": "LOG-102", "time": "07:05:12", "user": "Nguyễn Văn An", "action": "Đăng nhập ca trực Điều phối viên Trung tâm 115" },
-    { "id": "LOG-103", "time": "08:10:15", "user": "Nguyễn Văn An", "action": "Nhận cuộc gọi 115 số 0918.234.111 (Khu vực Cầu Hưng Lợi)" },
-    { "id": "LOG-104", "time": "08:11:30", "user": "Nguyễn Văn An", "action": "Tạo ca CC-261002-001, điều động xe 65A-012.34 (Kíp 3)" },
-    { "id": "LOG-105", "time": "08:12:10", "user": "BS. CKI. Nguyễn Văn Thông", "action": "Bệnh viện Đa khoa thành phố Cần Thơ xác nhận tiếp nhận ca CC-261002-001" },
-    { "id": "LOG-106", "time": "08:18:20", "user": "CREW-03", "action": "Xe 65A-012.34 đến hiện trường Cầu Hưng Lợi" }
+    {
+      "id": "LOG-101",
+      "time": "07:00:00",
+      "user": "Hệ thống",
+      "action": "Khởi tạo ca trực buổi sáng 02/10/2026, kích hoạt 5 kíp trực"
+    },
+    {
+      "id": "LOG-102",
+      "time": "07:05:12",
+      "user": "Nguyễn Văn An",
+      "action": "Đăng nhập ca trực Điều phối viên Trung tâm 115"
+    },
+    {
+      "id": "LOG-103",
+      "time": "08:10:15",
+      "user": "Nguyễn Văn An",
+      "action": "Nhận cuộc gọi 115 số 0918.234.111 (Khu vực Cầu Hưng Lợi)"
+    },
+    {
+      "id": "LOG-104",
+      "time": "08:11:30",
+      "user": "Nguyễn Văn An",
+      "action": "Tạo ca CC-261002-001, điều động xe 65A-012.34 (Kíp 3)"
+    },
+    {
+      "id": "LOG-105",
+      "time": "08:12:10",
+      "user": "BS. CKI. Nguyễn Văn Thông",
+      "action": "Bệnh viện Đa khoa thành phố Cần Thơ xác nhận tiếp nhận ca CC-261002-001"
+    },
+    {
+      "id": "LOG-106",
+      "time": "08:18:20",
+      "user": "CREW-03",
+      "action": "Xe 65A-012.34 đến hiện trường Cầu Hưng Lợi"
+    }
   ]
 }

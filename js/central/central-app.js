@@ -324,6 +324,9 @@
         logoutBtn._bound = true;
         logoutBtn.addEventListener('click', () => {
           sessionStorage.removeItem('ccnv_logged_in_user');
+          sessionStorage.removeItem('ccnv_hospital_confirmed');
+          this.hospitalDemoRunning = false;
+          this.realtimeSelectedPlate = null;
           document.body.classList.remove('hospital-mode');
           const loginOverlay = document.getElementById('login-screen-overlay');
           if (loginOverlay) loginOverlay.classList.remove('hidden');
@@ -1041,7 +1044,8 @@
       const caseOfPlate = (plate) => {
         if (!plate) return null;
         return activeCases.find(c => c.dispatch?.vehiclePlate === plate || c.currentVehiclePlate === plate)
-          || (state.cases || []).find(c => c.dispatch?.vehiclePlate === plate && !['COMPLETED', 'CANCELLED', 'CLOSED'].includes(c.status));
+          || (state.cases || []).find(c => (c.dispatch?.vehiclePlate === plate || c.currentVehiclePlate === plate) && !['COMPLETED', 'CANCELLED', 'CLOSED'].includes(c.status))
+          || ((this.demoRunning || state.demoRunning) && state.demoCase?.dispatch?.vehiclePlate === plate ? state.demoCase : null);
       };
 
       // Mặc định ở Trung tâm: Không tự động focus vào 1 xe nào để bản đồ luôn hiển thị toàn cảnh tất cả các bệnh viện và xe
@@ -1147,6 +1151,61 @@
       const bottomStrip = container.querySelector('#realtime-bottom-strip');
       const fleetPanel = container.querySelector('#fleet-side-panel');
       const btnToggleLayers = container.querySelector('#btn-toggle-layers-widget');
+      const tabVehicles = container.querySelector('#tab-panel-vehicles');
+      const tabCases = container.querySelector('#tab-panel-cases');
+      const searchInput = container.querySelector('#filter-vehicle-input');
+      const btnSortTrigger = container.querySelector('#btn-sort-vehicle-trigger');
+      const sortDropdown = container.querySelector('#veh-sort-dropdown-menu');
+      let currentSortMode = 'default';
+
+      const getFilteredVehicles = () => {
+        const q = (searchInput?.value || '').toLowerCase().trim();
+        let result = vehicles.filter(v =>
+          !q ||
+          v.plate.toLowerCase().includes(q) ||
+          v.station.toLowerCase().includes(q) ||
+          v.type.toLowerCase().includes(q)
+        );
+
+        if (currentSortMode === 'status') {
+          result.sort((a, b) => (a.status === 'READY' ? -1 : 1));
+        } else if (currentSortMode === 'speed') {
+          result.sort((a, b) => (b.speed || 0) - (a.speed || 0));
+        } else if (currentSortMode === 'battery') {
+          result.sort((a, b) => (b.fuel || 90) - (a.fuel || 90));
+        } else if (currentSortMode === 'plate') {
+          result.sort((a, b) => a.plate.localeCompare(b.plate));
+        }
+        return result;
+      };
+
+      const updateVehicleList = () => {
+        if (isHospital || (tabCases && tabCases.classList.contains('active'))) {
+          const currentCases = isHospital ? displayCases : activeCases;
+          const q = (searchInput?.value || '').toLowerCase().trim();
+          const filtered = currentCases.filter(c => {
+            const code = (c.code || c.id || '').toLowerCase();
+            const incident = (c.incident?.name || '').toLowerCase();
+            const plate = (c.dispatch?.vehiclePlate || '').toLowerCase();
+            const addr = (c.location?.address || '').toLowerCase();
+            const ageGroup = (c.patient?.ageGroupText || '').toLowerCase();
+            const hospital = (c.dispatch?.hospitalName || '').toLowerCase();
+            return !q || code.includes(q) || incident.includes(q) || plate.includes(q) || addr.includes(q) || ageGroup.includes(q) || hospital.includes(q);
+          });
+
+          if (listEl) {
+            listEl.innerHTML = this.renderHospitalCaseCards(filtered, currentSelectedPlate);
+            bindCardClicks();
+          }
+          return;
+        }
+
+        const result = getFilteredVehicles();
+        if (listEl) {
+          listEl.innerHTML = this.renderVehicleCards(result, currentSelectedPlate);
+          bindCardClicks();
+        }
+      };
 
       // Widget Toggle Handler trực tiếp khi nhấn vào Icon Layer
       const toggleFleetPanel = (show) => {
@@ -1336,23 +1395,28 @@
 
             if (listEl) {
               if (targetVeh && showDetail) {
-                // Nhấn nút "Chi tiết" → Xem chi tiết xe như ảnh 2
+                // Nhấn nút "Chi tiết" → Xem chi tiết xe
                 listEl.innerHTML = this.renderVehicleDetailPanel(targetVeh, caseOfPlate(targetVeh.plate));
                 bindDetailPanelEvents(targetVeh);
               } else {
-                // Nhấn vào xe → Theo dõi 1 xe trên bản đồ, giữ danh sách và highlight xe đang chọn
-                if (typeof updateVehicleList === 'function' && searchInput?.value) {
-                  updateVehicleList();
-                } else {
-                  listEl.innerHTML = this.renderVehicleCards(vehicles, plate);
+                const isDetailPanelOpen = Boolean(listEl.querySelector('.vehicle-detail-panel-box'));
+                if (isDetailPanelOpen) {
+                  const currentVehicles = getFilteredVehicles();
+                  listEl.innerHTML = this.renderVehicleCards(currentVehicles, plate);
                   bindCardClicks();
+                } else {
+                  // Đang ở danh sách xe: toggle class is-selected cho xe được chọn (hoặc bỏ chọn nếu plate == null)
+                  listEl.querySelectorAll('.vehicle-card').forEach(card => {
+                    const cardPlate = card.getAttribute('data-plate');
+                    card.classList.toggle('is-selected', Boolean(plate && cardPlate === plate));
+                  });
                 }
               }
             }
           }
         }
 
-        const vehForBottom = targetVeh || (isHospital ? null : defaultVeh);
+        const vehForBottom = targetVeh;
         if (bottomStrip) {
           if (vehForBottom) {
             bottomStrip.style.display = '';
@@ -1365,12 +1429,13 @@
 
         if (!this.mapInstance) return;
         if (plate) this.mapInstance.focusVehicle(plate, { animate });
-        else this.mapInstance.clearFocus();
+        else this.mapInstance.clearFocus(animate);
       };
 
       // Thẻ xe & Thẻ ca: bấm vào thẻ → chọn xe / mở chi tiết ca
       const bindCardClicks = () => {
         if (!listEl) return;
+
         listEl.querySelectorAll('.vehicle-card').forEach(card => {
           card.addEventListener('click', (e) => {
             // Nút Chi tiết trên thẻ xe (xem chi tiết xe như ảnh 2)
@@ -1428,7 +1493,7 @@
 
             if (plate) {
               if (plate === currentSelectedPlate) {
-                // Nhấn lại vào xe đang chọn thì thoát chế độ xem chi tiết xe, quay lại xem toàn bộ xe và bệnh viện
+                // Nhấn lại vào xe đang chọn thì hủy chọn xe, quay lại xem toàn bộ xe và bệnh viện
                 setSelection(null);
               } else {
                 // Nhấn vào xe đó thì là theo dõi 1 xe trên bản đồ
@@ -1506,56 +1571,6 @@
         }
       }
 
-      // Filter & Sort search input (tự động phân loại theo vai trò hoặc tab đang chọn)
-      const searchInput = container.querySelector('#filter-vehicle-input');
-      const btnSortTrigger = container.querySelector('#btn-sort-vehicle-trigger');
-      const sortDropdown = container.querySelector('#veh-sort-dropdown-menu');
-      let currentSortMode = 'default';
-
-      const updateVehicleList = () => {
-        const q = (searchInput?.value || '').toLowerCase().trim();
-
-        if (isHospital || (tabCases && tabCases.classList.contains('active'))) {
-          const currentCases = isHospital ? displayCases : activeCases;
-          const filtered = currentCases.filter(c => {
-            const code = (c.code || c.id || '').toLowerCase();
-            const incident = (c.incident?.name || '').toLowerCase();
-            const plate = (c.dispatch?.vehiclePlate || '').toLowerCase();
-            const addr = (c.location?.address || '').toLowerCase();
-            const ageGroup = (c.patient?.ageGroupText || '').toLowerCase();
-            const hospital = (c.dispatch?.hospitalName || '').toLowerCase();
-            return !q || code.includes(q) || incident.includes(q) || plate.includes(q) || addr.includes(q) || ageGroup.includes(q) || hospital.includes(q);
-          });
-
-          if (listEl) {
-            listEl.innerHTML = this.renderHospitalCaseCards(filtered, currentSelectedPlate);
-            bindCardClicks();
-          }
-          return;
-        }
-
-        let result = vehicles.filter(v =>
-          v.plate.toLowerCase().includes(q) ||
-          v.station.toLowerCase().includes(q) ||
-          v.type.toLowerCase().includes(q)
-        );
-
-        if (currentSortMode === 'status') {
-          result.sort((a, b) => (a.status === 'READY' ? -1 : 1));
-        } else if (currentSortMode === 'speed') {
-          result.sort((a, b) => (b.speed || 0) - (a.speed || 0));
-        } else if (currentSortMode === 'battery') {
-          result.sort((a, b) => (b.fuel || 90) - (a.fuel || 90));
-        } else if (currentSortMode === 'plate') {
-          result.sort((a, b) => a.plate.localeCompare(b.plate));
-        }
-
-        if (listEl) {
-          listEl.innerHTML = this.renderVehicleCards(result, currentSelectedPlate);
-          bindCardClicks();
-        }
-      };
-
       if (searchInput) searchInput.addEventListener('input', updateVehicleList);
 
       // Toggle sort popover dropdown (chỉ hiển thị ở vai trò Trung tâm điều hành)
@@ -1595,16 +1610,17 @@
       }
 
       // Tab switcher for right panel: Vehicles vs Active Cases (chỉ có ở vai trò Trung tâm điều hành)
-      const tabVehicles = container.querySelector('#tab-panel-vehicles');
-      const tabCases = container.querySelector('#tab-panel-cases');
       if (tabVehicles && tabCases) {
         tabVehicles.addEventListener('click', () => {
           tabVehicles.classList.add('active');
           tabCases.classList.remove('active');
           if (searchInput) searchInput.placeholder = 'Tìm biển số xe, kíp trực, trạm...';
           if (btnSortTrigger) btnSortTrigger.style.display = '';
-          if (listEl) {
-            listEl.innerHTML = this.renderVehicleCards(vehicles, currentSelectedPlate);
+          // Nếu đang có xe được chọn theo dõi, bấm vào tab Đội xe sẽ hủy chọn để quay lại xem toàn bộ xe và bệnh viện
+          if (currentSelectedPlate) {
+            setSelection(null);
+          } else if (listEl) {
+            listEl.innerHTML = this.renderVehicleCards(getFilteredVehicles(), null);
             bindCardClicks();
           }
         });
@@ -2197,7 +2213,7 @@
       `;
     }
 
-    renderVehicleCards(vehicles, selectedPlate = '65A-012.34') {
+    renderVehicleCards(vehicles, selectedPlate = null) {
       if (!vehicles || vehicles.length === 0) {
         return `<div style="text-align:center;padding:24px;color:var(--text-muted);">Không tìm thấy phương tiện</div>`;
       }
@@ -2238,9 +2254,6 @@
       return sortedVehicles.map(v => {
         const isEmergency = isVehicleDispatched(v);
         const isSelected = v.plate === selectedPlate;
-        const statusBadge = isEmergency
-          ? window.CCNV_UI.Badges.forVehicleStatus('EMERGENCY')
-          : window.CCNV_UI.Badges.forVehicleStatus(v.status || 'READY');
         return `
           <div class="vehicle-card ${isEmergency ? 'is-emergency' : ''} ${isSelected ? 'is-selected' : ''}" data-plate="${v.plate}">
             <div class="vehicle-card-top">
@@ -7670,6 +7683,7 @@
       // Lưu cờ xác nhận vào session cho cổng bệnh viện tiếp nhận
       try { sessionStorage.setItem('ccnv_hospital_confirmed', 'true'); } catch (e) {}
       this.hospitalDemoRunning = true;
+      this.realtimeSelectedPlate = plate;
       this.setDemoButton(true);
       window.CanThoMap?.resetMission?.(demoCase.id);
       window.StateManager.saveToSession?.();
@@ -7713,6 +7727,7 @@
         veh.coords = [10.0150, 105.7720];
       }
       this.hospitalDemoRunning = false;
+      this.realtimeSelectedPlate = null;
       this.setDemoButton(false);
       window.StateManager.saveToSession?.();
       window.CCNV_UI.Toast.show('Đã kết thúc demo', 'Đã đặt lại dữ liệu tiếp nhận của Khoa Cấp cứu.');
@@ -9746,7 +9761,11 @@
               this.modalMapInstance.destroy();
               this.modalMapInstance = null;
             }
-            this.modalMapInstance = new window.CanThoMap('modal-overview-map-viewport');
+            this.modalMapInstance = new window.CanThoMap('modal-overview-map-viewport', {
+              isHospital: this.isHospitalMode(),
+              hospitalId: myHospId,
+              hospitalName: myHospName
+            });
             this.modalMapInstance.render();
 
             const plate = c.dispatch?.vehiclePlate;

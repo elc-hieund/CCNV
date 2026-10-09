@@ -405,6 +405,7 @@
       margin: 2px 0 6px;
       height: 14px;
     }
+
     .incall-voice-wave .voice-bar {
       width: 3px;
       height: 6px;
@@ -412,15 +413,28 @@
       border-radius: 2px;
       animation: voiceWavePulse 0.85s ease-in-out infinite alternate;
     }
+
     .incall-voice-wave.paused .voice-bar {
       animation-play-state: paused !important;
       opacity: 0.35;
       height: 3px !important;
     }
+
     @keyframes voiceWavePulse {
-      0% { height: 4px; opacity: 0.5; }
-      50% { height: 14px; opacity: 1; }
-      100% { height: 6px; opacity: 0.7; }
+      0% {
+        height: 4px;
+        opacity: 0.5;
+      }
+
+      50% {
+        height: 14px;
+        opacity: 1;
+      }
+
+      100% {
+        height: 6px;
+        opacity: 0.7;
+      }
     }
   </style>
 </head>
@@ -670,7 +684,8 @@
             <div class="incall-controls-bar">
               <button type="button" class="incall-control-btn active" id="btn-incall-speaker" title="Bật/Tắt Loa ngoài">
                 <span id="icon-incall-speaker" style="display:inline-flex;align-items:center;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                    stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                     <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
                   </svg>
