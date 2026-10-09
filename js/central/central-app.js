@@ -15,6 +15,8 @@
       this.activeIncomingCall = null;
       this.selectedCaseId = null;
       this.demoRunning = false;
+      this.hospitalDemoRunning = false;
+      this.hospitalAlertTriggered = false;
       this.demo = null;
       this.caseTabOffset = 0;
       this.activeCameraMode = 'FRONT'; // 'FRONT' (Cam trước) hoặc 'REAR' (Cam sau/khoang)
@@ -34,14 +36,18 @@
       if (isHospital) {
         this.currentMenu = 'hospital-map';
         document.body.classList.add('hospital-mode');
+        // Mặc định ở màn Bệnh viện tiếp nhận: Không có ca nào, chỉ hiện vị trí bệnh viện
+        try { sessionStorage.removeItem('ccnv_hospital_confirmed'); } catch (e) {}
+        this.hospitalDemoRunning = false;
+        this.hospitalAlertTriggered = false;
+        this.resetAllToReady();
       } else {
         document.body.classList.remove('hospital-mode');
-      }
-
-      // Đảm bảo trạng thái ban đầu sạch sẽ khi chưa bắt đầu demo:
-      // Không có ca cấp cứu nào, toàn bộ xe và kíp trực ở trạng thái Sẵn sàng
-      if (!this.demoRunning) {
-        this.resetAllToReady();
+        this.currentMenu = 'realtime-map';
+        this.realtimeSelectedPlate = null;
+        if (!this.demoRunning) {
+          this.resetAllToReady();
+        }
       }
 
       // 2. Start Header Clock
@@ -1003,52 +1009,47 @@
     // --- 1. REALTIME MAP VIEW (COMMAND CENTER CORE) ---
     renderRealtimeMapView(container) {
       const state = window.StateManager.getState();
-      const isHospital = this.isHospitalMode() || this.currentMenu === 'hospital-map';
       const currentUser = window.StateManager.getCurrentUser();
+      // Phân định rõ ràng:
+      // - hospital-map: Màn hình Bệnh viện tiếp nhận (mặc định chỉ hiện vị trí bệnh viện của mình)
+      // - realtime-map: Màn hình Trung tâm giám sát & điều hành 115 (mặc định hiển thị toàn cảnh tất cả các bệnh viện và xe)
+      const isHospital = this.currentMenu === 'hospital-map' || (this.isHospitalMode() && this.currentMenu !== 'realtime-map');
       const myHospId = currentUser?.hospitalId || 'HOSP_BVTU';
       const myHospName = currentUser?.organization;
 
+      const isHospConfirmed = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('ccnv_hospital_confirmed') === 'true';
+
       const vehicles = state.vehicles || [];
       const activeCases = (state.cases || []).filter(c => !['COMPLETED', 'CANCELLED', 'CLOSED'].includes(c.status));
-      if (activeCases.length === 0 && state.demoCase && !['COMPLETED', 'CANCELLED', 'CLOSED'].includes(state.demoCase.status)) {
-        activeCases.push(state.demoCase);
-      }
 
-      // Lọc danh sách ca thuộc bệnh viện tiếp nhận (các ca hướng về hoặc đã gán cho BV này)
-      const hospitalCases = activeCases.filter(c => {
-        if (!isHospital) return true;
-        return !c.dispatch?.hospitalId ||
-          c.dispatch?.hospitalId === myHospId ||
-          c.dispatch?.hospitalName === myHospName ||
-          (myHospName && c.dispatch?.hospitalName && myHospName.includes(c.dispatch.hospitalName)) ||
-          (c.dispatch?.hospitalName && myHospName && c.dispatch.hospitalName.includes(myHospName));
-      });
+      // Lọc danh sách ca thuộc bệnh viện tiếp nhận:
+      // Mặc định CHƯA TIẾP NHẬN thì không có ca nào (0 ca) và không hiển thị thông báo trên layer bên trái.
+      // Khi đã bấm xác nhận (isHospConfirmed = true) thì mới hiển thị ca tiếp nhận.
+      const hospitalCases = isHospital
+        ? (isHospConfirmed ? activeCases.filter(c => {
+            if (c.hospitalResponse !== 'ACCEPTED') return false;
+            return !c.dispatch?.hospitalId ||
+              c.dispatch?.hospitalId === myHospId ||
+              c.dispatch?.hospitalName === myHospName ||
+              (myHospName && c.dispatch?.hospitalName && myHospName.includes(c.dispatch.hospitalName)) ||
+              (c.dispatch?.hospitalName && myHospName && c.dispatch.hospitalName.includes(myHospName));
+          }) : [])
+        : activeCases;
 
       const displayCases = isHospital ? hospitalCases : activeCases;
 
       const caseOfPlate = (plate) => {
         if (!plate) return null;
         return activeCases.find(c => c.dispatch?.vehiclePlate === plate || c.currentVehiclePlate === plate)
-          || (state.cases || []).find(c => c.dispatch?.vehiclePlate === plate && !['COMPLETED', 'CANCELLED', 'CLOSED'].includes(c.status))
-          || (state.demoCase && state.demoCase.dispatch?.vehiclePlate === plate ? state.demoCase : null);
+          || (state.cases || []).find(c => c.dispatch?.vehiclePlate === plate && !['COMPLETED', 'CANCELLED', 'CLOSED'].includes(c.status));
       };
 
-      // Xe hiển thị mặc định ở dải dưới khi chưa chọn xe
-      let defaultVeh = null;
-      if (isHospital) {
-        const caseWithVeh = displayCases.find(c => c.dispatch?.vehiclePlate);
-        if (caseWithVeh) {
-          defaultVeh = vehicles.find(v => v.plate === caseWithVeh.dispatch.vehiclePlate) || null;
-        }
-      } else {
-        defaultVeh = vehicles.find(v => caseOfPlate(v.plate)) || vehicles[0];
-      }
-
+      // Mặc định ở Trung tâm: Không tự động focus vào 1 xe nào để bản đồ luôn hiển thị toàn cảnh tất cả các bệnh viện và xe
       if (this.realtimeSelectedPlate && !vehicles.some(v => v.plate === this.realtimeSelectedPlate)) {
         this.realtimeSelectedPlate = null;
       }
-      let currentSelectedPlate = this.realtimeSelectedPlate || (defaultVeh ? defaultVeh.plate : null);
-      const initialVeh = (currentSelectedPlate && vehicles.find(v => v.plate === currentSelectedPlate)) || defaultVeh;
+      let currentSelectedPlate = this.realtimeSelectedPlate || null;
+      const initialVeh = currentSelectedPlate ? vehicles.find(v => v.plate === currentSelectedPlate) : null;
       const initialCase = caseOfPlate(initialVeh?.plate);
 
       container.innerHTML = `
@@ -1130,7 +1131,11 @@
 
       // Mount Can Tho Map (hủy instance cũ để không rò vòng lặp animation)
       if (this.mapInstance) this.mapInstance.destroy();
-      this.mapInstance = new window.CanThoMap('cantho-map-viewport');
+      this.mapInstance = new window.CanThoMap('cantho-map-viewport', {
+        isHospital: isHospital,
+        hospitalId: myHospId,
+        hospitalName: myHospName
+      });
       this.mapInstance.onMissionCompleted = (m) => {
         if (this.demoRunning) {
           this.completeDemoAtHospital(m);
@@ -1298,8 +1303,8 @@
         });
       };
 
-      // Chọn xe (plate) hoặc hủy chọn (null) → chuyển đổi giữa Danh sách xe và Chi tiết xe trong Widget (hoặc highlight ca xử lý ở vai trò BV)
-      const setSelection = (plate, { animate = true } = {}) => {
+      // Chọn theo dõi xe (showDetail = false) hoặc mở bảng chi tiết xe (showDetail = true)
+      const setSelection = (plate, { animate = true, showDetail = false } = {}) => {
         currentSelectedPlate = plate;
         this.realtimeSelectedPlate = plate;
 
@@ -1314,7 +1319,7 @@
             });
           }
         } else {
-          // Trung tâm điều hành: nếu đang ở tab Ca xử lý thì highlight thẻ ca, nếu ở tab Đội xe thì chuyển sang Chi tiết xe
+          // Trung tâm điều hành: nếu đang ở tab Ca xử lý thì highlight thẻ ca
           const isCasesTab = tabCases?.classList.contains('active');
           if (isCasesTab) {
             if (listEl) {
@@ -1326,16 +1331,22 @@
           } else {
             const searchBarEl = fleetPanel?.querySelector('.panel-search-bar');
             if (searchBarEl) {
-              searchBarEl.style.display = targetVeh ? 'none' : 'flex';
+              searchBarEl.style.display = (targetVeh && showDetail) ? 'none' : 'flex';
             }
 
             if (listEl) {
-              if (targetVeh) {
+              if (targetVeh && showDetail) {
+                // Nhấn nút "Chi tiết" → Xem chi tiết xe như ảnh 2
                 listEl.innerHTML = this.renderVehicleDetailPanel(targetVeh, caseOfPlate(targetVeh.plate));
                 bindDetailPanelEvents(targetVeh);
               } else {
-                listEl.innerHTML = this.renderVehicleCards(vehicles, null);
-                bindCardClicks();
+                // Nhấn vào xe → Theo dõi 1 xe trên bản đồ, giữ danh sách và highlight xe đang chọn
+                if (typeof updateVehicleList === 'function' && searchInput?.value) {
+                  updateVehicleList();
+                } else {
+                  listEl.innerHTML = this.renderVehicleCards(vehicles, plate);
+                  bindCardClicks();
+                }
               }
             }
           }
@@ -1362,6 +1373,16 @@
         if (!listEl) return;
         listEl.querySelectorAll('.vehicle-card').forEach(card => {
           card.addEventListener('click', (e) => {
+            // Nút Chi tiết trên thẻ xe (xem chi tiết xe như ảnh 2)
+            if (e.target.closest('.btn-card-veh-detail')) {
+              e.stopPropagation();
+              const plate = e.target.closest('.btn-card-veh-detail').getAttribute('data-plate') || card.getAttribute('data-plate');
+              if (plate) {
+                setSelection(plate, { showDetail: true });
+              }
+              return;
+            }
+
             // Nút mở modal chi tiết hồ sơ bệnh án
             if (e.target.closest('.btn-view-case-detail')) {
               e.stopPropagation();
@@ -1374,24 +1395,53 @@
               return;
             }
 
+            // Nút Xác nhận ca trực tiếp từ Thẻ ca (Khoa Cấp cứu tiếp nhận)
+            if (e.target.closest('.btn-confirm-hospital-case-btn')) {
+              e.stopPropagation();
+              const caseId = e.target.closest('.btn-confirm-hospital-case-btn').getAttribute('data-case-id');
+              const targetCase = (state.cases || []).find(c => c.id === caseId || c.code === caseId)
+                || (state.demoCase && (state.demoCase.id === caseId || state.demoCase.code === caseId) ? state.demoCase : null);
+              if (targetCase) {
+                this.confirmHospitalCase(targetCase);
+              }
+              return;
+            }
+
             // Nút định vị xe chở ca
             if (e.target.closest('.btn-track-case-veh')) {
               e.stopPropagation();
               const plate = e.target.closest('.btn-track-case-veh').getAttribute('data-plate');
-              if (plate) setSelection(plate);
+              if (plate) setSelection(plate, { showDetail: false });
               return;
             }
 
             const plate = card.getAttribute('data-plate');
             const caseId = card.getAttribute('data-case-id');
+            const targetCase = (state.cases || []).find(c => c.id === caseId || c.code === caseId)
+              || (state.demoCase && (state.demoCase.id === caseId || state.demoCase.code === caseId) ? state.demoCase : null);
+
+            // Ở màn Bệnh viện tiếp nhận: Nếu chưa xác nhận ca thì click card sẽ mở chi tiết bệnh án để tiếp nhận
+            if (isHospital && targetCase && targetCase.hospitalResponse !== 'ACCEPTED') {
+              this.showCaseDetailModal(targetCase.id, targetCase);
+              return;
+            }
+
             if (plate) {
-              setSelection(plate);
+              if (plate === currentSelectedPlate) {
+                // Nhấn lại vào xe đang chọn thì thoát chế độ xem chi tiết xe, quay lại xem toàn bộ xe và bệnh viện
+                setSelection(null);
+              } else {
+                // Nhấn vào xe đó thì là theo dõi 1 xe trên bản đồ
+                setSelection(plate, { showDetail: false });
+              }
             } else if (caseId) {
-              const targetCase = (state.cases || []).find(c => c.id === caseId || c.code === caseId)
-                || (state.demoCase && (state.demoCase.id === caseId || state.demoCase.code === caseId) ? state.demoCase : null);
               if (targetCase) {
                 if (targetCase.dispatch?.vehiclePlate) {
-                  setSelection(targetCase.dispatch.vehiclePlate);
+                  if (targetCase.dispatch.vehiclePlate === currentSelectedPlate) {
+                    setSelection(null);
+                  } else {
+                    setSelection(targetCase.dispatch.vehiclePlate, { showDetail: false });
+                  }
                 }
                 this.showCaseDetailModal(targetCase.id, targetCase);
               }
@@ -1402,10 +1452,28 @@
       bindCardClicks();
       bindBottomControls();
 
+
+
       // Hook map marker clicks (vehicles, incident, hospitals)
       if (this.mapInstance) {
         this.mapInstance.onVehicleSelect = (plate) => {
-          if (plate !== currentSelectedPlate) setSelection(plate);
+          if (plate !== currentSelectedPlate) {
+            setSelection(plate);
+          } else {
+            setSelection(null);
+          }
+        };
+
+        this.mapInstance.onClearFocus = () => {
+          if (currentSelectedPlate) {
+            setSelection(null);
+          }
+        };
+
+        this.mapInstance.onMapClick = () => {
+          if (currentSelectedPlate) {
+            setSelection(null);
+          }
         };
 
         this.mapInstance.onIncidentSelect = (caseId) => {
@@ -1430,9 +1498,11 @@
           });
         };
 
-        // Khôi phục chế độ theo dõi sau khi view re-render (ví dụ khi ca được cập nhật)
-        if (currentSelectedPlate) {
+        // Khôi phục chế độ theo dõi sau khi view re-render (chỉ khi người dùng đã chủ động chọn 1 xe cụ thể)
+        if (currentSelectedPlate && this.realtimeSelectedPlate) {
           this.mapInstance.focusVehicle(currentSelectedPlate, { animate: false });
+        } else {
+          this.mapInstance.clearFocus();
         }
       }
 
@@ -2184,6 +2254,12 @@
             </div>
             <div class="vehicle-meta-row" style="border-top:1px dashed var(--border-main);padding-top:4px;margin-top:4px;display:flex;align-items:center;justify-content:space-between;">
               ${window.CCNV_UI.renderBattery(v.battery)}
+              <button type="button" class="btn-card-veh-detail" data-plate="${v.plate}" title="Xem chi tiết kỹ thuật và kíp trực của xe ${v.plate}">
+                <span>Chi tiết</span>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
             </div>
           </div>
         `;
@@ -2194,9 +2270,9 @@
       if (!casesList || casesList.length === 0) {
         return `
           <div style="padding:36px 16px;text-align:center;color:var(--text-muted);font-size:12.5px;">
-            <div style="font-size:26px;margin-bottom:8px;opacity:0.6;">📋</div>
-            <div style="font-weight:600;color:var(--text-white);margin-bottom:4px;">Chưa có ca cấp cứu chuyển đến</div>
-            <div style="font-size:11.5px;color:var(--text-muted);">Các ca được điều phối về bệnh viện sẽ tự động hiển thị tại đây theo thời gian thực.</div>
+            <div style="font-size:36px;margin-bottom:10px;opacity:0.85;">🏥</div>
+            <div style="font-weight:700;color:var(--text-white);font-size:13.5px;margin-bottom:6px;">Sẵn sàng tiếp nhận cấp cứu</div>
+            <div style="font-size:12px;color:var(--text-slate);line-height:1.5;">Khoa Cấp cứu đang trong trạng thái sẵn sàng. Khi có tín hiệu chuyển nạn nhân từ Trung tâm 115, hãy nhấn vào biểu tượng quả chuông ở góc trên bên phải để mở thông báo và xác nhận tiếp nhận.</div>
           </div>
         `;
       }
@@ -2207,15 +2283,26 @@
         const ageText = c.patient?.ageGroupText || 'Người trưởng thành';
         const genderText = c.patient?.gender ? ` (${c.patient.gender})` : '';
         const incidentName = c.incident?.name || 'Cấp cứu';
-        const statusText = c.statusText || (c.status === 'TRANSPORTING' ? 'Đang đến viện' : c.status === 'DISPATCHED' ? 'Đã điều xe' : 'Đang xử lý');
+        const isAccepted = c.hospitalResponse === 'ACCEPTED';
+        const statusText = isAccepted
+          ? (c.statusText || (c.status === 'TRANSPORTING' ? 'Đang đến viện' : 'Đã tiếp nhận'))
+          : 'Chờ xác nhận';
         const hospitalName = c.dispatch?.hospitalName || 'Bệnh viện tiếp nhận';
         const etaText = c.eta || (c.status === 'TRANSPORTING' ? '4 phút' : '-');
 
         return `
-          <div class="vehicle-card is-emergency ${isSelected ? 'is-selected' : ''}" data-plate="${plate}" data-case-id="${c.id}" style="margin-bottom:8px;cursor:pointer;transition:border-color 0.2s, background-color 0.2s;">
+          <div class="vehicle-card is-emergency ${isSelected ? 'is-selected' : ''} ${!isAccepted ? 'is-pending-confirm' : ''}" data-plate="${plate}" data-case-id="${c.id}" style="margin-bottom:8px;cursor:pointer;transition:border-color 0.2s, background-color 0.2s;${!isAccepted ? 'border-color:rgba(245,158,11,0.5);background:rgba(245,158,11,0.05);' : ''}">
             <div class="vehicle-card-top" style="display:flex;align-items:center;justify-content:space-between;">
-              <span class="vehicle-plate" style="color:var(--red-vivid);font-weight:700;letter-spacing:0.3px;">${c.code}</span>
-              <span class="status-pill status-pill-processing" style="font-size:10.5px;padding:2px 8px;">${statusText}</span>
+              <span class="vehicle-plate" style="color:${isAccepted ? 'var(--red-vivid)' : '#f59e0b'};font-weight:700;letter-spacing:0.3px;">${c.code}</span>
+              ${!isAccepted ? `
+                <span class="status-pill" style="font-size:10.5px;padding:2px 8px;background:rgba(245,158,11,0.22);color:#fbbf24;border:1px solid rgba(245,158,11,0.5);font-weight:700;animation:pulse 2s infinite;">
+                  ● Chờ xác nhận
+                </span>
+              ` : `
+                <span class="status-pill status-pill-completed" style="font-size:10.5px;padding:2px 8px;background:rgba(16,185,129,0.2);color:#34d399;border:1px solid rgba(16,185,129,0.5);font-weight:700;">
+                  ✓ Đã tiếp nhận
+                </span>
+              `}
             </div>
             
             <div style="font-size:12.5px;color:var(--text-white);margin-top:4px;font-weight:600;">
@@ -2232,15 +2319,28 @@
               <span style="color:var(--yellow-vivid);font-weight:700;">ETA: ${etaText}</span>
             </div>
 
+            ${!isAccepted ? `
+              <div style="font-size:11px;color:#fbbf24;margin-top:6px;padding:5px 8px;background:rgba(245,158,11,0.12);border-radius:6px;border:1px dashed rgba(245,158,11,0.35);line-height:1.35;">
+                ⚠️ <strong>Chưa nhận ca:</strong> Bản đồ chỉ hiện vị trí bệnh viện. Bấm <strong>"Xác nhận ca"</strong> để theo dõi xe đang đến.
+              </div>
+            ` : ''}
+
             <div style="display:flex;gap:6px;margin-top:6px;padding-top:5px;border-top:1px solid rgba(255,255,255,0.06);">
-              <button type="button" class="btn btn-xs btn-default btn-view-case-detail" data-case-id="${c.id}" style="flex:1;padding:3px 6px;font-size:11px;" title="Xem hồ sơ bệnh án điện tử">
+              <button type="button" class="btn btn-xs btn-default btn-view-case-detail" data-case-id="${c.id}" style="flex:1;padding:4px 6px;font-size:11px;" title="Xem hồ sơ bệnh án điện tử">
                 Hồ sơ ePCR
               </button>
-              ${plate ? `
-              <button type="button" class="btn btn-xs btn-emergency btn-track-case-veh" data-plate="${plate}" style="padding:3px 8px;font-size:11px;" title="Định vị xe cấp cứu trên bản đồ">
-                Xem xe
-              </button>
-              ` : ''}
+              ${!isAccepted ? `
+                <button type="button" class="btn btn-xs btn-emergency btn-confirm-hospital-case-btn" data-case-id="${c.id}" data-plate="${plate}" style="padding:4px 10px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px;box-shadow:0 0 10px rgba(239,68,68,0.4);" title="Xác nhận tiếp nhận ca cấp cứu này để theo dõi xe trên bản đồ">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <span>Xác nhận ca</span>
+                </button>
+              ` : `
+                ${plate ? `
+                <button type="button" class="btn btn-xs btn-emergency btn-track-case-veh" data-plate="${plate}" style="padding:3px 8px;font-size:11px;" title="Định vị xe cấp cứu trên bản đồ">
+                  Xem xe
+                </button>
+                ` : ''}
+              `}
             </div>
           </div>
         `;
@@ -7567,15 +7667,41 @@
         veh.coords = [10.0235, 105.7730];
       }
 
+      // Lưu cờ xác nhận vào session cho cổng bệnh viện tiếp nhận
+      try { sessionStorage.setItem('ccnv_hospital_confirmed', 'true'); } catch (e) {}
       this.hospitalDemoRunning = true;
       this.setDemoButton(true);
+      window.CanThoMap?.resetMission?.(demoCase.id);
       window.StateManager.saveToSession?.();
 
       // 7. Bắn sự kiện CASE_CREATED để đồng bộ toàn bộ giao diện: Danh sách ca, Bản đồ, KPI, Badges
       window.StateManager.notify('CASE_CREATED', demoCase);
     }
 
+    confirmHospitalCase(targetCase) {
+      if (!targetCase) return;
+      this.commitHospitalDemoCase(targetCase);
+      const plate = targetCase.dispatch?.vehiclePlate || '65A-012.34';
+      this.realtimeSelectedPlate = plate;
+      window.CCNV_UI?.SoundFx?.playSuccess?.();
+      window.CCNV_UI?.Toast?.show?.(
+        'ĐÃ XÁC NHẬN TIẾP NHẬN CA CẤP CỨU',
+        `Khoa Cấp cứu đã xác nhận tiếp nhận ca ${targetCase.code}. Bản đồ đang hiển thị xe ${plate} đang di chuyển đến viện.`
+      );
+      const mainVp = document.getElementById('main-content-viewport');
+      if (mainVp) {
+        if (this.currentMenu === 'hospital-cases') {
+          this.renderHospitalCasesView(mainVp);
+        } else {
+          this.renderRealtimeMapView(mainVp);
+        }
+      }
+    }
+
     endHospitalDemo() {
+      try { sessionStorage.removeItem('ccnv_hospital_confirmed'); } catch (e) {}
+      this.hospitalDemoRunning = false;
+      this.hospitalAlertTriggered = false;
       const state = window.StateManager.getState();
       state.cases = (state.cases || []).filter(c => c.id !== 'CC-261002-001' && c.code !== 'CC-261002-001');
       const plate = '65A-012.34';
@@ -10880,7 +11006,10 @@
       });
 
       // 4. Xóa cờ demo & đặt lại nút "Bắt đầu"
+      try { sessionStorage.removeItem('ccnv_hospital_confirmed'); } catch (e) {}
       this.demoRunning = false;
+      this.hospitalDemoRunning = false;
+      this.hospitalAlertTriggered = false;
       this.demo = null;
       this.setDemoButton(false);
       this.closeDemoOverlay();

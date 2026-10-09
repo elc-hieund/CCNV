@@ -1457,6 +1457,41 @@ body.hospital-mode .kpi-header-grid {
   }
 }
 
+/* BỆNH VIỆN TIẾP NHẬN HIỆN TẠI (MÀN TIẾP NHẬN BỆNH VIỆN) */
+.map-hosp-stem-marker.is-current-hospital-active .map-hosp-top-card {
+  background: linear-gradient(135deg, #065f46, #047857) !important;
+  border: 2px solid #34d399 !important;
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.6), 0 4px 14px rgba(0, 0, 0, 0.8) !important;
+  animation: currentHospitalPulse 2.5s infinite ease-in-out;
+}
+.map-hosp-stem-marker.is-current-hospital-active .map-hosp-shield-icon {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  border: 2px solid #a7f3d0 !important;
+  box-shadow: 0 0 16px rgba(52, 211, 153, 0.8) !important;
+}
+.map-hosp-stem-marker.is-current-hospital-active .map-hosp-stem-pin {
+  border-top-color: #34d399 !important;
+}
+@keyframes currentHospitalPulse {
+  0%, 100% {
+    box-shadow: 0 0 16px rgba(52, 211, 153, 0.45), 0 4px 14px rgba(0, 0, 0, 0.8);
+    border-color: #34d399;
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(52, 211, 153, 0.85), 0 0 10px rgba(167, 243, 208, 0.6);
+    border-color: #6ee7b7;
+  }
+}
+
+.vehicle-card.is-pending-confirm {
+  border: 1.5px solid rgba(245, 158, 11, 0.6) !important;
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, rgba(15, 23, 42, 0.6) 100%) !important;
+}
+.vehicle-card.is-pending-confirm:hover {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.25) !important;
+}
+
 /* Fallback legacy classes */
 .map-veh-capsule { display: none; }
 .map-hosp-hub-badge { display: none; }
@@ -2252,6 +2287,29 @@ body.hospital-mode .kpi-header-grid {
   font-size: var(--font-xs);
   color: var(--text-muted);
   margin-top: 4px;
+}
+
+.btn-card-veh-detail {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1.3;
+}
+
+.btn-card-veh-detail:hover {
+  background: rgba(56, 189, 248, 0.28);
+  border-color: #38bdf8;
+  color: #ffffff;
+  transform: translateY(-1px);
 }
 
 /* --- 7. LARGE DRAWER: CREATE CASE (TT-07) --- */

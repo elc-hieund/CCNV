@@ -112,6 +112,21 @@
     return 'TO_SCENE';
   }
 
+  // Helper to format short hospital names for map display
+  function formatHospShortName(fullName) {
+    if (!fullName) return '';
+    let s = fullName.trim();
+    s = s.replace(/Bệnh viện Đa khoa thành phố Cần Thơ/gi, 'BVĐK TP Cần Thơ');
+    s = s.replace(/Bệnh viện Đa khoa TP Cần Thơ/gi, 'BVĐK TP Cần Thơ');
+    s = s.replace(/Bệnh viện Đa khoa Trung ương Cần Thơ/gi, 'BVĐK TW Cần Thơ');
+    s = s.replace(/Bệnh viện Ung bướu Cần Thơ/gi, 'BV Ung bướu Cần Thơ');
+    s = s.replace(/Bệnh viện Nhi đồng Cần Thơ/gi, 'BV Nhi đồng Cần Thơ');
+    s = s.replace(/Bệnh viện Đa khoa/gi, 'BVĐK');
+    s = s.replace(/Bệnh viện/gi, 'BV');
+    s = s.replace(/thành phố/gi, 'TP');
+    return s;
+  }
+
   class CanThoMap {
     constructor(containerId, options = {}) {
       this.containerId = containerId;
@@ -219,6 +234,12 @@
         zoomControl: false,
         attributionControl: true
       });
+
+      // Bấm vào nền bản đồ trống để bỏ chọn xe, quay về xem toàn bộ xe và bệnh viện
+      this.map.on('click', () => {
+        this.onMapClick?.();
+      });
+
       this.initTopRightControls(container);
 
       window.L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
@@ -236,6 +257,60 @@
 
       const hospitals = state.hospitals || [];
       const vehicles = state.vehicles || [];
+
+      if (this.rafId) {
+        cancelAnimationFrame(this.rafId);
+        this.rafId = null;
+      }
+
+      // 0. Xác định vai trò & Bệnh viện hiện tại (nếu ở chế độ Cổng Tiếp nhận & Cấp cứu Bệnh viện)
+      const isHospital = Boolean(this.options?.isHospital);
+      const isHospConfirmed = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('ccnv_hospital_confirmed') === 'true';
+      const myHospId = this.options?.hospitalId || 'HOSP_BVTU';
+      const myHospName = this.options?.hospitalName || '';
+      const currentHospital = hospitals.find(h => h.id === myHospId)
+        || hospitals.find(h => myHospName && (h.name === myHospName || h.name?.includes(myHospName) || myHospName.includes(h.name)))
+        || hospitals.find(h => h.id === 'HOSP_BVTU')
+        || hospitals[0];
+
+      // Khi ở chế độ Bệnh viện tiếp nhận và CHƯA BẤM XÁC NHẬN:
+      // Mặc định CHỈ HIỂN THỊ VỊ TRÍ CỦA BỆNH VIỆN TIẾP NHẬN, không vẽ xe, không chạy animation di chuyển
+      if (isHospital && !isHospConfirmed) {
+        this.missions = {};
+        const coords = currentHospital.coords || CITY_CENTER;
+        const fullDisplayName = currentHospital.name ? (currentHospital.name.startsWith('BV ') ? currentHospital.name.replace(/^BV\s+/, 'Bệnh viện ') : currentHospital.name) : 'Bệnh viện';
+        const shortName = formatHospShortName(fullDisplayName);
+        const icon = window.L.divIcon({
+          className: 'map-leaflet-marker',
+          html: `
+            <div class="map-hosp-stem-marker is-center-hospital is-current-hospital-active">
+              <div class="map-hosp-top-card is-ready">
+                <span class="map-hosp-current-pill" style="font-size:9px;background:rgba(255,255,255,0.28);padding:1px 6px;border-radius:3px;margin-bottom:2px;display:block;text-align:center;font-weight:800;letter-spacing:0.4px;">BỆNH VIỆN TIẾP NHẬN</span>
+                <span class="map-hosp-name-line" title="${fullDisplayName}">${shortName}</span>
+              </div>
+              <div class="map-hosp-shield-icon">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="#FEF3C7" stroke="#FEF3C7" stroke-width="1.5">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </div>
+              <div class="map-hosp-stem-pin"></div>
+            </div>
+          `,
+          iconSize: [154, 68],
+          iconAnchor: [77, 68]
+        });
+        const marker = window.L.marker(coords, { icon, zIndexOffset: 400 }).addTo(this.map);
+        marker.bindPopup(this.createHospitalPopupHtml(currentHospital), { autoPan: false });
+        this.hospitalMarkers[currentHospital.id] = { marker, data: currentHospital };
+
+        this.bindLegend(container);
+        this.map.setView(coords, 15);
+        setTimeout(() => this.map?.invalidateSize(), 200);
+        return;
+      }
+
+      // KHI ĐÃ XÁC NHẬN HOẶC Ở APP TRUNG TÂM TIẾP NHẬN:
+      // Giữ nguyên 100% code di chuyển chuẩn nguyên bản của app trung tâm tiếp nhận
       const activeCases = (state.cases || []).filter(c =>
         !INACTIVE_STATUSES.includes(c.status) && c.dispatch?.vehiclePlate && c.location?.coords
       );
@@ -264,35 +339,24 @@
         };
       });
 
-      // Helper to format short hospital names for map display
-      const formatHospShortName = (fullName) => {
-        if (!fullName) return '';
-        let s = fullName.trim();
-        s = s.replace(/Bệnh viện Đa khoa thành phố Cần Thơ/gi, 'BVĐK TP Cần Thơ');
-        s = s.replace(/Bệnh viện Đa khoa TP Cần Thơ/gi, 'BVĐK TP Cần Thơ');
-        s = s.replace(/Bệnh viện Đa khoa Trung ương Cần Thơ/gi, 'BVĐK TW Cần Thơ');
-        s = s.replace(/Bệnh viện Ung bướu Cần Thơ/gi, 'BV Ung bướu Cần Thơ');
-        s = s.replace(/Bệnh viện Nhi đồng Cần Thơ/gi, 'BV Nhi đồng Cần Thơ');
-        s = s.replace(/Bệnh viện Đa khoa/gi, 'BVĐK');
-        s = s.replace(/Bệnh viện/gi, 'BV');
-        s = s.replace(/thành phố/gi, 'TP');
-        return s;
-      };
-
-      // 2. Hospitals (xanh nước biển, Bệnh viện Đa khoa TP Cần Thơ làm nổi bật vì là trung tâm)
+      // 2. Hospitals (vẽ các bệnh viện)
       hospitals.forEach(h => {
         const coords = h.coords || CITY_CENTER;
         const isRestricted = h.status === 'RESTRICTED';
-        const isCenter = h.isCenter || h.id === 'HOSP_BVDK' || h.name?.includes('Đa khoa thành phố Cần Thơ') || h.name?.includes('Đa khoa TP Cần Thơ');
+        const isMyCurrentHosp = isHospital && h.id === currentHospital.id;
+        const isCenter = isMyCurrentHosp || h.isCenter || h.id === 'HOSP_BVDK' || h.name?.includes('Đa khoa thành phố Cần Thơ') || h.name?.includes('Đa khoa TP Cần Thơ');
         const fullDisplayName = h.name ? (h.name.startsWith('BV ') ? h.name.replace(/^BV\s+/, 'Bệnh viện ') : h.name) : 'Bệnh viện';
         const shortName = formatHospShortName(fullDisplayName);
-        const iconW = isCenter ? 144 : 130;
-        const iconH = isCenter ? 58 : 54;
+        const iconW = isCenter ? 154 : 130;
+        const iconH = isCenter ? (isMyCurrentHosp ? 68 : 58) : 54;
         const icon = window.L.divIcon({
           className: 'map-leaflet-marker',
           html: `
-            <div class="map-hosp-stem-marker ${isCenter ? 'is-center-hospital' : ''} ${isRestricted ? 'restricted' : ''}">
+            <div class="map-hosp-stem-marker ${isCenter ? 'is-center-hospital' : ''} ${isMyCurrentHosp ? 'is-current-hospital-active' : ''} ${isRestricted ? 'restricted' : ''}">
               <div class="map-hosp-top-card ${isRestricted ? 'is-busy' : 'is-ready'}">
+                ${isMyCurrentHosp ? `
+                  <span class="map-hosp-current-pill" style="font-size:9px;background:rgba(255,255,255,0.28);padding:1px 6px;border-radius:3px;margin-bottom:2px;display:block;text-align:center;font-weight:800;letter-spacing:0.4px;">BỆNH VIỆN TIẾP NHẬN</span>
+                ` : ''}
                 <span class="map-hosp-name-line" title="${fullDisplayName}">${shortName}</span>
               </div>
               <div class="map-hosp-shield-icon">
@@ -319,7 +383,7 @@
         this.hospitalMarkers[h.id] = { marker, data: h };
       });
 
-      // 3. Incidents (đỏ + rung + nhãn mã màu)
+      // 3. Incidents (chỉ vẽ các ca trong this.missions)
       Object.values(this.missions).forEach(m => {
         const c = m.caseData;
         const shortName = (c.incident?.name || 'Cấp cứu').split('/')[0].trim().toUpperCase();
@@ -348,7 +412,7 @@
         this.incidentMarkers[m.caseId] = { marker, mission: m };
       });
 
-      // 4. Vehicles (xanh lá)
+      // 4. Vehicles (vẽ các xe cứu thương)
       vehicles.forEach(v => {
         const mission = this.missionByPlate(v.plate);
         const startCoords = mission
@@ -391,9 +455,26 @@
       });
 
       this.bindLegend(container);
+
+      // 5. Căn chỉnh góc nhìn bản đồ (Camera viewport)
+      if (isHospital && isHospConfirmed) {
+        const targetPts = [window.L.latLng(currentHospital.coords || CITY_CENTER)];
+        activeCases.forEach(c => {
+          if (c.location?.coords) targetPts.push(window.L.latLng(c.location.coords));
+          const veh = vehicles.find(v => v.plate === c.dispatch?.vehiclePlate);
+          if (veh?.coords) targetPts.push(window.L.latLng(veh.coords));
+        });
+        if (targetPts.length > 1) {
+          const bounds = window.L.latLngBounds(targetPts);
+          this.map.fitBounds(bounds, { padding: [90, 90], maxZoom: 16 });
+        }
+      }
+
+      this.applyVisibility();
+
       setTimeout(() => this.map?.invalidateSize(), 200);
 
-      // 5. Load routes then animate
+      // 6. Load routes then animate
       Object.values(this.missions).forEach(m => this.loadMissionRoute(m));
       this.rafId = requestAnimationFrame(this._tick);
     }
@@ -480,6 +561,7 @@
           // Hủy trạng thái focus xe cụ thể nếu có để về toàn cảnh thành phố
           if (this.focusPlate) {
             this.clearFocus();
+            this.onClearFocus?.();
           } else {
             this.map.flyTo(CITY_CENTER, CITY_ZOOM, { duration: 0.8 });
           }
@@ -546,7 +628,8 @@
         if (p.phase === 'PICKUP') {
           p.phase = 'TO_HOSP';
           p.dist = 0;
-          this.applyVisibility(); // Ẩn điểm tai nạn sau 3s dừng đón
+          this.applyVisibility(); // Ẩn điểm tai nạn sau khi đón
+          this.drawMissionRoutes(); // Xóa chặng 1 đến điểm tai nạn, chỉ giữ chặng về bệnh viện
         } else if (p.phase === 'ARRIVED') {
           p.phase = 'COMPLETED';
           if (!p.completedTriggered) {
@@ -710,11 +793,13 @@
       Object.entries(this.vehicleMarkers).forEach(([plate, item]) => setVisible(item.marker, !focus || plate === focus));
       Object.entries(this.hospitalMarkers).forEach(([id, item]) => setVisible(item.marker, !focus || (m && m.hospId === id)));
 
-      // Marker điểm tai nạn (sự cố): Ẩn đi khi xe đã đón bệnh nhân xong (sau 3s, chuyển sang TO_HOSP hoặc ARRIVED)
+      // Marker điểm tai nạn (sự cố): Khi xe đã đến đón và đang di chuyển về bệnh viện (TO_HOSP/ARRIVED) thì ẩn điểm tai nạn đi, chỉ còn xe và bệnh viện tiếp nhận
       Object.entries(this.incidentMarkers).forEach(([cid, item]) => {
         const mission = item.mission || Object.values(this.missions).find(mis => mis.caseId === cid);
         const isPastPickup = mission && (mission.progress.phase === 'TO_HOSP' || mission.progress.phase === 'ARRIVED');
-        const shouldShow = (!focus || (m && m.caseId === cid)) && !isPastPickup;
+        const shouldShow = (!isPastPickup) && (this.options?.isHospital
+          ? Boolean(m && m.caseId === cid)
+          : (!focus || (m && m.caseId === cid)));
         setVisible(item.marker, shouldShow);
       });
 
@@ -736,13 +821,17 @@
         if (!m || !m.leg1 || !m.leg2) return;
         const isFocused = this.focusPlate === m.plate;
 
-        // Toàn tuyến (mờ) — thể hiện chặng đã đi qua
-        L.polyline(m.leg1.ll, {
-          color: '#f87171',
-          weight: isFocused ? 3 : 2.5,
-          opacity: isFocused ? 0.22 : 0.18,
-          dashArray: '6, 8'
-        }).addTo(this.focusLayer);
+        const isPastPickup = m.progress.phase === 'TO_HOSP' || m.progress.phase === 'ARRIVED' || m.progress.phase === 'COMPLETED';
+
+        // Toàn tuyến (mờ) — thể hiện chặng đã đi qua (chặng 1 tới hiện trường chỉ vẽ nếu chưa qua hiện trường)
+        if (!isPastPickup) {
+          L.polyline(m.leg1.ll, {
+            color: '#f87171',
+            weight: isFocused ? 3 : 2.5,
+            opacity: isFocused ? 0.22 : 0.18,
+            dashArray: '6, 8'
+          }).addTo(this.focusLayer);
+        }
 
         L.polyline(m.leg2.ll, {
           color: '#38bdf8',

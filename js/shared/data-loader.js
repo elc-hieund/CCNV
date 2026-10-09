@@ -64,7 +64,7 @@
       if (cached) {
         try {
           this.state = JSON.parse(cached);
-          const seedVersion = window.SEED_DATA?.system?.version || '3.3.0';
+          const seedVersion = window.SEED_DATA?.system?.version || '3.4.5';
           const hasOldPlates = Array.isArray(this.state?.vehicles) && this.state.vehicles.some(v => v.plate === '65A-017.22' || v.plate === '65A-015.67');
           const invalidVehicleCount = Array.isArray(this.state?.vehicles) && this.state.vehicles.length !== 6;
 
@@ -120,6 +120,7 @@
             paramUser = this.state.accounts.find(a => a.role === 'HOSPITAL_RECEIVER') || this.state.accounts[0];
           } else if (qRole === 'dispatcher' || qRole === 'central' || qRole === 'trungtam') {
             paramUser = this.state.accounts.find(a => a.role === 'DISPATCHER') || this.state.accounts[0];
+            try { sessionStorage.removeItem('ccnv_hospital_confirmed'); } catch (e) {}
           }
         } catch (e) {
           console.warn('Error parsing URL query params:', e);
@@ -138,6 +139,23 @@
           // Default to dispatcher 01
           this.currentUser = this.state.accounts[0];
           sessionStorage.setItem(STORAGE_KEY_CURRENT_USER, this.currentUser.id);
+        }
+      }
+
+      // Khi ở vai trò Cổng Tiếp nhận & Cấp cứu Bệnh viện:
+      // Mặc định luôn là 0 ca tiếp nhận cho đến khi người dùng bấm Xác nhận tiếp nhận
+      if (this.currentUser?.role === 'HOSPITAL_RECEIVER') {
+        const isHospConfirmed = typeof sessionStorage !== 'undefined' && sessionStorage.getItem('ccnv_hospital_confirmed') === 'true';
+        if (!isHospConfirmed && this.state) {
+          this.state.cases = [];
+          if (Array.isArray(this.state.vehicles)) {
+            const demoVeh = this.state.vehicles.find(v => v.plate === '65A-012.34');
+            if (demoVeh) {
+              demoVeh.status = 'READY';
+              demoVeh.statusText = 'Sẵn sàng';
+              demoVeh.speed = 0;
+            }
+          }
         }
       }
 
