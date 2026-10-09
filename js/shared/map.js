@@ -127,6 +127,9 @@
     return s;
   }
 
+  // Registry theo dõi tất cả instance bản đồ đang hoạt động
+  const activeMapInstances = new Set();
+
   class CanThoMap {
     constructor(containerId, options = {}) {
       this.containerId = containerId;
@@ -144,6 +147,7 @@
       this.lastRouteRedraw = 0;
       this.lastSpeedUpdate = 0;
       this._tick = this.tick.bind(this);
+      activeMapInstances.add(this);
     }
 
     isHospitalMode() {
@@ -698,6 +702,12 @@
       const isHospital = this.isHospitalMode();
       const allCases = (state.cases || []).filter(c => !INACTIVE_STATUSES.includes(c.status));
       const veh = (state.vehicles || []).find(v => v.plate === plate);
+
+      // Nếu xe đang ở trạng thái Sẵn sàng (READY) và không có cờ mô phỏng điều động, không có caseId thì tuyệt đối không gán mission
+      if (veh && veh.status === 'READY' && !veh.isDispatchedSimulated && !veh.currentCaseId) {
+        return null;
+      }
+
       let matchedCase = allCases.find(c => c.dispatch?.vehiclePlate === plate || c.currentVehiclePlate === plate || (veh?.currentCaseId && c.id === veh.currentCaseId));
 
       if (!matchedCase && (veh?.status === 'EMERGENCY' || veh?.isDispatchedSimulated || state.demoRunning || this.options?.demoRunning || (isHospital && (state.hospitalDemoRunning || this.options?.hospitalDemoRunning)))) {
@@ -806,6 +816,9 @@
           p.phase = 'COMPLETED';
           if (!p.completedTriggered) {
             p.completedTriggered = true;
+            if (!this.isHospitalMode()) {
+              this.clearAllMissions();
+            }
             this.onMissionCompleted?.(m);
           }
           return;
@@ -1003,6 +1016,63 @@
       }
     }
 
+    clearAllMissions() {
+      // 1. Gỡ bỏ toàn bộ marker hiện trường sự cố / tai nạn khỏi Leaflet
+      Object.entries(this.incidentMarkers).forEach(([cid, item]) => {
+        if (item?.marker && this.map) {
+          try { this.map.removeLayer(item.marker); } catch (e) { }
+        }
+      });
+      this.incidentMarkers = {};
+
+      // 2. Xóa các polyline lộ trình di chuyển (chặng 1, chặng 2, ánh sáng glow)
+      if (this.focusLayer) {
+        this.focusLayer.clearLayers();
+      }
+      this.routeLines = {};
+
+      // 3. Xóa danh sách missions
+      this.missions = {};
+
+      // 4. Đưa tất cả marker xe cứu thương về trạng thái Sẵn sàng (xanh lá cây), xóa badge bận & pill tốc độ
+      Object.entries(this.vehicleMarkers).forEach(([plate, vehItem]) => {
+        if (vehItem) {
+          if (vehItem.data) {
+            vehItem.data.status = 'READY';
+            vehItem.data.statusText = 'Sẵn sàng';
+            vehItem.data.speed = 0;
+            vehItem.data.currentCaseId = null;
+            vehItem.data.isDispatchedSimulated = false;
+          }
+          if (vehItem.marker) {
+            vehItem.marker.setZIndexOffset(200);
+            const el = vehItem.marker.getElement();
+            if (el) {
+              el.classList.remove('is-active-marker');
+              const stem = el.querySelector('.map-veh-stem-marker');
+              if (stem) {
+                stem.classList.remove('is-mission');
+                stem.classList.add('is-ready');
+              }
+              const badge = el.querySelector('.map-veh-top-badge');
+              if (badge) {
+                badge.classList.remove('is-busy');
+                badge.classList.add('is-ready');
+                const pill = badge.querySelector('.map-veh-status-pill');
+                if (pill) pill.remove();
+              }
+            }
+            if (plate === '65A-012.34' && VEH_COORDS[plate]) {
+              vehItem.marker.setLatLng(VEH_COORDS[plate]);
+            }
+          }
+        }
+      });
+
+      // 5. Bỏ focus xe
+      this.focusPlate = null;
+    }
+
     applyVisibility() {
       const isHospital = this.isHospitalMode();
       const currentHospital = this.getCurrentHospital();
@@ -1044,6 +1114,12 @@
       // Trong vai trò Bệnh viện tiếp nhận: TUYỆT ĐỐI CHỈ HIỂN THỊ HIỆN TRƯỜNG CA ĐIỀU ĐỘNG ĐẾN BỆNH VIỆN NÀY
       Object.entries(this.incidentMarkers).forEach(([cid, item]) => {
         const incMission = item.mission || Object.values(this.missions).find(mi => mi.caseId === cid);
+        const incPhase = incMission?.progress?.phase;
+        // Nếu đã đón bệnh nhân xong (TO_HOSP, ARRIVED, COMPLETED) hoặc không còn mission, ẩn điểm tai nạn
+        if (!incMission || incPhase === 'TO_HOSP' || incPhase === 'ARRIVED' || incPhase === 'COMPLETED') {
+          setVisible(item.marker, false);
+          return;
+        }
         if (isHospital) {
           const isForMe = Boolean(incMission && this.isCaseForMyHospital(incMission.caseData));
           const shouldShow = isForMe && (!focus || Boolean(m && m.caseId === cid));
@@ -1170,7 +1246,7 @@
       const bounds = window.L.latLngBounds(pts);
       const isFleetCollapsed = document.getElementById('fleet-side-panel')?.classList.contains('is-collapsed');
       const leftPad = isFleetCollapsed ? 80 : 360;
-      const opts = { paddingTopLeft: [50, leftPad], paddingBottomRight: [120, 60], maxZoom: 16 };
+      const opts = { paddingTopLeft: [leftPad, 50], paddingBottomRight: [60, 120], maxZoom: 16 };
       animate ? this.map.flyToBounds(bounds, { ...opts, duration: 0.8 }) : this.map.fitBounds(bounds, opts);
     }
 
@@ -1246,6 +1322,7 @@
     }
 
     destroy() {
+      activeMapInstances.delete(this);
       if (this.rafId) cancelAnimationFrame(this.rafId);
       this.rafId = null;
       if (this.map) {
@@ -1262,6 +1339,10 @@
     } else {
       Object.keys(missionProgress).forEach(k => delete missionProgress[k]);
     }
+    // Kích hoạt dọn sạch toàn bộ marker hiện trường và đưa xe về màu xanh trên mọi instance đang hiển thị
+    activeMapInstances.forEach(inst => {
+      try { inst.clearAllMissions(); } catch (e) { }
+    });
   };
 
   window.CanThoMap = CanThoMap;

@@ -160,7 +160,7 @@
       "plate": "65A-016.88",
       "type": "Type A",
       "typeName": "Hồi sức di động)",
-      "station": "Chốt ĐH Cần Thơ (3/2 - Nguyễn Văn Linh)",
+      "station": "Chốt Đại học Cần Thơ",
       "stationId": "ST_NK",
       "coords": [
         10.0298,
@@ -239,7 +239,7 @@
       "plate": "65A-018.89",
       "type": "Type B",
       "typeName": "Cứu thương tiêu chuẩn",
-      "station": "Trạm Cấp cứu Bình Thủy (Võ Văn Kiệt)",
+      "station": "Trạm Cấp cứu Bình Thủy",
       "stationId": "ST_BT",
       "coords": [
         10.0580,
@@ -277,7 +277,7 @@
       "plate": "65A-019.99",
       "type": "Type C",
       "typeName": "Vận chuyển",
-      "station": "Trạm Cấp cứu Ô Môn (Quốc lộ 91)",
+      "station": "Trạm Cấp cứu Ô Môn",
       "stationId": "ST_OM",
       "coords": [
         10.0880,
@@ -1303,7 +1303,7 @@
       "id": "LOG-104",
       "time": "08:11:30",
       "user": "Nguyễn Văn An",
-      "action": "Tạo ca CC-261002-001, điều động xe 65A-012.34 (Kíp 3)"
+      "action": "Tạo ca CC-261002-001, điều động xe 65A-012.34"
     },
     {
       "id": "LOG-105",

@@ -91,7 +91,7 @@
     #btn-call-citizen:hover {
       border-color: #34D399 !important;
       box-shadow: 0 0 16px rgba(16, 185, 129, 0.45) !important;
-      background: linear-gradient(90deg, rgba(16,185,129,0.32) 0%, rgba(5,150,105,0.4) 100%) !important;
+      background: linear-gradient(90deg, rgba(16, 185, 129, 0.32) 0%, rgba(5, 150, 105, 0.4) 100%) !important;
     }
 
     .dock-quick-caller-btn {
@@ -225,7 +225,7 @@
       transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .map-leaflet-marker:hover > * {
+    .map-leaflet-marker:hover>* {
       transform: translateY(-3px) scale(1.06);
     }
 
@@ -341,17 +341,26 @@
       box-shadow: 0 0 12px rgba(239, 68, 68, 0.9);
       animation: veh-mission-glow 1.5s infinite ease-in-out;
     }
+
     .map-veh-stem-marker.is-mission .map-veh-heading-arrow {
       color: #fca5a5;
       filter: drop-shadow(0 0 5px #ef4444);
     }
+
     .map-veh-stem-marker.is-mission .map-veh-stem-pin {
       border-top-color: #ef4444;
     }
 
     @keyframes veh-mission-glow {
-      0%, 100% { box-shadow: 0 0 6px rgba(239, 68, 68, 0.6); }
-      50% { box-shadow: 0 0 16px rgba(248, 113, 113, 1); }
+
+      0%,
+      100% {
+        box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+      }
+
+      50% {
+        box-shadow: 0 0 16px rgba(248, 113, 113, 1);
+      }
     }
 
     /* Xe đang làm nhiệm vụ cấp cứu (is-mission): Khi chọn có viền & ánh đỏ khẩn cấp */
@@ -359,6 +368,7 @@
       transform: scale(1.15);
       filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.9));
     }
+
     .map-leaflet-marker.is-active-marker .map-veh-stem-marker.is-mission .map-veh-top-badge {
       border-color: #f87171 !important;
       box-shadow: 0 0 14px rgba(239, 68, 68, 0.8) !important;
@@ -370,6 +380,7 @@
       transform: scale(1.15);
       filter: drop-shadow(0 0 14px rgba(16, 185, 129, 0.85));
     }
+
     .map-leaflet-marker.is-active-marker .map-veh-stem-marker.is-ready .map-veh-top-badge,
     .map-leaflet-marker.is-active-marker .map-veh-stem-marker:not(.is-mission) .map-veh-top-badge {
       border-color: #34d399 !important;
@@ -491,10 +502,13 @@
     }
 
     @keyframes centerHospitalGlow {
-      0%, 100% {
+
+      0%,
+      100% {
         box-shadow: 0 0 18px rgba(245, 158, 11, 0.55), 0 4px 16px rgba(0, 0, 0, 0.8);
         border-color: #F59E0B;
       }
+
       50% {
         box-shadow: 0 0 32px rgba(245, 158, 11, 0.95), 0 0 12px rgba(251, 191, 36, 0.7);
         border-color: #FBBF24;
@@ -559,21 +573,39 @@
       opacity: 0;
       animation: ripple-wave 2.2s infinite cubic-bezier(0.2, 0.8, 0.2, 1);
     }
+
     .map-incident-radar-rings .ring:nth-child(2) {
       animation-delay: 0.7s;
     }
+
     .map-incident-radar-rings .ring:nth-child(3) {
       animation-delay: 1.4s;
     }
 
     @keyframes ripple-wave {
-      0% { transform: scale(0.2); opacity: 0.9; }
-      100% { transform: scale(2.6); opacity: 0; }
+      0% {
+        transform: scale(0.2);
+        opacity: 0.9;
+      }
+
+      100% {
+        transform: scale(2.6);
+        opacity: 0;
+      }
     }
 
     @keyframes pulse-beacon-tag {
-      0%, 100% { transform: scale(1); box-shadow: 0 4px 15px rgba(220, 38, 38, 0.7), 0 0 20px rgba(239, 68, 68, 0.5); }
-      50% { transform: scale(1.04); box-shadow: 0 6px 20px rgba(239, 68, 68, 0.9), 0 0 28px rgba(239, 68, 68, 0.8); }
+
+      0%,
+      100% {
+        transform: scale(1);
+        box-shadow: 0 4px 15px rgba(220, 38, 38, 0.7), 0 0 20px rgba(239, 68, 68, 0.5);
+      }
+
+      50% {
+        transform: scale(1.04);
+        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.9), 0 0 28px rgba(239, 68, 68, 0.8);
+      }
     }
 
     .map-incident-shake {
@@ -584,11 +616,27 @@
     }
 
     @keyframes incident-shake {
-      0%, 100% { transform: rotate(0deg); }
-      20% { transform: rotate(-2deg); }
-      40% { transform: rotate(2deg); }
-      60% { transform: rotate(-1deg); }
-      80% { transform: rotate(1deg); }
+
+      0%,
+      100% {
+        transform: rotate(0deg);
+      }
+
+      20% {
+        transform: rotate(-2deg);
+      }
+
+      40% {
+        transform: rotate(2deg);
+      }
+
+      60% {
+        transform: rotate(-1deg);
+      }
+
+      80% {
+        transform: rotate(1deg);
+      }
     }
 
     .legend-dot-pulse {
@@ -678,7 +726,8 @@
         <!-- Phải: Trạng thái kíp trực / xe cấp cứu khi chưa nhận ca -->
         <div style="display:flex;align-items:center;gap:6px;">
           <div style="text-align:right;">
-            <div style="font-size:10px;color:#94A3B8;text-transform:uppercase;letter-spacing:0.5px;font-weight:700;">Trạng thái</div>
+            <div style="font-size:10px;color:#94A3B8;text-transform:uppercase;letter-spacing:0.5px;font-weight:700;">
+              Trạng thái</div>
             <span class="badge" id="badge-header-phase"
               style="font-size:11px;padding:3px 9px;font-weight:800;letter-spacing:0.3px;background:rgba(16,185,129,0.2);color:#34D399;border:1px solid rgba(16,185,129,0.5);border-radius:6px;display:inline-flex;align-items:center;gap:5px;margin-top:2px;">
               <span
@@ -779,7 +828,9 @@
           <!-- Dock Header: Quick ETA Status & Toggle Details -->
           <div class="dock-main-header">
             <div style="flex:1;min-width:0;display:flex;align-items:center;gap:8px;">
-              <span style="font-size:12.5px;font-weight:750;color:#CBD5E1;letter-spacing:0.3px;white-space:nowrap;">THÔNG TIN CA CẤP CỨU</span>
+              <span
+                style="font-size:12.5px;font-weight:750;color:#CBD5E1;letter-spacing:0.3px;white-space:nowrap;">THÔNG
+                TIN CA CẤP CỨU</span>
               <span class="badge badge-emergency"
                 style="font-size:10.5px;padding:2px 7px;font-weight:800;background:rgba(239,68,68,0.25);color:#FCA5A5;border:1px solid rgba(239,68,68,0.6);border-radius:4px;white-space:nowrap;">
                 KHẨN CẤP
@@ -797,21 +848,31 @@
             <div class="dock-info-grid">
               <div class="dock-info-box">
                 <span class="dock-box-label">Nạn nhân:</span>
-                <strong style="color:#FFFFFF;font-size:12.5px;display:block;" id="driver-patient-demographics">Người cao tuổi · Nam</strong>
-                <div id="driver-patient-symptoms" style="font-size:11px;color:#94A3B8;margin-top:2px;line-height:1.35;">Chấn thương sọ não, đa chấn thương phần mềm</div>
+                <strong style="color:#FFFFFF;font-size:12.5px;display:block;" id="driver-patient-demographics">Người cao
+                  tuổi · Nam</strong>
+                <div id="driver-patient-symptoms" style="font-size:11px;color:#94A3B8;margin-top:2px;line-height:1.35;">
+                  Chấn thương sọ não, đa chấn thương phần mềm</div>
               </div>
               <div class="dock-info-box">
                 <span class="dock-box-label">Hiện trường tai nạn:</span>
-                <strong style="color:#FFFFFF;font-size:12.5px;line-height:1.35;display:block;" id="driver-scene-address">Chân Cầu Hưng Lợi (hướng Cái Răng sang Ninh Kiều)</strong>
+                <strong style="color:#FFFFFF;font-size:12.5px;line-height:1.35;display:block;"
+                  id="driver-scene-address">Chân Cầu Hưng Lợi (hướng Cái Răng sang Ninh Kiều)</strong>
               </div>
-              <div class="dock-info-box" style="grid-column: 1 / -1; display:flex; align-items:center; justify-content:space-between; gap:10px; background:rgba(16,185,129,0.08); border-color:rgba(16,185,129,0.25);">
+              <div class="dock-info-box"
+                style="grid-column: 1 / -1; display:flex; align-items:center; justify-content:space-between; gap:10px; background:rgba(16,185,129,0.08); border-color:rgba(16,185,129,0.25);">
                 <div style="min-width:0;flex:1;">
                   <span class="dock-box-label" style="color:#34D399;">Người báo tin:</span>
-                  <strong style="color:#FFFFFF;font-size:12.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="driver-caller-info">Người dân báo tin · 0913.882.115</strong>
+                  <strong
+                    style="color:#FFFFFF;font-size:12.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"
+                    id="driver-caller-info">Người dân báo tin</strong>
                 </div>
-                <a href="tel:0913882115" class="dock-quick-caller-btn" id="btn-call-citizen" title="Gọi điện cho người báo tin" style="flex-shrink:0;">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                <a href="tel:0913882115" class="dock-quick-caller-btn" id="btn-call-citizen"
+                  title="Gọi điện cho người báo tin" style="flex-shrink:0;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path
+                      d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                    </path>
                   </svg>
                   <span>Gọi người báo</span>
                 </a>
@@ -845,12 +906,15 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2.2"
                   stroke-linecap="round" stroke-linejoin="round">
                   <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
-                  <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
+                  <path
+                    d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z">
+                  </path>
                 </svg>
                 <span style="color:#F1F5F9;">Tổng đài 115</span>
               </a>
               <a href="tel:02923821236" class="quick-call-btn" id="btn-call-hospital"
-                style="border-color:rgba(6,182,212,0.35);color:#06B6D4;" title="Liên hệ Khoa cấp cứu bệnh viện tiếp nhận">
+                style="border-color:rgba(6,182,212,0.35);color:#06B6D4;"
+                title="Liên hệ Khoa cấp cứu bệnh viện tiếp nhận">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="2.2"
                   stroke-linecap="round" stroke-linejoin="round">
                   <path d="M3 21h18"></path>
@@ -953,8 +1017,10 @@
           Cái Răng sang Ninh Kiều)</div>
         <div style="margin-bottom:6px;"><strong style="color:#FFFFFF;">Khoảng cách:</strong> 2.1 km (Ước tính di chuyển
           ~3.5 phút)</div>
-        <div style="margin-bottom:6px;"><strong style="color:#FFFFFF;">Nạn nhân:</strong> Người cao tuổi (Nam) | Đa chấn thương</div>
-        <div style="margin-bottom:6px;"><strong style="color:#FFFFFF;">Người báo tin:</strong> <span id="dispatch-caller-info">Người dân báo tin (0913.882.115)</span></div>
+        <div style="margin-bottom:6px;"><strong style="color:#FFFFFF;">Nạn nhân:</strong> Người cao tuổi (Nam) | Đa chấn
+          thương</div>
+        <div style="margin-bottom:6px;"><strong style="color:#FFFFFF;">Người báo tin:</strong> <span
+            id="dispatch-caller-info">Người dân báo tin</span></div>
         <div><strong style="color:#FFFFFF;">Bệnh viện đích dự kiến:</strong> Bệnh viện Đa khoa TW</div>
       </div>
 
@@ -1016,7 +1082,8 @@
             </svg>
           </div>
           <h3 style="color:#FFFFFF;font-size:16px;font-weight:800;margin:0 0 4px;">XÁC NHẬN TỪ CHỐI NHẬN CA</h3>
-          <p style="color:#94A3B8;font-size:12px;margin:0;line-height:1.4;">Kíp trực vui lòng chọn hoặc nêu rõ lý do để báo cáo về Trung tâm điều hành 115.</p>
+          <p style="color:#94A3B8;font-size:12px;margin:0;line-height:1.4;">Kíp trực vui lòng chọn hoặc nêu rõ lý do để
+            báo cáo về Trung tâm điều hành 115.</p>
         </div>
 
         <!-- Danh sách lý do gợi ý nhanh -->
@@ -1026,16 +1093,20 @@
             Gợi ý lý do phổ biến:
           </div>
           <div id="quick-reject-reasons-list" style="display:flex;flex-direction:column;gap:6px;">
-            <button type="button" class="driver-reject-option-btn" data-reason="Xe gặp sự cố kỹ thuật / Hỏng hóc đột xuất">
+            <button type="button" class="driver-reject-option-btn"
+              data-reason="Xe gặp sự cố kỹ thuật / Hỏng hóc đột xuất">
               <span>🚑</span> <span>Xe gặp sự cố kỹ thuật / Hỏng hóc</span>
             </button>
-            <button type="button" class="driver-reject-option-btn" data-reason="Kíp trực đang xử lý ca cấp cứu khác chưa hoàn tất">
+            <button type="button" class="driver-reject-option-btn"
+              data-reason="Kíp trực đang xử lý ca cấp cứu khác chưa hoàn tất">
               <span>👨‍⚕️</span> <span>Kíp trực đang bận ca cấp cứu khác</span>
             </button>
-            <button type="button" class="driver-reject-option-btn" data-reason="Xe đang tiếp nhiên liệu / Bảo dưỡng khẩn">
+            <button type="button" class="driver-reject-option-btn"
+              data-reason="Xe đang tiếp nhiên liệu / Bảo dưỡng khẩn">
               <span>⛽</span> <span>Xe đang tiếp nhiên liệu / Bảo dưỡng khẩn</span>
             </button>
-            <button type="button" class="driver-reject-option-btn" data-reason="Sự cố giao thông tắc nghẽn, không có lộ trình tiếp cận khả thi">
+            <button type="button" class="driver-reject-option-btn"
+              data-reason="Sự cố giao thông tắc nghẽn, không có lộ trình tiếp cận khả thi">
               <span>🚦</span> <span>Giao thông tắc nghẽn, không thể tiếp cận</span>
             </button>
             <button type="button" class="driver-reject-option-btn" data-reason="">
@@ -1054,7 +1125,11 @@
             style="width:100%;box-sizing:border-box;background:#05121F;border:1px solid #1E3A56;border-radius:8px;padding:10px;font-size:12.5px;color:#FFFFFF;resize:none;margin-bottom:4px;outline:none;font-family:inherit;"></textarea>
           <div id="error-dispatch-reject-reason"
             style="display:none;color:#F87171;font-size:11.5px;font-weight:600;margin-top:4px;align-items:center;gap:4px;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
             <span>Vui lòng chọn hoặc nhập lý do từ chối nhận ca.</span>
           </div>
         </div>

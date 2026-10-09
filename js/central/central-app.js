@@ -1141,7 +1141,9 @@
         hospitalName: myHospName
       });
       this.mapInstance.onMissionCompleted = (m) => {
-        if (this.demoRunning) {
+        if (isHospital) {
+          this.endHospitalDemo?.();
+        } else {
           this.completeDemoAtHospital(m);
         }
       };
@@ -1360,6 +1362,78 @@
           const caseId = e.currentTarget.getAttribute('data-case-id');
           if (caseId) this.openCaseDetailModal(caseId);
         });
+
+        // Nút Gọi nhanh khẩn cấp (4 luồng cuộc gọi theo vai trò)
+        listEl.querySelectorAll('.btn-veh-call-action').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const target = btn.getAttribute('data-call-target');
+            const title = btn.getAttribute('data-title');
+            const name = btn.getAttribute('data-name');
+            const phone = btn.getAttribute('data-phone');
+            const activeCase = caseOfPlate(targetVeh.plate);
+            const caseCode = btn.getAttribute('data-case-code') || activeCase?.code;
+            this.openLiveCallModal({ title, name, phone, type: target, plate: targetVeh.plate, caseCode });
+          });
+        });
+
+        // Chat: Tự động cuộn xuống tin nhắn mới nhất
+        const chatStreamEl = listEl.querySelector('#veh-chat-stream');
+        if (chatStreamEl) {
+          chatStreamEl.scrollTop = chatStreamEl.scrollHeight;
+        }
+
+        // Chat: Gửi tin nhắn trao đổi
+        const chatInputEl = listEl.querySelector('#veh-chat-input');
+        const chatSendBtn = listEl.querySelector('#btn-veh-chat-send');
+
+        const doSendChat = (txt) => {
+          const messageText = txt !== undefined ? txt : (chatInputEl?.value || '');
+          if (!messageText || !messageText.trim()) return;
+
+          const chatBoxEl = listEl.querySelector('.veh-chat-box');
+          const caseKeyFromDom = chatBoxEl?.getAttribute('data-case-key');
+          const activeCase = caseOfPlate(targetVeh.plate);
+          const caseKey = caseKeyFromDom || activeCase?.code || targetVeh.plate;
+          const msg = this.sendVehicleChatMessage(caseKey, messageText, targetVeh, activeCase);
+
+          if (chatInputEl) chatInputEl.value = '';
+
+          if (chatStreamEl && msg) {
+            const bubbleEl = document.createElement('div');
+            bubbleEl.className = 'veh-chat-bubble mine';
+            bubbleEl.innerHTML = `
+              <div class="veh-chat-bubble-header">
+                <span class="veh-chat-sender-tag ${msg.badgeClass}">${msg.badge} ${msg.senderName}</span>
+                <span class="veh-chat-time">${msg.time}</span>
+              </div>
+              <div class="veh-chat-bubble-body">${msg.text}</div>
+            `;
+            chatStreamEl.appendChild(bubbleEl);
+            chatStreamEl.scrollTop = chatStreamEl.scrollHeight;
+          }
+        };
+
+        chatSendBtn?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          doSendChat();
+        });
+
+        chatInputEl?.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.stopPropagation();
+            doSendChat();
+          }
+        });
+
+        // Chat: Quick chips gợi ý phản hồi nhanh
+        listEl.querySelectorAll('.veh-chat-chip').forEach(chip => {
+          chip.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const chipMsg = chip.getAttribute('data-msg') || chip.textContent;
+            doSendChat(chipMsg);
+          });
+        });
       };
 
       // Chọn theo dõi xe (showDetail = false) hoặc mở bảng chi tiết xe (showDetail = true)
@@ -1367,25 +1441,59 @@
         currentSelectedPlate = plate;
         this.realtimeSelectedPlate = plate;
 
-        const targetVeh = (plate && vehicles.find(v => v.plate === plate)) || null;
+        const targetVeh = (plate && (vehicles.find(v => v.plate === plate || v.plate?.replace(/[\s.-]/g, '') === plate.replace(/[\s.-]/g, ''))
+          || { plate, typeName: 'Xe Cứu thương Cấp cứu 115', station: 'Trạm Cấp cứu 115', status: 'EMERGENCY', speed: 45, battery: 96 })) || null;
+
+        const searchBarEl = fleetPanel?.querySelector('.panel-search-bar');
 
         if (isHospital) {
-          // Bệnh viện tiếp nhận: phần layer chỉ hiển thị ca xử lý, không chuyển sang giao diện giám sát xe
+          // Bệnh viện tiếp nhận: hỗ trợ xem chi tiết xe và kíp trực giống bên trung tâm điều phối
+          if (searchBarEl) {
+            searchBarEl.style.display = (targetVeh && showDetail) ? 'none' : 'flex';
+          }
+
           if (listEl) {
-            listEl.querySelectorAll('.vehicle-card').forEach(card => {
-              const cardPlate = card.getAttribute('data-plate');
-              card.classList.toggle('is-selected', Boolean(plate && cardPlate === plate));
-            });
+            if (targetVeh && showDetail) {
+              // Nhấn nút "Chi tiết" → Xem chi tiết xe và kíp trực
+              listEl.innerHTML = this.renderVehicleDetailPanel(targetVeh, caseOfPlate(targetVeh.plate));
+              bindDetailPanelEvents(targetVeh);
+            } else {
+              const isDetailPanelOpen = Boolean(listEl.querySelector('.vehicle-detail-panel-box'));
+              if (isDetailPanelOpen) {
+                // Thoát khỏi bảng chi tiết xe → render lại danh sách ca bệnh viện
+                updateVehicleList();
+              } else {
+                // Đang ở danh sách ca: toggle class is-selected cho ca của xe tương ứng
+                listEl.querySelectorAll('.vehicle-card').forEach(card => {
+                  const cardPlate = card.getAttribute('data-plate');
+                  card.classList.toggle('is-selected', Boolean(plate && cardPlate === plate));
+                });
+              }
+            }
           }
         } else {
-          // Trung tâm điều hành: nếu đang ở tab Ca xử lý thì highlight thẻ ca
+          // Trung tâm điều hành: nếu đang ở tab Ca xử lý thì highlight thẻ ca hoặc xem chi tiết xe
           const isCasesTab = tabCases?.classList.contains('active');
           if (isCasesTab) {
+            if (searchBarEl) {
+              searchBarEl.style.display = (targetVeh && showDetail) ? 'none' : 'flex';
+            }
             if (listEl) {
-              listEl.querySelectorAll('.vehicle-card').forEach(card => {
-                const cardPlate = card.getAttribute('data-plate');
-                card.classList.toggle('is-selected', Boolean(plate && cardPlate === plate));
-              });
+              if (targetVeh && showDetail) {
+                // Nhấn nút "Chi tiết" trên ca xử lý → Xem chi tiết xe
+                listEl.innerHTML = this.renderVehicleDetailPanel(targetVeh, caseOfPlate(targetVeh.plate));
+                bindDetailPanelEvents(targetVeh);
+              } else {
+                const isDetailPanelOpen = Boolean(listEl.querySelector('.vehicle-detail-panel-box'));
+                if (isDetailPanelOpen) {
+                  updateVehicleList();
+                } else {
+                  listEl.querySelectorAll('.vehicle-card').forEach(card => {
+                    const cardPlate = card.getAttribute('data-plate');
+                    card.classList.toggle('is-selected', Boolean(plate && cardPlate === plate));
+                  });
+                }
+              }
             }
           } else {
             const searchBarEl = fleetPanel?.querySelector('.panel-search-bar');
@@ -1438,10 +1546,11 @@
 
         listEl.querySelectorAll('.vehicle-card').forEach(card => {
           card.addEventListener('click', (e) => {
-            // Nút Chi tiết trên thẻ xe (xem chi tiết xe như ảnh 2)
-            if (e.target.closest('.btn-card-veh-detail')) {
+            // Nút Chi tiết trên thẻ xe hoặc thẻ ca (xem chi tiết xe như bên trung tâm điều phối)
+            if (e.target.closest('.btn-card-veh-detail, .btn-hosp-veh-detail')) {
               e.stopPropagation();
-              const plate = e.target.closest('.btn-card-veh-detail').getAttribute('data-plate') || card.getAttribute('data-plate');
+              const detailBtn = e.target.closest('.btn-card-veh-detail, .btn-hosp-veh-detail');
+              const plate = detailBtn.getAttribute('data-plate') || card.getAttribute('data-plate');
               if (plate) {
                 setSelection(plate, { showDetail: true });
               }
@@ -1883,6 +1992,205 @@
       return leftStripHtml + rightStripHtml;
     }
 
+    // --- MODAL CUỘC GỌI TRỰC TIẾP KHẨN CẤP (4 LUỒNG KẾT NỐI) ---
+    openLiveCallModal({ title, name, phone, type, plate, caseCode }) {
+      document.getElementById('veh-call-overlay-modal')?.remove();
+
+      window.CCNV_UI?.SoundFx?.playClick?.();
+      window.CCNV_UI?.Toast?.show?.('ĐANG QUAY SỐ...', `Kết nối thoại khẩn cấp đến: ${name} (${phone})`);
+      window.StateManager?.addAuditLog?.(`Thực hiện cuộc gọi đàm thoại khẩn cấp đến ${title}: ${name} (${phone})`);
+
+      const callTypeClass = type ? type.toLowerCase() : 'center';
+      const iconSvg = `<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>`;
+
+      const modalEl = document.createElement('div');
+      modalEl.className = 'veh-call-overlay-modal';
+      modalEl.id = 'veh-call-overlay-modal';
+      modalEl.innerHTML = `
+        <div class="veh-call-modal-dialog">
+          <div class="call-dialog-status-pill">
+            <span class="live-call-dot"></span>
+            <span>ĐANG ĐÀM THOẠI KHẨN CẤP</span>
+          </div>
+
+          <div class="call-avatar-circle ${callTypeClass}">
+            <div class="call-ripple-ring"></div>
+            <div class="call-ripple-ring delay"></div>
+            ${iconSvg}
+          </div>
+
+          <div class="call-contact-target-role">${title}</div>
+          <div class="call-contact-name">${name}</div>
+          <div class="call-contact-phone">${phone}</div>
+          ${caseCode ? `
+            <div style="display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#38bdf8;background:rgba(56,189,248,0.12);padding:3px 10px;border-radius:20px;border:1px solid rgba(56,189,248,0.3);margin:2px auto 6px auto;font-family:var(--font-mono);font-weight:700;">
+              <span>🚨 CA CẤP CỨU:</span><span>${caseCode}</span>
+            </div>
+          ` : ''}
+
+          <div class="call-timer-display" id="call-timer-counter">00:01</div>
+
+          <div class="call-wave-visualizer">
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+          </div>
+
+          <div class="call-actions-row">
+            <button type="button" class="call-sub-btn" id="btn-call-modal-mute" title="Bật/Tắt Mic">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+              <span>Mic</span>
+            </button>
+            <button type="button" class="btn-modal-hangup" id="btn-call-modal-hangup" title="Kết thúc cuộc gọi">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="23" y1="1" x2="1" y2="23"></line><path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91"></path></svg>
+            </button>
+            <button type="button" class="call-sub-btn active" id="btn-call-modal-speaker" title="Bật/Tắt Loa ngoài">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+              <span>Loa</span>
+            </button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(modalEl);
+
+      let seconds = 1;
+      const timerEl = modalEl.querySelector('#call-timer-counter');
+      const timerInterval = setInterval(() => {
+        seconds++;
+        const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
+        const secs = String(seconds % 60).padStart(2, '0');
+        if (timerEl) timerEl.textContent = `${mins}:${secs}`;
+      }, 1000);
+
+      const hangupCall = () => {
+        clearInterval(timerInterval);
+        const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
+        const secs = String(seconds % 60).padStart(2, '0');
+        const durationStr = `${mins}:${secs}`;
+        modalEl.remove();
+        window.CCNV_UI?.SoundFx?.playClick?.();
+        window.CCNV_UI?.Toast?.show?.('ĐÃ KẾT THÚC CUỘC GỌI', `Cuộc gọi với ${name} đã kết thúc. Thời lượng: ${durationStr}`);
+        window.StateManager?.addAuditLog?.(`Kết thúc cuộc gọi thoại với ${title}: ${name} (${durationStr})`);
+      };
+
+      modalEl.querySelector('#btn-call-modal-hangup')?.addEventListener('click', hangupCall);
+
+      modalEl.querySelector('#btn-call-modal-mute')?.addEventListener('click', (e) => {
+        const btn = e.currentTarget;
+        btn.classList.toggle('active');
+        const isMuted = btn.classList.contains('active');
+        btn.querySelector('span').textContent = isMuted ? 'Đã tắt mic' : 'Mic';
+      });
+
+      modalEl.querySelector('#btn-call-modal-speaker')?.addEventListener('click', (e) => {
+        const btn = e.currentTarget;
+        btn.classList.toggle('active');
+      });
+    }
+
+    // --- KÊNH CHAT TRAO ĐỔI TRỰC TIẾP CA CẤP CỨU & XE ---
+    getVehicleChatMessages(caseKey, v, c) {
+      const storageKey = `ccnv_case_chat_${caseKey}`;
+      try {
+        const raw = sessionStorage.getItem(storageKey);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (e) {
+        console.warn('Error reading chat from storage:', e);
+      }
+
+      const caseCode = c?.code || caseKey || 'CC-261002-001';
+      const incidentName = c?.incident?.name || c?.incidentName || 'Cấp cứu y tế';
+      const locAddr = c?.location?.address || 'hiện trường';
+      const hospName = c?.dispatch?.hospitalName || c?.hospitalName || c?.hospital || 'BV Đa khoa Trung ương Cần Thơ';
+      const patientSummary = c?.patient ? `${c.patient.gender ? c.patient.gender + ' ' : ''}${c.patient.ageGroupText || (c.patient.age ? c.patient.age + 'T' : '')} - ${c.incident?.description || c.patient?.symptoms || incidentName}` : incidentName;
+
+      const defaultMessages = [
+        {
+          id: 'cm-1',
+          senderRole: 'DRIVER',
+          senderName: 'Kíp xe (LX. Trần Văn Bình)',
+          badge: 'LX',
+          badgeClass: 'crew',
+          time: '08:12:45',
+          text: `Xe ${v?.plate || '65A-012.34'} đã tiếp nhận lệnh điều động ca ${caseCode}. Kíp trực đang xuất phát khẩn cấp tới ${locAddr}.`
+        },
+        {
+          id: 'cm-2',
+          senderRole: 'DISPATCHER',
+          senderName: 'Trung tâm Điều phối 115',
+          badge: '115',
+          badgeClass: 'dispatch',
+          time: '08:14:20',
+          text: `Ca ${caseCode} (${incidentName}): Đã thông báo kíp ứng trực và yêu cầu CSGT hỗ trợ phân luồng trên lộ trình di chuyển.`
+        },
+        {
+          id: 'cm-3',
+          senderRole: 'DOCTOR',
+          senderName: 'Kíp xe (BS. Võ Văn Kiệt)',
+          badge: 'BS',
+          badgeClass: 'crew',
+          time: '08:18:40',
+          text: `Đã tiếp cận hiện trường ${locAddr}. Nạn nhân: ${patientSummary}. Đang tiến hành sơ cấp cứu và chuẩn bị chuyển viện.`
+        },
+        {
+          id: 'cm-4',
+          senderRole: 'HOSPITAL',
+          senderName: hospName,
+          badge: 'BV',
+          badgeClass: 'hospital',
+          time: '08:21:15',
+          text: `Khoa Cấp cứu [${hospName}] đã sẵn sàng tiếp nhận nạn nhân ca ${caseCode}.`
+        }
+      ];
+
+      try {
+        sessionStorage.setItem(storageKey, JSON.stringify(defaultMessages));
+      } catch (e) { }
+
+      return defaultMessages;
+    }
+
+    sendVehicleChatMessage(caseKey, text, targetVeh, activeCase) {
+      if (!text || !text.trim()) return;
+      const cleanText = text.trim();
+      const storageKey = `ccnv_case_chat_${caseKey}`;
+      const messages = this.getVehicleChatMessages(caseKey, targetVeh, activeCase);
+
+      const isHospitalUser = this.isHospitalMode();
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+
+      const newMsg = {
+        id: 'cm-' + Date.now(),
+        senderRole: isHospitalUser ? 'HOSPITAL' : 'DISPATCHER',
+        senderName: isHospitalUser ? 'BV tiếp nhận (Bạn)' : 'Trung tâm 115 (Bạn)',
+        badge: isHospitalUser ? 'BV' : '115',
+        badgeClass: isHospitalUser ? 'hospital' : 'dispatch',
+        time: timeStr,
+        text: cleanText
+      };
+
+      messages.push(newMsg);
+
+      try {
+        sessionStorage.setItem(storageKey, JSON.stringify(messages));
+      } catch (e) { }
+
+      window.CCNV_UI?.SoundFx?.playClick?.();
+      window.StateManager?.addAuditLog?.(`Gửi tin nhắn trao đổi ca ${caseKey}: "${cleanText}"`);
+
+      return newMsg;
+    }
+
     renderVehicleDetailPanel(v, activeCase = null) {
       if (!v) return '';
 
@@ -1906,14 +2214,116 @@
         'Máy thở đa năng', 'Monitor 7 thông số', 'Máy sốc tim AED', 'Bơm tiêm điện', 'Bộ nẹp cố định chấn thương'
       ];
 
-      // Tìm ca điều động gắn với xe này
-      const allCases = state?.cases || [];
-      const resolvedCase = activeCase
-        || allCases.find(c => c.dispatch?.vehiclePlate === v.plate || c.currentVehiclePlate === v.plate || c.id === v.currentCaseId)
-        || (v.currentCaseId ? allCases.find(c => c.id === v.currentCaseId) : null)
-        || (isEmergency || v.isDispatchedSimulated ? (allCases[0] || state?.demoCase || window.SEED_DATA?.demoCase) : null);
+      // Tìm ca điều động ĐANG HOẠT ĐỘNG gắn với xe này
+      const allActiveCases = (state?.cases || []).filter(c => !['COMPLETED', 'CANCELLED', 'CLOSED'].includes(c.status));
+      const isDemoActive = Boolean(this.demoRunning || state?.demoRunning);
 
-      const isDispatched = isEmergency || !!v.isDispatchedSimulated || !!resolvedCase || v.status === 'DISPATCHED' || v.status === 'EN_ROUTE' || v.status === 'TRANSPORTING';
+      let resolvedCase = null;
+      if (activeCase && !['COMPLETED', 'CANCELLED', 'CLOSED'].includes(activeCase.status)) {
+        resolvedCase = activeCase;
+      } else {
+        resolvedCase = allActiveCases.find(c => c.dispatch?.vehiclePlate === v.plate || c.currentVehiclePlate === v.plate || c.id === v.currentCaseId) || null;
+      }
+
+      if (!resolvedCase && isDemoActive && state?.demoCase && (state.demoCase.dispatch?.vehiclePlate === v.plate || v.plate === '65A-012.34')) {
+        resolvedCase = state.demoCase;
+      }
+
+      if (!resolvedCase && v.isDispatchedSimulated) {
+        resolvedCase = allActiveCases[0] || state?.demoCase || window.SEED_DATA?.demoCase || null;
+      }
+
+      // Xe chỉ coi là ĐANG TRONG CA CẤP CỨU khi:
+      // - v.status thuộc nhóm đang điều động / cấp cứu
+      // - hoặc v.isDispatchedSimulated
+      // - hoặc (isDemoActive && v.plate === '65A-012.34')
+      // - VÀ phải có resolvedCase hợp lệ
+      const isEmergencyStatus = v.status === 'EMERGENCY' || v.status === 'DISPATCHED' || v.status === 'EN_ROUTE' || v.status === 'TRANSPORTING';
+      const isDispatched = Boolean(
+        resolvedCase && (
+          isEmergencyStatus ||
+          v.isDispatchedSimulated ||
+          (isDemoActive && (state?.demoCase?.dispatch?.vehiclePlate === v.plate || v.plate === '65A-012.34'))
+        )
+      );
+
+      // Nếu không có ca cấp cứu đang thực hiện thì reset resolvedCase để không hiển thị thông tin ca cũ
+      if (!isDispatched) {
+        resolvedCase = null;
+      }
+
+      // 4 LUỒNG CUỘC GỌI THEO YÊU CẦU:
+      // 1. Tới người gọi báo tin
+      // 2. Tới bệnh viện trung tâm (115)
+      // 3. Tới bệnh viện tiếp nhận
+      // 4. Tới lái xe
+      // Nguyên tắc: Không gọi cho chính mình ->
+      // - Đang ở Trung tâm: bỏ gọi tới trung tâm (còn: Người báo tin, Bệnh viện tiếp nhận, Lái xe)
+      // - Đang ở Bệnh viện tiếp nhận: bỏ gọi tới bệnh viện tiếp nhận (còn: Người báo tin, Trung tâm 115, Lái xe)
+      const isHospitalUser = this.isHospitalMode();
+
+      const callerName = resolvedCase?.caller?.name || resolvedCase?.callerName || 'Người dân báo tin';
+      const callerPhone = resolvedCase?.caller?.phone || resolvedCase?.callerPhone || '0913.882.115';
+      const callerLocation = resolvedCase?.location?.address || 'Hiện trường ca cấp cứu';
+
+      const centerName = 'Tổng đài Điều phối Cấp cứu 115 Cần Thơ';
+      const centerPhone = '115 (0292.115.115)';
+
+      const hospName = resolvedCase?.dispatch?.hospitalName || resolvedCase?.hospitalName || resolvedCase?.hospital || 'BV Đa khoa Trung ương Cần Thơ';
+      const hospPhone = resolvedCase?.dispatch?.hospitalPhone || resolvedCase?.hospitalPhone || '0292.3820.071';
+
+      const driverName = matchedCrew.driver || 'LX. Trần Văn Bình';
+      const driverPhone = matchedCrew.driverPhone || '0913.555.666';
+
+      const callTargets = [];
+
+      // 1. Tới người gọi báo tin (luôn có)
+      callTargets.push({
+        type: 'CALLER',
+        title: 'Người gọi báo tin',
+        name: callerName,
+        phone: callerPhone,
+        iconClass: 'caller',
+        desc: `Hiện trường: ${callerLocation}`
+      });
+
+      // 2. Tới bệnh viện trung tâm (Chỉ hiển thị khi là Bệnh viện tiếp nhận)
+      if (isHospitalUser) {
+        callTargets.push({
+          type: 'CENTER',
+          title: 'Bệnh viện trung tâm (Điều phối 115)',
+          name: centerName,
+          phone: centerPhone,
+          iconClass: 'center',
+          desc: `Điều phối ca ${resolvedCase?.code || ''}`
+        });
+      }
+
+      // 3. Tới bệnh viện tiếp nhận (Chỉ hiển thị khi là Trung tâm điều hành)
+      if (!isHospitalUser) {
+        callTargets.push({
+          type: 'HOSPITAL',
+          title: 'Bệnh viện tiếp nhận',
+          name: hospName,
+          phone: hospPhone,
+          iconClass: 'hospital',
+          desc: `Khoa Cấp cứu tiếp nhận ca ${resolvedCase?.code || ''}`
+        });
+      }
+
+      // 4. Tới lái xe (Cả 2 bên đều có)
+      callTargets.push({
+        type: 'DRIVER',
+        title: 'Lái xe cứu thương',
+        name: `${driverName} (${v.plate})`,
+        phone: driverPhone,
+        iconClass: 'driver',
+        desc: `Kíp xe ${v.plate}`
+      });
+
+      // Kênh chat trao đổi trực tiếp
+      const caseKey = resolvedCase?.code || v.plate;
+      const chatMessages = (isDispatched && resolvedCase) ? this.getVehicleChatMessages(caseKey, v, resolvedCase) : [];
 
       // Tạo HTML 2 thanh timeline dạng ngang (Thời gian SLA & Thời gian thực tế chia theo mốc)
       let timelineSectionHtml = '';
@@ -2094,15 +2504,17 @@
         <div class="vehicle-detail-panel-box">
           <!-- Navigation header: Back to list button & Goto full detail button -->
           <div class="veh-detail-nav-header">
-            <button type="button" class="btn-back-to-veh-list" id="btn-back-to-veh-list" title="Quay lại danh sách xe">
-              ‹ Danh sách xe
+            <button type="button" class="btn-back-to-veh-list" id="btn-back-to-veh-list" title="${this.isHospitalMode() ? 'Quay lại danh sách ca tiếp nhận' : 'Quay lại danh sách xe'}">
+              ‹ Quay lại danh sách
             </button>
+            ${!this.isHospitalMode() ? `
             <button type="button" class="btn-veh-goto-detail" id="btn-veh-goto-detail" data-plate="${v.plate}" title="Xem chi tiết phương tiện trên màn Xe cứu thương">
               <span>Chi tiết</span>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="9 18 15 12 9 6"></polyline>
               </svg>
             </button>
+            ` : ''}
           </div>
 
           <!-- Main Vehicle Overview Header -->
@@ -2152,6 +2564,101 @@
               </div>
             </div>
           </div>
+
+          ${isDispatched && resolvedCase ? `
+          <!-- CUỘC GỌI KHẨN CẤP (3 LUỒNG THEO VAI TRÒ) - CHỈ HIỂN THỊ TRONG CA CẤP CỨU -->
+          <div class="veh-detail-section">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <div class="veh-section-title" style="margin-bottom:0;display:flex;align-items:center;gap:6px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                <span>LIÊN HỆ KHẨN CẤP</span>
+              </div>
+              <span class="badge badge-accent" style="font-size:10px;font-family:var(--font-mono);font-weight:700;padding:2px 7px;">CA: ${resolvedCase.code}</span>
+            </div>
+
+            <div class="veh-call-list">
+              ${callTargets.map(tgt => `
+                <button type="button" class="btn-veh-call-action" data-call-target="${tgt.type}" data-title="${tgt.title}" data-name="${tgt.name}" data-phone="${tgt.phone}" data-case-code="${resolvedCase.code}" title="Gọi đến ${tgt.title}: ${tgt.name}">
+                  <div class="veh-call-btn-left">
+                    <div class="veh-call-icon-wrap ${tgt.iconClass}">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                    </div>
+                    <div class="veh-call-btn-info">
+                      <div class="veh-call-btn-target">${tgt.title}</div>
+                    </div>
+                  </div>
+                  <span class="veh-call-btn-badge">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                    <span>Gọi</span>
+                  </span>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- TRAO ĐỔI TRỰC TIẾP - CHỈ HIỂN THỊ TRONG CA CẤP CỨU -->
+          <div class="veh-detail-section veh-chat-section">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <div class="veh-section-title" style="margin-bottom:0;display:flex;align-items:center;gap:6px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                <span>TRAO ĐỔI TRỰC TIẾP · ${resolvedCase.code}</span>
+              </div>
+              <span class="live-status-tag" style="background:rgba(16,185,129,0.15);color:#34d399;border-color:rgba(16,185,129,0.35);">
+                Đang trực tuyến
+              </span>
+            </div>
+
+            <div class="veh-chat-box" data-case-key="${caseKey}">
+              <!-- Chat message stream -->
+              <div class="veh-chat-stream" id="veh-chat-stream">
+                ${chatMessages.map(m => {
+                  const isMine = isHospitalUser ? m.senderRole === 'HOSPITAL' : m.senderRole === 'DISPATCHER';
+                  return `
+                    <div class="veh-chat-bubble ${isMine ? 'mine' : 'other'}">
+                      <div class="veh-chat-bubble-header">
+                        <span class="veh-chat-sender-tag ${m.badgeClass || 'dispatch'}">${m.badge || ''} ${m.senderName}</span>
+                        <span class="veh-chat-time">${m.time}</span>
+                      </div>
+                      <div class="veh-chat-bubble-body">${m.text}</div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+
+              <!-- Quick reply suggestion chips theo ca -->
+              <div class="veh-chat-quick-chips">
+                <button type="button" class="veh-chat-chip" data-msg="Cập nhật sinh hiệu mới nhất của nạn nhân ca ${resolvedCase.code}?">Sinh hiệu ca ${resolvedCase.code}?</button>
+                <button type="button" class="veh-chat-chip" data-msg="Xe ${v.plate} cách ${hospName ? hospName.replace(/Bệnh viện|Đa khoa/g, '').trim() : 'bệnh viện tiếp nhận'} bao xa?">Khoảng cách đến viện?</button>
+                <button type="button" class="veh-chat-chip" data-msg="Khoa Cấp cứu đã sẵn sàng phòng can thiệp đón nạn nhân ca ${resolvedCase.code}.">Sẵn sàng phòng cấp cứu</button>
+                <button type="button" class="veh-chat-chip" data-msg="Hiện trường tại ${resolvedCase.location?.address || 'điểm sự cố'} có ùn tắc không?">Tình hình hiện trường?</button>
+              </div>
+
+              <!-- Chat input bar -->
+              <div class="veh-chat-input-bar">
+                <input type="text" class="veh-chat-input" id="veh-chat-input" placeholder="Nhập tin nhắn trao đổi nhanh..." maxlength="200" autocomplete="off" />
+                <button type="button" class="btn-veh-chat-send" id="btn-veh-chat-send" title="Gửi tin nhắn">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          ` : `
+          <!-- TRẠNG THÁI SẴN SÀNG THƯỜNG TRỰC (KHÔNG TRONG CA CẤP CỨU) -->
+          <div class="veh-detail-section veh-standby-section">
+            <div style="background:rgba(16,185,129,0.06);border:1px dashed rgba(16,185,129,0.25);border-radius:8px;padding:14px 16px;text-align:center;">
+              <div style="display:flex;align-items:center;justify-content:center;gap:7px;color:#34d399;font-weight:700;font-size:12.5px;margin-bottom:5px;">
+                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#34d399;box-shadow:0 0 8px #34d399;"></span>
+                <span>PHƯƠNG TIỆN SẴN SÀNG ĐIỀU ĐỘNG</span>
+              </div>
+              <div style="font-size:11.5px;color:var(--text-muted);line-height:1.5;">
+                Xe và kíp trực đang ở trạng thái thường trực sẵn sàng tại trạm. Kênh <strong>Liên hệ khẩn cấp</strong> và <strong>Trao đổi trực tiếp</strong> sẽ tự động kích hoạt khi xe nhận lệnh điều động ca cấp cứu.
+              </div>
+            </div>
+          </div>
+          `}
 
           <!-- Trang thiết bị y tế trên xe -->
           <div class="veh-detail-section">
@@ -2349,8 +2856,11 @@
                 </button>
               ` : `
                 ${plate ? `
-                <button type="button" class="btn btn-xs btn-emergency btn-track-case-veh" data-plate="${plate}" style="padding:3px 8px;font-size:11px;" title="Định vị xe cấp cứu trên bản đồ">
-                  Xem xe
+                <button type="button" class="btn btn-xs btn-hosp-veh-detail btn-card-veh-detail" data-plate="${plate}" title="Xem chi tiết xe và kíp trực">
+                  <span>Chi tiết</span>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
                 </button>
                 ` : ''}
               `}
@@ -9137,7 +9647,7 @@
                 </div>
               </div>
               <div class="suggestion-banner">
-                <strong>GỢI Ý TỰ ĐỘNG:</strong> Xe 65A-016.88 (Type A - ICU) cách 1.4km · ETA ~4 phút · BVĐK thành phố Cần Thơ sẵn sàng phòng mổ sọ não
+                <strong>GỢI Ý TỰ ĐỘNG:</strong> Xe 65A-016.88 cách 1.4km · ETA ~4 phút · BVĐK thành phố Cần Thơ sẵn sàng phòng mổ sọ não
               </div>
             </div>
           </div>
@@ -10798,7 +11308,7 @@
 
       // Đặt lại xe 65A-012.34 tại Trạm Cái Răng để xuất phát theo đúng kịch bản
       veh.coords = [10.0105, 105.7700];
-      veh.station = 'Trạm Cấp cứu Cái Răng (Kíp 3)';
+      veh.station = 'Trạm Cấp cứu Cái Răng';
       veh.status = 'READY';
       veh.statusText = 'Sẵn sàng';
       veh.speed = 0;
@@ -11005,15 +11515,23 @@
 
       // 1. Dọn dẹp danh sách ca
       state.cases = [];
+      state.demoRunning = false;
+      state.demoCase = null;
+      if (window.SEED_DATA) {
+        window.SEED_DATA.demoRunning = false;
+        window.SEED_DATA.demoCase = null;
+      }
 
       // 2. Tất cả các xe về trạng thái sẵn sàng
+      const initialCaiRangCoords = [10.0105, 105.7700];
       (state.vehicles || []).forEach(v => {
         v.status = 'READY';
         v.statusText = 'Sẵn sàng';
         v.speed = 0;
         v.currentCaseId = null;
+        v.isDispatchedSimulated = false;
         if (v.plate === plate) {
-          v.coords = [10.0105, 105.7700]; // Vị trí Trạm Cấp cứu Cái Răng
+          v.coords = initialCaiRangCoords; // Vị trí Trạm Cấp cứu Cái Răng
           v.station = 'Trạm Cấp cứu Cái Răng (Kíp 3)';
         }
       });
@@ -11033,10 +11551,11 @@
       this.setDemoButton(false);
       this.closeDemoOverlay();
 
-      // 5. Bản đồ: xóa mission, bỏ focus xe
-      window.CanThoMap?.resetMission?.();
+      // 5. Bản đồ: xóa mission, dọn dẹp hiện trường tai nạn, bỏ focus xe
       this.realtimeSelectedPlate = null;
+      window.CanThoMap?.resetMission?.();
       if (this.mapInstance) {
+        this.mapInstance.clearAllMissions?.();
         this.mapInstance.clearFocus();
       }
 
@@ -11047,59 +11566,58 @@
       }
     }
 
-    // Tự động kết thúc demo khi xe cấp cứu đã đến bệnh viện (xe dừng tại BV và về lại READY)
+    // Tự động kết thúc demo khi xe cấp cứu đã đến bệnh viện (toàn bộ hệ thống trở về trạng thái khi chưa demo)
     completeDemoAtHospital(mission) {
       const state = window.StateManager?.getState();
       if (!state) return;
       const plate = mission?.plate || '65A-012.34';
       const hosp = mission?.hosp || (state.hospitals || []).find(h => h.id === 'HOSP_BVTU');
-      const hospCoords = hosp?.coords || [10.0270, 105.7530];
       const hospName = hosp?.name || 'Bệnh viện Đa khoa Trung ương Cần Thơ';
+      const initialCaiRangCoords = [10.0105, 105.7700];
 
-      // 1. Dọn dẹp danh sách ca (kết thúc ca)
+      // 1. Dọn dẹp danh sách ca (kết thúc ca, không còn ca tai nạn nào)
       state.cases = [];
-
-      // 2. Xe 65A-012.34 dừng tại vị trí bệnh viện và chuyển về trạng thái Sẵn sàng
-      const veh = (state.vehicles || []).find(v => v.plate === plate);
-      if (veh) {
-        veh.status = 'READY';
-        veh.statusText = 'Sẵn sàng';
-        veh.speed = 0;
-        veh.currentCaseId = null;
-        veh.coords = hospCoords;
-        veh.station = hospName;
+      state.demoRunning = false;
+      state.demoCase = null;
+      if (window.SEED_DATA) {
+        window.SEED_DATA.demoRunning = false;
+        window.SEED_DATA.demoCase = null;
       }
 
-      // 3. Tất cả các xe khác cũng về trạng thái sẵn sàng
+      // 2. Xe 65A-012.34 và tất cả các xe chuyển về trạng thái Sẵn sàng (xanh) như trước demo
       (state.vehicles || []).forEach(v => {
-        if (v.plate !== plate) {
-          v.status = 'READY';
-          v.statusText = 'Sẵn sàng';
-          v.speed = 0;
-          v.currentCaseId = null;
+        v.status = 'READY';
+        v.statusText = 'Sẵn sàng';
+        v.speed = 0;
+        v.currentCaseId = null;
+        v.isDispatchedSimulated = false;
+        if (v.plate === '65A-012.34') {
+          v.coords = initialCaiRangCoords;
+          v.station = 'Trạm Cấp cứu Cái Răng (Kíp 3)';
         }
       });
 
-      // 4. Toàn bộ kíp trực về sẵn sàng
+      // 3. Toàn bộ kíp trực về sẵn sàng
       (state.crews || []).forEach(cr => {
         cr.status = 'READY';
         cr.statusText = 'Sẵn sàng';
       });
 
-      // 5. Kết thúc chế độ demo, trả nút header về "Bắt đầu"
+      // 4. Kết thúc chế độ demo, trả nút header về "Bắt đầu"
       this.demoRunning = false;
       this.demo = null;
       this.setDemoButton(false);
       this.closeDemoOverlay();
 
-      // 6. Xóa cache lộ trình mission trên bản đồ
+      // 5. Bản đồ: xóa mission, dọn sạch hiện trường tai nạn, xóa lộ trình, bỏ chọn xe
+      this.realtimeSelectedPlate = null; // Trả về trạng thái chưa demo (không chọn xe nào)
       window.CanThoMap?.resetMission?.();
-      this.realtimeSelectedPlate = plate; // Giữ chọn xe 65A-012.34 để người dùng thấy xe đang ở bệnh viện
       if (this.mapInstance) {
+        this.mapInstance.clearAllMissions?.();
         this.mapInstance.clearFocus();
       }
 
-      // 7. Lưu session & thông báo cập nhật toàn hệ thống
+      // 6. Lưu session & thông báo cập nhật toàn hệ thống
       window.StateManager.saveToSession?.();
       window.StateManager.notify('CASE_UPDATED', null);
 
@@ -11110,39 +11628,38 @@
       this.updateKpiBar();
 
       window.CCNV_UI.Toast.show(
-        'ĐÃ ĐẾN BỆNH VIỆN · HOÀN TẤT CA',
-        `Xe ${plate} đã đến ${hospName} và bàn giao người bệnh. Tất cả xe về trạng thái sẵn sàng.`,
+        'ĐÃ HOÀN TẤT CA CẤP CỨU',
+        `Xe ${plate} đã đến ${hospName} và bàn giao người bệnh an toàn. Toàn bộ hệ thống trở về trạng thái sẵn sàng trực chiến.`,
         true,
-        6000
+        5000
       );
     }
 
-    // Nhấn Kết thúc → tất cả các xe và kíp trực trở về trạng thái Sẵn sàng, xe 65A-012.34 ở vị trí bệnh viện
+    // Nhấn Kết thúc → tất cả các xe và kíp trực trở về trạng thái Sẵn sàng, xóa hiện trường tai nạn
     endDemo() {
       const state = window.StateManager?.getState();
-      const hosp = (state?.hospitals || []).find(h => h.id === 'HOSP_BVTU');
-      const hospCoords = hosp?.coords || [10.0270, 105.7530];
-      const hospName = hosp?.name || 'Bệnh viện Đa khoa Trung ương Cần Thơ';
       const plate = '65A-012.34';
+      const initialCaiRangCoords = [10.0105, 105.7700];
 
-      if (state) state.cases = [];
-
-      const veh = (state?.vehicles || []).find(v => v.plate === plate);
-      if (veh) {
-        veh.status = 'READY';
-        veh.statusText = 'Sẵn sàng';
-        veh.speed = 0;
-        veh.currentCaseId = null;
-        veh.coords = hospCoords;
-        veh.station = hospName;
+      if (state) {
+        state.cases = [];
+        state.demoRunning = false;
+        state.demoCase = null;
+      }
+      if (window.SEED_DATA) {
+        window.SEED_DATA.demoRunning = false;
+        window.SEED_DATA.demoCase = null;
       }
 
       (state?.vehicles || []).forEach(v => {
-        if (v.plate !== plate) {
-          v.status = 'READY';
-          v.statusText = 'Sẵn sàng';
-          v.speed = 0;
-          v.currentCaseId = null;
+        v.status = 'READY';
+        v.statusText = 'Sẵn sàng';
+        v.speed = 0;
+        v.currentCaseId = null;
+        v.isDispatchedSimulated = false;
+        if (v.plate === plate) {
+          v.coords = initialCaiRangCoords;
+          v.station = 'Trạm Cấp cứu Cái Răng (Kíp 3)';
         }
       });
 
@@ -11156,9 +11673,10 @@
       this.setDemoButton(false);
       this.closeDemoOverlay();
 
+      this.realtimeSelectedPlate = null;
       window.CanThoMap?.resetMission?.();
-      this.realtimeSelectedPlate = plate;
       if (this.mapInstance) {
+        this.mapInstance.clearAllMissions?.();
         this.mapInstance.clearFocus();
       }
 
@@ -11173,7 +11691,7 @@
 
       window.CCNV_UI.Toast.show(
         'ĐÃ KẾT THÚC DEMO',
-        'Tất cả phương tiện và kíp trực đã trở về trạng thái sẵn sàng.'
+        'Tất cả phương tiện và kíp trực đã trở về trạng thái sẵn sàng trực chiến.'
       );
     }
 
