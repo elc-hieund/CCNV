@@ -22,7 +22,7 @@
     '65A-016.88': [10.0298, 105.7685],      // Chốt ĐH Cần Thơ
     '65A-010.02': [10.0215, 105.7850],      // KDC Hưng Phú
     '65A-018.89': [10.0580, 105.7460],      // Trục Võ Văn Kiệt
-    '65A-019.99': [10.0880, 105.7050]       // Trạm Ô Môn
+    '65A-019.99': [10.0420, 105.7600]       // Trạm Cấp cứu An Khánh (Kíp 5)
   };
 
   // Bảng mã màu khẩn cấp bệnh viện
@@ -460,12 +460,13 @@
       // 4. Vehicles (vẽ các xe cứu thương)
       // Khi là Bệnh viện tiếp nhận: TUYỆT ĐỐI CHỈ VẼ CÁC XE ĐƯỢC PHÂN CÔNG ĐẾN BỆNH VIỆN NÀY (VD: 65A-012.34)
       // Tuyệt đối không bao giờ vẽ các xe không được phân công đến bệnh viện này!
+      const baseVehicles = vehicles;
       const vehiclesToProcess = isHospital
-        ? vehicles.filter(v => {
+        ? baseVehicles.filter(v => {
             const m = Object.values(this.missions).find(item => item.plate === v.plate);
             return Boolean(m && this.isCaseForMyHospital(m.caseData));
           })
-        : vehicles;
+        : baseVehicles;
 
       this.vehicleMarkers = {};
       vehiclesToProcess.forEach(v => {
@@ -483,11 +484,6 @@
                 ${mission ? `<span class="map-veh-status-pill">${(v.speed || 50)} km/h</span>` : ''}
               </div>
               <div class="map-veh-puck">
-                <div class="map-veh-heading-arrow">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2L4 20l8-4 8 4z"/>
-                  </svg>
-                </div>
                 <div class="map-veh-icon-center" style="display:flex;align-items:center;justify-content:center;">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1 .4-1 1v9h2"></path>

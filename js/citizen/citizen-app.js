@@ -1374,7 +1374,7 @@
       try {
         let media = document.getElementById('citizen-emergency-voice-media');
         if (!media) {
-          media = new Audio('assets/voice_demo.m4a');
+          media = new Audio('assets/voice_demo.mp4');
           media.id = 'citizen-emergency-voice-media';
         }
         this.inCallVoiceMedia = media;

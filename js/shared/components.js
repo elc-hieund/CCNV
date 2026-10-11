@@ -370,6 +370,8 @@
         }
       });
 
+      this.currentFilteredData = filtered;
+
       const totalItems = filtered.length;
       const totalPages = Math.max(1, Math.ceil(totalItems / this.pageSize));
       if (this.currentPage > totalPages) this.currentPage = totalPages;
@@ -521,8 +523,9 @@
                   </tr>
                 ` : pageItems.map((item, rowIdx) => {
                   const stt = startIndex + rowIdx + 1;
+                  const itemId = item.id || item.code || '';
                   return `
-                    <tr data-row-index="${startIndex + rowIdx}">
+                    <tr data-row-index="${startIndex + rowIdx}" data-case-id="${itemId}">
                       <td style="text-align: center; color: #88A2BC; font-weight: 500;">${stt}</td>
                       ${this.columns.map(col => {
                         let cellContent = item[col.key];
@@ -788,10 +791,11 @@
       if (typeof this.onRowClick === 'function') {
         container.querySelectorAll('tbody tr[data-row-index]').forEach(tr => {
           tr.style.cursor = 'pointer';
-          tr.addEventListener('click', () => {
+          tr.addEventListener('click', (e) => {
+            if (e.target.closest('button, a, input, select, textarea')) return;
             const idx = parseInt(tr.getAttribute('data-row-index'), 10);
-            const item = this.data[idx];
-            if (item) this.onRowClick(item, idx);
+            const item = (this.currentFilteredData && this.currentFilteredData[idx]) || this.data[idx];
+            if (item) this.onRowClick(item, idx, e);
           });
         });
       }

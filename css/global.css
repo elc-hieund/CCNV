@@ -134,9 +134,11 @@ textarea::placeholder {
 }
 
 .badge-ready {
-  background-color: #0E2938;
-  color: var(--text-slate);
-  border: 1px solid var(--border-main);
+  background-color: rgba(16, 185, 129, 0.18);
+  color: #10B981;
+  border: 1px solid #10B981;
+  font-weight: 700;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.25);
 }
 
 .badge-maintenance {

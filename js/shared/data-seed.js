@@ -1,7 +1,7 @@
 window.SEED_DATA = {
   "system": {
     "name": "HỆ THỐNG ĐIỀU HÀNH CẤP CỨU NGOẠI VIỆN (CCNV) THÀNH PHỐ CẦN THƠ",
-    "version": "3.4.5",
+    "version": "3.4.8",
     "deploymentDate": "2026-10-01",
     "demoDate": "2026-10-09",
     "center": "Bệnh viện Đa khoa Trung ương Cần Thơ",
@@ -180,29 +180,6 @@ window.SEED_DATA = {
       "camera": { "status": "LIVE", "fps": 25, "resolution": "1080p" }
     },
     {
-      "id": "VEH-05",
-      "plate": "65A-019.99",
-      "type": "Type C",
-      "typeName": "Vận chuyển",
-      "station": "Trạm Cấp cứu Ô Môn",
-      "stationId": "ST_OM",
-      "coords": [10.0880, 105.7050],
-      "mapPos": { "x": 320, "y": 120 },
-      "speed": 0,
-      "heading": 270,
-      "status": "READY",
-      "statusText": "Sẵn sàng",
-      "gpsStatus": "ONLINE",
-      "gpsSignal": "FAIR",
-      "lastUpdate": "12 giây trước",
-      "battery": 90,
-      "fuel": "80%",
-      "oxygen": "85%",
-      "currentCaseId": null,
-      "equipment": ["Cáng đẩy tự nâng thủy lực", "Bình oxy thở cá nhân", "Hộp dụng cụ băng bó vết thương"],
-      "camera": { "status": "STANDBY", "fps": 15, "resolution": "720p" }
-    },
-    {
       "id": "VEH-07",
       "plate": "65A-012.34",
       "type": "Type A",
@@ -247,6 +224,29 @@ window.SEED_DATA = {
       "currentCaseId": null,
       "equipment": ["Monitor 5 thông số", "AED", "Vali thuốc cấp cứu"],
       "camera": { "status": "STANDBY", "fps": 15, "resolution": "720p" }
+    },
+    {
+      "id": "VEH-05",
+      "plate": "65A-019.99",
+      "type": "Type B",
+      "typeName": "Cứu thương tiêu chuẩn",
+      "station": "Trạm Cấp cứu An Khánh (Kíp 5)",
+      "stationId": "ST_AK",
+      "coords": [10.0420, 105.7600],
+      "mapPos": { "x": 490, "y": 320 },
+      "speed": 0,
+      "heading": 0,
+      "status": "READY",
+      "statusText": "Sẵn sàng",
+      "gpsStatus": "ONLINE",
+      "gpsSignal": "GOOD",
+      "lastUpdate": "12 giây trước",
+      "battery": 94,
+      "fuel": "80%",
+      "oxygen": "88%",
+      "currentCaseId": null,
+      "equipment": ["Monitor 5 thông số", "AED", "Vali thuốc cấp cứu", "Bộ nẹp cổ - cột sống"],
+      "camera": { "status": "LIVE", "fps": 25, "resolution": "1080p" }
     }
   ],
   "personnel": [
@@ -317,9 +317,9 @@ window.SEED_DATA = {
     },
     {
       "id": "CREW-05",
-      "name": "Kíp 5 - Ô Môn",
+      "name": "Kíp 5 - An Khánh",
       "shift": "Ca sáng (07:00 - 15:00)",
-      "stationId": "ST_OM",
+      "stationId": "ST_AK",
       "defaultVehicle": "65A-019.99",
       "doctor": "BS. Đặng Văn Nam",
       "nurse": "ĐD. Bùi Thị Thảo",

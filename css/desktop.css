@@ -1277,21 +1277,9 @@ body.hospital-mode .kpi-header-grid {
   color: #FFFFFF;
 }
 
-/* Mũi tên chỉ hướng di chuyển theo tim đường (Heading Arrow) */
+/* Mũi tên chỉ hướng di chuyển theo tim đường (Heading Arrow) - Đã ẩn theo yêu cầu */
 .map-veh-heading-arrow {
-  position: absolute;
-  top: -8px;
-  left: 50%;
-  margin-left: -5px;
-  width: 10px;
-  height: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #34d399;
-  filter: drop-shadow(0 0 4px #10b981);
-  transform-origin: center 22px;
-  transition: transform 0.25s linear;
+  display: none !important;
 }
 
 /* Chân cắm nhọn neo đúng tim đường */
@@ -1311,8 +1299,7 @@ body.hospital-mode .kpi-header-grid {
   animation: veh-mission-glow 1.5s infinite ease-in-out;
 }
 .map-veh-stem-marker.is-mission .map-veh-heading-arrow {
-  color: #fca5a5;
-  filter: drop-shadow(0 0 5px #ef4444);
+  display: none !important;
 }
 .map-veh-stem-marker.is-mission .map-veh-stem-pin {
   border-top-color: #ef4444;
@@ -2284,6 +2271,15 @@ body.hospital-mode .kpi-header-grid {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 4px;
+}
+
+.vehicle-card-top .badge-ready,
+.badge.badge-ready {
+  background-color: rgba(16, 185, 129, 0.18) !important;
+  color: #10B981 !important;
+  border: 1px solid #10B981 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.25);
 }
 
 .vehicle-plate {

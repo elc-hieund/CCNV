@@ -52,7 +52,7 @@
                 try { fn('STORAGE_SYNC', null, this.state); } catch (err) { console.error(err); }
               });
               window.dispatchEvent(new CustomEvent('ccnvStateUpdate', { detail: { event: 'STORAGE_SYNC', fromRemote: true } }));
-            } catch (err) {}
+            } catch (err) { }
           }
         });
       }
@@ -64,7 +64,7 @@
       if (cached) {
         try {
           this.state = JSON.parse(cached);
-          const seedVersion = window.SEED_DATA?.system?.version || '3.4.5';
+          const seedVersion = window.SEED_DATA?.system?.version || '3.4.8';
           const hasOldPlates = Array.isArray(this.state?.vehicles) && this.state.vehicles.some(v => v.plate === '65A-017.22' || v.plate === '65A-015.67');
           const invalidVehicleCount = Array.isArray(this.state?.vehicles) && this.state.vehicles.length !== 6;
 
@@ -74,7 +74,7 @@
             try {
               localStorage.removeItem(STORAGE_KEY_STATE);
               sessionStorage.removeItem(STORAGE_KEY_STATE);
-            } catch (err) {}
+            } catch (err) { }
           } else if (window.SEED_DATA) {
             if (window.SEED_DATA.accounts) this.state.accounts = window.SEED_DATA.accounts;
             if (window.SEED_DATA.hospitals) this.state.hospitals = window.SEED_DATA.hospitals;
@@ -120,7 +120,7 @@
             paramUser = this.state.accounts.find(a => a.role === 'HOSPITAL_RECEIVER') || this.state.accounts[0];
           } else if (qRole === 'dispatcher' || qRole === 'central' || qRole === 'trungtam') {
             paramUser = this.state.accounts.find(a => a.role === 'DISPATCHER') || this.state.accounts[0];
-            try { sessionStorage.removeItem('ccnv_hospital_confirmed'); } catch (e) {}
+            try { sessionStorage.removeItem('ccnv_hospital_confirmed'); } catch (e) { }
           }
         } catch (e) {
           console.warn('Error parsing URL query params:', e);
@@ -189,7 +189,7 @@
       if (this.channel) {
         try {
           this.channel.postMessage({ event, payload, state: this.state });
-        } catch (e) {}
+        } catch (e) { }
       }
       this.listeners.forEach(fn => {
         try {

@@ -396,6 +396,10 @@
     }
 
     #home-facilities-map .leaflet-popup-pane,
+    #citizen-tracking-map .leaflet-popup-pane {
+      z-index: 400;
+    }
+
     /* Voice Call Waveform Visualizer */
     .incall-voice-wave {
       display: flex;
@@ -675,9 +679,9 @@
 
             <!-- Video / Audio Element phát voice đàm thoại cấp cứu 115 -->
             <video id="citizen-emergency-voice-media" preload="auto" playsinline style="display:none;">
-              <source src="assets/voice_demo.m4a" type="audio/mp4">
-              <source src="assets/voice_demo.m4a" type="audio/x-m4a">
-              <source src="assets/voice_demo.m4a" type="audio/aac">
+              <source src="assets/voice_demo.mp4" type="audio/mp4">
+              <source src="assets/voice_demo.mp4" type="audio/x-m4a">
+              <source src="assets/voice_demo.mp4" type="audio/aac">
             </video>
 
             <!-- In-call action controls: Speaker, Mute, End Call (100% Lucide SVG) -->

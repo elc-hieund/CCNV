@@ -254,9 +254,48 @@
       line-height: 1;
     }
 
+    .module-code {
+      display: inline-block;
+      font-family: var(--font-mono, monospace);
+      font-size: 12.5px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      width: fit-content;
+    }
+
+    .card-central .module-code {
+      color: #F87171;
+      border-color: rgba(239, 68, 68, 0.3);
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .card-hospital .module-code {
+      color: #34D399;
+      border-color: rgba(16, 185, 129, 0.3);
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    .card-driver .module-code {
+      color: #FBBF24;
+      border-color: rgba(245, 158, 11, 0.3);
+      background: rgba(245, 158, 11, 0.1);
+    }
+
+    .card-citizen .module-code {
+      color: #38BDF8;
+      border-color: rgba(6, 182, 212, 0.3);
+      background: rgba(6, 182, 212, 0.1);
+    }
+
     .card-content h2,
     .card-content h3 {
-      font-size: 24px;
+      font-size: 23px;
       font-weight: 700;
       color: #FFFFFF;
       margin: 0 0 14px 0;
@@ -411,7 +450,7 @@
     <main class="portal-grid">
       <!-- 1. Central Dispatch Console -->
       <a href="central.html?role=dispatcher" class="portal-card card-central" id="link-central"
-        aria-label="Trung tâm Giám sát và Điều hành 115">
+        aria-label="Trung tâm Giám sát và Điều hành - EAMS Central">
         <div>
           <div class="card-top">
             <div class="icon-wrapper icon-central">
@@ -428,6 +467,7 @@
             </div>
           </div>
           <div class="card-content">
+            <div class="module-code">EAMS Center</div>
             <h2>Trung tâm Giám sát & Điều hành</h2>
             <p>Hệ thống giám sát, tiếp nhận cuộc gọi khẩn cấp 115, bản đồ GIS thời gian thực và điều phối mạng lưới xe
               cấp cứu toàn thành phố.</p>
@@ -442,7 +482,7 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6">
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
-                Bản đồ GIS vị trí xe, trạm & bệnh viện
+                Bản đồ vị trí xe, trạm & bệnh viện
               </li>
               <li>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6">
@@ -454,13 +494,13 @@
           </div>
         </div>
         <div class="card-btn">
-          Mở Bàn Điều Phối &rarr;
+          Mở Trung tâm Điều Phối &rarr;
         </div>
       </a>
 
       <!-- 2. Receiving Hospital Portal -->
       <a href="central.html?role=hospital" class="portal-card card-hospital" id="link-hospital"
-        aria-label="Cổng Tiếp nhận và Cấp cứu Bệnh viện">
+        aria-label="Cổng Tiếp nhận và Cấp cứu - EAMS Hospital">
         <div>
           <div class="card-top">
             <div class="icon-wrapper icon-hospital">
@@ -479,6 +519,7 @@
             </div>
           </div>
           <div class="card-content">
+            <div class="module-code">EAMS Hospital</div>
             <h2>Cổng Tiếp nhận & Cấp cứu</h2>
             <p>Cổng web app chuyên biệt cho Khoa Cấp cứu: nhận cảnh báo ca đang đến, xem trước bệnh án ePCR, theo dõi xe
               và xác nhận bàn giao.</p>
@@ -511,7 +552,7 @@
 
       <!-- 3. Driver & Crew App -->
       <a href="driver.html" class="portal-card card-driver" id="link-driver"
-        aria-label="Ứng dụng Kíp cấp cứu và Lái xe">
+        aria-label="Ứng dụng Kíp cấp cứu và Lái xe - EAMS Crew">
         <div>
           <div class="card-top">
             <div class="icon-wrapper icon-driver">
@@ -527,6 +568,7 @@
             </div>
           </div>
           <div class="card-content">
+            <div class="module-code">EAMS Crew</div>
             <h2>Ứng dụng Kíp cấp cứu & Lái xe</h2>
             <p>Ứng dụng dành cho kíp cấp cứu trên xe tiếp nhận lệnh điều động từ trung tâm, dẫn đường GIS và cập nhật hồ
               sơ bệnh nhân ePCR.</p>
@@ -559,7 +601,7 @@
 
       <!-- 4. Citizen App -->
       <a href="citizen.html" class="portal-card card-citizen" id="link-citizen"
-        aria-label="Cổng Cứu nạn và Cấp cứu Người dân">
+        aria-label="Cổng Cứu nạn và Cấp cứu Người dân - EAMS Citizen">
         <div>
           <div class="card-top">
             <div class="icon-wrapper icon-citizen">
@@ -575,6 +617,7 @@
             </div>
           </div>
           <div class="card-content">
+            <div class="module-code">EAMS Citizen</div>
             <h2>Cổng Cứu nạn & Cấp cứu Người dân</h2>
             <p>Ứng dụng hỗ trợ người dân gọi cấp cứu 115 một chạm, truyền tọa độ GPS chuẩn xác, theo dõi xe đến và tra
               cứu cẩm nang sơ cứu tại chỗ.</p>
