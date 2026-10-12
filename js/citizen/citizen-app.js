@@ -668,8 +668,10 @@
             const vehCoords = (this.simMission?.pos?.latlng)
               ? [this.simMission.pos.latlng.lat, this.simMission.pos.latlng.lng]
               : originCoords;
+            const isTransporting = (this.activeCase.status === 'TRANSPORTING' || this.simMission?.phase === 'TO_HOSP');
+            const targetBounds = isTransporting ? [vehCoords, hospCoords] : [vehCoords, sceneCoords, hospCoords];
             try {
-              this.mapTracking.fitBounds([vehCoords, sceneCoords, hospCoords], {
+              this.mapTracking.fitBounds(targetBounds, {
                 padding: [30, 30],
                 maxZoom: 16
               });
@@ -700,7 +702,8 @@
             }
           }
           if (this.mapTracking) {
-            setTimeout(() => this.mapTracking.invalidateSize(), 100);
+            setTimeout(() => this.mapTracking.invalidateSize(), 50);
+            setTimeout(() => this.mapTracking.invalidateSize(), 200);
           }
         });
       }
@@ -1642,6 +1645,31 @@
           m.dist = 0;
           this.activeCase.status = 'TRANSPORTING';
           this.activeCase.stageLabel = 'Đang chuyển viện';
+
+          // Khi đón bệnh nhân xong (đi qua điểm tai nạn): Xóa marker điểm tai nạn và tuyến đường chặng 1
+          if (this.citizenMarker && this.mapTracking) {
+            try {
+              this.mapTracking.removeLayer(this.citizenMarker);
+            } catch (e) { }
+            this.citizenMarker = null;
+          }
+          if (this.routeVehToSceneBg && this.mapTracking) {
+            try {
+              this.mapTracking.removeLayer(this.routeVehToSceneBg);
+            } catch (e) { }
+            this.routeVehToSceneBg = null;
+          }
+
+          // Cập nhật lại khung nhìn bao quát xe và bệnh viện đích
+          try {
+            const currentVehPos = m.pos?.latlng ? [m.pos.latlng.lat, m.pos.latlng.lng] : (m.scene || [10.0298, 105.7702]);
+            const hospPos = m.hospCoords || [10.0265, 105.7588];
+            this.mapTracking.fitBounds([currentVehPos, hospPos], {
+              padding: [30, 30],
+              maxZoom: 16
+            });
+          } catch (e) { }
+
           this.updateTrackingStatsUI(null, null, 'Đang chuyển viện');
           window.CCNV_UI.Toast.show(
             'BỆNH NHÂN ĐÃ LÊN XE',
@@ -1826,23 +1854,24 @@
             if (dot) dot.textContent = `${i}`;
           }
         } else if (status === 'MOVING' || status === 'DISPATCHED') {
-          // Nhấn SOS lần 2: Mốc 1 thành xanh (done), Mốc 2 thành đỏ (active) như ảnh người dùng
-          if (i === 1) {
+          // Xe bắt đầu di chuyển: Mốc 1 (Tiếp nhận) & Mốc 2 (Điều xe) done, Mốc 3 (Xe đang đến) active
+          if (i <= 2) {
             node.classList.add('done');
             if (dot) dot.innerHTML = checkSvg;
-          } else if (i === 2) {
+          } else if (i === 3) {
             node.classList.add('active');
             if (dot) dot.innerHTML = checkSvg;
           } else {
             if (dot) dot.textContent = `${i}`;
           }
         } else if (status === 'AT_SCENE') {
-          if (i <= 2) {
+          // Đến hiện trường: Mốc 1-3 done, Mốc 4 (Tiếp nhận bệnh nhân) active
+          if (i <= 3) {
             node.classList.add('done');
             if (dot) dot.innerHTML = checkSvg;
-          } else if (i === 3) {
+          } else if (i === 4) {
             node.classList.add('active');
-            if (dot) dot.textContent = `${i}`;
+            if (dot) dot.innerHTML = checkSvg;
           } else {
             if (dot) dot.textContent = `${i}`;
           }
@@ -1906,21 +1935,26 @@
         }).addTo(this.mapTracking);
 
         // 1. Marker Vị trí tai nạn / Vị trí của bạn (Beacon đỏ nhấp nháy clone Central App)
-        const incidentIcon = L.divIcon({
-          className: 'map-leaflet-marker',
-          html: `
-            <div class="map-incident-capsule">
-              <span class="legend-dot-pulse"></span>
-              <span style="font-weight:700;font-size:11px;color:#fca5a5;letter-spacing:0.3px;">${isReceivedOnly ? 'VỊ TRÍ CỦA BẠN' : 'VỊ TRÍ TAI NẠN'}</span>
-            </div>
-          `,
-          iconSize: [180, 32],
-          iconAnchor: [90, 32]
-        });
+        const isTransporting = (this.activeCase.status === 'TRANSPORTING' || this.simMission?.phase === 'TO_HOSP');
+        if (!isTransporting) {
+          const incidentIcon = L.divIcon({
+            className: 'map-leaflet-marker',
+            html: `
+              <div class="map-incident-capsule">
+                <span class="legend-dot-pulse"></span>
+                <span style="font-weight:700;font-size:11px;color:#fca5a5;letter-spacing:0.3px;">${isReceivedOnly ? 'VỊ TRÍ CỦA BẠN' : 'VỊ TRÍ TAI NẠN'}</span>
+              </div>
+            `,
+            iconSize: [180, 32],
+            iconAnchor: [90, 32]
+          });
 
-        this.citizenMarker = L.marker(sceneCoords, { icon: incidentIcon, zIndexOffset: 500 })
-          .addTo(this.mapTracking)
-          .bindPopup('<b>VỊ TRÍ CỦA BẠN</b><br>Đại học Cần Thơ - Cổng A đường 3/2');
+          this.citizenMarker = L.marker(sceneCoords, { icon: incidentIcon, zIndexOffset: 500 })
+            .addTo(this.mapTracking)
+            .bindPopup('<b>VỊ TRÍ CỦA BẠN</b><br>Đại học Cần Thơ - Cổng A đường 3/2');
+        } else {
+          this.citizenMarker = null;
+        }
 
         // 2. Marker Xe cấp cứu đang đến (Capsule xe màu hổ phách/amber clone Central App)
         const ambulanceIcon = L.divIcon({
@@ -1974,7 +2008,8 @@
           this.vehicleMarker.addTo(this.mapTracking);
           this.hospitalMarker.addTo(this.mapTracking);
           try {
-            this.mapTracking.fitBounds([originCoords, sceneCoords, hospCoords], {
+            const fitPts = isTransporting ? [vehCoords, hospCoords] : [originCoords, sceneCoords, hospCoords];
+            this.mapTracking.fitBounds(fitPts, {
               padding: [28, 28],
               maxZoom: 15
             });
@@ -1990,7 +2025,15 @@
         }
       } else {
         this.mapTracking.invalidateSize();
-        if (this.citizenMarker) {
+        const isTransporting = (this.activeCase.status === 'TRANSPORTING' || this.simMission?.phase === 'TO_HOSP');
+
+        if (isTransporting) {
+          // Đã đón bệnh nhân xong: Không hiển thị điểm tai nạn nữa
+          if (this.citizenMarker && this.mapTracking.hasLayer(this.citizenMarker)) {
+            try { this.mapTracking.removeLayer(this.citizenMarker); } catch (e) { }
+          }
+          this.citizenMarker = null;
+        } else if (this.citizenMarker) {
           this.citizenMarker.setLatLng(sceneCoords);
           const iconHtml = `
             <div class="map-incident-capsule">
@@ -2034,7 +2077,10 @@
             this.setupTrackingMapRoutes();
           }
           try {
-            this.mapTracking.fitBounds([originCoords, sceneCoords, hospCoords], {
+            const boundsPoints = isTransporting
+              ? [vehCoords, hospCoords]
+              : [originCoords, sceneCoords, hospCoords];
+            this.mapTracking.fitBounds(boundsPoints, {
               padding: [28, 28],
               maxZoom: 15
             });

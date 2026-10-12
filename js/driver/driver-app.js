@@ -571,6 +571,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       // =========================================================================
       function resetToDefaultIdleMap(showNotification = true) {
         stopSimulation();
+        stopEmergencyAlarm();
         isMissionActive = false;
         simState.phase = 'IDLE';
         simState.stateNum = 1;
@@ -667,6 +668,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         dispatchLabel.textContent = 'VUỐT SANG PHẢI: XÁC NHẬN NHẬN LỆNH ❯❯❯';
       }
 
+      function closeDispatchAlertPopup() {
+        if (dispatchModal) {
+          dispatchModal.classList.remove('active');
+          stopEmergencyAlarm();
+        }
+      }
+
       function openDispatchAlertPopup() {
         if (dispatchModal) {
           resetDispatchSlider();
@@ -677,7 +685,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       btnCloseDispatch?.addEventListener('click', () => {
-        dispatchModal.classList.remove('active');
+        closeDispatchAlertPopup();
       });
 
       // =========================================================================
@@ -760,7 +768,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Đóng cả 2 modal
         closeRejectDispatchModal();
-        dispatchModal?.classList.remove('active');
+        closeDispatchAlertPopup();
 
         // Hiển thị thông báo Toast
         if (window.CCNV_UI?.Toast) {
@@ -823,6 +831,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (dispatchCurrentX >= maxDist * 0.72) {
           // Vuốt thành công sang phải
+          stopEmergencyAlarm();
           dispatchKnob.style.transition = 'transform 0.15s ease';
           dispatchFill.style.transition = 'width 0.15s ease';
           dispatchKnob.style.transform = `translateX(${maxDist}px)`;
@@ -835,7 +844,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (navigator.vibrate) navigator.vibrate([150, 80, 200]);
 
           setTimeout(() => {
-            dispatchModal.classList.remove('active');
+            closeDispatchAlertPopup();
             startMissionNavigation();
           }, 220);
         } else {
@@ -938,40 +947,48 @@ document.addEventListener('DOMContentLoaded', async () => {
       function ensureMissionMarkers() {
         if (!driverMap) return;
 
-        // Tọa độ chính xác theo chặng đường đã tải (hoặc fallback COORDS)
-        const scenePt = simState.leg1 ? simState.leg1.ll[simState.leg1.ll.length - 1] : COORDS.scene;
-        const hospPt = simState.leg2 ? simState.leg2.ll[simState.leg2.ll.length - 1] : COORDS.hospital;
+        const isPastScene = simState.phase === 'TO_HOSP' || simState.phase === 'COMPLETED' || simState.stateNum >= 3;
 
-        // 1. Marker Hiện trường tai nạn (Tactical SOS Radar Beacon)
-        if (!sceneMarker) {
-          const sceneIcon = window.L.divIcon({
-            className: 'map-leaflet-marker',
-            html: `
-              <div class="map-incident-beacon-container">
-                <div class="map-incident-radar-rings">
-                  <div class="ring"></div><div class="ring"></div><div class="ring"></div>
-                </div>
-                <div class="map-incident-shake">
-                  <div class="map-incident-banner">
-                    <span class="map-incident-code" style="background:#EF4444;color:#FFFFFF;padding:1px 6px;border-radius:6px;font-weight:800;font-size:10px;letter-spacing:0.3px;">CODE ĐỎ</span>
-                    <span style="font-weight:700;font-size:11.5px;letter-spacing:0.2px;">HIỆN TRƯỜNG TAI NẠN</span>
-                    <span class="map-incident-eta" style="background:rgba(0,0,0,0.35);padding:1px 6px;border-radius:6px;color:#FDE047;font-weight:700;font-size:10.5px;">ETA ~4P</span>
+        // 1. Marker Hiện trường tai nạn (Khi xe đã đón bệnh nhân và đi qua khỏi hiện trường thì ẩn đi)
+        if (isPastScene) {
+          if (sceneMarker) {
+            try { driverMap.removeLayer(sceneMarker); } catch (e) {}
+            sceneMarker = null;
+          }
+        } else {
+          // Tọa độ chính xác theo chặng đường đã tải (hoặc fallback COORDS)
+          const scenePt = simState.leg1 ? simState.leg1.ll[simState.leg1.ll.length - 1] : COORDS.scene;
+          if (!sceneMarker) {
+            const sceneIcon = window.L.divIcon({
+              className: 'map-leaflet-marker',
+              html: `
+                <div class="map-incident-beacon-container">
+                  <div class="map-incident-radar-rings">
+                    <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+                  </div>
+                  <div class="map-incident-shake">
+                    <div class="map-incident-banner">
+                      <span class="map-incident-code" style="background:#EF4444;color:#FFFFFF;padding:1px 6px;border-radius:6px;font-weight:800;font-size:10px;letter-spacing:0.3px;">CODE ĐỎ</span>
+                      <span style="font-weight:700;font-size:11.5px;letter-spacing:0.2px;">HIỆN TRƯỜNG TAI NẠN</span>
+                      <span class="map-incident-eta" style="background:rgba(0,0,0,0.35);padding:1px 6px;border-radius:6px;color:#FDE047;font-weight:700;font-size:10.5px;">ETA ~4P</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            `,
-            iconSize: [260, 44],
-            iconAnchor: [130, 22]
-          });
+              `,
+              iconSize: [260, 44],
+              iconAnchor: [130, 22]
+            });
 
-          sceneMarker = window.L.marker(scenePt, { icon: sceneIcon, zIndexOffset: 500 })
-            .addTo(driverMap)
-            .bindPopup('<b>VỊ TRÍ TAI NẠN</b><br>Chân Cầu Hưng Lợi (hướng Cái Răng sang Ninh Kiều)');
-        } else {
-          sceneMarker.setLatLng(scenePt);
+            sceneMarker = window.L.marker(scenePt, { icon: sceneIcon, zIndexOffset: 500 })
+              .addTo(driverMap)
+              .bindPopup('<b>VỊ TRÍ TAI NẠN</b><br>Chân Cầu Hưng Lợi (hướng Cái Răng sang Ninh Kiều)');
+          } else {
+            sceneMarker.setLatLng(scenePt);
+          }
         }
 
         // 2. Marker Bệnh viện đích (Fixed Medical Hub Landmark Shield - BVĐK TP Cần Thơ)
+        const hospPt = simState.leg2 ? simState.leg2.ll[simState.leg2.ll.length - 1] : COORDS.hospital;
         if (!hospMarker) {
           const hospIcon = window.L.divIcon({
             className: 'map-leaflet-marker',
@@ -1026,16 +1043,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Chỉ xóa tuyến đường cũ (KHÔNG xóa marker bệnh viện và điểm tai nạn)
         clearRouteLinesOnly();
 
-        // Đảm bảo marker Hiện trường và Bệnh viện luôn hiển thị trên bản đồ khi thực hiện nhiệm vụ
+        // Đảm bảo marker Hiện trường và Bệnh viện luôn hiển thị chính xác theo trạng thái
         ensureMissionMarkers();
 
-        // 1. Toàn tuyến mờ ở nền (Leg 1 amber, Leg 2 cyan)
-        routeBgLeg1 = L.polyline(simState.leg1.ll, {
-          color: '#f59e0b',
-          weight: 3.5,
-          opacity: 0.25,
-          dashArray: '6, 8'
-        }).addTo(driverMap);
+        const isPastScene = simState.phase === 'TO_HOSP' || simState.phase === 'COMPLETED' || simState.stateNum >= 3;
+
+        // 1. Toàn tuyến mờ ở nền (Chỉ vẽ chặng 1 nếu chưa đi qua khỏi hiện trường)
+        if (!isPastScene) {
+          routeBgLeg1 = L.polyline(simState.leg1.ll, {
+            color: '#f59e0b',
+            weight: 3.5,
+            opacity: 0.25,
+            dashArray: '6, 8'
+          }).addTo(driverMap);
+        }
 
         routeBgLeg2 = L.polyline(simState.leg2.ll, {
           color: '#38bdf8',
@@ -1184,6 +1205,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           m.pauseUntil = 0;
           updateStepperUI(1);
           resetSlider(1);
+          ensureMissionMarkers();
           if (badgeHeaderPhase) {
             badgeHeaderPhase.textContent = 'ĐANG ĐẾN HT';
             badgeHeaderPhase.style.background = 'var(--red-primary)';
@@ -1194,6 +1216,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           m.pauseUntil = now + 3500; // Dừng đón bệnh nhân 3.5 giây
           updateStepperUI(2);
           resetSlider(2);
+          ensureMissionMarkers();
           updateVehiclePill('Đón BN (3.5s)', true);
           if (badgeHeaderPhase) {
             badgeHeaderPhase.textContent = 'TẠI HIỆN TRƯỜNG';
@@ -1212,6 +1235,27 @@ document.addEventListener('DOMContentLoaded', async () => {
             badgeHeaderPhase.textContent = 'CHUYỂN VIỆN';
             badgeHeaderPhase.style.background = '#0284C7';
           }
+
+          // Khi xe đón bệnh nhân xong & đi qua khỏi hiện trường: ẨN VỊ TRÍ TAI NẠN VÀ XÓA TUYẾN ĐƯỜNG ĐÃ ĐI
+          if (sceneMarker && driverMap) {
+            try { driverMap.removeLayer(sceneMarker); } catch (e) {}
+            sceneMarker = null;
+          }
+          if (routeBgLeg1 && driverMap) {
+            try { driverMap.removeLayer(routeBgLeg1); } catch (e) {}
+            routeBgLeg1 = null;
+          }
+          if (focusLines?.glow1) focusLines.glow1.setLatLngs([]);
+          if (focusLines?.line1) focusLines.line1.setLatLngs([]);
+
+          // Điều chỉnh góc nhìn tập trung vào vị trí xe và bệnh viện đích
+          try {
+            const currentVehPos = vehMarker ? vehMarker.getLatLng() : (m.pos?.latlng || COORDS.scene);
+            driverMap.fitBounds([currentVehPos, COORDS.hospital], {
+              padding: [50, 50],
+              maxZoom: 15
+            });
+          } catch (e) {}
         } else if (targetState === 4) {
           // State 4: Bàn giao bệnh nhân
           m.phase = 'COMPLETED';
@@ -1223,6 +1267,18 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
           updateVehiclePill('Đã đến Bệnh viện', true);
           updateNavigationTextsLive(m);
+
+          // Ẩn vị trí tai nạn và tuyến đường cũ nếu còn
+          if (sceneMarker && driverMap) {
+            try { driverMap.removeLayer(sceneMarker); } catch (e) {}
+            sceneMarker = null;
+          }
+          if (routeBgLeg1 && driverMap) {
+            try { driverMap.removeLayer(routeBgLeg1); } catch (e) {}
+            routeBgLeg1 = null;
+          }
+          if (focusLines?.glow1) focusLines.glow1.setLatLngs([]);
+          if (focusLines?.line1) focusLines.line1.setLatLngs([]);
 
           // Cập nhật thanh trượt hoàn tất
           if (sliderLabel) sliderLabel.textContent = '✔ ĐÃ HOÀN TẤT BÀN GIAO';
@@ -1358,6 +1414,20 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (targetStep >= 1 && targetStep <= 4) {
             updateStepperUI(targetStep);
             resetSlider(targetStep);
+            if (targetStep >= 3) {
+              if (sceneMarker && driverMap) {
+                try { driverMap.removeLayer(sceneMarker); } catch (e) {}
+                sceneMarker = null;
+              }
+              if (routeBgLeg1 && driverMap) {
+                try { driverMap.removeLayer(routeBgLeg1); } catch (e) {}
+                routeBgLeg1 = null;
+              }
+              if (focusLines?.glow1) focusLines.glow1.setLatLngs([]);
+              if (focusLines?.line1) focusLines.line1.setLatLngs([]);
+            } else {
+              ensureMissionMarkers();
+            }
           }
         });
       });
@@ -1404,6 +1474,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
           const nextStep = Math.min(4, currentStep + 1);
           updateStepperUI(nextStep);
+
+          if (nextStep >= 3) {
+            if (sceneMarker && driverMap) {
+              try { driverMap.removeLayer(sceneMarker); } catch (e) {}
+              sceneMarker = null;
+            }
+            if (routeBgLeg1 && driverMap) {
+              try { driverMap.removeLayer(routeBgLeg1); } catch (e) {}
+              routeBgLeg1 = null;
+            }
+            if (focusLines?.glow1) focusLines.glow1.setLatLngs([]);
+            if (focusLines?.line1) focusLines.line1.setLatLngs([]);
+          }
 
           if (nextStep === 4) {
             sliderKnob.style.transform = `translateX(${maxDist}px)`;
@@ -1514,24 +1597,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         vehModal?.classList.remove('active');
       });
 
-      // Web Audio API Synthesizer for Emergency Alarm
+      // Emergency Alarm Audio Player (alarm_sound.mp3)
+      let dispatchAlarmAudio = null;
+
       function playEmergencyAlarm() {
         try {
-          const ctx = new (window.AudioContext || window.webkitAudioContext)();
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(750, ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(1250, ctx.currentTime + 0.3);
-          osc.frequency.exponentialRampToValueAtTime(750, ctx.currentTime + 0.6);
-          gain.gain.setValueAtTime(0.25, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.85);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start();
-          osc.stop(ctx.currentTime + 0.85);
-        } catch (e) {
-          console.warn('AudioContext not allowed without user gesture yet:', e);
+          if (!dispatchAlarmAudio) {
+            dispatchAlarmAudio = new Audio('assets/alarm_sound.mp3');
+            dispatchAlarmAudio.loop = true;
+          }
+          dispatchAlarmAudio.currentTime = 0;
+          dispatchAlarmAudio.play().catch(e => {
+            console.warn('Driver alarm audio autoplay warning:', e);
+          });
+        } catch (err) {
+          console.warn('Error playing assets/alarm_sound.mp3 in driver app:', err);
+        }
+      }
+
+      function stopEmergencyAlarm() {
+        if (dispatchAlarmAudio) {
+          try {
+            dispatchAlarmAudio.pause();
+            dispatchAlarmAudio.currentTime = 0;
+          } catch (e) { }
         }
       }
 

@@ -513,7 +513,8 @@
         if (hospMissions.length > 0) {
           const targetPts = [window.L.latLng(currentHospital.coords || CITY_CENTER)];
           hospMissions.forEach(m => {
-            if (m.scene) targetPts.push(window.L.latLng(m.scene));
+            const isPast = m.progress?.phase === 'TO_HOSP' || m.progress?.phase === 'ARRIVED' || m.progress?.phase === 'COMPLETED';
+            if (!isPast && m.scene) targetPts.push(window.L.latLng(m.scene));
             const veh = vehicles.find(v => v.plate === m.plate);
             if (veh?.coords) targetPts.push(window.L.latLng(veh.coords));
             else if (m.origin) targetPts.push(window.L.latLng(m.origin));
@@ -741,8 +742,10 @@
           };
           this.missions[matchedCase.id] = m;
 
-          // Tạo marker hiện trường nếu chưa có trên bản đồ
-          if (!this.incidentMarkers[matchedCase.id] && this.map) {
+          // Tạo marker hiện trường nếu chưa có trên bản đồ và chưa đi qua
+          const incPhase = missionProgress[matchedCase.id]?.phase;
+          const isPastScene = incPhase === 'TO_HOSP' || incPhase === 'ARRIVED' || incPhase === 'COMPLETED';
+          if (!isPastScene && !this.incidentMarkers[matchedCase.id] && this.map) {
             const shortName = (matchedCase.incident?.name || 'Cấp cứu').split('/')[0].trim().toUpperCase();
             const icon = window.L.divIcon({
               className: 'map-leaflet-marker',
@@ -769,6 +772,7 @@
             this.incidentMarkers[m.caseId] = { marker, mission: m };
           }
 
+          this.applyVisibility();
           this.loadMissionRoute(m);
           return m;
         }
@@ -967,7 +971,8 @@
         if (activeMissions.length > 0) {
           const targetPts = [window.L.latLng(currentHospital.coords || CITY_CENTER)];
           activeMissions.forEach(m => {
-            if (m.scene) targetPts.push(window.L.latLng(m.scene));
+            const isPast = m.progress?.phase === 'TO_HOSP' || m.progress?.phase === 'ARRIVED' || m.progress?.phase === 'COMPLETED';
+            if (!isPast && m.scene) targetPts.push(window.L.latLng(m.scene));
             const vMarker = this.vehicleMarkers[m.plate]?.marker;
             if (vMarker) targetPts.push(vMarker.getLatLng());
             else if (m.pos?.latlng) targetPts.push(m.pos.latlng);
@@ -989,7 +994,7 @@
           if (item?.marker) pts.push(item.marker.getLatLng());
         });
         Object.values(this.incidentMarkers).forEach(item => {
-          if (item?.marker) pts.push(item.marker.getLatLng());
+          if (item?.marker && this.map.hasLayer(item.marker)) pts.push(item.marker.getLatLng());
         });
 
         if (pts.length > 0) {
@@ -1151,16 +1156,15 @@
         if (!m || !m.leg1 || !m.leg2) return;
         const isFocused = this.focusPlate === m.plate;
 
-        // Chặng 1: Từ vị trí xuất phát đến hiện trường (màu đỏ cam / nét đứt)
-        L.polyline(m.leg1.ll, {
+        // Base polylines (vạch mờ mờ toàn bộ lộ trình phía trước)
+        const baseLine1 = L.polyline([], {
           color: '#f87171',
           weight: isFocused ? 3 : 2.5,
           opacity: isFocused ? 0.35 : 0.18,
           dashArray: '6, 8'
         }).addTo(this.focusLayer);
 
-        // Chặng 2: Từ hiện trường về bệnh viện tiếp nhận (màu xanh dương)
-        L.polyline(m.leg2.ll, {
+        const baseLine2 = L.polyline([], {
           color: '#38bdf8',
           weight: isFocused ? 3.5 : 2.5,
           opacity: isFocused ? 0.45 : 0.2
@@ -1168,6 +1172,8 @@
 
         // Chặng còn lại (sáng, nổi bật)
         const lines = {
+          base1: baseLine1,
+          base2: baseLine2,
           glow1: L.polyline([], {
             color: '#ef4444',
             weight: isFocused ? 9 : 6,
@@ -1220,10 +1226,13 @@
           rem2 = remaining(m.leg2);
         }
 
-        lines.glow1.setLatLngs(rem1);
-        lines.line1.setLatLngs(rem1);
-        lines.glow2.setLatLngs(rem2);
-        lines.line2.setLatLngs(rem2);
+        // Cập nhật cả đường mờ mờ (base1, base2) và đường phát sáng để đoạn đường xe đã đi qua được xóa sạch
+        if (lines.base1) lines.base1.setLatLngs(rem1);
+        if (lines.base2) lines.base2.setLatLngs(rem2);
+        if (lines.glow1) lines.glow1.setLatLngs(rem1);
+        if (lines.line1) lines.line1.setLatLngs(rem1);
+        if (lines.glow2) lines.glow2.setLatLngs(rem2);
+        if (lines.line2) lines.line2.setLatLngs(rem2);
       });
     }
 
@@ -1237,8 +1246,13 @@
         animate ? this.map.flyTo(vehMarker.getLatLng(), 16, { duration: 0.8 }) : this.map.setView(vehMarker.getLatLng(), 16);
         return;
       }
-      const pts = [vehMarker.getLatLng(), window.L.latLng(m.scene), window.L.latLng(m.hosp.coords)];
-      if (m.leg1) pts.push(...m.leg1.ll, ...m.leg2.ll);
+      const isPastScene = m.progress?.phase === 'TO_HOSP' || m.progress?.phase === 'ARRIVED' || m.progress?.phase === 'COMPLETED';
+      const pts = [vehMarker.getLatLng(), window.L.latLng(m.hosp.coords)];
+      if (!isPastScene) {
+        if (m.scene) pts.push(window.L.latLng(m.scene));
+        if (m.leg1) pts.push(...m.leg1.ll);
+      }
+      if (m.leg2) pts.push(...m.leg2.ll);
       const bounds = window.L.latLngBounds(pts);
       const isFleetCollapsed = document.getElementById('fleet-side-panel')?.classList.contains('is-collapsed');
       const leftPad = isFleetCollapsed ? 80 : 360;

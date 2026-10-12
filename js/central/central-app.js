@@ -950,7 +950,7 @@
           this.renderCatHospitalsView(container);
           break;
         case 'cat-directory':
-          this.renderCallCenterView(container, 'directory');
+          this.renderCatDirectoryView(container);
           break;
         case 'cat-incidents':
           this.renderCatIncidentsView(container);
@@ -2785,78 +2785,72 @@
       if (!casesList || casesList.length === 0) {
         return `
           <div style="padding:36px 16px;text-align:center;color:var(--text-muted);font-size:12.5px;">
-            <div style="font-weight:700;color:var(--text-white);font-size:13.5px;margin-bottom:6px;">Sẵn sàng tiếp nhận cấp cứu</div>
+            <div style="font-weight:700;color:var(--text-white);font-size:13.5px;margin-bottom:6px;">Chưa có ca xử lý</div>
+            <div>Hiện tại không có ca cấp cứu nào đang điều động</div>
           </div>
         `;
       }
 
+      const state = window.StateManager?.getState();
+      const allVehicles = state?.vehicles || [];
+
       return casesList.map(c => {
         const plate = c.dispatch?.vehiclePlate || '';
+        const veh = allVehicles.find(v => v.plate === plate) || {
+          plate: plate || '65A-012.34',
+          typeName: 'Xe Cứu thương Cấp cứu 115',
+          station: c.dispatch?.station || 'Trạm Cấp cứu 115 Trung tâm',
+          speed: 56,
+          battery: 94
+        };
+
         const isSelected = Boolean(plate && plate === selectedPlate);
         const ageText = c.patient?.ageGroupText || 'Người trưởng thành';
         const genderText = c.patient?.gender ? ` (${c.patient.gender})` : '';
-        const incidentName = c.incident?.name || 'Cấp cứu';
+        const incidentName = c.incident?.name || 'Tai nạn giao thông';
         const isAccepted = c.hospitalResponse === 'ACCEPTED';
-        const statusText = isAccepted
-          ? (c.statusText || (c.status === 'TRANSPORTING' ? 'Đang đến viện' : 'Đã tiếp nhận'))
-          : 'Chờ xác nhận';
         const hospitalName = c.dispatch?.hospitalName || 'Bệnh viện tiếp nhận';
-        const etaText = c.eta || (c.status === 'TRANSPORTING' ? '4 phút' : '-');
+        const etaText = c.eta || (c.status === 'TRANSPORTING' ? '4 phút' : 'Đang di chuyển');
 
         return `
-          <div class="vehicle-card is-emergency ${isSelected ? 'is-selected' : ''} ${!isAccepted ? 'is-pending-confirm' : ''}" data-plate="${plate}" data-case-id="${c.id}" style="margin-bottom:8px;cursor:pointer;transition:border-color 0.2s, background-color 0.2s;${!isAccepted ? 'border-color:rgba(245,158,11,0.5);background:rgba(245,158,11,0.05);' : ''}">
-            <div class="vehicle-card-top" style="display:flex;align-items:center;justify-content:space-between;">
-              <span class="vehicle-plate" style="color:${isAccepted ? 'var(--red-vivid)' : '#f59e0b'};font-weight:700;letter-spacing:0.3px;">${c.code}</span>
-              ${!isAccepted ? `
-                <span class="status-pill" style="font-size:10.5px;padding:2px 8px;background:rgba(245,158,11,0.22);color:#fbbf24;border:1px solid rgba(245,158,11,0.5);font-weight:700;animation:pulse 2s infinite;">
-                  ● Chờ xác nhận
-                </span>
-              ` : `
-                <span class="status-pill status-pill-completed" style="font-size:10.5px;padding:2px 8px;background:rgba(16,185,129,0.2);color:#34d399;border:1px solid rgba(16,185,129,0.5);font-weight:700;">
-                  ✓ Đã tiếp nhận
-                </span>
-              `}
+          <div class="vehicle-card is-emergency ${isSelected ? 'is-selected' : ''}" data-plate="${plate}" data-case-id="${c.id}">
+            <div class="vehicle-card-top">
+              <span class="vehicle-plate">${plate || c.code}</span>
+              ${window.CCNV_UI.Badges.forVehicleStatus('EMERGENCY')}
             </div>
-            
-            <div style="font-size:12.5px;color:var(--text-white);margin-top:4px;font-weight:600;">
-              Nạn nhân: ${ageText}${genderText}
+
+            <div style="font-size:12px;color:var(--text-white);margin-top:2px;display:flex;align-items:center;justify-content:space-between;">
+              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:210px;" title="${veh.station}">${veh.station}</span>
+              <span style="font-family:var(--font-mono);font-size:11px;color:var(--yellow-vivid);font-weight:700;">${c.code}</span>
             </div>
 
             <div class="vehicle-meta-row" style="margin-top:4px;">
-              <span style="color:var(--text-white);">${incidentName}</span>
-              <span>Xe: <strong style="color:var(--yellow-vivid);font-family:var(--font-mono);">${plate || 'Chưa gán'}</strong></span>
+              <span style="color:#FFF;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;" title="${incidentName} · Nạn nhân: ${ageText}${genderText}">
+                ${incidentName} · ${ageText}${genderText}
+              </span>
+              <span>Tốc độ: <strong style="color:var(--text-white);">${veh.speed || 50} km/h</strong></span>
             </div>
 
-            <div class="vehicle-meta-row" style="border-top:1px dashed var(--border-main);padding-top:5px;margin-top:5px;font-size:11px;">
-              <span style="color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;" title="${hospitalName}">Đến: ${hospitalName}</span>
-              <span style="color:var(--yellow-vivid);font-weight:700;">ETA: ${etaText}</span>
+            <div class="vehicle-meta-row" style="border-top:1px dashed var(--border-main);padding-top:4px;margin-top:4px;display:flex;align-items:center;justify-content:space-between;">
+              <span style="color:var(--text-muted);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px;" title="${hospitalName}">
+                Đến: <strong style="color:#FFF;">${hospitalName}</strong>
+              </span>
+              <span style="color:var(--yellow-vivid);font-weight:700;font-size:11px;">ETA: ${etaText}</span>
             </div>
 
-            ${!isAccepted ? `
-              <div style="font-size:11px;color:#fbbf24;margin-top:6px;padding:5px 8px;background:rgba(245,158,11,0.12);border-radius:6px;border:1px dashed rgba(245,158,11,0.35);line-height:1.35;">
-                ⚠️ <strong>Chưa nhận ca:</strong> Bản đồ chỉ hiện vị trí bệnh viện. Bấm <strong>"Xác nhận ca"</strong> để theo dõi xe đang đến.
-              </div>
-            ` : ''}
-
-            <div style="display:flex;gap:6px;margin-top:6px;padding-top:5px;border-top:1px solid rgba(255,255,255,0.06);">
-              <button type="button" class="btn btn-xs btn-default btn-view-case-detail" data-case-id="${c.id}" style="flex:1;padding:4px 6px;font-size:11px;" title="Xem hồ sơ bệnh án điện tử">
-                Hồ sơ ePCR
-              </button>
-              ${!isAccepted ? `
-                <button type="button" class="btn btn-xs btn-emergency btn-confirm-hospital-case-btn" data-case-id="${c.id}" data-plate="${plate}" style="padding:4px 10px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px;box-shadow:0 0 10px rgba(239,68,68,0.4);" title="Xác nhận tiếp nhận ca cấp cứu này để theo dõi xe trên bản đồ">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                  <span>Xác nhận ca</span>
+            <div class="vehicle-meta-row" style="border-top:1px dashed var(--border-main);padding-top:4px;margin-top:4px;display:flex;align-items:center;justify-content:space-between;">
+              ${window.CCNV_UI.renderBattery(veh.battery || 95)}
+              <div style="display:flex;align-items:center;gap:6px;">
+                <button type="button" class="btn btn-xs btn-default btn-view-case-detail" data-case-id="${c.id}" style="padding:2px 7px;font-size:11px;" title="Xem hồ sơ bệnh án ePCR">
+                  Hồ sơ ePCR
                 </button>
-              ` : `
-                ${plate ? `
-                <button type="button" class="btn btn-xs btn-hosp-veh-detail btn-card-veh-detail" data-plate="${plate}" title="Xem chi tiết xe và kíp trực">
+                <button type="button" class="btn-card-veh-detail" data-plate="${plate}" title="Xem chi tiết kỹ thuật và kíp trực của xe ${plate}">
                   <span>Chi tiết</span>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="9 18 15 12 9 6"></polyline>
                   </svg>
                 </button>
-                ` : ''}
-              `}
+              </div>
             </div>
           </div>
         `;
@@ -3829,26 +3823,31 @@
           const isHospMatch = currentHospitalId === rec.bestHospitalId;
           const isFullyApplied = isVehiclesMatch && isCrewMatch && isHospMatch;
 
+          // Chuỗi text thuần để gán vào title/tooltip
+          const patientsText = patients.length === 1
+            ? `Nạn nhân (${formatAgeGroup(patients[0].ageGroup)}, ${patients[0].gender || 'Nam'}${patients[0].notes ? ' · ' + patients[0].notes : ''})`
+            : `${patients.length} nạn nhân: ` + patients.map((p, idx) => `Nạn nhân ${idx + 1} (${formatAgeGroup(p.ageGroup)}, ${p.gender || '?'})`).join(' · ');
+
           box.innerHTML = `
-            <!-- PHẦN 1: TÓM TẮT THÔNG TIN TỪ BƯỚC 1 (1 DÒNG DUY NHẤT) -->
+            <!-- PHẦN 1: TÓM TẮT THÔNG TIN TỪ BƯỚC 1 -->
             <div class="dispatch-summary-row">
-              <div class="summary-meta-item" style="flex:1.2;min-width:0;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;">
+              <div class="summary-meta-item" style="flex:1 1 auto;min-width:180px;display:flex;align-items:center;gap:6px;" title="${patientsText.replace(/"/g, '&quot;')}">
                 <span style="display:inline-flex;align-items:center;color:#60A5FA;flex-shrink:0;">${window.CCNV_UI.ICONS.users}</span>
                 <span style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.3px;font-weight:700;flex-shrink:0;">NẠN NHÂN:</span>
-                <div style="font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${patientsSummaryHtml}</div>
+                <div style="font-size:11.5px;line-height:1.35;">${patientsSummaryHtml}</div>
               </div>
 
-              <div class="summary-meta-item" style="flex:1.4;min-width:0;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;">
+              <div class="summary-meta-item" style="flex:1 1 auto;min-width:200px;display:flex;align-items:center;gap:6px;" title="${address ? address.replace(/"/g, '&quot;') : ''}">
                 <span style="display:inline-flex;align-items:center;color:#F59E0B;flex-shrink:0;">${window.CCNV_UI.ICONS.mapPin}</span>
                 <span style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.3px;font-weight:700;flex-shrink:0;">HIỆN TRƯỜNG:</span>
-                <div style="font-size:11.5px;color:#FFF;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${address}">${address}</div>
+                <div style="font-size:11.5px;color:#FFF;line-height:1.35;">${address || 'Chưa xác định'}</div>
               </div>
 
-              <div class="summary-meta-item" style="flex:1.4;min-width:0;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;">
+              <div class="summary-meta-item" style="flex:1 1 auto;min-width:220px;display:flex;align-items:center;gap:6px;" title="${incName ? incName.replace(/"/g, '&quot;') : ''}">
                 <span style="display:inline-flex;align-items:center;color:var(--red-vivid);flex-shrink:0;">${window.CCNV_UI.ICONS.alertTriangle}</span>
                 <span style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.3px;font-weight:700;flex-shrink:0;">TÌNH HUỐNG & MỨC ĐỘ:</span>
-                <div style="display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;">
-                  <strong style="color:#FFF;font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${incName}</strong>
+                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                  <strong style="color:#FFF;font-size:11.5px;">${incName}</strong>
                   ${sevBadge}
                 </div>
               </div>
@@ -5162,10 +5161,6 @@
                   ${window.CCNV_UI.ICONS.truck || ''} Danh sách tài xế (${(state.personnel || []).filter(p => p.role === 'DRIVER').length})
                 </button>
               </div>
-              <div style="font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px;">
-                <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#10B981;box-shadow:0 0 8px #10B981;"></span>
-                <span>Hệ thống trực thoại 24/7 sẵn sàng</span>
-              </div>
             </div>
             <div class="content-card" style="padding:0;overflow:visible;border:1px solid rgba(56, 189, 248, 0.18);box-shadow:0 10px 30px rgba(0,0,0,0.5);">
               <div id="call-directory-table-mount"></div>
@@ -5199,7 +5194,6 @@
                       </div>
                       <div>
                         <strong style="color:#FFFFFF;font-size:13px;display:block;">${h.name}</strong>
-                        <span style="font-size:11px;color:#94A3B8;">Phân hạng: Bệnh viện Đa khoa Hạng I</span>
                       </div>
                     </div>
                   `
@@ -7419,11 +7413,10 @@
           { key: 'plate', title: 'Biển số', sortable: true, render: v => `<strong style="font-family:var(--font-mono);color:#93C5FD;">${v.plate}</strong>` },
           { key: 'type', title: 'Phân loại', sortable: true, render: v => `<span class="badge ${v.type === 'Type A' ? 'badge-emergency' : 'badge-normal'}">${v.type || 'Type B'}</span>` },
           { key: 'station', title: 'Trạm trực', sortable: true, render: v => v.station || 'BVĐK thành phố Cần Thơ' },
-          { key: 'model', title: 'Dòng xe', sortable: true, render: v => v.model || 'Ford Transit Emergency' },
           { key: 'status', title: 'Trạng thái hoạt động', sortable: true, render: v => `<span class="status-pill status-pill-completed">${v.statusText || 'Sẵn sàng'}</span>` }
         ],
         onRowClick: (v) => {
-          window.CCNV_UI.Toast.show('Thông tin xe ' + v.plate, `Trạm trực: ${v.station || 'Trung tâm'} · Phân loại: ${v.type || 'Type B'} · Dòng xe: ${v.model || 'Ford Transit Emergency'}`);
+          window.CCNV_UI.Toast.show('Thông tin xe ' + v.plate, `Trạm trực: ${v.station || 'Trung tâm'} · Phân loại: ${v.type || 'Type B'}`);
         }
       }).render();
 
@@ -7437,7 +7430,7 @@
           const idx = parseInt(tr.getAttribute('data-row-index'), 10);
           const v = vehicles[idx];
           if (v) {
-            window.CCNV_UI.Toast.show('Thông tin xe ' + v.plate, `Trạm trực: ${v.station || 'Trung tâm'} · Phân loại: ${v.type || 'Type B'} · Dòng xe: ${v.model || 'Ford Transit Emergency'}`);
+            window.CCNV_UI.Toast.show('Thông tin xe ' + v.plate, `Trạm trực: ${v.station || 'Trung tâm'} · Phân loại: ${v.type || 'Type B'}`);
           }
         }
       });
@@ -7486,6 +7479,481 @@
       container.querySelector('#btn-add-cat-hosp')?.addEventListener('click', () => {
         window.CCNV_UI.Toast.show('Thêm bệnh viện', 'Mở biểu mẫu khai báo bệnh viện tiếp nhận mới');
       });
+    }
+
+    renderCatDirectoryView(container) {
+      let currentSubTab = 'hospitals'; // 'hospitals' | 'doctors' | 'drivers'
+
+      const openDirectoryFormModal = ({ mode = 'create', type = 'hospitals', item = null } = {}) => {
+        const modalOverlay = document.createElement('div');
+        modalOverlay.className = 'modal-overlay';
+        modalOverlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(2,6,23,0.8);backdrop-filter:blur(6px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+
+        const isEdit = mode === 'edit';
+        const typeLabels = {
+          hospitals: 'Bệnh viện / Cơ sở y tế',
+          doctors: 'Bác sĩ / Y sĩ cấp cứu',
+          drivers: 'Tài xế lái xe cấp cứu'
+        };
+
+        const titleText = isEdit
+          ? `Chi tiết & Cập nhật: ${typeLabels[type]}`
+          : `Thêm mới: ${typeLabels[type]}`;
+
+        let formFieldsHtml = '';
+        if (type === 'hospitals') {
+          formFieldsHtml = `
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div>
+                <label style="display:block;font-size:12px;font-weight:600;color:#CBD5E1;margin-bottom:4px;">Tên Bệnh viện / Cơ sở Y tế <span style="color:#EF4444;">*</span></label>
+                <input type="text" id="dir-input-name" class="input" value="${item?.name || ''}" placeholder="VD: Bệnh viện Đa khoa Trung ương Cần Thơ" style="width:100%;" required />
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div>
+                  <label style="display:block;font-size:12px;font-weight:600;color:#CBD5E1;margin-bottom:4px;">Hotline Cấp cứu (24/7) <span style="color:#EF4444;">*</span></label>
+                  <input type="text" id="dir-input-hotline" class="input" value="${item?.hotline || ''}" placeholder="VD: 0292.3821.236" style="width:100%;" required />
+                </div>
+                <div>
+                  <label style="display:block;font-size:12px;font-weight:600;color:#CBD5E1;margin-bottom:4px;">Trạng thái tiếp nhận</label>
+                  <select id="dir-input-status" class="input" style="width:100%;">
+                    <option value="READY" ${item?.status === 'READY' ? 'selected' : ''}>Sẵn sàng tiếp nhận</option>
+                    <option value="LIMITED" ${item?.status === 'LIMITED' ? 'selected' : ''}>Hạn chế tiếp nhận</option>
+                    <option value="RESTRICTED" ${item?.status === 'RESTRICTED' ? 'selected' : ''}>Tạm ngưng</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label style="display:block;font-size:12px;font-weight:600;color:#CBD5E1;margin-bottom:4px;">Địa chỉ chi tiết</label>
+                <input type="text" id="dir-input-address" class="input" value="${item?.address || ''}" placeholder="VD: 315 Nguyễn Văn Linh, P. An Khánh, Ninh Kiều, Cần Thơ" style="width:100%;" />
+              </div>
+            </div>
+          `;
+        } else if (type === 'doctors') {
+          formFieldsHtml = `
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;">
+                <div>
+                  <label style="display:block;font-size:12px;font-weight:600;color:#CBD5E1;margin-bottom:4px;">Họ và tên Bác sĩ / Y sĩ <span style="color:#EF4444;">*</span></label>
+                  <input type="text" id="dir-input-name" class="input" value="${item?.name || ''}" placeholder="VD: BS. Nguyễn Văn An" style="width:100%;" required />
+                </div>
+                <div>
+                  <label style="display:block;font-size:12px;font-weight:600;color:#CBD5E1;margin-bottom:4px;">Chức danh</label>
+                  <select id="dir-input-role" class="input" style="width:100%;">
+                    <option value="DOCTOR" ${item?.role === 'DOCTOR' ? 'selected' : ''}>Bác sĩ cấp cứu</option>
+                    <option value="NURSE" ${item?.role === 'NURSE' ? 'selected' : ''}>Điều dưỡng / Y sĩ</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div>
+                  <label style="display:block;font-size:12px;font-weight:600;color:#CBD5E1;margin-bottom:4px;">Số điện thoại liên lạc <span style="color:#EF4444;">*</span></label>
+                  <input type="text" id="dir-input-phone" class="input" value="${item?.phone || ''}" placeholder="VD: 0912 345 678" style="width:100%;" required />
+                </div>
+                <div>
+                  <label style="display:block;font-size:12px;font-weight:600;color:#CBD5E1;margin-bottom:4px;">Trạng thái trực</label>
+                  <select id="dir-input-status" class="input" style="width:100%;">
+                    <option value="ON_DUTY" ${item?.status === 'ON_DUTY' ? 'selected' : ''}>Đang trực kíp</option>
+                    <option value="OFF_DUTY" ${item?.status === 'OFF_DUTY' ? 'selected' : ''}>Nghỉ ca</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label style="display:block;font-size:12px;font-weight:600;color:#CBD5E1;margin-bottom:4px;">Chứng chỉ chuyên môn</label>
+                <input type="text" id="dir-input-cert" class="input" value="${item?.cert || ''}" placeholder="VD: Hồi sức Cấp cứu Nâng cao (ACLS)" style="width:100%;" />
+              </div>
+            </div>
+          `;
+        } else if (type === 'drivers') {
+          formFieldsHtml = `
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div>
+                <label style="display:block;font-size:12px;font-weight:600;color:#CBD5E1;margin-bottom:4px;">Họ và tên Tài xế <span style="color:#EF4444;">*</span></label>
+                <input type="text" id="dir-input-name" class="input" value="${item?.name || ''}" placeholder="VD: Trần Văn Bình" style="width:100%;" required />
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div>
+                  <label style="display:block;font-size:12px;font-weight:600;color:#CBD5E1;margin-bottom:4px;">Số điện thoại di động <span style="color:#EF4444;">*</span></label>
+                  <input type="text" id="dir-input-phone" class="input" value="${item?.phone || ''}" placeholder="VD: 0903 123 456" style="width:100%;" required />
+                </div>
+                <div>
+                  <label style="display:block;font-size:12px;font-weight:600;color:#CBD5E1;margin-bottom:4px;">Trạng thái sẵn sàng</label>
+                  <select id="dir-input-status" class="input" style="width:100%;">
+                    <option value="ON_DUTY" ${item?.status === 'ON_DUTY' ? 'selected' : ''}>Sẵn sàng lái xe</option>
+                    <option value="OFF_DUTY" ${item?.status === 'OFF_DUTY' ? 'selected' : ''}>Nghỉ ca</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label style="display:block;font-size:12px;font-weight:600;color:#CBD5E1;margin-bottom:4px;">Bằng lái & Chứng chỉ nghiệp vụ</label>
+                <input type="text" id="dir-input-cert" class="input" value="${item?.cert || ''}" placeholder="VD: Bằng Hạng D - Lái xe Cứu thương 115" style="width:100%;" />
+              </div>
+            </div>
+          `;
+        }
+
+        modalOverlay.innerHTML = `
+          <div style="background:#0F172A;border:1px solid rgba(56,189,248,0.25);border-radius:12px;width:100%;max-width:520px;box-shadow:0 20px 45px rgba(0,0,0,0.6);overflow:hidden;animation:fadeIn 0.15s ease;">
+            <div style="padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-between;background:rgba(30,41,59,0.5);">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="color:#38BDF8;font-size:16px;">${isEdit ? '📝' : '➕'}</span>
+                <strong style="color:#FFF;font-size:14px;">${titleText}</strong>
+              </div>
+              <button type="button" id="btn-close-dir-modal" style="background:none;border:none;color:#94A3B8;cursor:pointer;font-size:18px;line-height:1;padding:4px 8px;">✕</button>
+            </div>
+            
+            <form id="form-dir-record" style="padding:18px;">
+              ${formFieldsHtml}
+
+              <div style="margin-top:20px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-between;">
+                ${isEdit ? `
+                  <button type="button" id="btn-delete-dir-item" class="btn btn-outline-danger btn-sm" style="color:#F87171;border:1px solid rgba(239,68,68,0.4);background:rgba(239,68,68,0.1);padding:6px 14px;border-radius:6px;font-weight:600;display:flex;align-items:center;gap:6px;cursor:pointer;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    Xóa bản ghi
+                  </button>
+                ` : '<div></div>'}
+
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <button type="button" id="btn-cancel-dir-modal" class="btn btn-ghost btn-sm" style="padding:6px 14px;color:#94A3B8;">Hủy</button>
+                  <button type="submit" class="btn btn-emergency btn-sm" style="padding:6px 18px;font-weight:700;">
+                    ${isEdit ? 'Lưu thay đổi' : 'Thêm mới'}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        `;
+
+        document.body.appendChild(modalOverlay);
+
+        const closeModal = () => modalOverlay.remove();
+        modalOverlay.querySelector('#btn-close-dir-modal')?.addEventListener('click', closeModal);
+        modalOverlay.querySelector('#btn-cancel-dir-modal')?.addEventListener('click', closeModal);
+
+        // Xóa bản ghi
+        modalOverlay.querySelector('#btn-delete-dir-item')?.addEventListener('click', () => {
+          if (!confirm(`Bạn có chắc chắn muốn xóa "${item?.name}" khỏi danh bạ?`)) return;
+
+          const state = window.StateManager.getState();
+          if (type === 'hospitals') {
+            const hList = state.hospitals || [];
+            const idx = hList.findIndex(h => h.id === item.id || h.name === item.name);
+            if (idx !== -1) hList.splice(idx, 1);
+            window.StateManager.setState({ hospitals: [...hList] });
+          } else {
+            const pList = state.personnel || [];
+            const idx = pList.findIndex(p => p.id === item.id || (p.name === item.name && p.phone === item.phone));
+            if (idx !== -1) pList.splice(idx, 1);
+            window.StateManager.setState({ personnel: [...pList] });
+          }
+
+          window.CCNV_UI.Toast.show('ĐÃ XÓA THÀNH CÔNG', `Đã xóa "${item?.name}" khỏi danh bạ.`);
+          closeModal();
+          renderActiveSubTab();
+        });
+
+        // Submit form (Thêm mới hoặc Cập nhật)
+        modalOverlay.querySelector('#form-dir-record')?.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const nameVal = modalOverlay.querySelector('#dir-input-name')?.value?.trim();
+          if (!nameVal) {
+            window.CCNV_UI.Toast.show('Thiếu thông tin', 'Vui lòng nhập họ tên hoặc tên cơ sở.');
+            return;
+          }
+
+          const state = window.StateManager.getState();
+          if (type === 'hospitals') {
+            const hotlineVal = modalOverlay.querySelector('#dir-input-hotline')?.value?.trim() || '0292.3821.236';
+            const statusVal = modalOverlay.querySelector('#dir-input-status')?.value || 'READY';
+            const addressVal = modalOverlay.querySelector('#dir-input-address')?.value?.trim() || 'Thành phố Cần Thơ';
+            const hList = state.hospitals || [];
+
+            if (isEdit) {
+              const target = hList.find(h => h.id === item.id || h.name === item.name);
+              if (target) {
+                target.name = nameVal;
+                target.hotline = hotlineVal;
+                target.status = statusVal;
+                target.address = addressVal;
+              }
+              window.CCNV_UI.Toast.show('ĐÃ CẬP NHẬT', `Đã cập nhật thông tin bệnh viện "${nameVal}".`);
+            } else {
+              const newHosp = {
+                id: 'HOSP_' + Date.now().toString(36).toUpperCase(),
+                name: nameVal,
+                hotline: hotlineVal,
+                status: statusVal,
+                address: addressVal,
+                coords: [10.035, 105.775]
+              };
+              hList.push(newHosp);
+              window.CCNV_UI.Toast.show('ĐÃ THÊM MỚI', `Đã thêm bệnh viện "${nameVal}" vào danh bạ.`);
+            }
+            window.StateManager.setState({ hospitals: [...hList] });
+          } else {
+            const phoneVal = modalOverlay.querySelector('#dir-input-phone')?.value?.trim() || '0901 234 567';
+            const statusVal = modalOverlay.querySelector('#dir-input-status')?.value || 'ON_DUTY';
+            const certVal = modalOverlay.querySelector('#dir-input-cert')?.value?.trim() || (type === 'doctors' ? 'Chuyên khoa Cấp cứu' : 'Bằng Hạng D');
+            const roleVal = type === 'doctors' ? (modalOverlay.querySelector('#dir-input-role')?.value || 'DOCTOR') : 'DRIVER';
+            const roleNameVal = roleVal === 'DOCTOR' ? 'Bác sĩ Cấp cứu' : (roleVal === 'NURSE' ? 'Y sĩ / Điều dưỡng' : 'Tài xế Cấp cứu');
+            const pList = state.personnel || [];
+
+            if (isEdit) {
+              const target = pList.find(p => p.id === item.id || (p.name === item.name && p.phone === item.phone));
+              if (target) {
+                target.name = nameVal;
+                target.phone = phoneVal;
+                target.status = statusVal;
+                target.cert = certVal;
+                target.role = roleVal;
+                target.roleName = roleNameVal;
+              }
+              window.CCNV_UI.Toast.show('ĐÃ CẬP NHẬT', `Đã cập nhật thông tin "${nameVal}".`);
+            } else {
+              const newPerson = {
+                id: (type === 'doctors' ? 'DR_' : 'DRV_') + Date.now().toString(36).toUpperCase(),
+                name: nameVal,
+                phone: phoneVal,
+                role: roleVal,
+                roleName: roleNameVal,
+                status: statusVal,
+                cert: certVal
+              };
+              pList.push(newPerson);
+              window.CCNV_UI.Toast.show('ĐÃ THÊM MỚI', `Đã thêm nhân sự "${nameVal}" vào danh bạ.`);
+            }
+            window.StateManager.setState({ personnel: [...pList] });
+          }
+
+          closeModal();
+          renderActiveSubTab();
+        });
+      };
+
+      const renderActiveSubTab = () => {
+        const state = window.StateManager.getState();
+        const hospitals = state.hospitals || [];
+        const doctors = (state.personnel || []).filter(p => p.role === 'DOCTOR' || p.role === 'NURSE');
+        const drivers = (state.personnel || []).filter(p => p.role === 'DRIVER');
+
+        const typeLabels = {
+          hospitals: 'Thêm Bệnh viện',
+          doctors: 'Thêm Bác sĩ / Y sĩ',
+          drivers: 'Thêm Tài xế'
+        };
+
+        container.innerHTML = `
+          <div class="view-container-full">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;background:rgba(15, 23, 42, 0.75);backdrop-filter:blur(10px);padding:8px 12px;border-radius:10px;border:1px solid rgba(56, 189, 248, 0.2);box-shadow:0 4px 16px rgba(0,0,0,0.3);">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <button type="button" class="btn btn-sm ${currentSubTab === 'hospitals' ? 'btn-primary' : 'btn-ghost'}" id="cat-subtab-hospitals" style="font-weight:600;display:flex;align-items:center;gap:6px;border-radius:6px;padding:6px 14px;transition:all 0.2s ease;${currentSubTab === 'hospitals' ? 'color:#FFFFFF;background:#2563EB;border-color:#3B82F6;' : 'color:#CBD5E1;'}">
+                  ${window.CCNV_UI.ICONS.hospital || '🏥'} Bệnh viện (${hospitals.length})
+                </button>
+                <button type="button" class="btn btn-sm ${currentSubTab === 'doctors' ? 'btn-primary' : 'btn-ghost'}" id="cat-subtab-doctors" style="font-weight:600;display:flex;align-items:center;gap:6px;border-radius:6px;padding:6px 14px;transition:all 0.2s ease;${currentSubTab === 'doctors' ? 'color:#FFFFFF;background:#2563EB;border-color:#3B82F6;' : 'color:#CBD5E1;'}">
+                  ${window.CCNV_UI.ICONS.user || '👨‍⚕️'} Bác sĩ & Y sĩ (${doctors.length})
+                </button>
+                <button type="button" class="btn btn-sm ${currentSubTab === 'drivers' ? 'btn-primary' : 'btn-ghost'}" id="cat-subtab-drivers" style="font-weight:600;display:flex;align-items:center;gap:6px;border-radius:6px;padding:6px 14px;transition:all 0.2s ease;${currentSubTab === 'drivers' ? 'color:#FFFFFF;background:#2563EB;border-color:#3B82F6;' : 'color:#CBD5E1;'}">
+                  ${window.CCNV_UI.ICONS.truck || '🚑'} Tài xế (${drivers.length})
+                </button>
+              </div>
+
+              <button type="button" class="btn btn-emergency btn-sm" id="btn-add-dir-record" style="font-weight:700;display:flex;align-items:center;gap:6px;">
+                <span>+</span> ${typeLabels[currentSubTab]}
+              </button>
+            </div>
+
+            <div class="content-card" style="padding:0;overflow:visible;border:1px solid rgba(56, 189, 248, 0.18);box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+              <div id="cat-directory-table-mount"></div>
+            </div>
+          </div>
+        `;
+
+        container.querySelector('#cat-subtab-hospitals')?.addEventListener('click', () => {
+          currentSubTab = 'hospitals';
+          renderActiveSubTab();
+        });
+        container.querySelector('#cat-subtab-doctors')?.addEventListener('click', () => {
+          currentSubTab = 'doctors';
+          renderActiveSubTab();
+        });
+        container.querySelector('#cat-subtab-drivers')?.addEventListener('click', () => {
+          currentSubTab = 'drivers';
+          renderActiveSubTab();
+        });
+
+        container.querySelector('#btn-add-dir-record')?.addEventListener('click', () => {
+          openDirectoryFormModal({ mode: 'create', type: currentSubTab });
+        });
+
+        // Render DataTable tương ứng từng tab
+        // QUY TẮC: KHÔNG DÙNG CỘT THAO TÁC, NHẤN TRỰC TIẾP VÀO HÀNG ĐỂ MỞ MODAL XEM/SỬA/XÓA
+        if (currentSubTab === 'hospitals') {
+          new window.CCNV_UI.DataTable({
+            containerId: 'cat-directory-table-mount',
+            data: hospitals,
+            pageSize: 10,
+            exportTitle: 'Danh bạ Bệnh viện',
+            searchPlaceholder: 'Tìm tên bệnh viện, số điện thoại hotline, địa chỉ...',
+            defaultSortKey: 'name',
+            defaultSortOrder: 'asc',
+            columns: [
+              {
+                key: 'name',
+                title: 'Tên Bệnh viện / Cơ sở Y tế',
+                sortable: true,
+                render: h => `
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:34px;height:34px;border-radius:8px;background:rgba(56, 189, 248, 0.12);border:1px solid rgba(56, 189, 248, 0.3);display:flex;align-items:center;justify-content:center;color:#38BDF8;flex-shrink:0;">
+                      ${window.CCNV_UI.ICONS.hospital || '🏥'}
+                    </div>
+                    <div>
+                      <strong style="color:#FFFFFF;font-size:13px;display:block;">${h.name}</strong>
+                    </div>
+                  </div>
+                `
+              },
+              {
+                key: 'hotline',
+                title: 'Hotline Cấp cứu 24/7',
+                sortable: true,
+                render: h => `
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span style="color:#EF4444;">📞</span>
+                    <strong style="font-family:var(--font-mono);color:#F87171;font-size:13px;letter-spacing:0.5px;">${h.hotline || '0292.3821.236'}</strong>
+                  </div>
+                `
+              },
+              {
+                key: 'address',
+                title: 'Địa chỉ & Khu vực',
+                sortable: false,
+                render: h => `
+                  <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:#CBD5E1;">
+                    <span style="color:#38BDF8;">📍</span>
+                    <span>${h.address}</span>
+                  </div>
+                `
+              },
+              {
+                key: 'status',
+                title: 'Trạng thái tiếp nhận',
+                sortable: true,
+                render: h => {
+                  if (h.status === 'READY') return `<span class="status-pill status-pill-completed">Đang nhận</span>`;
+                  if (h.status === 'LIMITED') return `<span class="status-pill status-pill-processing">Hạn chế</span>`;
+                  return `<span class="status-pill status-pill-cancelled">Tạm ngưng</span>`;
+                }
+              }
+            ],
+            onRowClick: (h) => {
+              openDirectoryFormModal({ mode: 'edit', type: 'hospitals', item: h });
+            }
+          }).render();
+        } else if (currentSubTab === 'doctors') {
+          new window.CCNV_UI.DataTable({
+            containerId: 'cat-directory-table-mount',
+            data: doctors,
+            pageSize: 10,
+            exportTitle: 'Danh bạ Bác sĩ & Y tế Cấp cứu',
+            searchPlaceholder: 'Tìm tên bác sĩ, chuyên khoa, số điện thoại...',
+            defaultSortKey: 'name',
+            defaultSortOrder: 'asc',
+            columns: [
+              {
+                key: 'name',
+                title: 'Họ và tên Bác sĩ / Y sĩ',
+                sortable: true,
+                render: p => `
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:34px;height:34px;border-radius:50%;background:rgba(16, 185, 129, 0.15);border:1px solid rgba(16, 185, 129, 0.4);display:flex;align-items:center;justify-content:center;color:#10B981;font-weight:700;flex-shrink:0;">
+                      ${p.name.charAt(0)}
+                    </div>
+                    <div>
+                      <strong style="color:#FFFFFF;font-size:13px;display:block;">${p.name}</strong>
+                      <span style="font-size:11px;color:#94A3B8;">${p.cert || 'Chuyên khoa Cấp cứu Nâng cao'}</span>
+                    </div>
+                  </div>
+                `
+              },
+              {
+                key: 'roleName',
+                title: 'Chức danh',
+                sortable: true,
+                render: p => `<span class="badge ${p.role === 'DOCTOR' ? 'badge-primary' : 'badge-normal'}" style="padding:3px 10px;font-size:11.5px;">${p.roleName}</span>`
+              },
+              {
+                key: 'phone',
+                title: 'Số điện thoại',
+                sortable: true,
+                render: p => `<strong style="font-family:var(--font-mono);color:#60A5FA;font-size:13px;">${p.phone}</strong>`
+              },
+              {
+                key: 'status',
+                title: 'Trạng thái ca trực',
+                sortable: true,
+                render: p => p.status === 'ON_DUTY'
+                  ? `<span class="status-pill status-pill-completed" style="background:rgba(16, 185, 129, 0.15);border:1px solid #10B981;color:#34D399;">● Đang trực kíp</span>`
+                  : `<span class="status-pill status-pill-cancelled" style="background:rgba(148, 163, 184, 0.1);border:1px solid #64748B;color:#94A3B8;">○ Nghỉ ca</span>`
+              }
+            ],
+            onRowClick: (p) => {
+              openDirectoryFormModal({ mode: 'edit', type: 'doctors', item: p });
+            }
+          }).render();
+        } else if (currentSubTab === 'drivers') {
+          new window.CCNV_UI.DataTable({
+            containerId: 'cat-directory-table-mount',
+            data: drivers,
+            pageSize: 10,
+            exportTitle: 'Danh sách Tài xế Cấp cứu',
+            searchPlaceholder: 'Tìm tên tài xế, bằng lái, số điện thoại...',
+            defaultSortKey: 'name',
+            defaultSortOrder: 'asc',
+            columns: [
+              {
+                key: 'name',
+                title: 'Họ và tên Lái xe',
+                sortable: true,
+                render: p => `
+                  <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:34px;height:34px;border-radius:50%;background:rgba(245, 158, 11, 0.15);border:1px solid rgba(245, 158, 11, 0.4);display:flex;align-items:center;justify-content:center;color:#F59E0B;font-weight:700;flex-shrink:0;">
+                      🚑
+                    </div>
+                    <div>
+                      <strong style="color:#FFFFFF;font-size:13px;display:block;">${p.name}</strong>
+                      <span style="font-size:11px;color:#94A3B8;">${p.cert || 'Bằng Hạng D - Lái xe Cứu thương'}</span>
+                    </div>
+                  </div>
+                `
+              },
+              {
+                key: 'roleName',
+                title: 'Nhiệm vụ kíp',
+                sortable: true,
+                render: p => `<span class="badge badge-accent" style="padding:3px 10px;font-size:11.5px;">${p.roleName}</span>`
+              },
+              {
+                key: 'phone',
+                title: 'Số điện thoại',
+                sortable: true,
+                render: p => `<strong style="font-family:var(--font-mono);color:#60A5FA;font-size:13px;">${p.phone}</strong>`
+              },
+              {
+                key: 'status',
+                title: 'Trạng thái sẵn sàng',
+                sortable: true,
+                render: p => p.status === 'ON_DUTY'
+                  ? `<span class="status-pill status-pill-completed" style="background:rgba(16, 185, 129, 0.15);border:1px solid #10B981;color:#34D399;">● Sẵn sàng lái xe</span>`
+                  : `<span class="status-pill status-pill-cancelled" style="background:rgba(148, 163, 184, 0.1);border:1px solid #64748B;color:#94A3B8;">○ Nghỉ ca</span>`
+              }
+            ],
+            onRowClick: (p) => {
+              openDirectoryFormModal({ mode: 'edit', type: 'drivers', item: p });
+            }
+          }).render();
+        }
+      };
+
+      renderActiveSubTab();
     }
 
     renderCatIncidentsView(container) {
@@ -10271,7 +10739,8 @@
               if (!this.modalMapInstance?.map) return;
               this.modalMapInstance.map.invalidateSize();
               const points = [];
-              if (caseCoords) points.push(caseCoords);
+              const isPastScene = (c.status === 'TRANSPORTING' || c.status === 'COMPLETED' || c.status === 'HOSPITAL_RECEIVED');
+              if (caseCoords && !isPastScene) points.push(caseCoords);
               if (hospCoords) points.push(hospCoords);
               const stateVeh = (state.vehicles || []).find(v => v.plate === plate);
               if (stateVeh?.coords) points.push(stateVeh.coords);
