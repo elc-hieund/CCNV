@@ -37,15 +37,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const loc = c.location || {};
         const disp = c.dispatch || {};
 
-        // 1. Tab 1: Nhiệm vụ
-        const caseCodeEl = document.getElementById('driver-case-code');
-        const caseEtaEl = document.getElementById('driver-case-eta');
-        const pNameEl = document.getElementById('driver-patient-name');
         const pDemoEl = document.getElementById('driver-patient-demographics');
         const pSymptomsEl = document.getElementById('driver-patient-symptoms');
         const sceneAddrEl = document.getElementById('driver-scene-address');
-        const hospNameEl = document.getElementById('driver-hospital-name');
         const btnCallCitizen = document.getElementById('btn-call-citizen');
+        const navHospName = document.getElementById('nav-hospital-name');
 
         const ageGroupMap = {
           INFANT: 'Sơ sinh',
@@ -65,11 +61,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           return 'Người trưởng thành';
         };
 
-        if (caseCodeEl) caseCodeEl.textContent = c.code || 'CC-261002-001';
-        const caseTitleEl = document.getElementById('driver-case-title');
-        if (caseTitleEl) caseTitleEl.textContent = `${(inc.name || 'CẤP CỨU').toUpperCase()} — ${loc.district ? loc.district.toUpperCase() : 'CẦN THƠ'}`;
-        if (caseEtaEl) caseEtaEl.textContent = c.eta || '~4 PHÚT';
-        if (pNameEl) pNameEl.style.display = 'none';
         if (pDemoEl) {
           const ageGroupStr = getAgeGroupText(p);
           const genderStr = p.gender || '—';
@@ -79,145 +70,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (pSymptomsEl) {
           pSymptomsEl.textContent = p.symptom || inc.description || 'Chấn thương sọ não, đa chấn thương';
         }
-        if (sceneAddrEl) sceneAddrEl.textContent = loc.address || 'Hiện trường Cần Thơ';
-        if (hospNameEl) hospNameEl.textContent = disp.hospitalName || 'Bệnh viện Đa khoa thành phố Cần Thơ';
-        
+        if (sceneAddrEl) {
+          sceneAddrEl.textContent = loc.address || 'Hiện trường Cần Thơ';
+        }
+        if (navHospName) {
+          navHospName.textContent = disp.hospitalName || 'Bệnh viện Đa khoa thành phố Cần Thơ';
+        }
+
         const callerPhone = c.callerPhone || p.phone || '0913.882.115';
         const callerName = c.callerName || 'Người dân báo tin';
-
-        const callerInfoEl = document.getElementById('driver-caller-info');
-        if (callerInfoEl) {
-          callerInfoEl.textContent = `${callerName} · ${callerPhone}`;
-        }
-
-        const dispatchCallerEl = document.getElementById('dispatch-caller-info');
-        if (dispatchCallerEl) {
-          dispatchCallerEl.textContent = `${callerName} (${callerPhone})`;
-        }
 
         if (btnCallCitizen) {
           btnCallCitizen.href = `tel:${callerPhone}`;
           btnCallCitizen.setAttribute('title', `Gọi cho người báo tin: ${callerName} (${callerPhone})`);
         }
 
-
-        const btnCallCitizenInline = document.getElementById('btn-call-citizen-inline');
-        if (btnCallCitizenInline) {
-          btnCallCitizenInline.href = `tel:${callerPhone}`;
-          btnCallCitizenInline.setAttribute('title', `Gọi cho người báo tin: ${callerName} (${callerPhone})`);
-        }
-
-        // 2. Tab 2: Bản đồ dẫn đường
-        const navHospName = document.getElementById('nav-hospital-name');
-        const navPatientInfo = document.getElementById('nav-patient-info');
-        if (navHospName) navHospName.textContent = disp.hospitalName || 'Bệnh viện Đa khoa thành phố Cần Thơ';
-        if (navPatientInfo) {
-          const ageGroupStr = getAgeGroupText(p);
-          navPatientInfo.textContent = `Nạn nhân: ${ageGroupStr} (${p.gender || '—'}) · ${p.bloodType || 'O+'}`;
-        }
-
-        // 3. Tab 3: ePCR Fields
-        const epcrTitle = document.getElementById('epcr-patient-title');
-        const inputGender = document.getElementById('epcr-input-gender');
-        const inputPhone = document.getElementById('epcr-input-phone');
-        const inputBlood = document.getElementById('epcr-input-blood');
-        const inputHistory = document.getElementById('epcr-input-history');
-        const inputAllergies = document.getElementById('epcr-input-allergies');
-        const inputSymptom = document.getElementById('epcr-input-symptom');
-
-        if (epcrTitle) {
-          const ageGroupStr = getAgeGroupText(p);
-          epcrTitle.textContent = `Nạn nhân · ${ageGroupStr} · ${p.gender || '—'}`;
-        }
-        if (inputGender && p.gender) inputGender.value = p.gender;
-        if (inputPhone) inputPhone.value = p.phone || c.callerPhone || '';
-        if (inputBlood && p.bloodType) inputBlood.value = p.bloodType;
-        if (inputHistory) inputHistory.value = p.history || '';
-        if (inputAllergies) inputAllergies.value = p.allergies || '';
-        if (inputSymptom) inputSymptom.value = p.symptom || inc.description || '';
-
-        // Vitals
-        if (c.epcr?.vitals) {
-          const v = c.epcr.vitals;
-          if (v.pulse && document.getElementById('v-pulse')) document.getElementById('v-pulse').value = v.pulse;
-          if (v.bp && document.getElementById('v-bp')) document.getElementById('v-bp').value = v.bp;
-          if (v.spO2 && document.getElementById('v-spo2')) document.getElementById('v-spo2').value = v.spO2;
-          if (v.temp && document.getElementById('v-temp')) document.getElementById('v-temp').value = v.temp;
-          if (v.rr && document.getElementById('v-rr')) document.getElementById('v-rr').value = v.rr;
-          if (v.glasgow && document.getElementById('v-glasgow')) document.getElementById('v-glasgow').value = v.glasgow;
-        }
-
-        // Progression
-        if (c.epcr?.progression && document.getElementById('epcr-progression-text')) {
-          document.getElementById('epcr-progression-text').value = c.epcr.progression;
-        }
-
         if (isRemoteUpdate) {
           flashSyncHighlight([
             'driver-patient-demographics',
             'driver-patient-symptoms',
-            'nav-patient-info',
-            'epcr-input-gender',
-            'epcr-input-blood',
-            'epcr-input-history',
-            'epcr-input-allergies',
-            'epcr-input-symptom'
+            'driver-scene-address'
           ]);
-        }
-      }
-
-      function savePatientData(showToast = true) {
-        const c = getActiveCase();
-        if (!c) return;
-
-        const inputGender = document.getElementById('epcr-input-gender');
-        const inputPhone = document.getElementById('epcr-input-phone');
-        const inputBlood = document.getElementById('epcr-input-blood');
-        const inputHistory = document.getElementById('epcr-input-history');
-        const inputAllergies = document.getElementById('epcr-input-allergies');
-        const inputSymptom = document.getElementById('epcr-input-symptom');
-
-        const patch = {
-          gender: inputGender ? inputGender.value : c.patient?.gender,
-          phone: inputPhone ? inputPhone.value.trim() : c.patient?.phone,
-          bloodType: inputBlood ? inputBlood.value : c.patient?.bloodType,
-          history: inputHistory ? inputHistory.value.trim() : c.patient?.history,
-          allergies: inputAllergies ? inputAllergies.value.trim() : c.patient?.allergies,
-          symptom: inputSymptom ? inputSymptom.value.trim() : c.patient?.symptom
-        };
-
-        // Đồng thời lưu sinh hiệu & diễn biến
-        const pulse = document.getElementById('v-pulse')?.value;
-        const bp = document.getElementById('v-bp')?.value;
-        const spO2 = document.getElementById('v-spo2')?.value;
-        const temp = document.getElementById('v-temp')?.value;
-        const rr = document.getElementById('v-rr')?.value;
-        const glasgow = document.getElementById('v-glasgow')?.value;
-        const prog = document.getElementById('epcr-progression-text')?.value;
-
-        c.epcr = c.epcr || {};
-        c.epcr.vitals = {
-          pulse: pulse ? Number(pulse) : null,
-          bp: bp || '',
-          spO2: spO2 ? Number(spO2) : null,
-          temp: temp ? Number(temp) : null,
-          rr: rr ? Number(rr) : null,
-          glasgow: glasgow ? Number(glasgow) : null
-        };
-        if (prog) c.epcr.progression = prog;
-
-        // Cập nhật StateManager (Lưu localStorage + broadcast sang central.html)
-        window.StateManager.updateCasePatient(c.id, patch);
-
-        // Cập nhật giao diện nội bộ app lái xe ngay
-        renderCaseAndPatient(c, false);
-
-        if (showToast && window.CCNV_UI?.Toast) {
-          window.CCNV_UI.Toast.show(
-            'ĐÃ ĐỒNG BỘ VỚI TRUNG TÂM 115',
-            `Thông tin BN "${patch.name}" (${patch.age}T, ${patch.gender}, máu ${patch.bloodType}) đã lưu & phát tức thời về Trung tâm điều hành 115 và Bệnh viện tiếp nhận.`,
-            true
-          );
         }
       }
 
@@ -226,17 +99,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (initialCase) {
         renderCaseAndPatient(initialCase, false);
       }
-
-
-
-      // Tự động đồng bộ khi thay đổi các trường thông tin bệnh nhân (Auto-sync with Central)
-      let syncDebounceTimer = null;
-      document.querySelectorAll('.epcr-patient-input').forEach(input => {
-        input.addEventListener('change', () => {
-          clearTimeout(syncDebounceTimer);
-          syncDebounceTimer = setTimeout(() => savePatientData(false), 300);
-        });
-      });
 
 
       // Lắng nghe tín hiệu đồng bộ từ Trung tâm 115 & các tab khác
@@ -1554,7 +1416,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Modal Đổi xe (Vehicle Switcher)
       const vehModal = document.getElementById('modal-vehicle-picker');
-      const btnOpenVeh = document.getElementById('btn-open-vehicle-picker');
+      const btnOpenVeh = document.getElementById('driver-header-plate') || document.getElementById('btn-open-vehicle-picker');
       const btnCloseVeh = document.getElementById('btn-close-veh-modal');
       const vehListEl = document.getElementById('vehicle-picker-list');
 
@@ -1577,7 +1439,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           btn.addEventListener('click', () => {
             const plate = btn.getAttribute('data-plate');
             currentPlate = plate;
-            const headerPlate = document.getElementById('header-plate-text');
+            const headerPlate = document.getElementById('driver-header-plate') || document.getElementById('header-plate-text');
             if (headerPlate) headerPlate.textContent = plate;
             vehModal.classList.remove('active');
             renderCaseAndPatient(getActiveCase());
@@ -1629,7 +1491,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       let isAudioPlaying = false;
 
       window.playPatientAudioSummary = function() {
-        const floatAudioBtn = document.getElementById('driver-btn-audio-summary');
+        const floatAudioBtn = document.getElementById('btn-audio-summary') || document.getElementById('driver-btn-audio-summary');
         
         // Nếu đang phát thì nhấn lại để dừng
         if (isAudioPlaying) {

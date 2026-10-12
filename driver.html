@@ -706,8 +706,8 @@
           </div>
           <div>
             <div style="display:flex;align-items:center;gap:6px;">
-              <strong style="color:#FFFFFF;font-size:14px;letter-spacing:0.3px;font-family:var(--font-mono);"
-                id="driver-header-plate">65A-012.34</strong>
+              <strong style="color:#FFFFFF;font-size:14px;letter-spacing:0.3px;font-family:var(--font-mono);cursor:pointer;"
+                id="driver-header-plate" title="Bấm để đổi xe cấp cứu (Demo)">65A-012.34</strong>
             </div>
             <div style="font-size:10px;color:#38BDF8;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;">ỨNG
               DỤNG KÍP CẤP CỨU & LÁI XE</div>
@@ -948,18 +948,6 @@
               </div>
             </div>
           </div>
-
-          <!-- P0: Undo Banner (Hoàn tác trong 10 giây nếu trượt nhầm) -->
-          <div class="undo-banner" id="undo-step-banner" style="display:none;margin-top:8px;">
-            <div style="font-size:11.5px;color:#FFFFFF;">
-              Đã ghi nhận: <strong id="undo-milestone-name">Đã đến bệnh viện</strong>
-            </div>
-            <button class="btn btn-default btn-xs" id="btn-undo-step"
-              style="border:1px solid #475569;color:#CBD5E1;padding:3px 8px;font-size:11px;">
-              Hoàn tác (10s)
-            </button>
-            <div class="undo-progress-line" id="undo-progress-bar"></div>
-          </div>
         </div>
       </div>
     </main>
@@ -1152,7 +1140,6 @@
   <script src="js/shared/data-seed.js?v=20261005_07"></script>
   <script src="js/shared/data-loader.js?v=20261005_07"></script>
   <script src="js/shared/components.js?v=20261005_07"></script>
-  <script src="js/shared/epcr-form.js?v=20261005_07"></script>
   <!-- Leaflet GIS Map Engine -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="js/shared/map.js?v=20261005_07"></script>

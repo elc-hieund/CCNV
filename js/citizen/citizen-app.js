@@ -2677,12 +2677,18 @@
 
     // --- PERSONAL PROFILE & SUB-TABS (ND-07, ND-08, ND-09, ND-10) ---
     saveMedicalProfileForm() {
-      this.medicalProfile.bloodType = document.getElementById('profile-input-blood').value;
-      this.medicalProfile.allergies = document.getElementById('profile-input-allergies').value;
-      this.medicalProfile.chronicDiseases = document.getElementById('profile-input-diseases').value;
-      this.medicalProfile.medications = document.getElementById('profile-input-medications').value;
-      this.medicalProfile.bhytCode = document.getElementById('profile-input-bhyt').value;
-      this.medicalProfile.specialNotes = document.getElementById('profile-input-notes').value;
+      const pBlood = document.getElementById('profile-input-blood');
+      if (pBlood) this.medicalProfile.bloodType = pBlood.value;
+      const pAllergies = document.getElementById('profile-input-allergies');
+      if (pAllergies) this.medicalProfile.allergies = pAllergies.value;
+      const pDiseases = document.getElementById('profile-input-diseases');
+      if (pDiseases) this.medicalProfile.chronicDiseases = pDiseases.value;
+      const pMeds = document.getElementById('profile-input-medications');
+      if (pMeds) this.medicalProfile.medications = pMeds.value;
+      const pBhyt = document.getElementById('profile-input-bhyt');
+      if (pBhyt) this.medicalProfile.bhytCode = pBhyt.value;
+      const pNotes = document.getElementById('profile-input-notes');
+      if (pNotes) this.medicalProfile.specialNotes = pNotes.value;
 
       this.saveToStorage();
       window.CCNV_UI.Toast.show(
