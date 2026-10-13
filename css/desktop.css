@@ -3009,6 +3009,32 @@ body.critical-focus-active .kpi-header-grid {
   color: #FFFFFF;
 }
 
+.btn-table-primary {
+  background-color: var(--red-primary, #DC2626);
+  border: 1px solid var(--red-vivid, #EF4444);
+  color: #FFFFFF;
+  border-radius: 6px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-table-primary:hover {
+  background-color: var(--red-vivid, #EF4444);
+  box-shadow: 0 0 12px var(--red-glow, rgba(239, 68, 68, 0.4));
+  color: #FFFFFF;
+}
+
+.btn-table-primary:active {
+  transform: translateY(1px);
+}
+
 /* Table scroll wrapper */
 .table-scroll-wrapper {
   width: 100%;

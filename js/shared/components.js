@@ -222,6 +222,30 @@
       this.sortDirection = (options.defaultSortOrder === 'OLDEST' || options.defaultSortOrder === 'desc') ? 'OLDEST' : 'NEWEST';
       this.onRowClick = options.onRowClick || null;
       this.emptyText = options.emptyText || 'Không có ca nào hiện tại';
+      this.actions = options.actions || options.customToolbarActions || [];
+    }
+
+    renderActionsHtml() {
+      if (!this.actions) return '';
+      if (typeof this.actions === 'string') return this.actions;
+      if (typeof this.actions === 'function') return this.actions(this);
+      if (Array.isArray(this.actions)) {
+        return this.actions.map((act, idx) => {
+          if (!act) return '';
+          if (typeof act === 'string') return act;
+          const btnId = act.id || `${this.containerId}-action-${idx}`;
+          const cls = act.className || 'btn-table-primary';
+          const iconHtml = act.icon !== undefined ? act.icon : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
+          const style = act.style ? `style="${act.style}"` : '';
+          return `
+            <button type="button" class="${cls}" id="${btnId}" ${style} title="${act.title || act.label || ''}">
+              ${iconHtml}
+              <span>${act.label || ''}</span>
+            </button>
+          `;
+        }).join('');
+      }
+      return '';
     }
 
     getAvailableStatuses() {
@@ -495,6 +519,7 @@
                 <span>Xuất Excel</span>
               </button>
               ` : ''}
+              ${this.renderActionsHtml()}
             </div>
           </div>
 
@@ -797,6 +822,19 @@
             const item = (this.currentFilteredData && this.currentFilteredData[idx]) || this.data[idx];
             if (item) this.onRowClick(item, idx, e);
           });
+        });
+      }
+
+      // 10. Toolbar Action Buttons
+      if (Array.isArray(this.actions)) {
+        this.actions.forEach((act, idx) => {
+          if (typeof act === 'object' && act && act.onClick) {
+            const btnId = act.id || `${this.containerId}-action-${idx}`;
+            const btn = container.querySelector(`#${btnId}`);
+            if (btn) {
+              btn.addEventListener('click', (e) => act.onClick(e, this));
+            }
+          }
         });
       }
     }
